@@ -1,36 +1,44 @@
 package info.bethard.timenorm
 
-import scala.Array.canBuildFrom
-import scala.Array.fallbackCanBuildFrom
-import scala.Option.option2Iterable
-import scala.collection.TraversableOnce.flattenTraversableOnce
+import scala.collection.immutable.{ Seq, IndexedSeq }
 
-// TODO: make this efficient, probably using a trie
 class Grammar(val rules: Seq[Grammar.Rule]) {
-  def sourceSeqStartsWith(tokens: Seq[String]) = this.rules.filter(_.sourceSeq.startsWith(tokens))
-  def sourceSeqStartsWithTerminals(tokens: Seq[String]) = this.rules.filter { rule =>
-    rule.sourceSeq.startsWith(tokens) && rule.sourceSeq.take(tokens.size).forall(Grammar.isTerminal)
+
+  private val rulePrefixMap = PrefixMultiMap.empty[String, Grammar.Rule]
+  for (rule <- rules) {
+    this.rulePrefixMap += (rule.sourceSeq, rule)
   }
-  def sourceSeqStartsWith(token: String) = this.rules.filter { rule =>
-    rule.sourceSeq.nonEmpty && rule.sourceSeq.head == token
+
+  def sourceSeqStartsWith(tokens: Seq[String]) = {
+    this.rulePrefixMap.getAllWithPrefix(tokens)
+  }
+
+  def sourceSeqStartsWithTerminals(tokens: Seq[String]) = {
+    this.rulePrefixMap.getAllWithPrefix(tokens).filter {
+      _.sourceSeq.take(tokens.size).forall(Grammar.isTerminal)
+    }
+  }
+
+  def sourceSeqStartsWith(token: String) = {
+    this.rulePrefixMap.getAllWithPrefix(Seq(token))
   }
 }
 
 object Grammar {
-  
+
   val isTerminal: (String => Boolean) = !_.matches("^\\[.*\\]$")
   val isNumber: (String => Boolean) = _.matches("^\\d+$")
 
   def apply(rules: Seq[Rule]): Grammar = new Grammar(rules)
-  
+
   def fromString(text: String): Grammar = {
     // example:
     // [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
     val stripLabel: (String => String) = _.replaceAll("\\[(.*),.*\\]", "[$1]")
     val rules = for (line <- text.lines) yield line.trim.split("\\s*[|][|][|]\\s*") match {
-      case Array(symbol, sourceSeqString, targetSeqString, scoreString) => { 
-        val sourceSeqItems = sourceSeqString.split("\\s+")
-        val targetSeqItems = targetSeqString.split("\\s+")
+      case Array(symbol, sourceSeqString, targetSeqString, scoreString) => {
+        val sourceSeqItems = sourceSeqString.split("\\s+").toIndexedSeq
+        val targetSeqItems = targetSeqString.split("\\s+").toIndexedSeq
         val sourceNonTerminals = sourceSeqItems.filterNot(this.isTerminal)
         val targetNonTerminals = targetSeqItems.filterNot(this.isTerminal)
         val alignment = for ((token, targetIndex) <- targetNonTerminals.zipWithIndex) yield {
@@ -48,5 +56,53 @@ object Grammar {
     Grammar(rules.flatten.toList)
   }
 
-  case class Rule(symbol: String, sourceSeq: Seq[String], targetSeq: Seq[String], nonTerminalAlignment: Map[Int, Int])
+  case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int])
+}
+
+private[timenorm] class PrefixMultiMap[K, V] {
+
+  var suffixes = Map.empty[K, PrefixMultiMap[K, V]]
+  var values = Set.empty[V]
+
+  def +=(key: Seq[K], value: V): Unit = {
+    if (key.isEmpty) {
+      this.values += value
+    } else {
+      val head = key.head
+      if (!this.suffixes.contains(head)) {
+        this.suffixes += head -> new PrefixMultiMap[K, V]
+      }
+      this.suffixes(head) += (key.tail, value)
+    }
+  }
+
+  def get(key: Seq[K]): Set[V] = {
+    this.getMap(key) match {
+      case None => Set.empty
+      case Some(map) => map.values
+    }
+  }
+
+  def getAll: Set[V] = {
+    this.values ++ this.suffixes.values.flatMap(_.getAll)
+  }
+
+  def getAllWithPrefix(key: Seq[K]) = {
+    this.getMap(key) match {
+      case None => Set.empty
+      case Some(map) => map.getAll
+    }
+  }
+
+  private def getMap(key: Seq[K]): Option[PrefixMultiMap[K, V]] = {
+    if (key.isEmpty) {
+      Some(this)
+    } else {
+      this.suffixes.get(key.head).flatMap(_.getMap(key.tail))
+    }
+  }
+}
+
+private[timenorm] object PrefixMultiMap {
+  def empty[K, V] = new PrefixMultiMap[K, V]
 }

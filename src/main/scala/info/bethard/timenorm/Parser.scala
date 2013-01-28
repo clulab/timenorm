@@ -1,14 +1,16 @@
 package info.bethard.timenorm
 
+import scala.collection.immutable.{ Seq, IndexedSeq }
 import scala.collection.mutable.Buffer
+
 import org.threeten.bp.temporal.ChronoUnit
 
 class Parser(grammar: Grammar) {
   def apply(sourceTokens: Seq[String]): Temporal = {
     val chart = this.parseChart(sourceTokens)
     chart(sourceTokens.size)(0).completes.map(_.toTemporal) match {
-      case Seq(temporal) => temporal
-      case Seq() => {
+      case Buffer(temporal) => temporal
+      case Buffer() => {
         val nTokens = sourceTokens.size
         throw new UnsupportedOperationException("Could not parse %s. Partial parses: %s".format(
           sourceTokens.toString,
@@ -22,7 +24,7 @@ class Parser(grammar: Grammar) {
 
   def parseAll(sourceTokens: Seq[String]): Seq[Temporal] = {
     val chart = this.parseChart(sourceTokens)
-    chart(sourceTokens.size)(0).completes.map(_.toTemporal)
+    chart(sourceTokens.size)(0).completes.map(_.toTemporal).toIndexedSeq
   }
 
   private def parseChart(sourceTokens: Seq[String]): Array[Array[Parser.ChartEntry]] = {
@@ -30,12 +32,12 @@ class Parser(grammar: Grammar) {
     val chart = Array.tabulate(nTokens + 1, nTokens) {
       (size, start) => if (size == 0 || start + size > nTokens) null else Parser.ChartEntry()
     }
-    
+
     // special handling of [Number]: pass through tokens that are numbers 
     for (start <- 0 until nTokens) {
       val token = sourceTokens(start)
       if (Grammar.isNumber(token)) {
-        val rule = Grammar.Rule("[Number]", Seq(token), Seq(token), Map.empty)
+        val rule = Grammar.Rule("[Number]", IndexedSeq(token), IndexedSeq(token), Map.empty)
         chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
       }
     }

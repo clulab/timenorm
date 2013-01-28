@@ -1,5 +1,6 @@
 package info.bethard.timenorm
 
+import scala.collection.immutable.Seq
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
@@ -85,7 +86,7 @@ class ParserTest extends FunSuite {
           Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)),
         Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
   }
-  
+
   /*
    * More things to test:
    * 
