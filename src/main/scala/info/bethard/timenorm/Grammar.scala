@@ -56,7 +56,9 @@ object Grammar {
     Grammar(rules.flatten.toList)
   }
 
-  case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int])
+  case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int]) {
+    val basicSymbol = symbol.replaceAll(":[^\\]]*", "")
+  }
 }
 
 private[timenorm] class PrefixMultiMap[K, V] {

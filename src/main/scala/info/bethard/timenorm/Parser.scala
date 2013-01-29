@@ -40,7 +40,7 @@ class Parser(grammar: Grammar) {
       if (Grammar.isNumber(token)) {
         val rule = Grammar.Rule("[Number]", IndexedSeq(token), IndexedSeq(token), Map.empty)
         chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
-        val symbolN = "[Number(%d)]".format(token.size)
+        val symbolN = "[Number:%ddigit]".format(token.size)
         val ruleN = Grammar.Rule(symbolN, IndexedSeq(token), IndexedSeq(token), Map.empty)
         chart(1)(start).completes += Parser.Parse(ruleN, IndexedSeq.empty)
       }
@@ -132,16 +132,8 @@ object Parser {
       def fail: Temporal = throw new UnsupportedOperationException(
         "Don't know how to parse %s from %s".format(this.rule.symbol, targetList))
 
-      this.rule.symbol match {
+      this.rule.basicSymbol match {
         case "[Number]" => targetList match {
-          case (number: Temporal.Number) :: Nil =>
-            number
-          case (number: String) :: Nil =>
-            Temporal.Number(number.toInt)
-          case _ =>
-            fail
-        }
-        case string if string.matches("^\\[Number\\(\\d+\\)\\]$") => targetList match {
           case (number: Temporal.Number) :: Nil =>
             number
           case (number: String) :: Nil =>
@@ -157,7 +149,7 @@ object Parser {
           case _ =>
             fail
         }
-        case "[Year]" | "[MonthOfYear]" | "[DayOfMonth]" => targetList match {
+        case "[Field]" => targetList match {
           case (field: String) :: (number: String) :: Nil =>
             Temporal.Field(ChronoField.valueOf(field), number.toInt)
           case (field: String) :: (number: Temporal.Number) :: Nil =>
