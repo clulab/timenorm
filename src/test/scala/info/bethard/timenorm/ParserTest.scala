@@ -42,8 +42,8 @@ class ParserTest extends FunSuite {
     [Anchor] ||| today ||| TODAY ||| 1.0
     [Anchor] ||| yesterday ||| Minus TODAY ( Period 1 DAYS ) ||| 1.0
     [Anchor] ||| tomorrow ||| Plus TODAY ( Period 1 DAYS ) ||| 1.0
-    [Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] [Field:Year] ||| OfFields [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
-    [Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] ||| OfFields [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+    [Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] [Field:Year] ||| [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+    [Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] ||| [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
     [Anchor] ||| next [Period] ||| Plus TODAY [Period] ||| 1.0
     [Anchor] ||| last [Period] ||| Minus TODAY [Period] ||| 1.0
     [Anchor] ||| [Period] from [Anchor] ||| Plus [Anchor] [Period] ||| 1.0
@@ -69,11 +69,11 @@ class ParserTest extends FunSuite {
   test("parses simple anchors") {
     val parser = new Parser(grammar)
     assert(parser(Seq("today")) === Temporal.Anchor.Today)
-    assert(parser(Seq("September", "21", "1976")) === Temporal.Anchor.OfFields(Map(
+    assert(parser(Seq("September", "21", "1976")) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 9,
         ChronoField.DAY_OF_MONTH -> 21,
         ChronoField.YEAR -> 1976)))
-    assert(parser(Seq("October", "15")) === Temporal.Anchor.OfFields(Map(
+    assert(parser(Seq("October", "15")) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 10,
         ChronoField.DAY_OF_MONTH -> 15)))
   }

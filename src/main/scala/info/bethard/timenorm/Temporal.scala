@@ -18,7 +18,7 @@ object Temporal {
   sealed trait Anchor extends Temporal
   object Anchor {
     case object Today extends Anchor
-    case class OfFields(fields: Map[ChronoField, Int]) extends Anchor
+    case class Of(fields: Map[ChronoField, Int]) extends Anchor
     case class Plus(anchor: Anchor, period: Period) extends Anchor
     case class Minus(anchor: Anchor, period: Period) extends Anchor
   }

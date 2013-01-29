@@ -176,8 +176,8 @@ object Parser {
             Temporal.Anchor.Plus(anchor, period)
           case "Minus" :: (anchor: Temporal.Anchor) :: (period: Temporal.Period) :: Nil =>
             Temporal.Anchor.Minus(anchor, period)
-          case "OfFields" :: fields if fields.forall(_.isInstanceOf[Temporal.Field]) =>
-            Temporal.Anchor.OfFields(fields.collect { case f: Temporal.Field => (f.name, f.value) }.toMap)
+          case fields if fields.forall(_.isInstanceOf[Temporal.Field]) =>
+            Temporal.Anchor.Of(fields.collect { case f: Temporal.Field => (f.name, f.value) }.toMap)
           case _ =>
             fail
         }
