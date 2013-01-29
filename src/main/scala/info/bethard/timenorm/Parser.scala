@@ -4,6 +4,7 @@ import scala.collection.immutable.{ Seq, IndexedSeq }
 import scala.collection.mutable.Buffer
 
 import org.threeten.bp.temporal.ChronoUnit
+import org.threeten.bp.temporal.ChronoField
 
 class Parser(grammar: Grammar) {
   def apply(sourceTokens: Seq[String]): Temporal = {
@@ -39,6 +40,9 @@ class Parser(grammar: Grammar) {
       if (Grammar.isNumber(token)) {
         val rule = Grammar.Rule("[Number]", IndexedSeq(token), IndexedSeq(token), Map.empty)
         chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
+        val symbolN = "[Number(%d)]".format(token.size)
+        val ruleN = Grammar.Rule(symbolN, IndexedSeq(token), IndexedSeq(token), Map.empty)
+        chart(1)(start).completes += Parser.Parse(ruleN, IndexedSeq.empty)
       }
     }
 
@@ -78,13 +82,13 @@ class Parser(grammar: Grammar) {
 
           // partials that can be advanced to `size` using completed non-terminals
           for (complete <- chart(size2)(start2).completes) {
-            val completeSeq = partial.rule.sourceSeq.take(partial.sourceSeqIndex) :+ complete.rule.symbol
-            for (rule <- grammar.sourceSeqStartsWith(completeSeq)) {
+            if (partial.rule.sourceSeq(partial.sourceSeqIndex) == complete.rule.symbol) {
+              val sourceSeqIndex = partial.sourceSeqIndex + 1
               val nonTerminalRules = partial.nonTerminalRules :+ complete
-              if (rule.sourceSeq.size == completeSeq.size) {
-                entry.completes += Parser.Parse(rule, nonTerminalRules)
+              if (partial.rule.sourceSeq.size == sourceSeqIndex) {
+                entry.completes += Parser.Parse(partial.rule, nonTerminalRules)
               } else {
-                entry.partials += Parser.PartialParse(rule, partial.sourceSeqIndex + 1, nonTerminalRules)
+                entry.partials += Parser.PartialParse(partial.rule, sourceSeqIndex, nonTerminalRules)
               }
             }
           }
@@ -124,22 +128,42 @@ object Parser {
         }
       }
       val targetList = this.toTemporals(targetSeq.toList)
+
+      def fail: Temporal = throw new UnsupportedOperationException(
+        "Don't know how to parse %s from %s".format(this.rule.symbol, targetList))
+
       this.rule.symbol match {
         case "[Number]" => targetList match {
           case (number: Temporal.Number) :: Nil =>
             number
           case (number: String) :: Nil =>
             Temporal.Number(number.toInt)
-          case _ => throw new UnsupportedOperationException(
-            "Don't know how to parse [Number] from " + targetList)
+          case _ =>
+            fail
+        }
+        case string if string.matches("^\\[Number\\(\\d+\\)\\]$") => targetList match {
+          case (number: Temporal.Number) :: Nil =>
+            number
+          case (number: String) :: Nil =>
+            Temporal.Number(number.toInt)
+          case _ =>
+            fail
         }
         case "[Unit]" => targetList match {
           case (unit: Temporal.Unit) :: Nil =>
             unit
           case (unit: String) :: Nil =>
             Temporal.Unit(ChronoUnit.valueOf(unit))
-          case _ => throw new UnsupportedOperationException(
-            "Don't know how to parse [Unit] from " + targetList)
+          case _ =>
+            fail
+        }
+        case "[Year]" | "[MonthOfYear]" | "[DayOfMonth]" => targetList match {
+          case (field: String) :: (number: String) :: Nil =>
+            Temporal.Field(ChronoField.valueOf(field), number.toInt)
+          case (field: String) :: (number: Temporal.Number) :: Nil =>
+            Temporal.Field(ChronoField.valueOf(field), number.value)
+          case _ =>
+            fail
         }
         case "[Period]" => targetList match {
           case (period: Temporal.Period) :: Nil =>
@@ -150,8 +174,8 @@ object Parser {
             Temporal.Period.SimplePeriod(amount.value, unit.value)
           case "Sum" :: (period1: Temporal.Period) :: (period2: Temporal.Period) :: Nil =>
             Temporal.Period.Plus(period1, period2)
-          case _ => throw new UnsupportedOperationException(
-            "Don't know how to parse [Period] from " + targetList)
+          case _ =>
+            fail
         }
         case "[Anchor]" => targetList match {
           case (anchor: Temporal.Anchor) :: Nil =>
@@ -160,8 +184,10 @@ object Parser {
             Temporal.Anchor.Plus(anchor, period)
           case "Minus" :: (anchor: Temporal.Anchor) :: (period: Temporal.Period) :: Nil =>
             Temporal.Anchor.Minus(anchor, period)
-          case _ => throw new UnsupportedOperationException(
-            "Don't know how to parse [Anchor] from " + targetList)
+          case "OfFields" :: fields if fields.forall(_.isInstanceOf[Temporal.Field]) =>
+            Temporal.Anchor.OfFields(fields.collect { case f: Temporal.Field => (f.name, f.value) }.toMap)
+          case _ =>
+            fail
         }
       }
     }

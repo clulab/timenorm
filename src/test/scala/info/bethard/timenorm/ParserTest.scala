@@ -5,6 +5,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import org.threeten.bp.temporal.ChronoUnit
+import org.threeten.bp.temporal.ChronoField
 
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
@@ -20,12 +21,29 @@ class ParserTest extends FunSuite {
     [Unit] ||| weeks ||| WEEKS ||| 1.0
     [Unit] ||| month ||| MONTHS ||| 1.0
     [Unit] ||| months ||| MONTHS ||| 1.0
+    [MonthOfYear] ||| January ||| MONTH_OF_YEAR 1 ||| 1.0
+    [MonthOfYear] ||| February ||| MONTH_OF_YEAR 2 ||| 1.0
+    [MonthOfYear] ||| March ||| MONTH_OF_YEAR 3 ||| 1.0
+    [MonthOfYear] ||| April ||| MONTH_OF_YEAR 4 ||| 1.0
+    [MonthOfYear] ||| May ||| MONTH_OF_YEAR 5 ||| 1.0
+    [MonthOfYear] ||| June ||| MONTH_OF_YEAR 6 ||| 1.0
+    [MonthOfYear] ||| July ||| MONTH_OF_YEAR 7 ||| 1.0
+    [MonthOfYear] ||| August ||| MONTH_OF_YEAR 8 ||| 1.0
+    [MonthOfYear] ||| September ||| MONTH_OF_YEAR 9 ||| 1.0
+    [MonthOfYear] ||| October ||| MONTH_OF_YEAR 10 ||| 1.0
+    [MonthOfYear] ||| November ||| MONTH_OF_YEAR 11 ||| 1.0
+    [MonthOfYear] ||| December ||| MONTH_OF_YEAR 12 ||| 1.0
+    [DayOfMonth] ||| [Number(1)] ||| DAY_OF_MONTH [Number(1)] ||| 1.0
+    [DayOfMonth] ||| [Number(2)] ||| DAY_OF_MONTH [Number(2)] ||| 1.0
+    [Year] ||| [Number(4)] ||| YEAR [Number(4)] ||| 1.0
     [Period] ||| [Unit] ||| [Unit] ||| 1.0
     [Period] ||| [Number] [Unit] ||| [Number] [Unit] ||| 1.0
     [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
     [Anchor] ||| today ||| TODAY ||| 1.0
     [Anchor] ||| yesterday ||| Minus TODAY ( Period 1 DAYS ) ||| 1.0
     [Anchor] ||| tomorrow ||| Plus TODAY ( Period 1 DAYS ) ||| 1.0
+    [Anchor] ||| [MonthOfYear] [DayOfMonth] [Year] ||| OfFields [Year] [MonthOfYear] [DayOfMonth] ||| 1.0
+    [Anchor] ||| [MonthOfYear] [DayOfMonth] ||| OfFields [MonthOfYear] [DayOfMonth] ||| 1.0
     [Anchor] ||| next [Period] ||| Plus TODAY [Period] ||| 1.0
     [Anchor] ||| last [Period] ||| Minus TODAY [Period] ||| 1.0
     [Anchor] ||| [Period] from [Anchor] ||| Plus [Anchor] [Period] ||| 1.0
@@ -51,6 +69,13 @@ class ParserTest extends FunSuite {
   test("parses simple anchors") {
     val parser = new Parser(grammar)
     assert(parser(Seq("today")) === Temporal.Anchor.Today)
+    assert(parser(Seq("September", "21", "1976")) === Temporal.Anchor.OfFields(Map(
+        ChronoField.MONTH_OF_YEAR -> 9,
+        ChronoField.DAY_OF_MONTH -> 21,
+        ChronoField.YEAR -> 1976)))
+    assert(parser(Seq("October", "15")) === Temporal.Anchor.OfFields(Map(
+        ChronoField.MONTH_OF_YEAR -> 10,
+        ChronoField.DAY_OF_MONTH -> 15)))
   }
 
   test("parses complex anchors") {
@@ -91,9 +116,6 @@ class ParserTest extends FunSuite {
    * More things to test:
    * 
    * == Anchors ==
-   * October 15, 2011
-   * October 15
-   * last week
    * three days from now
    * a week from yesterday
    * next October 15

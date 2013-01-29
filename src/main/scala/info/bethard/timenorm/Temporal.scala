@@ -6,16 +6,19 @@ import org.threeten.bp.temporal.TemporalAdjuster
 import org.threeten.bp.temporal.{Temporal => JTemporal}
 import org.threeten.bp.temporal.TemporalAdder
 import org.threeten.bp.temporal.TemporalSubtractor
+import org.threeten.bp.temporal.ChronoField
 
 sealed trait Temporal
 
 object Temporal {
   case class Number(value: Int) extends Temporal
   case class Unit(value: ChronoUnit) extends Temporal
+  case class Field(name: ChronoField, value: Int) extends Temporal
 
   sealed trait Anchor extends Temporal
   object Anchor {
     case object Today extends Anchor
+    case class OfFields(fields: Map[ChronoField, Int]) extends Anchor
     case class Plus(anchor: Anchor, period: Period) extends Anchor
     case class Minus(anchor: Anchor, period: Period) extends Anchor
   }
