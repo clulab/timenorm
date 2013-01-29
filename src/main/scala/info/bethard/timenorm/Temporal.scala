@@ -11,9 +11,21 @@ import org.threeten.bp.temporal.ChronoField
 sealed trait Temporal
 
 object Temporal {
+  
   private[Temporal] def fail[T](name: String, args: List[AnyRef]): T = {
     throw new UnsupportedOperationException(
         "Don't know how to parse %s from %s".format(name, args))
+  }
+  
+  private[timenorm] def handleSpecials(args: List[AnyRef]): List[AnyRef] = args match {
+    case "TODAY" :: tail =>
+      Temporal.Anchor.Today :: handleSpecials(tail)
+    case "(" :: "Period" :: (amount: String) :: (unit: String) :: ")" :: tail =>
+      Temporal.Period.SimplePeriod(amount.toInt, ChronoUnit.valueOf(unit)) :: handleSpecials(tail)
+    case other :: tail =>
+      other :: handleSpecials(tail)
+    case Nil =>
+      Nil
   }
   
   case class Number(value: Int) extends Temporal

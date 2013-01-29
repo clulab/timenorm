@@ -127,26 +127,13 @@ object Parser {
           this.nonTerminalRules(nonTerminalRulesIndex).toTemporal
         }
       }
-      val targetList = this.toTemporals(targetSeq.toList)
+      val targetList = Temporal.handleSpecials(targetSeq.toList)
       this.rule.basicSymbol match {
         case "[Number]" => Temporal.Number(targetList)
         case "[Unit]" => Temporal.Unit(targetList)
         case "[Field]" => Temporal.Field(targetList)
         case "[Period]" => Temporal.Period(targetList)
         case "[Anchor]" => Temporal.Anchor(targetList)
-      }
-    }
-
-    private def toTemporals(targetList: List[AnyRef]): List[AnyRef] = {
-      targetList match {
-        case "TODAY" :: tail =>
-          Temporal.Anchor.Today :: toTemporals(tail)
-        case "(" :: "Period" :: (amount: String) :: (unit: String) :: ")" :: tail =>
-          Temporal.Period.SimplePeriod(amount.toInt, ChronoUnit.valueOf(unit)) :: toTemporals(tail)
-        case other :: tail =>
-          other :: toTemporals(tail)
-        case Nil =>
-          Nil
       }
     }
   }
