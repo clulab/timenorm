@@ -11,9 +11,48 @@ import org.threeten.bp.temporal.ChronoField
 sealed trait Temporal
 
 object Temporal {
+  private[Temporal] def fail[T](name: String, args: List[AnyRef]): T = {
+    throw new UnsupportedOperationException(
+        "Don't know how to parse %s from %s".format(name, args))
+  }
+  
   case class Number(value: Int) extends Temporal
+  object Number {
+    def apply(args: List[AnyRef]): Number = args match {
+      case (number: Temporal.Number) :: Nil =>
+        number
+      case (number: String) :: Nil =>
+        Number(number.toInt)
+      case _ =>
+        fail("Number", args)
+    }
+  }
+  
   case class Unit(value: ChronoUnit) extends Temporal
+  object Unit {
+    def apply(args: List[AnyRef]): Unit = args match {
+      case (unit: Unit) :: Nil =>
+        unit
+      case (unit: String) :: Nil =>
+        Temporal.Unit(ChronoUnit.valueOf(unit))
+      case _ =>
+        fail("Unit", args)
+    }
+  }
+  
   case class Field(name: ChronoField, value: Int) extends Temporal
+  object Field {
+    def apply(args: List[AnyRef]): Field = args match {
+      case (field: Field) :: Nil =>
+        field
+      case (field: String) :: (number: String) :: Nil =>
+        Field(ChronoField.valueOf(field), number.toInt)
+      case (field: String) :: (number: Temporal.Number) :: Nil =>
+        Field(ChronoField.valueOf(field), number.value)
+      case _ =>
+        fail("Field", args)
+    }
+  }
 
   sealed trait Anchor extends Temporal
   object Anchor {
@@ -21,6 +60,19 @@ object Temporal {
     case class Of(fields: Map[ChronoField, Int]) extends Anchor
     case class Plus(anchor: Anchor, period: Period) extends Anchor
     case class Minus(anchor: Anchor, period: Period) extends Anchor
+
+    def apply(args: List[AnyRef]): Anchor = args match {
+      case (anchor: Anchor) :: Nil =>
+        anchor
+      case "Plus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
+        Plus(anchor, period)
+      case "Minus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
+        Minus(anchor, period)
+      case fields if fields.forall(_.isInstanceOf[Field]) =>
+        Of(fields.collect { case field: Field => (field.name, field.value) }.toMap)
+      case _ =>
+        fail("Anchor", args)
+    }
   }
 
   sealed trait Period extends Temporal
@@ -28,6 +80,19 @@ object Temporal {
     case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period
     case class Plus(period1: Period, period2: Period) extends Period
     case class Minus(period1: Period, period2: Period) extends Period
+    
+    def apply(args: List[AnyRef]): Period = args match {
+      case (period: Period) :: Nil =>
+        period
+      case (unit: Unit) :: Nil =>
+        SimplePeriod(1, unit.value)
+      case (amount: Number) :: (unit: Unit) :: Nil =>
+        SimplePeriod(amount.value, unit.value)
+      case "Sum" :: (period1: Period) :: (period2: Period) :: Nil =>
+        Plus(period1, period2)
+      case _ =>
+        fail("Period", args)
+    }
   }
 
   sealed trait Mod extends Temporal

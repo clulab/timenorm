@@ -128,59 +128,12 @@ object Parser {
         }
       }
       val targetList = this.toTemporals(targetSeq.toList)
-
-      def fail: Temporal = throw new UnsupportedOperationException(
-        "Don't know how to parse %s from %s".format(this.rule.symbol, targetList))
-
       this.rule.basicSymbol match {
-        case "[Number]" => targetList match {
-          case (number: Temporal.Number) :: Nil =>
-            number
-          case (number: String) :: Nil =>
-            Temporal.Number(number.toInt)
-          case _ =>
-            fail
-        }
-        case "[Unit]" => targetList match {
-          case (unit: Temporal.Unit) :: Nil =>
-            unit
-          case (unit: String) :: Nil =>
-            Temporal.Unit(ChronoUnit.valueOf(unit))
-          case _ =>
-            fail
-        }
-        case "[Field]" => targetList match {
-          case (field: String) :: (number: String) :: Nil =>
-            Temporal.Field(ChronoField.valueOf(field), number.toInt)
-          case (field: String) :: (number: Temporal.Number) :: Nil =>
-            Temporal.Field(ChronoField.valueOf(field), number.value)
-          case _ =>
-            fail
-        }
-        case "[Period]" => targetList match {
-          case (period: Temporal.Period) :: Nil =>
-            period
-          case (unit: Temporal.Unit) :: Nil =>
-            Temporal.Period.SimplePeriod(1, unit.value)
-          case (amount: Temporal.Number) :: (unit: Temporal.Unit) :: Nil =>
-            Temporal.Period.SimplePeriod(amount.value, unit.value)
-          case "Sum" :: (period1: Temporal.Period) :: (period2: Temporal.Period) :: Nil =>
-            Temporal.Period.Plus(period1, period2)
-          case _ =>
-            fail
-        }
-        case "[Anchor]" => targetList match {
-          case (anchor: Temporal.Anchor) :: Nil =>
-            anchor
-          case "Plus" :: (anchor: Temporal.Anchor) :: (period: Temporal.Period) :: Nil =>
-            Temporal.Anchor.Plus(anchor, period)
-          case "Minus" :: (anchor: Temporal.Anchor) :: (period: Temporal.Period) :: Nil =>
-            Temporal.Anchor.Minus(anchor, period)
-          case fields if fields.forall(_.isInstanceOf[Temporal.Field]) =>
-            Temporal.Anchor.Of(fields.collect { case f: Temporal.Field => (f.name, f.value) }.toMap)
-          case _ =>
-            fail
-        }
+        case "[Number]" => Temporal.Number(targetList)
+        case "[Unit]" => Temporal.Unit(targetList)
+        case "[Field]" => Temporal.Field(targetList)
+        case "[Period]" => Temporal.Period(targetList)
+        case "[Anchor]" => Temporal.Anchor(targetList)
       }
     }
 
