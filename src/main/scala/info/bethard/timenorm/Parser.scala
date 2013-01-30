@@ -40,9 +40,10 @@ class Parser(grammar: Grammar) {
       if (Grammar.isNumber(token)) {
         val rule = Grammar.Rule("[Number]", IndexedSeq(token), IndexedSeq(token), Map.empty)
         chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
-        val symbolN = "[Number:%ddigit]".format(token.size)
-        val ruleN = Grammar.Rule(symbolN, IndexedSeq(token), IndexedSeq(token), Map.empty)
-        chart(1)(start).completes += Parser.Parse(ruleN, IndexedSeq.empty)
+        for (symbolN <- grammar.numberSymbols(token.toInt)) { 
+          val ruleN = Grammar.Rule(symbolN, IndexedSeq(token), IndexedSeq(token), Map.empty)
+          chart(1)(start).completes += Parser.Parse(ruleN, IndexedSeq.empty)
+        }
       }
     }
 
@@ -96,7 +97,11 @@ class Parser(grammar: Grammar) {
       }
 
       // create parses for rules that start with any of the currently complete parses
-      for (complete <- entry.completes) {
+      // NOTE: we have to use a while-loop here because the loop itself may add more completed
+      // rules that we then also need to process
+      var i = 0
+      while (i < entry.completes.size) {
+        val complete = entry.completes(i)
         for (rule <- grammar.sourceSeqStartsWith(complete.rule.symbol)) {
           if (rule.sourceSeq.tail.isEmpty) {
             entry.completes += Parser.Parse(rule, IndexedSeq(complete))
@@ -104,6 +109,7 @@ class Parser(grammar: Grammar) {
             entry.partials += Parser.PartialParse(rule, 1, IndexedSeq(complete))
           }
         }
+        i += 1
       }
     }
     chart

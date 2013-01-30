@@ -8,6 +8,20 @@ class Grammar(val rules: Seq[Grammar.Rule]) {
   for (rule <- rules) {
     this.rulePrefixMap += (rule.sourceSeq, rule)
   }
+  
+  private val numberRegex = "^\\[Number:(.*)-(.*)\\]$".r
+  private val numberRanges = (
+    for {
+      rule <- rules
+      numberRegex(begin, end) <- rule.symbol +: rule.sourceSeq
+    } yield {
+      begin.toInt to end.toInt
+    }).toSet
+  
+  def numberSymbols(number: Int): Set[String] = {
+    for (range <- this.numberRanges; if range.contains(number))
+      yield "[Number:%d-%d]".format(range.start, range.end)
+  }
 
   def sourceSeqStartsWith(tokens: Seq[String]) = {
     this.rulePrefixMap.getAllWithPrefix(tokens)
