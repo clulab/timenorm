@@ -9,6 +9,7 @@ import org.threeten.bp.temporal.{ Temporal => JTemporal }
 import org.threeten.bp.temporal.TemporalAdder
 import org.threeten.bp.temporal.TemporalSubtractor
 import org.threeten.bp.temporal.ChronoField
+import org.threeten.bp.ZonedDateTime
 
 sealed trait Temporal
 
@@ -89,12 +90,26 @@ object Temporal {
     }
   }
 
-  sealed trait Anchor extends Temporal
+  sealed trait Anchor extends Temporal {
+    def toTimeMLValue(anchor: ZonedDateTime): String
+    protected val fieldFormats = Seq(
+        ChronoField.YEAR -> "%04d",
+        ChronoField.MONTH_OF_YEAR -> "-%02d",
+        ChronoField.DAY_OF_MONTH -> "-%02d")
+  }
   object Anchor {
-    case object Today extends Anchor
-    case class Of(fields: Map[ChronoField, Int]) extends Anchor
-    case class Plus(anchor: Anchor, period: Period) extends Anchor
-    case class Minus(anchor: Anchor, period: Period) extends Anchor
+    case object Today extends Anchor {
+      def toTimeMLValue(anchor: ZonedDateTime) = anchor.getDate().toString
+    }
+    case class Of(fields: Map[ChronoField, Int]) extends Anchor {
+      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+    }
+    case class Plus(anchor: Anchor, period: Period) extends Anchor {
+      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+    }
+    case class Minus(anchor: Anchor, period: Period) extends Anchor {
+      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+    }
 
     def apply(args: List[AnyRef]): Anchor = args match {
       case (anchor: Anchor) :: Nil =>
