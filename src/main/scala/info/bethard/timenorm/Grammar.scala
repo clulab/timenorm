@@ -10,7 +10,7 @@ class Grammar(val rules: Seq[Grammar.Rule]) {
   }
   
   private val numberRegex = "^\\[Number:(.*)-(.*)\\]$".r
-  private val numberRanges = (
+  private val numberRanges: Set[Range.Inclusive] = (
     for {
       rule <- rules
       numberRegex(begin, end) <- rule.symbol +: rule.sourceSeq
@@ -18,9 +18,11 @@ class Grammar(val rules: Seq[Grammar.Rule]) {
       begin.toInt to end.toInt
     }).toSet
   
-  def numberSymbols(number: Int): Set[String] = {
-    for (range <- this.numberRanges; if range.contains(number))
-      yield "[Number:%d-%d]".format(range.start, range.end)
+  def symbolsForNumber(number: Int): Set[String] = {
+    val symbolsWithRanges =
+      for (range <- this.numberRanges; if range.contains(number))
+        yield "[Number:%d-%d]".format(range.start, range.end)
+    symbolsWithRanges + "[Number]" 
   }
 
   def sourceSeqStartsWith(tokens: Seq[String]) = {

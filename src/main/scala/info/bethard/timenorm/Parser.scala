@@ -6,11 +6,13 @@ import scala.collection.mutable.Buffer
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 
-class Parser(grammar: Grammar) {
-  def apply(sourceTokens: Seq[String]): Temporal = {
+class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
+  def apply(sourceTokens: Seq[String]): Parser.Parse = this.parse(sourceTokens)
+  
+  def parse(sourceTokens: Seq[String]): Parser.Parse = {
     val chart = this.parseChart(sourceTokens)
-    chart(sourceTokens.size)(0).completes.map(_.toTemporal) match {
-      case Buffer(temporal) => temporal
+    chart(sourceTokens.size)(0).completes match {
+      case Buffer(parse) => parse
       case Buffer() => {
         val nTokens = sourceTokens.size
         throw new UnsupportedOperationException("Could not parse %s. Partial parses: %s".format(
@@ -23,9 +25,9 @@ class Parser(grammar: Grammar) {
     }
   }
 
-  def parseAll(sourceTokens: Seq[String]): Seq[Temporal] = {
+  def parseAll(sourceTokens: Seq[String]): Seq[Parser.Parse] = {
     val chart = this.parseChart(sourceTokens)
-    chart(sourceTokens.size)(0).completes.map(_.toTemporal).toIndexedSeq
+    chart(sourceTokens.size)(0).completes.toIndexedSeq
   }
 
   private def parseChart(sourceTokens: Seq[String]): Array[Array[Parser.ChartEntry]] = {
@@ -38,11 +40,9 @@ class Parser(grammar: Grammar) {
     for (start <- 0 until nTokens) {
       val token = sourceTokens(start)
       if (Grammar.isNumber(token)) {
-        val rule = Grammar.Rule("[Number]", IndexedSeq(token), IndexedSeq(token), Map.empty)
-        chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
-        for (symbolN <- grammar.numberSymbols(token.toInt)) { 
-          val ruleN = Grammar.Rule(symbolN, IndexedSeq(token), IndexedSeq(token), Map.empty)
-          chart(1)(start).completes += Parser.Parse(ruleN, IndexedSeq.empty)
+        for (symbol <- grammar.symbolsForNumber(token.toInt)) { 
+          val rule = Grammar.Rule(symbol, IndexedSeq(token), IndexedSeq(token), Map.empty)
+          chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
         }
       }
     }
@@ -118,31 +118,9 @@ class Parser(grammar: Grammar) {
 
 object Parser {
 
-  private[Parser] case class Parse(
+  case class Parse(
       rule: Grammar.Rule,
-      nonTerminalRules: IndexedSeq[Parse]) {
-
-    def toTemporal: Temporal = {
-      var nonTerminalIndex = -1
-      val targetSeq = for ((token, i) <- this.rule.targetSeq.zipWithIndex) yield {
-        if (Grammar.isTerminal(token)) {
-          token
-        } else {
-          nonTerminalIndex += 1
-          val nonTerminalRulesIndex = this.rule.nonTerminalAlignment(nonTerminalIndex)
-          this.nonTerminalRules(nonTerminalRulesIndex).toTemporal
-        }
-      }
-      val targetList = Temporal.handleSpecials(targetSeq.toList)
-      this.rule.basicSymbol match {
-        case "[Number]" => Temporal.Number(targetList)
-        case "[Unit]" => Temporal.Unit(targetList)
-        case "[Field]" => Temporal.Field(targetList)
-        case "[Period]" => Temporal.Period(targetList)
-        case "[Anchor]" => Temporal.Anchor(targetList)
-      }
-    }
-  }
+      nonTerminalRules: IndexedSeq[Parse])
 
   private[Parser] case class PartialParse(
     rule: Grammar.Rule,

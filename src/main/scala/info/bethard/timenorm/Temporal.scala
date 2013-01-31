@@ -3,7 +3,7 @@ package info.bethard.timenorm
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalAdjuster
-import org.threeten.bp.temporal.{Temporal => JTemporal}
+import org.threeten.bp.temporal.{ Temporal => JTemporal }
 import org.threeten.bp.temporal.TemporalAdder
 import org.threeten.bp.temporal.TemporalSubtractor
 import org.threeten.bp.temporal.ChronoField
@@ -11,13 +11,34 @@ import org.threeten.bp.temporal.ChronoField
 sealed trait Temporal
 
 object Temporal {
-  
+
+  def fromParse(parse: Parser.Parse): Temporal = {
+    var nonTerminalIndex = -1
+    val targetSeq = for ((token, i) <- parse.rule.targetSeq.zipWithIndex) yield {
+      if (Grammar.isTerminal(token)) {
+        token
+      } else {
+        nonTerminalIndex += 1
+        val nonTerminalRulesIndex = parse.rule.nonTerminalAlignment(nonTerminalIndex)
+        this.fromParse(parse.nonTerminalRules(nonTerminalRulesIndex))
+      }
+    }
+    val targetList = Temporal.handleSpecials(targetSeq.toList)
+    parse.rule.basicSymbol match {
+      case "[Number]" => Temporal.Number(targetList)
+      case "[Unit]" => Temporal.Unit(targetList)
+      case "[Field]" => Temporal.Field(targetList)
+      case "[Period]" => Temporal.Period(targetList)
+      case "[Anchor]" => Temporal.Anchor(targetList)
+    }
+  }
+
   private[Temporal] def fail[T](name: String, args: List[AnyRef]): T = {
     throw new UnsupportedOperationException(
-        "Don't know how to parse %s from %s".format(name, args))
+      "Don't know how to parse %s from %s".format(name, args))
   }
-  
-  private[timenorm] def handleSpecials(args: List[AnyRef]): List[AnyRef] = args match {
+
+  private[Temporal] def handleSpecials(args: List[AnyRef]): List[AnyRef] = args match {
     case "TODAY" :: tail =>
       Temporal.Anchor.Today :: handleSpecials(tail)
     case "(" :: "Period" :: (amount: String) :: (unit: String) :: ")" :: tail =>
@@ -27,7 +48,7 @@ object Temporal {
     case Nil =>
       Nil
   }
-  
+
   case class Number(value: Int) extends Temporal
   object Number {
     def apply(args: List[AnyRef]): Number = args match {
@@ -39,7 +60,7 @@ object Temporal {
         fail("Number", args)
     }
   }
-  
+
   case class Unit(value: ChronoUnit) extends Temporal
   object Unit {
     def apply(args: List[AnyRef]): Unit = args match {
@@ -51,7 +72,7 @@ object Temporal {
         fail("Unit", args)
     }
   }
-  
+
   case class Field(name: ChronoField, value: Int) extends Temporal
   object Field {
     def apply(args: List[AnyRef]): Field = args match {
@@ -92,7 +113,7 @@ object Temporal {
     case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period
     case class Plus(period1: Period, period2: Period) extends Period
     case class Minus(period1: Period, period2: Period) extends Period
-    
+
     def apply(args: List[AnyRef]): Period = args match {
       case (period: Period) :: Nil =>
         period
@@ -123,7 +144,6 @@ object Temporal {
     case object End extends Mod
     case object Approx extends Mod
   }
-
 
   // TODO: the below are unused at the moment
   abstract class SearchingAdjuster(constraints: Seq[(TemporalField, Int)]) extends TemporalAdjuster {

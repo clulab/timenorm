@@ -55,14 +55,17 @@ class ParserTest extends FunSuite {
 
   test("parses simple periods") {
     val parser = new Parser(grammar)
-    assert(parser(Seq("two", "weeks")) === Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS))
-    assert(parser(Seq("10", "days")) === Temporal.Period.SimplePeriod(10, ChronoUnit.DAYS))
-    assert(parser(Seq("a", "month")) === Temporal.Period.SimplePeriod(1, ChronoUnit.MONTHS))
+    assert(Temporal.fromParse(parser(Seq("two", "weeks"))) ===
+      Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS))
+    assert(Temporal.fromParse(parser(Seq("10", "days"))) ===
+      Temporal.Period.SimplePeriod(10, ChronoUnit.DAYS))
+    assert(Temporal.fromParse(parser(Seq("a", "month"))) ===
+      Temporal.Period.SimplePeriod(1, ChronoUnit.MONTHS))
   }
 
   test("parses complex periods") {
     val parser = new Parser(grammar)
-    assert(parser(Seq("two", "weeks", "and", "a", "day")) ===
+    assert(Temporal.fromParse(parser(Seq("two", "weeks", "and", "a", "day"))) ===
       Temporal.Period.Plus(
         Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS),
         Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
@@ -70,55 +73,55 @@ class ParserTest extends FunSuite {
 
   test("parses simple anchors") {
     val parser = new Parser(grammar)
-    assert(parser(Seq("today")) === Temporal.Anchor.Today)
-    assert(parser(Seq("September", "21", "1976")) === Temporal.Anchor.Of(Map(
+    assert(Temporal.fromParse(parser(Seq("today"))) === Temporal.Anchor.Today)
+    assert(Temporal.fromParse(parser(Seq("September", "21", "1976"))) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 9,
         ChronoField.DAY_OF_MONTH -> 21,
         ChronoField.YEAR -> 1976)))
-    assert(parser(Seq("9", "21", "1976")) === Temporal.Anchor.Of(Map(
+    assert(Temporal.fromParse(parser(Seq("9", "21", "1976"))) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 9,
         ChronoField.DAY_OF_MONTH -> 21,
         ChronoField.YEAR -> 1976)))
-    assert(parser(Seq("21", "9", "1976")) === Temporal.Anchor.Of(Map(
+    assert(Temporal.fromParse(parser(Seq("21", "9", "1976"))) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 9,
         ChronoField.DAY_OF_MONTH -> 21,
         ChronoField.YEAR -> 1976)))
-    assert(parser(Seq("1976", "9", "21")) === Temporal.Anchor.Of(Map(
+    assert(Temporal.fromParse(parser(Seq("1976", "9", "21"))) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 9,
         ChronoField.DAY_OF_MONTH -> 21,
         ChronoField.YEAR -> 1976)))
-    assert(parser(Seq("October", "15")) === Temporal.Anchor.Of(Map(
+    assert(Temporal.fromParse(parser(Seq("October", "15"))) === Temporal.Anchor.Of(Map(
         ChronoField.MONTH_OF_YEAR -> 10,
         ChronoField.DAY_OF_MONTH -> 15)))
   }
 
   test("parses complex anchors") {
     val parser = new Parser(grammar)
-    assert(parser(Seq("tomorrow")) ===
+    assert(Temporal.fromParse(parser(Seq("tomorrow"))) ===
       Temporal.Anchor.Plus(
         Temporal.Anchor.Today,
         Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
-    assert(parser(Seq("yesterday")) ===
+    assert(Temporal.fromParse(parser(Seq("yesterday"))) ===
       Temporal.Anchor.Minus(
         Temporal.Anchor.Today,
         Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
-    assert(parser(Seq("next", "week")) ===
+    assert(Temporal.fromParse(parser(Seq("next", "week"))) ===
       Temporal.Anchor.Plus(
         Temporal.Anchor.Today,
         Temporal.Period.SimplePeriod(1, ChronoUnit.WEEKS)))
-    assert(parser(Seq("last", "week")) ===
+    assert(Temporal.fromParse(parser(Seq("last", "week"))) ===
       Temporal.Anchor.Minus(
         Temporal.Anchor.Today,
         Temporal.Period.SimplePeriod(1, ChronoUnit.WEEKS)))
-    assert(parser(Seq("next", "month")) ===
+    assert(Temporal.fromParse(parser(Seq("next", "month"))) ===
       Temporal.Anchor.Plus(
         Temporal.Anchor.Today,
         Temporal.Period.SimplePeriod(1, ChronoUnit.MONTHS)))
-    assert(parser(Seq("two", "weeks", "ago")) ===
+    assert(Temporal.fromParse(parser(Seq("two", "weeks", "ago"))) ===
       Temporal.Anchor.Minus(
         Temporal.Anchor.Today,
         Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS)))
-    assert(parser(Seq("the", "day", "before", "yesterday")) ===
+    assert(Temporal.fromParse(parser(Seq("the", "day", "before", "yesterday"))) ===
       Temporal.Anchor.Minus(
         Temporal.Anchor.Minus(
           Temporal.Anchor.Today,
