@@ -1,5 +1,7 @@
 package info.bethard.timenorm
 
+import org.threeten.bp.{ Period => JPeriod }
+import org.threeten.bp.temporal.{ SimplePeriod => JSimplePeriod }
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalAdjuster
@@ -108,11 +110,43 @@ object Temporal {
     }
   }
 
-  sealed trait Period extends Temporal
+  sealed trait Period extends Temporal {
+    def toUnitCounts: Map[ChronoUnit, Int]
+    def toTimeMLValue: String = {
+      val counts = this.toUnitCounts
+      val parts = for ((unit, char) <- this.unitChars) yield counts.get(unit).map(_ + char)
+      "P" + parts.flatten.mkString
+    }
+    private val unitChars = Seq(
+        ChronoUnit.YEARS -> "Y",
+        ChronoUnit.MONTHS -> "M",
+        ChronoUnit.WEEKS -> "W",
+        ChronoUnit.DAYS -> "D")
+  }
   object Period {
-    case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period
-    case class Plus(period1: Period, period2: Period) extends Period
-    case class Minus(period1: Period, period2: Period) extends Period
+    case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period {
+      def toUnitCounts = Map(unit -> amount).withDefaultValue(0)
+    }
+    case class Plus(period1: Period, period2: Period) extends Period {
+      def toUnitCounts = {
+        val counts1 = period1.toUnitCounts
+        val counts2 = period2.toUnitCounts
+        val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
+          (unit, counts1(unit) + counts2(unit))
+        }
+        pairs.toMap
+      }
+    }
+    case class Minus(period1: Period, period2: Period) extends Period {
+      def toUnitCounts = {
+        val counts1 = period1.toUnitCounts
+        val counts2 = period2.toUnitCounts
+        val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
+          (unit, counts1(unit) - counts2(unit))
+        }
+        pairs.toMap
+      }
+    }
 
     def apply(args: List[AnyRef]): Period = args match {
       case (period: Period) :: Nil =>
