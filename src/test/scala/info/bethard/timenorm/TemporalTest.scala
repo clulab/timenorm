@@ -31,11 +31,8 @@ class TemporalTest extends FunSuite {
   
   test("resolves simple anchors") {
     assert(Temporal.Anchor.Today.toTimeMLValue(now) === "2012-12-12")
-    assert(Temporal.Anchor.Of(Map(
-        ChronoField.MONTH_OF_YEAR -> 9,
-        ChronoField.DAY_OF_MONTH -> 21,
-        ChronoField.YEAR -> 1976)).toTimeMLValue(now) === "1976-09-21")
-    assert(Temporal.Anchor.Of(Map(
+    assert(Temporal.Anchor.Date(1976, 9, 21).toTimeMLValue(now) === "1976-09-21")
+    assert(Temporal.Anchor.Previous(Map(
         ChronoField.MONTH_OF_YEAR -> 10,
         ChronoField.DAY_OF_MONTH -> 15)).toTimeMLValue(now) == "2012-10-15")
   }

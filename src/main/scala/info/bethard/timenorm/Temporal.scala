@@ -93,15 +93,21 @@ object Temporal {
   sealed trait Anchor extends Temporal {
     def toTimeMLValue(anchor: ZonedDateTime): String
     protected val fieldFormats = Seq(
-        ChronoField.YEAR -> "%04d",
-        ChronoField.MONTH_OF_YEAR -> "-%02d",
-        ChronoField.DAY_OF_MONTH -> "-%02d")
+      ChronoField.YEAR -> "%04d",
+      ChronoField.MONTH_OF_YEAR -> "-%02d",
+      ChronoField.DAY_OF_MONTH -> "-%02d")
   }
   object Anchor {
     case object Today extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime) = anchor.getDate().toString
     }
-    case class Of(fields: Map[ChronoField, Int]) extends Anchor {
+    case class Date(year: Int, month: Int, day: Int) extends Anchor {
+      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+    }
+    case class Next(fields: Map[ChronoField, Int]) extends Anchor {
+      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+    }
+    case class Previous(fields: Map[ChronoField, Int]) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = ???
     }
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
@@ -114,12 +120,16 @@ object Temporal {
     def apply(args: List[AnyRef]): Anchor = args match {
       case (anchor: Anchor) :: Nil =>
         anchor
+      case "Date" :: Field(ChronoField.YEAR, year) :: Field(ChronoField.MONTH_OF_YEAR, month) :: Field(ChronoField.DAY_OF_MONTH, day) :: Nil =>
+        Date(year, month, day)
+      case "Next" :: tail =>
+        Next(tail.map { case field: Field => (field.name, field.value) }.toMap)
+      case "Previous" :: tail =>
+        Previous(tail.map { case field: Field => (field.name, field.value) }.toMap)
       case "Plus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
         Plus(anchor, period)
       case "Minus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
         Minus(anchor, period)
-      case fields if fields.forall(_.isInstanceOf[Field]) =>
-        Of(fields.collect { case field: Field => (field.name, field.value) }.toMap)
       case _ =>
         fail("Anchor", args)
     }
@@ -133,10 +143,10 @@ object Temporal {
       "P" + parts.flatten.mkString
     }
     private val unitChars = Seq(
-        ChronoUnit.YEARS -> "Y",
-        ChronoUnit.MONTHS -> "M",
-        ChronoUnit.WEEKS -> "W",
-        ChronoUnit.DAYS -> "D")
+      ChronoUnit.YEARS -> "Y",
+      ChronoUnit.MONTHS -> "M",
+      ChronoUnit.WEEKS -> "W",
+      ChronoUnit.DAYS -> "D")
   }
   object Period {
     case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period {
