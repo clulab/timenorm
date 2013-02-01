@@ -10,7 +10,7 @@ import org.threeten.bp.temporal.ChronoField
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  val grammar = Grammar.fromString("""
+  val grammar = SynchronousGrammar.fromString("""
     [Number] ||| a ||| 1 ||| 1.0
     [Number] ||| the ||| 1 ||| 1.0
     [Number] ||| two ||| 2 ||| 1.0
@@ -54,7 +54,7 @@ class ParserTest extends FunSuite {
     """)
 
   test("parses simple periods") {
-    val parser = new Parser(grammar)
+    val parser = new SynchronousParser(grammar)
     assert(Temporal.fromParse(parser(Seq("two", "weeks"))) ===
       Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS))
     assert(Temporal.fromParse(parser(Seq("10", "days"))) ===
@@ -64,7 +64,7 @@ class ParserTest extends FunSuite {
   }
 
   test("parses complex periods") {
-    val parser = new Parser(grammar)
+    val parser = new SynchronousParser(grammar)
     assert(Temporal.fromParse(parser(Seq("two", "weeks", "and", "a", "day"))) ===
       Temporal.Period.Plus(
         Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS),
@@ -72,7 +72,7 @@ class ParserTest extends FunSuite {
   }
 
   test("parses simple anchors") {
-    val parser = new Parser(grammar)
+    val parser = new SynchronousParser(grammar)
     assert(Temporal.fromParse(parser(Seq("today"))) === Temporal.Anchor.Today)
     assert(Temporal.fromParse(parser(Seq("September", "21", "1976"))) ===
       Temporal.Anchor.Date(1976, 9, 21))
@@ -88,7 +88,7 @@ class ParserTest extends FunSuite {
   }
 
   test("parses complex anchors") {
-    val parser = new Parser(grammar)
+    val parser = new SynchronousParser(grammar)
     assert(Temporal.fromParse(parser(Seq("tomorrow"))) ===
       Temporal.Anchor.Plus(
         Temporal.Anchor.Today,

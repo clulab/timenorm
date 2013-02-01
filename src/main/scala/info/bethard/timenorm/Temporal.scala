@@ -15,10 +15,10 @@ sealed trait Temporal
 
 object Temporal {
 
-  def fromParse(parse: Parser.Parse): Temporal = {
+  def fromParse(parse: SynchronousParser.Parse): Temporal = {
     var nonTerminalIndex = -1
     val targetSeq = for ((token, i) <- parse.rule.targetSeq.zipWithIndex) yield {
-      if (Grammar.isTerminal(token)) {
+      if (SynchronousGrammar.isTerminal(token)) {
         token
       } else {
         nonTerminalIndex += 1

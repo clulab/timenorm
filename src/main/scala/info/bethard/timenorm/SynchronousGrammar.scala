@@ -2,9 +2,9 @@ package info.bethard.timenorm
 
 import scala.collection.immutable.{ Seq, IndexedSeq }
 
-class Grammar(val rules: Seq[Grammar.Rule]) {
+class SynchronousGrammar(val rules: Seq[SynchronousGrammar.Rule]) {
 
-  private val rulePrefixMap = PrefixMultiMap.empty[String, Grammar.Rule]
+  private val rulePrefixMap = PrefixMultiMap.empty[String, SynchronousGrammar.Rule]
   for (rule <- rules) {
     this.rulePrefixMap += (rule.sourceSeq, rule)
   }
@@ -31,7 +31,7 @@ class Grammar(val rules: Seq[Grammar.Rule]) {
 
   def sourceSeqStartsWithTerminals(tokens: Seq[String]) = {
     this.rulePrefixMap.getAllWithPrefix(tokens).filter {
-      _.sourceSeq.take(tokens.size).forall(Grammar.isTerminal)
+      _.sourceSeq.take(tokens.size).forall(SynchronousGrammar.isTerminal)
     }
   }
 
@@ -40,14 +40,14 @@ class Grammar(val rules: Seq[Grammar.Rule]) {
   }
 }
 
-object Grammar {
+object SynchronousGrammar {
 
   val isTerminal: (String => Boolean) = !_.matches("^\\[.*\\]$")
   val isNumber: (String => Boolean) = _.matches("^\\d+$")
 
-  def apply(rules: Seq[Rule]): Grammar = new Grammar(rules)
+  def apply(rules: Seq[Rule]): SynchronousGrammar = new SynchronousGrammar(rules)
 
-  def fromString(text: String): Grammar = {
+  def fromString(text: String): SynchronousGrammar = {
     // example:
     // [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
     val stripLabel: (String => String) = _.replaceAll("\\[(.*),.*\\]", "[$1]")
@@ -69,7 +69,7 @@ object Grammar {
       case Array("") => None
       case _ => throw new IllegalArgumentException("\"" + line + "\"")
     }
-    Grammar(rules.flatten.toList)
+    SynchronousGrammar(rules.flatten.toList)
   }
 
   case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int]) {

@@ -6,10 +6,13 @@ import scala.collection.mutable.Buffer
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 
-class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
-  def apply(sourceTokens: Seq[String]): Parser.Parse = this.parse(sourceTokens)
+class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Parse){
   
-  def parse(sourceTokens: Seq[String]): Parser.Parse = {
+  import SynchronousParser._
+  
+  def apply(sourceTokens: Seq[String]): Parse = this.parse(sourceTokens)
+  
+  def parse(sourceTokens: Seq[String]): Parse = {
     val chart = this.parseChart(sourceTokens)
     chart(sourceTokens.size)(0).completes match {
       case Buffer(parse) => parse
@@ -25,24 +28,24 @@ class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
     }
   }
 
-  def parseAll(sourceTokens: Seq[String]): Seq[Parser.Parse] = {
+  def parseAll(sourceTokens: Seq[String]): Seq[Parse] = {
     val chart = this.parseChart(sourceTokens)
     chart(sourceTokens.size)(0).completes.toIndexedSeq
   }
 
-  private def parseChart(sourceTokens: Seq[String]): Array[Array[Parser.ChartEntry]] = {
+  private def parseChart(sourceTokens: Seq[String]): Array[Array[ChartEntry]] = {
     val nTokens = sourceTokens.size
     val chart = Array.tabulate(nTokens + 1, nTokens) {
-      (size, start) => if (size == 0 || start + size > nTokens) null else Parser.ChartEntry()
+      (size, start) => if (size == 0 || start + size > nTokens) null else ChartEntry()
     }
 
     // special handling of [Number]: pass through tokens that are numbers 
     for (start <- 0 until nTokens) {
       val token = sourceTokens(start)
-      if (Grammar.isNumber(token)) {
+      if (SynchronousGrammar.isNumber(token)) {
         for (symbol <- grammar.symbolsForNumber(token.toInt)) { 
-          val rule = Grammar.Rule(symbol, IndexedSeq(token), IndexedSeq(token), Map.empty)
-          chart(1)(start).completes += Parser.Parse(rule, IndexedSeq.empty)
+          val rule = SynchronousGrammar.Rule(symbol, IndexedSeq(token), IndexedSeq(token), Map.empty)
+          chart(1)(start).completes += Parse(rule, IndexedSeq.empty)
         }
       }
     }
@@ -52,9 +55,9 @@ class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
       val entry = chart(size)(start)
       for (rule <- grammar.sourceSeqStartsWith(sourceTokens.slice(start, start + size))) {
         if (rule.sourceSeq.size == size) {
-          entry.completes += Parser.Parse(rule, IndexedSeq.empty)
+          entry.completes += Parse(rule, IndexedSeq.empty)
         } else {
-          entry.partials += Parser.PartialParse(rule, size, IndexedSeq.empty)
+          entry.partials += PartialParse(rule, size, IndexedSeq.empty)
         }
       }
     }
@@ -73,11 +76,11 @@ class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
           val newSourceSeqIndex = partial.sourceSeqIndex + size2
           val symbolSeq = partial.rule.sourceSeq.slice(partial.sourceSeqIndex, newSourceSeqIndex)
           val tokenSeq = sourceTokens.slice(start2, start2 + size2)
-          if (symbolSeq.forall(Grammar.isTerminal) && symbolSeq == tokenSeq) {
+          if (symbolSeq.forall(SynchronousGrammar.isTerminal) && symbolSeq == tokenSeq) {
             if (partial.rule.sourceSeq.size == newSourceSeqIndex) {
-              entry.completes += Parser.Parse(partial.rule, partial.nonTerminalRules)
+              entry.completes += Parse(partial.rule, partial.nonTerminalRules)
             } else {
-              entry.partials += Parser.PartialParse(partial.rule, newSourceSeqIndex, partial.nonTerminalRules)
+              entry.partials += PartialParse(partial.rule, newSourceSeqIndex, partial.nonTerminalRules)
             }
           }
 
@@ -87,9 +90,9 @@ class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
               val sourceSeqIndex = partial.sourceSeqIndex + 1
               val nonTerminalRules = partial.nonTerminalRules :+ complete
               if (partial.rule.sourceSeq.size == sourceSeqIndex) {
-                entry.completes += Parser.Parse(partial.rule, nonTerminalRules)
+                entry.completes += Parse(partial.rule, nonTerminalRules)
               } else {
-                entry.partials += Parser.PartialParse(partial.rule, sourceSeqIndex, nonTerminalRules)
+                entry.partials += PartialParse(partial.rule, sourceSeqIndex, nonTerminalRules)
               }
             }
           }
@@ -104,9 +107,9 @@ class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
         val complete = entry.completes(i)
         for (rule <- grammar.sourceSeqStartsWith(complete.rule.symbol)) {
           if (rule.sourceSeq.tail.isEmpty) {
-            entry.completes += Parser.Parse(rule, IndexedSeq(complete))
+            entry.completes += Parse(rule, IndexedSeq(complete))
           } else {
-            entry.partials += Parser.PartialParse(rule, 1, IndexedSeq(complete))
+            entry.partials += PartialParse(rule, 1, IndexedSeq(complete))
           }
         }
         i += 1
@@ -116,18 +119,18 @@ class Parser(grammar: Grammar) extends (Seq[String] => Parser.Parse){
   }
 }
 
-object Parser {
+object SynchronousParser {
 
   case class Parse(
-      rule: Grammar.Rule,
+      rule: SynchronousGrammar.Rule,
       nonTerminalRules: IndexedSeq[Parse])
 
-  private[Parser] case class PartialParse(
-    rule: Grammar.Rule,
+  private[SynchronousParser] case class PartialParse(
+    rule: SynchronousGrammar.Rule,
     sourceSeqIndex: Int,
     nonTerminalRules: IndexedSeq[Parse])
 
-  private[Parser] case class ChartEntry(
+  private[SynchronousParser] case class ChartEntry(
     completes: Buffer[Parse] = Buffer.empty,
     partials: Buffer[PartialParse] = Buffer.empty)
 }
