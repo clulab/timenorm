@@ -110,7 +110,7 @@ object Temporal {
   }
 
   object Anchor {
-    
+
     def apply(args: List[AnyRef]): Anchor = args match {
       case (anchor: Anchor) :: Nil =>
         anchor

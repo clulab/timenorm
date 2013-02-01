@@ -83,8 +83,8 @@ class ParserTest extends FunSuite {
     assert(Temporal.fromParse(parser(Seq("1976", "9", "21"))) ===
       Temporal.Anchor.Date(1976, 9, 21))
     assert(Temporal.fromParse(parser(Seq("October", "15"))) === Temporal.Anchor.Previous(Map(
-        ChronoField.MONTH_OF_YEAR -> 10,
-        ChronoField.DAY_OF_MONTH -> 15)))
+      ChronoField.MONTH_OF_YEAR -> 10,
+      ChronoField.DAY_OF_MONTH -> 15)))
   }
 
   test("parses complex anchors") {

@@ -34,7 +34,7 @@ class TemporalTest extends FunSuite {
     assert(Today.toTimeMLValue(now) === "2012-12-12")
     assert(Date(1976, 9, 21).toTimeMLValue(now) === "1976-09-21")
     assert(Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)).toTimeMLValue(now) ===
-        "2012-10-15")
+      "2012-10-15")
     assert(Next(Map(MONTH_OF_YEAR -> 2)).toTimeMLValue(now) === "2013-02")
     val friday = DayOfWeek.FRIDAY.getValue()
     assert(Next(Map(DAY_OF_WEEK -> friday, DAY_OF_MONTH -> 13)).toTimeMLValue(now) ===
