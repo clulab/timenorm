@@ -6,12 +6,12 @@ import scala.collection.mutable.Buffer
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 
-class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Parse){
-  
+class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Parse) {
+
   import SynchronousParser._
-  
+
   def apply(sourceTokens: Seq[String]): Parse = this.parse(sourceTokens)
-  
+
   def parse(sourceTokens: Seq[String]): Parse = {
     val chart = this.parseChart(sourceTokens)
     chart(sourceTokens.size)(0).completes match {
@@ -43,7 +43,7 @@ class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => Syn
     for (start <- 0 until nTokens) {
       val token = sourceTokens(start)
       if (SynchronousGrammar.isNumber(token)) {
-        for (symbol <- grammar.symbolsForNumber(token.toInt)) { 
+        for (symbol <- grammar.symbolsForNumber(token.toInt)) {
           val rule = SynchronousGrammar.Rule(symbol, IndexedSeq(token), IndexedSeq(token), Map.empty)
           chart(1)(start).completes += Parse(rule, IndexedSeq.empty)
         }
@@ -123,7 +123,21 @@ object SynchronousParser {
 
   case class Parse(
       rule: SynchronousGrammar.Rule,
-      nonTerminalRules: IndexedSeq[Parse])
+      nonTerminalRules: IndexedSeq[Parse]) {
+
+    def toTargetSeq: Seq[AnyRef] = {
+      var nonTerminalIndex = -1
+      for ((token, i) <- this.rule.targetSeq.zipWithIndex) yield {
+        if (SynchronousGrammar.isTerminal(token)) {
+          token
+        } else {
+          nonTerminalIndex += 1
+          val nonTerminalRulesIndex = this.rule.nonTerminalAlignment(nonTerminalIndex)
+          this.nonTerminalRules(nonTerminalRulesIndex)
+        }
+      }
+    }
+  }
 
   private[SynchronousParser] case class PartialParse(
     rule: SynchronousGrammar.Rule,

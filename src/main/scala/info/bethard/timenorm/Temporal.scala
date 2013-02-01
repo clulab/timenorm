@@ -16,15 +16,9 @@ sealed trait Temporal
 object Temporal {
 
   def fromParse(parse: SynchronousParser.Parse): Temporal = {
-    var nonTerminalIndex = -1
-    val targetSeq = for ((token, i) <- parse.rule.targetSeq.zipWithIndex) yield {
-      if (SynchronousGrammar.isTerminal(token)) {
-        token
-      } else {
-        nonTerminalIndex += 1
-        val nonTerminalRulesIndex = parse.rule.nonTerminalAlignment(nonTerminalIndex)
-        this.fromParse(parse.nonTerminalRules(nonTerminalRulesIndex))
-      }
+    val targetSeq = for (item <- parse.toTargetSeq) yield item match {
+      case token: String => token
+      case parse: SynchronousParser.Parse => this.fromParse(parse)
     }
     val targetList = Temporal.handleSpecials(targetSeq.toList)
     parse.rule.basicSymbol match {
@@ -91,9 +85,9 @@ object Temporal {
   }
 
   sealed trait Anchor extends Temporal {
-    
+
     def chronoFields: Set[ChronoField]
-    
+
     def toDateTime(anchor: ZonedDateTime): ZonedDateTime
 
     def toTimeMLValue(anchor: ZonedDateTime): String = {
@@ -137,23 +131,23 @@ object Temporal {
     case object Today extends Anchor {
 
       val chronoFields = Set(ChronoField.DAY_OF_MONTH)
-      
+
       def toDateTime(anchor: ZonedDateTime) = anchor
     }
 
     case class Date(year: Int, month: Int, day: Int) extends Anchor {
-      
+
       val chronoFields = Set(ChronoField.DAY_OF_MONTH)
-      
+
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.withYear(year).withMonth(month).withDayOfMonth(day)
       }
     }
 
     case class Next(fields: Map[ChronoField, Int]) extends Anchor {
-      
+
       val chronoFields = fields.keySet
-      
+
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.plus(new FollowingAdjuster(fields))
       }
@@ -162,16 +156,16 @@ object Temporal {
     case class Previous(fields: Map[ChronoField, Int]) extends Anchor {
 
       val chronoFields = fields.keySet
-      
+
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.minus(new PreviousAdjuster(fields))
       }
     }
 
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
-      
+
       val chronoFields = anchor.chronoFields
-      
+
       def toDateTime(anchorDateTime: ZonedDateTime) = {
         var result = anchor.toDateTime(anchorDateTime)
         for ((unit, amount) <- period.toUnitCounts) {
@@ -184,7 +178,7 @@ object Temporal {
     case class Minus(anchor: Anchor, period: Period) extends Anchor {
 
       val chronoFields = anchor.chronoFields
-      
+
       def toDateTime(anchorDateTime: ZonedDateTime) = {
         var result = anchor.toDateTime(anchorDateTime)
         for ((unit, amount) <- period.toUnitCounts) {
