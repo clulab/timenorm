@@ -40,4 +40,17 @@ class TemporalTest extends FunSuite {
     assert(Next(Map(DAY_OF_WEEK -> friday, DAY_OF_MONTH -> 13)).toTimeMLValue(now) ===
       "2013-09-13")
   }
+
+  test("resolves complex anchors") {
+    import Temporal.Period.SimplePeriod
+    import Temporal.Anchor._
+    assert(Plus(Today, SimplePeriod(1, DAYS)).toTimeMLValue(now) === "2012-12-13")
+    assert(Minus(Today, SimplePeriod(1, DAYS)).toTimeMLValue(now) === "2012-12-11")
+    assert(Plus(Today, SimplePeriod(1, WEEKS)).toTimeMLValue(now) === "2012-12-19")
+    assert(Minus(Today, SimplePeriod(1, WEEKS)).toTimeMLValue(now) === "2012-12-05")
+    assert(Plus(Today, SimplePeriod(1, MONTHS)).toTimeMLValue(now) === "2013-01-12")
+    assert(Minus(Today, SimplePeriod(2, WEEKS)).toTimeMLValue(now) === "2012-11-28")
+    assert(Minus(Minus(Today, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)).toTimeMLValue(now) ===
+      "2012-12-10")
+  }
 }

@@ -91,22 +91,28 @@ object Temporal {
   }
 
   sealed trait Anchor extends Temporal {
-    def toTimeMLValue(anchor: ZonedDateTime): String
-    private val fieldFormats = Seq(
-      ChronoField.YEAR -> "%04d",
-      ChronoField.MONTH_OF_YEAR -> "-%02d",
-      ChronoField.DAY_OF_MONTH -> "-%02d")
-    protected def toString(anchor: ZonedDateTime, fields: Set[ChronoField]): String = {
-      val minDuration = fields.map(_.getBaseUnit.getDuration).min
+    
+    def chronoFields: Set[ChronoField]
+    
+    def toDateTime(anchor: ZonedDateTime): ZonedDateTime
+
+    def toTimeMLValue(anchor: ZonedDateTime): String = {
+      val minDuration = this.chronoFields.map(_.getBaseUnit.getDuration).min
       val isBigEnough = (fieldFormat: (ChronoField, String)) => {
         val duration = fieldFormat._1.getBaseUnit.getDuration
         duration.equals(minDuration) || duration.isGreaterThan(minDuration)
       }
+      val dateTime = this.toDateTime(anchor)
       val parts = for ((field, format) <- this.fieldFormats.takeWhile(isBigEnough)) yield {
-        format.format(anchor.get(field))
+        format.format(dateTime.get(field))
       }
       parts.mkString
     }
+
+    private val fieldFormats = Seq(
+      ChronoField.YEAR -> "%04d",
+      ChronoField.MONTH_OF_YEAR -> "-%02d",
+      ChronoField.DAY_OF_MONTH -> "-%02d")
   }
 
   object Anchor {
@@ -129,34 +135,63 @@ object Temporal {
     }
 
     case object Today extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime) = anchor.getDate().toString
+
+      val chronoFields = Set(ChronoField.DAY_OF_MONTH)
+      
+      def toDateTime(anchor: ZonedDateTime) = anchor
     }
 
     case class Date(year: Int, month: Int, day: Int) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = {
-        val date = anchor.withYear(year).withMonth(month).withDayOfMonth(day);
-        this.toString(date, Set(ChronoField.DAY_OF_MONTH))
+      
+      val chronoFields = Set(ChronoField.DAY_OF_MONTH)
+      
+      def toDateTime(anchor: ZonedDateTime) = {
+        anchor.withYear(year).withMonth(month).withDayOfMonth(day)
       }
     }
 
     case class Next(fields: Map[ChronoField, Int]) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = {
-        this.toString(anchor.plus(new FollowingAdjuster(fields)), fields.keySet)
+      
+      val chronoFields = fields.keySet
+      
+      def toDateTime(anchor: ZonedDateTime) = {
+        anchor.plus(new FollowingAdjuster(fields))
       }
     }
 
     case class Previous(fields: Map[ChronoField, Int]) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = {
-        this.toString(anchor.minus(new PreviousAdjuster(fields)), fields.keySet)
+
+      val chronoFields = fields.keySet
+      
+      def toDateTime(anchor: ZonedDateTime) = {
+        anchor.minus(new PreviousAdjuster(fields))
       }
     }
 
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+      
+      val chronoFields = anchor.chronoFields
+      
+      def toDateTime(anchorDateTime: ZonedDateTime) = {
+        var result = anchor.toDateTime(anchorDateTime)
+        for ((unit, amount) <- period.toUnitCounts) {
+          result = result.plus(amount, unit)
+        }
+        result
+      }
     }
 
     case class Minus(anchor: Anchor, period: Period) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+
+      val chronoFields = anchor.chronoFields
+      
+      def toDateTime(anchorDateTime: ZonedDateTime) = {
+        var result = anchor.toDateTime(anchorDateTime)
+        for ((unit, amount) <- period.toUnitCounts) {
+          result = result.minus(amount, unit)
+        }
+        result
+      }
     }
 
     private abstract class SearchingAdjuster(constraints: Map[ChronoField, Int]) {
