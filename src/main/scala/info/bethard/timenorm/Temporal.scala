@@ -110,28 +110,51 @@ object Temporal {
   }
 
   object Anchor {
+    
+    def apply(args: List[AnyRef]): Anchor = args match {
+      case (anchor: Anchor) :: Nil =>
+        anchor
+      case "Date" :: Field(ChronoField.YEAR, year) :: Field(ChronoField.MONTH_OF_YEAR, month) :: Field(ChronoField.DAY_OF_MONTH, day) :: Nil =>
+        Date(year, month, day)
+      case "Next" :: tail =>
+        Next(tail.map { case field: Field => (field.name, field.value) }.toMap)
+      case "Previous" :: tail =>
+        Previous(tail.map { case field: Field => (field.name, field.value) }.toMap)
+      case "Plus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
+        Plus(anchor, period)
+      case "Minus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
+        Minus(anchor, period)
+      case _ =>
+        fail("Anchor", args)
+    }
+
     case object Today extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime) = anchor.getDate().toString
     }
+
     case class Date(year: Int, month: Int, day: Int) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = {
         val date = anchor.withYear(year).withMonth(month).withDayOfMonth(day);
         this.toString(date, Set(ChronoField.DAY_OF_MONTH))
       }
     }
+
     case class Next(fields: Map[ChronoField, Int]) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = {
         this.toString(anchor.plus(new FollowingAdjuster(fields)), fields.keySet)
       }
     }
+
     case class Previous(fields: Map[ChronoField, Int]) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = {
         this.toString(anchor.minus(new PreviousAdjuster(fields)), fields.keySet)
       }
     }
+
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = ???
     }
+
     case class Minus(anchor: Anchor, period: Period) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = ???
     }
@@ -158,62 +181,26 @@ object Temporal {
         this.adjustInto(temporal, _.plus(1, this.unit))
       }
     }
-    
-    def apply(args: List[AnyRef]): Anchor = args match {
-      case (anchor: Anchor) :: Nil =>
-        anchor
-      case "Date" :: Field(ChronoField.YEAR, year) :: Field(ChronoField.MONTH_OF_YEAR, month) :: Field(ChronoField.DAY_OF_MONTH, day) :: Nil =>
-        Date(year, month, day)
-      case "Next" :: tail =>
-        Next(tail.map { case field: Field => (field.name, field.value) }.toMap)
-      case "Previous" :: tail =>
-        Previous(tail.map { case field: Field => (field.name, field.value) }.toMap)
-      case "Plus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
-        Plus(anchor, period)
-      case "Minus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
-        Minus(anchor, period)
-      case _ =>
-        fail("Anchor", args)
-    }
   }
 
   sealed trait Period extends Temporal {
+
     def toUnitCounts: Map[ChronoUnit, Int]
+
     def toTimeMLValue: String = {
       val counts = this.toUnitCounts
       val parts = for ((unit, char) <- this.unitChars) yield counts.get(unit).map(_ + char)
       "P" + parts.flatten.mkString
     }
+
     private val unitChars = Seq(
       ChronoUnit.YEARS -> "Y",
       ChronoUnit.MONTHS -> "M",
       ChronoUnit.WEEKS -> "W",
       ChronoUnit.DAYS -> "D")
   }
+
   object Period {
-    case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period {
-      def toUnitCounts = Map(unit -> amount).withDefaultValue(0)
-    }
-    case class Plus(period1: Period, period2: Period) extends Period {
-      def toUnitCounts = {
-        val counts1 = period1.toUnitCounts
-        val counts2 = period2.toUnitCounts
-        val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
-          (unit, counts1(unit) + counts2(unit))
-        }
-        pairs.toMap
-      }
-    }
-    case class Minus(period1: Period, period2: Period) extends Period {
-      def toUnitCounts = {
-        val counts1 = period1.toUnitCounts
-        val counts2 = period2.toUnitCounts
-        val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
-          (unit, counts1(unit) - counts2(unit))
-        }
-        pairs.toMap
-      }
-    }
 
     def apply(args: List[AnyRef]): Period = args match {
       case (period: Period) :: Nil =>
@@ -226,6 +213,32 @@ object Temporal {
         Plus(period1, period2)
       case _ =>
         fail("Period", args)
+    }
+
+    case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period {
+      def toUnitCounts = Map(unit -> amount).withDefaultValue(0)
+    }
+
+    case class Plus(period1: Period, period2: Period) extends Period {
+      def toUnitCounts = {
+        val counts1 = period1.toUnitCounts
+        val counts2 = period2.toUnitCounts
+        val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
+          (unit, counts1(unit) + counts2(unit))
+        }
+        pairs.toMap
+      }
+    }
+
+    case class Minus(period1: Period, period2: Period) extends Period {
+      def toUnitCounts = {
+        val counts1 = period1.toUnitCounts
+        val counts2 = period2.toUnitCounts
+        val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
+          (unit, counts1(unit) - counts2(unit))
+        }
+        pairs.toMap
+      }
     }
   }
 
