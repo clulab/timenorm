@@ -92,23 +92,42 @@ object Temporal {
 
   sealed trait Anchor extends Temporal {
     def toTimeMLValue(anchor: ZonedDateTime): String
-    protected val fieldFormats = Seq(
+    private val fieldFormats = Seq(
       ChronoField.YEAR -> "%04d",
       ChronoField.MONTH_OF_YEAR -> "-%02d",
       ChronoField.DAY_OF_MONTH -> "-%02d")
+    protected def toString(anchor: ZonedDateTime, fields: Set[ChronoField]): String = {
+      val minDuration = fields.map(_.getBaseUnit.getDuration).min
+      val isBigEnough = (fieldFormat: (ChronoField, String)) => {
+        val duration = fieldFormat._1.getBaseUnit.getDuration
+        duration.equals(minDuration) || duration.isGreaterThan(minDuration)
+      }
+      val parts = for ((field, format) <- this.fieldFormats.takeWhile(isBigEnough)) yield {
+        format.format(anchor.get(field))
+      }
+      parts.mkString
+    }
   }
+
   object Anchor {
     case object Today extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime) = anchor.getDate().toString
     }
     case class Date(year: Int, month: Int, day: Int) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+      def toTimeMLValue(anchor: ZonedDateTime): String = {
+        val date = anchor.withYear(year).withMonth(month).withDayOfMonth(day);
+        this.toString(date, Set(ChronoField.DAY_OF_MONTH))
+      }
     }
     case class Next(fields: Map[ChronoField, Int]) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+      def toTimeMLValue(anchor: ZonedDateTime): String = {
+        this.toString(anchor.plus(new FollowingAdjuster(fields)), fields.keySet)
+      }
     }
     case class Previous(fields: Map[ChronoField, Int]) extends Anchor {
-      def toTimeMLValue(anchor: ZonedDateTime): String = ???
+      def toTimeMLValue(anchor: ZonedDateTime): String = {
+        this.toString(anchor.minus(new PreviousAdjuster(fields)), fields.keySet)
+      }
     }
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
       def toTimeMLValue(anchor: ZonedDateTime): String = ???
@@ -117,6 +136,29 @@ object Temporal {
       def toTimeMLValue(anchor: ZonedDateTime): String = ???
     }
 
+    private abstract class SearchingAdjuster(constraints: Map[ChronoField, Int]) {
+      val unit = constraints.keySet.map(_.getBaseUnit).minBy(_.getDuration)
+      def adjustInto(temporal: JTemporal, adjust: JTemporal => JTemporal): JTemporal = {
+        var curr = adjust(temporal)
+        while (constraints.exists { case (field, value) => curr.get(field) != value }) {
+          curr = adjust(curr)
+        }
+        curr
+      }
+    }
+
+    private class PreviousAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalSubtractor {
+      def subtractFrom(temporal: JTemporal): JTemporal = {
+        this.adjustInto(temporal, _.minus(1, this.unit))
+      }
+    }
+
+    private class FollowingAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalAdder {
+      def addTo(temporal: JTemporal): JTemporal = {
+        this.adjustInto(temporal, _.plus(1, this.unit))
+      }
+    }
+    
     def apply(args: List[AnyRef]): Anchor = args match {
       case (anchor: Anchor) :: Nil =>
         anchor
@@ -202,28 +244,5 @@ object Temporal {
     case object Mid extends Mod
     case object End extends Mod
     case object Approx extends Mod
-  }
-
-  // TODO: the below are unused at the moment
-  abstract class SearchingAdjuster(constraints: Seq[(TemporalField, Int)]) extends TemporalAdjuster {
-    val unit = constraints.map(_._1.getBaseUnit).minBy(_.getDuration)
-    def adjustInto(temporal: JTemporal): JTemporal = {
-      var curr = this.adjust(temporal)
-      while (constraints.exists { case (field, value) => curr.get(field) != value }) {
-        curr = this.adjust(curr)
-      }
-      curr
-    }
-    def adjust(dateTime: JTemporal): JTemporal
-  }
-
-  class PreviousAdjuster(constraints: Seq[(TemporalField, Int)]) extends SearchingAdjuster(constraints) with TemporalAdder {
-    def addTo(temporal: JTemporal): JTemporal = this.adjustInto(temporal)
-    def adjust(temporal: JTemporal) = temporal.minus(1, this.unit)
-  }
-
-  class FollowingAdjuster(constraints: Seq[(TemporalField, Int)]) extends SearchingAdjuster(constraints) with TemporalSubtractor {
-    def subtractFrom(temporal: JTemporal): JTemporal = this.adjustInto(temporal)
-    def adjust(temporal: JTemporal) = temporal.plus(1, this.unit)
   }
 }
