@@ -11,76 +11,62 @@ import org.threeten.bp.temporal.TemporalSubtractor
 import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.ZonedDateTime
 
+import info.bethard.timenorm.SynchronousParser.Tree
+
 sealed trait Temporal
 
 object Temporal {
 
-  def fromParse(parse: SynchronousParser.Parse): Temporal = {
-    val targetSeq = for (item <- parse.toTargetSeq) yield item match {
-      case token: String => token
-      case parse: SynchronousParser.Parse => this.fromParse(parse)
-    }
-    val targetList = Temporal.handleSpecials(targetSeq.toList)
-    parse.rule.basicSymbol match {
-      case "[Number]" => Temporal.Number(targetList)
-      case "[Unit]" => Temporal.Unit(targetList)
-      case "[Field]" => Temporal.Field(targetList)
-      case "[Period]" => Temporal.Period(targetList)
-      case "[Anchor]" => Temporal.Anchor(targetList)
+  def fromParse(tree: Tree.NonTerminal): Temporal = {
+    tree.rule.basicSymbol match {
+      case "[Number]" => Temporal.Number.fromParse(tree)
+      case "[Unit]" => Temporal.Unit.fromParse(tree)
+      case "[Field]" => Temporal.Field.fromParse(tree)
+      case "[Period]" => Temporal.Period.fromParse(tree)
+      case "[Anchor]" => Temporal.Anchor.fromParse(tree)
     }
   }
 
-  private[Temporal] def fail[T](name: String, args: List[AnyRef]): T = {
+  private[Temporal] def fail[T](name: String, tree: Tree): T = {
     throw new UnsupportedOperationException(
-      "Don't know how to parse %s from %s".format(name, args))
-  }
-
-  private[Temporal] def handleSpecials(args: List[AnyRef]): List[AnyRef] = args match {
-    case "TODAY" :: tail =>
-      Temporal.Anchor.Today :: handleSpecials(tail)
-    case "(" :: "Period" :: (amount: String) :: (unit: String) :: ")" :: tail =>
-      Temporal.Period.SimplePeriod(amount.toInt, ChronoUnit.valueOf(unit)) :: handleSpecials(tail)
-    case other :: tail =>
-      other :: handleSpecials(tail)
-    case Nil =>
-      Nil
+      "Don't know how to parse %s from %s".format(name, tree match {
+        case tree: Tree.Terminal => tree.token
+        case tree: Tree.NonTerminal => tree.children.map {
+          case child: Tree.Terminal => "Terminal:" + child.token
+          case child: Tree.NonTerminal => "NonTerminal:" + child.rule.symbol
+        }
+      }))
   }
 
   case class Number(value: Int) extends Temporal
   object Number {
-    def apply(args: List[AnyRef]): Number = args match {
-      case (number: Temporal.Number) :: Nil =>
-        number
-      case (number: String) :: Nil =>
+    def fromParse(tree: Tree.NonTerminal): Number = tree.children match {
+      case Tree.Terminal(number) :: Nil =>
         Number(number.toInt)
       case _ =>
-        fail("Number", args)
+        fail("Number", tree)
     }
   }
 
   case class Unit(value: ChronoUnit) extends Temporal
   object Unit {
-    def apply(args: List[AnyRef]): Unit = args match {
-      case (unit: Unit) :: Nil =>
-        unit
-      case (unit: String) :: Nil =>
+    def fromParse(tree: Tree.NonTerminal): Unit = tree.children match {
+      case Tree.Terminal(unit) :: Nil =>
         Temporal.Unit(ChronoUnit.valueOf(unit))
       case _ =>
-        fail("Unit", args)
+        fail("Unit", tree)
     }
   }
 
   case class Field(name: ChronoField, value: Int) extends Temporal
   object Field {
-    def apply(args: List[AnyRef]): Field = args match {
-      case (field: Field) :: Nil =>
-        field
-      case (field: String) :: (number: String) :: Nil =>
+    def fromParse(tree: Tree.NonTerminal): Field = tree.children match {
+      case Tree.Terminal(field) :: Tree.Terminal(number) :: Nil =>
         Field(ChronoField.valueOf(field), number.toInt)
-      case (field: String) :: (number: Temporal.Number) :: Nil =>
-        Field(ChronoField.valueOf(field), number.value)
+      case Tree.Terminal(field) :: (number: Tree.NonTerminal) :: Nil =>
+        Field(ChronoField.valueOf(field), Number.fromParse(number).value)
       case _ =>
-        fail("Field", args)
+        fail("Field", tree)
     }
   }
 
@@ -111,21 +97,39 @@ object Temporal {
 
   object Anchor {
 
-    def apply(args: List[AnyRef]): Anchor = args match {
-      case (anchor: Anchor) :: Nil =>
-        anchor
-      case "Date" :: Field(ChronoField.YEAR, year) :: Field(ChronoField.MONTH_OF_YEAR, month) :: Field(ChronoField.DAY_OF_MONTH, day) :: Nil =>
-        Date(year, month, day)
-      case "Next" :: tail =>
-        Next(tail.map { case field: Field => (field.name, field.value) }.toMap)
-      case "Previous" :: tail =>
-        Previous(tail.map { case field: Field => (field.name, field.value) }.toMap)
-      case "Plus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
-        Plus(anchor, period)
-      case "Minus" :: (anchor: Anchor) :: (period: Period) :: Nil =>
-        Minus(anchor, period)
+    def fromParse(tree: Tree.NonTerminal): Anchor = tree.children match {
+      case Tree.Terminal("TODAY") :: Nil =>
+        Temporal.Anchor.Today
+      case Tree.Terminal("Date") :: (year: Tree.NonTerminal) :: (month: Tree.NonTerminal) :: (day: Tree.NonTerminal) :: Nil =>
+        Date(Field.fromParse(year).value, Field.fromParse(month).value, Field.fromParse(day).value)
+      case Tree.Terminal("Next") :: tail =>
+        Next(this.toFieldNameValuePairs(tail).toMap)
+      case Tree.Terminal("Previous") :: tail =>
+        Previous(this.toFieldNameValuePairs(tail).toMap)
+      case Tree.Terminal("Plus") :: (anchor: Tree.NonTerminal) :: (period: Tree.NonTerminal) :: Nil =>
+        Plus(Anchor.fromParse(anchor), Period.fromParse(period))
+      case Tree.Terminal("Plus") :: Tree.Terminal("TODAY") :: (period: Tree.NonTerminal) :: Nil =>
+        Plus(Temporal.Anchor.Today, Period.fromParse(period))
+      case Tree.Terminal("Plus") :: Tree.Terminal("TODAY") :: Tree.Terminal("(") :: Tree.Terminal("Period") :: Tree.Terminal(amount) :: Tree.Terminal(unit) :: Tree.Terminal(")") :: Nil =>
+        Plus(Temporal.Anchor.Today, Period.SimplePeriod(amount.toInt, ChronoUnit.valueOf(unit)))
+      case Tree.Terminal("Minus") :: (anchor: Tree.NonTerminal) :: (period: Tree.NonTerminal) :: Nil =>
+        Minus(Anchor.fromParse(anchor), Period.fromParse(period))
+      case Tree.Terminal("Minus") :: Tree.Terminal("TODAY") :: (period: Tree.NonTerminal) :: Nil =>
+        Minus(Temporal.Anchor.Today, Period.fromParse(period))
+      case Tree.Terminal("Minus") :: Tree.Terminal("TODAY") :: Tree.Terminal("(") :: Tree.Terminal("Period") :: Tree.Terminal(amount) :: Tree.Terminal(unit) :: Tree.Terminal(")") :: Nil =>
+        Minus(Temporal.Anchor.Today, Period.SimplePeriod(amount.toInt, ChronoUnit.valueOf(unit)))
       case _ =>
-        fail("Anchor", args)
+        fail("Anchor", tree)
+    }
+
+    private def toFieldNameValuePairs(trees: List[Tree]): List[(ChronoField, Int)] = {
+      trees.map {
+        case tree: Tree.NonTerminal =>
+          val field = Field.fromParse(tree)
+          (field.name, field.value)
+        case tree: Tree.Terminal =>
+          fail("Field", tree)
+      }
     }
 
     case object Today extends Anchor {
@@ -231,17 +235,15 @@ object Temporal {
 
   object Period {
 
-    def apply(args: List[AnyRef]): Period = args match {
-      case (period: Period) :: Nil =>
-        period
-      case (unit: Unit) :: Nil =>
-        SimplePeriod(1, unit.value)
-      case (amount: Number) :: (unit: Unit) :: Nil =>
-        SimplePeriod(amount.value, unit.value)
-      case "Sum" :: (period1: Period) :: (period2: Period) :: Nil =>
-        Plus(period1, period2)
+    def fromParse(tree: Tree.NonTerminal): Period = tree.children match {
+      case (unit: Tree.NonTerminal) :: Nil =>
+        SimplePeriod(1, Unit.fromParse(unit).value)
+      case (amount: Tree.NonTerminal) :: (unit: Tree.NonTerminal) :: Nil =>
+        SimplePeriod(Number.fromParse(amount).value, Unit.fromParse(unit).value)
+      case Tree.Terminal("Sum") :: (period1: Tree.NonTerminal) :: (period2: Tree.NonTerminal) :: Nil =>
+        Plus(Period.fromParse(period1), Period.fromParse(period2))
       case _ =>
-        fail("Period", args)
+        fail("Period", tree)
     }
 
     case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period {

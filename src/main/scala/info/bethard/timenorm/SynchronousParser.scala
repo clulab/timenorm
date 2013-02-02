@@ -6,16 +6,16 @@ import scala.collection.mutable.Buffer
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 
-class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Parse) {
+class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Tree.NonTerminal) {
 
   import SynchronousParser._
 
-  def apply(sourceTokens: Seq[String]): Parse = this.parse(sourceTokens)
+  def apply(sourceTokens: Seq[String]): Tree.NonTerminal = this.parse(sourceTokens)
 
-  def parse(sourceTokens: Seq[String]): Parse = {
+  def parse(sourceTokens: Seq[String]): Tree.NonTerminal = {
     val chart = this.parseChart(sourceTokens)
     chart(sourceTokens.size)(0).completes match {
-      case Buffer(parse) => parse
+      case Buffer(parse) => parse.toTargetTree
       case Buffer() => {
         val nTokens = sourceTokens.size
         throw new UnsupportedOperationException("Could not parse %s. Partial parses: %s".format(
@@ -28,9 +28,9 @@ class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => Syn
     }
   }
 
-  def parseAll(sourceTokens: Seq[String]): Seq[Parse] = {
+  def parseAll(sourceTokens: Seq[String]): Seq[Tree.NonTerminal] = {
     val chart = this.parseChart(sourceTokens)
-    chart(sourceTokens.size)(0).completes.toIndexedSeq
+    chart(sourceTokens.size)(0).completes.map(_.toTargetTree).toIndexedSeq
   }
 
   private def parseChart(sourceTokens: Seq[String]): Array[Array[ChartEntry]] = {
@@ -120,22 +120,29 @@ class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => Syn
 }
 
 object SynchronousParser {
+  
+  sealed trait Tree
+  object Tree {
+    case class Terminal(token: String) extends Tree
+    case class NonTerminal(rule: SynchronousGrammar.Rule, children: List[Tree]) extends Tree
+  }
 
-  case class Parse(
+  private[SynchronousParser] case class Parse(
       rule: SynchronousGrammar.Rule,
       nonTerminalRules: IndexedSeq[Parse]) {
-
-    def toTargetSeq: Seq[AnyRef] = {
+    
+    def toTargetTree: Tree.NonTerminal = {
       var nonTerminalIndex = -1
-      for ((token, i) <- this.rule.targetSeq.zipWithIndex) yield {
+      val children = for ((token, i) <- this.rule.targetSeq.zipWithIndex) yield {
         if (SynchronousGrammar.isTerminal(token)) {
-          token
+          Tree.Terminal(token)
         } else {
           nonTerminalIndex += 1
           val nonTerminalRulesIndex = this.rule.nonTerminalAlignment(nonTerminalIndex)
-          this.nonTerminalRules(nonTerminalRulesIndex)
+          this.nonTerminalRules(nonTerminalRulesIndex).toTargetTree
         }
       }
+      Tree.NonTerminal(rule, children.toList)
     }
   }
 
