@@ -4,8 +4,8 @@ import scala.collection.immutable.Seq
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.ChronoField
+import org.threeten.bp.temporal.ChronoUnit._
+import org.threeten.bp.temporal.ChronoField._
 
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
@@ -57,74 +57,44 @@ class ParserTest extends FunSuite {
     [Anchor] ||| [Field] ||| Next [Field] ||| 1.0
     """)
 
+  val parser = new SynchronousParser(grammar)
+  private def parse(tokens: String*) = Temporal.fromParse(this.parser(tokens.toIndexedSeq))
+  
   test("parses simple periods") {
-    val parser = new SynchronousParser(grammar)
-    assert(Temporal.fromParse(parser(Seq("two", "weeks"))) ===
-      Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS))
-    assert(Temporal.fromParse(parser(Seq("10", "days"))) ===
-      Temporal.Period.SimplePeriod(10, ChronoUnit.DAYS))
-    assert(Temporal.fromParse(parser(Seq("a", "month"))) ===
-      Temporal.Period.SimplePeriod(1, ChronoUnit.MONTHS))
+    import Temporal.Period._
+    assert(this.parse("two", "weeks") === SimplePeriod(2, WEEKS))
+    assert(this.parse("10", "days") === SimplePeriod(10, DAYS))
+    assert(this.parse("a", "month") === SimplePeriod(1, MONTHS))
   }
 
   test("parses complex periods") {
-    val parser = new SynchronousParser(grammar)
-    assert(Temporal.fromParse(parser(Seq("two", "weeks", "and", "a", "day"))) ===
-      Temporal.Period.Plus(
-        Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS),
-        Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
+    import Temporal.Period._
+    assert(this.parse("two", "weeks", "and", "a", "day") ===
+      Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)))
   }
 
   test("parses simple anchors") {
-    val parser = new SynchronousParser(grammar)
-    assert(Temporal.fromParse(parser(Seq("today"))) === Temporal.Anchor.Today)
-    assert(Temporal.fromParse(parser(Seq("September", "21", "1976"))) ===
-      Temporal.Anchor.Date(1976, 9, 21))
-    assert(Temporal.fromParse(parser(Seq("9", "21", "1976"))) ===
-      Temporal.Anchor.Date(1976, 9, 21))
-    assert(Temporal.fromParse(parser(Seq("21", "9", "1976"))) ===
-      Temporal.Anchor.Date(1976, 9, 21))
-    assert(Temporal.fromParse(parser(Seq("1976", "9", "21"))) ===
-      Temporal.Anchor.Date(1976, 9, 21))
-    assert(Temporal.fromParse(parser(Seq("October", "15"))) === Temporal.Anchor.Previous(Map(
-      ChronoField.MONTH_OF_YEAR -> 10,
-      ChronoField.DAY_OF_MONTH -> 15)))
+    import Temporal.Anchor._
+    assert(this.parse("today") === Today)
+    assert(this.parse("September", "21", "1976") === Date(1976, 9, 21))
+    assert(this.parse("9", "21", "1976") === Date(1976, 9, 21))
+    assert(this.parse("21", "9", "1976") === Date(1976, 9, 21))
+    assert(this.parse("1976", "9", "21") === Date(1976, 9, 21))
+    assert(this.parse("October", "15") === Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
   }
 
   test("parses complex anchors") {
-    val parser = new SynchronousParser(grammar)
-    assert(Temporal.fromParse(parser(Seq("tomorrow"))) ===
-      Temporal.Anchor.Plus(
-        Temporal.Anchor.Today,
-        Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
-    assert(Temporal.fromParse(parser(Seq("yesterday"))) ===
-      Temporal.Anchor.Minus(
-        Temporal.Anchor.Today,
-        Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
-    assert(Temporal.fromParse(parser(Seq("next", "week"))) ===
-      Temporal.Anchor.Plus(
-        Temporal.Anchor.Today,
-        Temporal.Period.SimplePeriod(1, ChronoUnit.WEEKS)))
-    assert(Temporal.fromParse(parser(Seq("last", "week"))) ===
-      Temporal.Anchor.Minus(
-        Temporal.Anchor.Today,
-        Temporal.Period.SimplePeriod(1, ChronoUnit.WEEKS)))
-    assert(Temporal.fromParse(parser(Seq("next", "month"))) ===
-      Temporal.Anchor.Plus(
-        Temporal.Anchor.Today,
-        Temporal.Period.SimplePeriod(1, ChronoUnit.MONTHS)))
-    assert(Temporal.fromParse(parser(Seq("two", "weeks", "ago"))) ===
-      Temporal.Anchor.Minus(
-        Temporal.Anchor.Today,
-        Temporal.Period.SimplePeriod(2, ChronoUnit.WEEKS)))
-    assert(Temporal.fromParse(parser(Seq("the", "day", "before", "yesterday"))) ===
-      Temporal.Anchor.Minus(
-        Temporal.Anchor.Minus(
-          Temporal.Anchor.Today,
-          Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)),
-        Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
-    assert(Temporal.fromParse(parser(Seq("next", "October"))) ===
-      Temporal.Anchor.Next(Map(ChronoField.MONTH_OF_YEAR -> 10)))
+    import Temporal.Anchor._
+    import Temporal.Period.SimplePeriod
+    assert(this.parse("tomorrow") === Plus(Today, SimplePeriod(1, DAYS)))
+    assert(this.parse("yesterday") === Minus(Today, SimplePeriod(1, DAYS)))
+    assert(this.parse("next", "week") === Plus(Today, SimplePeriod(1, WEEKS)))
+    assert(this.parse("last", "week") === Minus(Today, SimplePeriod(1, WEEKS)))
+    assert(this.parse("next", "month") === Plus(Today, SimplePeriod(1, MONTHS)))
+    assert(this.parse("two", "weeks", "ago") === Minus(Today, SimplePeriod(2, WEEKS)))
+    assert(this.parse("the", "day", "before", "yesterday") ===
+      Minus(Minus(Today, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)))
+    assert(this.parse("next", "October") === Next(Map(MONTH_OF_YEAR -> 10)))
   }
 
   /*
