@@ -21,6 +21,10 @@ class ParserTest extends FunSuite {
     [Unit] ||| weeks ||| WEEKS ||| 1.0
     [Unit] ||| month ||| MONTHS ||| 1.0
     [Unit] ||| months ||| MONTHS ||| 1.0
+    [Field:HourOfAMPM] ||| [Number:1-12] ||| HOUR_OF_AMPM [Number:1-12] ||| 1.0
+    [Field:MinuteOfHour] ||| [Number:0-60] ||| MINUTE_OF_HOUR [Number:0-60] ||| 1.0
+    [Field:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
+    [Field:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
     [Field:MonthOfYear] ||| January ||| MONTH_OF_YEAR 1 ||| 1.0
     [Field:MonthOfYear] ||| February ||| MONTH_OF_YEAR 2 ||| 1.0
     [Field:MonthOfYear] ||| March ||| MONTH_OF_YEAR 3 ||| 1.0
@@ -55,13 +59,17 @@ class ParserTest extends FunSuite {
     [Anchor] ||| next [Field] ||| Next [Field] ||| 1.0
     [Anchor] ||| [Field] ||| Previous [Field] ||| 1.0
     [Anchor] ||| [Field] ||| Next [Field] ||| 1.0
+    [Anchor] ||| [Field:HourOfAMPM] : [Field:MinuteOfHour] [Field:AMPMOfDay] ||| Previous [Field:HourOfAMPM] [Field:MinuteOfHour] [Field:AMPMOfDay] ||| 1.0
     """)
 
   val parser = new SynchronousParser(grammar)
 
   private def parse(tokens: String*): Temporal = {
-    val Seq(tree) = this.parseAll(tokens: _*)
-    tree
+    this.parseAll(tokens: _*) match {
+      case Seq(tree) => tree
+      case trees => throw new IllegalArgumentException(
+          "Expected one tree, found:\n" + trees.mkString("\n"))
+    }
   }
 
   private def parseAll(tokens: String*): Seq[Temporal] = {
@@ -89,6 +97,8 @@ class ParserTest extends FunSuite {
     assert(this.parse("21", "9", "1976") === Date(1976, 9, 21))
     assert(this.parse("1976", "9", "21") === Date(1976, 9, 21))
     assert(this.parse("October", "15") === Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
+    assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
+      Previous(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
   }
 
   test("parses complex anchors") {

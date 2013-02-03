@@ -49,13 +49,17 @@ class SynchronousParser(grammar: SynchronousGrammar) {
     }
 
     // fill rules that start with terminals
-    for (size <- 1 to nTokens; start <- 0 until (nTokens - size + 1)) {
-      val entry = chart(size)(start)
-      for (rule <- grammar.sourceSeqStartsWith(sourceTokens.slice(start, start + size))) {
-        if (rule.sourceSeq.size == size) {
-          entry.completes += Parse(rule, IndexedSeq.empty)
-        } else {
-          entry.partials += PartialParse(rule, size, IndexedSeq.empty)
+    for (start <- 0 until nTokens) {
+      for (rule <- grammar.sourceSeqStartsWith(sourceTokens(start))) {
+        val initialTerminals = rule.sourceSeq.takeWhile(SynchronousGrammar.isTerminal)
+        val size = initialTerminals.size
+        if (sourceTokens.slice(start, start + size) == initialTerminals) {
+          val entry = chart(size)(start)
+          if (rule.sourceSeq.size == size) {
+            entry.completes += Parse(rule, IndexedSeq.empty)
+          } else {
+            entry.partials += PartialParse(rule, size, IndexedSeq.empty)
+          }
         }
       }
     }
