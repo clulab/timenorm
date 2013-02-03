@@ -27,6 +27,10 @@ class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => Syn
       case parses => throw new UnsupportedOperationException("Found multiple parses: " + parses)
     }
   }
+  
+  def parse(sourceText: String): Tree.NonTerminal = {
+    this.parse(sourceText.split("\\b").toIndexedSeq.filter(!_.matches("\\s*")))
+  }
 
   def parseAll(sourceTokens: Seq[String]): Seq[Tree.NonTerminal] = {
     val chart = this.parseChart(sourceTokens)

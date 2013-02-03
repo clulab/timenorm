@@ -13,7 +13,7 @@ import org.threeten.bp.ZonedDateTime
 
 import info.bethard.timenorm.SynchronousParser.Tree
 
-sealed trait Temporal
+sealed abstract class Temporal
 
 object Temporal {
 
@@ -94,7 +94,7 @@ object Temporal {
     }
   }
 
-  sealed trait Anchor extends Temporal {
+  sealed abstract class Anchor extends Temporal {
 
     def chronoFields: Set[ChronoField]
 
@@ -242,7 +242,7 @@ object Temporal {
     }
   }
 
-  sealed trait Period extends Temporal {
+  sealed abstract class Period extends Temporal {
 
     def toUnitCounts: Map[ChronoUnit, Int]
 
@@ -307,7 +307,7 @@ object Temporal {
     }
   }
 
-  sealed trait Mod extends Temporal
+  sealed abstract class Mod extends Temporal
   object Mod {
     case object Exact extends Mod
     case object Before extends Mod
