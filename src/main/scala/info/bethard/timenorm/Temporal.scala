@@ -35,7 +35,7 @@ object Temporal {
         case tree: Tree.Terminal => tree.token
         case tree: Tree.NonTerminal => tree.rule.basicSymbol + " -> " + tree.children.map {
           case child: Tree.Terminal => child.token
-          case child: Tree.NonTerminal => "[" + child.rule.symbol + "]"
+          case child: Tree.NonTerminal => child.rule.symbol
         }.mkString(" ")
       }))
   }
@@ -83,6 +83,8 @@ object Temporal {
         fail("Field", tree)
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Field]" => tree.children match {
+          case tree :: Nil =>
+            Field.fromParse(tree)
           case (tree: Tree.Terminal) :: number :: Nil =>
             Field(ChronoField.valueOf(tree.token), Number.fromParse(number).value)
           case _ =>

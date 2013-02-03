@@ -51,6 +51,10 @@ class ParserTest extends FunSuite {
     [Anchor] ||| [Period] from [Anchor] ||| Plus [Anchor] [Period] ||| 1.0
     [Anchor] ||| [Period] before [Anchor] ||| Minus [Anchor] [Period] ||| 1.0
     [Anchor] ||| [Period] ago ||| Minus TODAY [Period] ||| 1.0
+    [Anchor] ||| last [Field] ||| Previous [Field] ||| 1.0
+    [Anchor] ||| next [Field] ||| Next [Field] ||| 1.0
+    [Anchor] ||| [Field] ||| Previous [Field] ||| 1.0
+    [Anchor] ||| [Field] ||| Next [Field] ||| 1.0
     """)
 
   test("parses simple periods") {
@@ -119,6 +123,8 @@ class ParserTest extends FunSuite {
           Temporal.Anchor.Today,
           Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)),
         Temporal.Period.SimplePeriod(1, ChronoUnit.DAYS)))
+    assert(Temporal.fromParse(parser(Seq("next", "October"))) ===
+      Temporal.Anchor.Next(Map(ChronoField.MONTH_OF_YEAR -> 10)))
   }
 
   /*
