@@ -137,7 +137,10 @@ object Temporal {
     private val fieldFormats = Seq(
       ChronoField.YEAR -> "%04d",
       ChronoField.MONTH_OF_YEAR -> "-%02d",
-      ChronoField.DAY_OF_MONTH -> "-%02d")
+      ChronoField.DAY_OF_MONTH -> "-%02d",
+      ChronoField.HOUR_OF_DAY -> "T%02d",
+      ChronoField.MINUTE_OF_HOUR -> ":%02d",
+      ChronoField.SECOND_OF_MINUTE -> ":%02d")
   }
 
   object Anchor {

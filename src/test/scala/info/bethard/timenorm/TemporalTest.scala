@@ -45,6 +45,8 @@ class TemporalTest extends FunSuite {
       "2012-12-12")
     assert(Closest(Map(DAY_OF_WEEK -> DayOfWeek.THURSDAY.getValue)).toTimeMLValue(now) ===
       "2012-12-13")
+    assert(Previous(Map(CLOCK_HOUR_OF_AMPM -> 11, MINUTE_OF_HOUR -> 18, AMPM_OF_DAY -> 0)).toTimeMLValue(now) ===
+      "2012-12-12T11:18")
   }
 
   test("resolves complex anchors") {
