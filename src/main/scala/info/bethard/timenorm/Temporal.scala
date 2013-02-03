@@ -155,6 +155,8 @@ object Temporal {
             Next(this.toFieldNameValuePairs(tail).toMap)
           case Tree.Terminal("Previous") :: tail =>
             Previous(this.toFieldNameValuePairs(tail).toMap)
+          case Tree.Terminal("Closest") :: tail =>
+            Closest(this.toFieldNameValuePairs(tail).toMap)
           case Tree.Terminal("Plus") :: anchor :: period :: Nil =>
             Plus(Anchor.fromParse(anchor), Period.fromParse(period))
           case Tree.Terminal("Minus") :: anchor :: period :: Nil =>
@@ -212,6 +214,15 @@ object Temporal {
         anchor.minus(new PreviousAdjuster(fields))
       }
     }
+    
+    case class Closest(fields: Map[ChronoField, Int]) extends Anchor {
+      
+      val chronoFields = fields.keySet
+
+      def toDateTime(anchor: ZonedDateTime) = {
+        anchor.plus(new ClosestAdjuster(fields))
+      }
+    }
 
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
 
@@ -242,7 +253,7 @@ object Temporal {
     private abstract class SearchingAdjuster(constraints: Map[ChronoField, Int]) {
       val unit = constraints.keySet.map(_.getBaseUnit).minBy(_.getDuration)
       def adjustInto(temporal: JTemporal, adjust: JTemporal => JTemporal): JTemporal = {
-        var curr = adjust(temporal)
+        var curr = temporal
         while (constraints.exists { case (field, value) => curr.get(field) != value }) {
           curr = adjust(curr)
         }
@@ -252,13 +263,25 @@ object Temporal {
 
     private class PreviousAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalSubtractor {
       def subtractFrom(temporal: JTemporal): JTemporal = {
-        this.adjustInto(temporal, _.minus(1, this.unit))
+        this.adjustInto(temporal.minus(1, this.unit), _.minus(1, this.unit))
       }
     }
 
     private class FollowingAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalAdder {
       def addTo(temporal: JTemporal): JTemporal = {
-        this.adjustInto(temporal, _.plus(1, this.unit))
+        this.adjustInto(temporal.plus(1, this.unit), _.plus(1, this.unit))
+      }
+    }
+    
+    private class ClosestAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalAdder {
+      def addTo(temporal: JTemporal): JTemporal = {
+        val prev = this.adjustInto(temporal, _.minus(1, this.unit))
+        val next = this.adjustInto(temporal, _.plus(1, this.unit))
+        if (prev.periodUntil(temporal, this.unit) < temporal.periodUntil(next, this.unit)) {
+          prev
+        } else {
+          next
+        }
       }
     }
   }

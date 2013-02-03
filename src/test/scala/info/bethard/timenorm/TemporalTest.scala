@@ -39,6 +39,12 @@ class TemporalTest extends FunSuite {
     val friday = DayOfWeek.FRIDAY.getValue()
     assert(Next(Map(DAY_OF_WEEK -> friday, DAY_OF_MONTH -> 13)).toTimeMLValue(now) ===
       "2013-09-13")
+    assert(Closest(Map(DAY_OF_WEEK -> DayOfWeek.TUESDAY.getValue)).toTimeMLValue(now) ===
+      "2012-12-11")
+    assert(Closest(Map(DAY_OF_WEEK -> DayOfWeek.WEDNESDAY.getValue)).toTimeMLValue(now) ===
+      "2012-12-12")
+    assert(Closest(Map(DAY_OF_WEEK -> DayOfWeek.THURSDAY.getValue)).toTimeMLValue(now) ===
+      "2012-12-13")
   }
 
   test("resolves complex anchors") {
