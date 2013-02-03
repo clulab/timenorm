@@ -13,6 +13,25 @@ import org.threeten.bp.ZonedDateTime
 
 import info.bethard.timenorm.SynchronousParser.Tree
 
+import scala.collection.immutable.Seq
+
+class TemporalParser(grammar: SynchronousGrammar) {
+  
+  val parser = new SynchronousParser(grammar)
+  
+  def parseAll(sourceTokens: Seq[String]): Seq[Temporal] = {
+    this.parser.parseAll(sourceTokens).map(Temporal.fromParse)
+  }
+  
+  def parseAll(sourceTokens: Array[String]): Array[Temporal] = {
+    this.parseAll(sourceTokens.toIndexedSeq).toArray
+  }
+  
+  def parseAll(sourceText: String): Array[Temporal] = {
+    this.parseAll(sourceText.split("\\b").filter(!_.matches("\\s*")))
+  }
+}
+
 sealed abstract class Temporal
 
 object Temporal {
