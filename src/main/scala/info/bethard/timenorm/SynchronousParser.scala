@@ -6,35 +6,29 @@ import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 import scala.collection.mutable.ListBuffer
 
-class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Tree.NonTerminal) {
+class SynchronousParser(grammar: SynchronousGrammar) {
 
   import SynchronousParser._
 
-  def apply(sourceTokens: Seq[String]): Tree.NonTerminal = this.parse(sourceTokens)
-
-  def parse(sourceTokens: Seq[String]): Tree.NonTerminal = {
-    val chart = this.parseChart(sourceTokens)
-    chart(sourceTokens.size)(0).completes match {
-      case Buffer(parse) => parse.toTargetTree
-      case Buffer() => {
-        val nTokens = sourceTokens.size
-        throw new UnsupportedOperationException("Could not parse %s. Partial parses: %s".format(
-          sourceTokens.toString,
-          for (size <- 1 to nTokens; start <- 0 until (nTokens - size + 1); complete <- chart(size)(start).completes) yield {
-            "%s(%s)".format(complete.rule.symbol, sourceTokens.slice(start, start + size).mkString(","))
-          }))
-      }
-      case parses => throw new UnsupportedOperationException("Found multiple parses: " + parses)
-    }
-  }
-  
-  def parse(sourceText: String): Tree.NonTerminal = {
-    this.parse(sourceText.split("\\b").toIndexedSeq.filter(!_.matches("\\s*")))
-  }
-
   def parseAll(sourceTokens: Seq[String]): Seq[Tree.NonTerminal] = {
     val chart = this.parseChart(sourceTokens)
-    chart(sourceTokens.size)(0).completes.map(_.toTargetTree).toIndexedSeq
+    val completes = chart(sourceTokens.size)(0).completes
+    val roots = completes.filter(parse => this.grammar.rootSymbols.contains(parse.rule.basicSymbol))
+    val trees = roots.map(_.toTargetTree).toIndexedSeq
+    if (trees.isEmpty) {
+      val nTokens = sourceTokens.size
+      val completes =
+        for {
+          size <- 1 to nTokens
+          start <- 0 until (nTokens - size + 1)
+          complete <- chart(size)(start).completes
+        } yield {
+          "%s(%s)".format(complete.rule.symbol, sourceTokens.slice(start, start + size).mkString(","))
+        }
+      val message = "Could not parse %s. Partial parses: %s"
+      throw new UnsupportedOperationException(message.format(sourceTokens, completes))
+    }
+    trees
   }
 
   private def parseChart(sourceTokens: Seq[String]): Array[Array[ChartEntry]] = {

@@ -10,7 +10,7 @@ import org.threeten.bp.temporal.ChronoField._
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  val grammar = SynchronousGrammar.fromString("""
+  val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [Anchor]
     [Number] ||| a ||| 1 ||| 1.0
     [Number] ||| the ||| 1 ||| 1.0
     [Number] ||| two ||| 2 ||| 1.0
@@ -58,8 +58,16 @@ class ParserTest extends FunSuite {
     """)
 
   val parser = new SynchronousParser(grammar)
-  private def parse(tokens: String*) = Temporal.fromParse(this.parser(tokens.toIndexedSeq))
-  
+
+  private def parse(tokens: String*): Temporal = {
+    val Seq(tree) = this.parseAll(tokens: _*)
+    tree
+  }
+
+  private def parseAll(tokens: String*): Seq[Temporal] = {
+    this.parser.parseAll(tokens.toIndexedSeq).map(Temporal.fromParse)
+  }
+
   test("parses simple periods") {
     import Temporal.Period._
     assert(this.parse("two", "weeks") === SimplePeriod(2, WEEKS))
@@ -95,6 +103,8 @@ class ParserTest extends FunSuite {
     assert(this.parse("the", "day", "before", "yesterday") ===
       Minus(Minus(Today, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)))
     assert(this.parse("next", "October") === Next(Map(MONTH_OF_YEAR -> 10)))
+    assert(this.parseAll("January").toSet ===
+      Set(Next(Map(MONTH_OF_YEAR -> 1)), Previous(Map(MONTH_OF_YEAR -> 1))))
   }
 
   /*

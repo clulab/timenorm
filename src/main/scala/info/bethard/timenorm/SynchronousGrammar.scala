@@ -2,12 +2,13 @@ package info.bethard.timenorm
 
 import scala.collection.immutable.{ Seq, IndexedSeq }
 
-class SynchronousGrammar(val rules: Seq[SynchronousGrammar.Rule]) {
+class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[SynchronousGrammar.Rule]) {
 
   private val rulePrefixMap = PrefixMultiMap.empty[String, SynchronousGrammar.Rule]
   for (rule <- rules) {
     this.rulePrefixMap += (rule.sourceSeq, rule)
   }
+  
   private val delexicalizedSymbols = 
     for (rule <- rules; if rule.symbol != rule.basicSymbol)
       yield rule.symbol -> rule.basicSymbol
@@ -52,13 +53,17 @@ object SynchronousGrammar {
   val isTerminal: (String => Boolean) = !_.matches("^\\[.*\\]$")
   val isNumber: (String => Boolean) = _.matches("^\\d+$")
 
-  def apply(rules: Seq[Rule]): SynchronousGrammar = new SynchronousGrammar(rules)
-
   def fromString(text: String): SynchronousGrammar = {
     // example:
     // [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
     val stripLabel: (String => String) = _.replaceAll("\\[(.*),.*\\]", "[$1]")
-    val rules = for (line <- text.lines) yield line.trim.split("\\s*[|][|][|]\\s*") match {
+    val lines = text.lines
+    val firstLine = lines.next
+    if (!firstLine.startsWith("ROOTS")) {
+      throw new IllegalArgumentException("First line must define root symbols, e.g. ROOTS [XXX] [YYY]")
+    }
+    val rootSymbols = firstLine.split("\\s+").tail.toSet
+    val rules = for (line <- lines) yield line.trim.split("\\s*[|][|][|]\\s*") match {
       case Array(symbol, sourceSeqString, targetSeqString, scoreString) => {
         val sourceSeqItems = sourceSeqString.split("\\s+").toIndexedSeq
         val targetSeqItems = targetSeqString.split("\\s+").toIndexedSeq
@@ -76,7 +81,7 @@ object SynchronousGrammar {
       case Array("") => None
       case _ => throw new IllegalArgumentException("\"" + line + "\"")
     }
-    SynchronousGrammar(rules.flatten.toList)
+    new SynchronousGrammar(rootSymbols, rules.flatten.toList)
   }
 
   case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int]) {
