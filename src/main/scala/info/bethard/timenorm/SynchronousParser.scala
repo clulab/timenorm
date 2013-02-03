@@ -2,9 +2,9 @@ package info.bethard.timenorm
 
 import scala.collection.immutable.{ Seq, IndexedSeq }
 import scala.collection.mutable.Buffer
-
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
+import scala.collection.mutable.ListBuffer
 
 class SynchronousParser(grammar: SynchronousGrammar) extends (Seq[String] => SynchronousParser.Tree.NonTerminal) {
 
@@ -142,6 +142,33 @@ object SynchronousParser {
           this.nonTerminalRules(nonTerminalRulesIndex).toTargetTree
         }
       }
+      Tree.NonTerminal(rule, this.insertSubtreesFromParentheses(children.iterator))
+    }
+    
+    private def insertSubtreesFromParentheses(trees: Iterator[Tree]): List[Tree] = {
+      if (trees.isEmpty) {
+        Nil
+      } else {
+        val tree = trees.next match {
+          case Tree.Terminal("(") => this.parseSubtreeFollowingOpenParentheses(trees)
+          case tree => tree
+        }
+        tree :: this.insertSubtreesFromParentheses(trees)
+      }
+    }
+    
+    private def parseSubtreeFollowingOpenParentheses(trees: Iterator[Tree]): Tree = {
+      val Tree.Terminal(symbol) = trees.next
+      val children = ListBuffer.empty[Tree]
+      var getNext = true
+      while (getNext) {
+        trees.next match {
+          case Tree.Terminal(")") => getNext = false
+          case Tree.Terminal("(") => children += this.parseSubtreeFollowingOpenParentheses(trees)
+          case tree => children += tree
+        }
+      }
+      val rule = SynchronousGrammar.Rule("[" + symbol + "]", IndexedSeq.empty, IndexedSeq.empty, Map.empty)
       Tree.NonTerminal(rule, children.toList)
     }
   }
