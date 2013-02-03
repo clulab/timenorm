@@ -28,7 +28,7 @@ class TemporalParser(grammar: SynchronousGrammar) {
   }
   
   def parseAll(sourceText: String): Array[Temporal] = {
-    this.parseAll(sourceText.split("\\b").filter(!_.matches("\\s*")))
+    this.parseAll(sourceText.split("\\s*\\b\\s*").filter(!_.matches("\\s*")))
   }
 }
 
