@@ -37,12 +37,6 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
     this.rulePrefixMap.getAllWithPrefix(tokens)
   }
 
-  def sourceSeqStartsWithTerminals(tokens: Seq[String]) = {
-    this.rulePrefixMap.getAllWithPrefix(tokens).filter {
-      _.sourceSeq.take(tokens.size).forall(SynchronousGrammar.isTerminal)
-    }
-  }
-
   def sourceSeqStartsWith(token: String) = {
     this.rulePrefixMap.getAllWithPrefix(Seq(token))
   }
