@@ -295,15 +295,28 @@ object Temporal {
 
     def toTimeMLValue: String = {
       val counts = this.toUnitCounts
-      val parts = for ((unit, char) <- this.unitChars) yield counts.get(unit).map(_ + char)
-      "P" + parts.flatten.mkString
+      val dateParts = this.toParts(counts, this.dateChars)
+      val timeParts = this.toParts(counts, this.timeChars)
+      val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.mkString
+      "P" + dateParts.mkString + timeString
     }
+    
+    private def toParts(counts: Map[ChronoUnit, Int], unitChars: Seq[(ChronoUnit, String)]) = {
+      val partOptions = for ((unit, char) <- unitChars) yield counts.get(unit).map(_ + char)
+      partOptions.flatten
+    }
+    
 
-    private val unitChars = Seq(
+    private val dateChars = Seq(
       ChronoUnit.YEARS -> "Y",
       ChronoUnit.MONTHS -> "M",
       ChronoUnit.WEEKS -> "W",
       ChronoUnit.DAYS -> "D")
+    
+    private val timeChars = Seq(
+      ChronoUnit.HOURS -> "H",
+      ChronoUnit.MINUTES -> "M",
+      ChronoUnit.SECONDS -> "S")
   }
 
   object Period {

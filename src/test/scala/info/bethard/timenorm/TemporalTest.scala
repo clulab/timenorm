@@ -20,6 +20,9 @@ class TemporalTest extends FunSuite {
     assert(SimplePeriod(2, WEEKS).toTimeMLValue === "P2W")
     assert(SimplePeriod(10, DAYS).toTimeMLValue === "P10D")
     assert(SimplePeriod(1, MONTHS).toTimeMLValue === "P1M")
+    assert(SimplePeriod(16, HOURS).toTimeMLValue === "PT16H")
+    assert(SimplePeriod(20, MINUTES).toTimeMLValue === "PT20M")
+    assert(SimplePeriod(53, SECONDS).toTimeMLValue === "PT53S")
   }
 
   test("resolves complex periods") {
