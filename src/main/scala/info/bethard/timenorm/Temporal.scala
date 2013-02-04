@@ -1,19 +1,15 @@
 package info.bethard.timenorm
+import scala.collection.immutable.Seq
 
-import org.threeten.bp.{ Period => JPeriod }
-import org.threeten.bp.temporal.{ SimplePeriod => JSimplePeriod }
+import org.threeten.bp.Duration
+import org.threeten.bp.ZonedDateTime
+import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.TemporalField
-import org.threeten.bp.temporal.TemporalAdjuster
 import org.threeten.bp.temporal.{ Temporal => JTemporal }
 import org.threeten.bp.temporal.TemporalAdder
 import org.threeten.bp.temporal.TemporalSubtractor
-import org.threeten.bp.temporal.ChronoField
-import org.threeten.bp.ZonedDateTime
 
 import info.bethard.timenorm.SynchronousParser.Tree
-
-import scala.collection.immutable.Seq
 
 class TemporalParser(grammar: SynchronousGrammar) {
   
@@ -117,12 +113,11 @@ object Temporal {
 
   sealed abstract class Anchor extends Temporal {
 
-    def chronoFields: Set[ChronoField]
+    def minDuration: Duration
 
     def toDateTime(anchor: ZonedDateTime): ZonedDateTime
 
     def toTimeMLValue(anchor: ZonedDateTime): String = {
-      val minDuration = this.chronoFields.map(_.getBaseUnit.getDuration).min
       val isBigEnough = (fieldFormat: (ChronoField, String)) => {
         val duration = fieldFormat._1.getBaseUnit.getDuration
         duration.equals(minDuration) || duration.isGreaterThan(minDuration)
@@ -186,14 +181,23 @@ object Temporal {
 
     case object Today extends Anchor {
 
-      val chronoFields = Set(ChronoField.DAY_OF_MONTH)
+      val minDuration = ChronoUnit.DAYS.getDuration
 
       def toDateTime(anchor: ZonedDateTime) = anchor
     }
 
+    case object Now extends Anchor {
+
+      val minDuration = ChronoUnit.SECONDS.getDuration
+
+      def toDateTime(anchor: ZonedDateTime) = anchor
+      
+      override def toTimeMLValue(anchor: ZonedDateTime) = "PRESENT_REF"
+    }
+
     case class Date(year: Int, month: Int, day: Int) extends Anchor {
 
-      val chronoFields = Set(ChronoField.DAY_OF_MONTH)
+      val minDuration = ChronoUnit.DAYS.getDuration
 
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.withYear(year).withMonth(month).withDayOfMonth(day)
@@ -202,7 +206,7 @@ object Temporal {
 
     case class Next(fields: Map[ChronoField, Int]) extends Anchor {
 
-      val chronoFields = fields.keySet
+      val minDuration = fields.keySet.map(_.getBaseUnit.getDuration).min
 
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.plus(new FollowingAdjuster(fields))
@@ -211,7 +215,7 @@ object Temporal {
 
     case class Previous(fields: Map[ChronoField, Int]) extends Anchor {
 
-      val chronoFields = fields.keySet
+      val minDuration = fields.keySet.map(_.getBaseUnit.getDuration).min
 
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.minus(new PreviousAdjuster(fields))
@@ -220,7 +224,7 @@ object Temporal {
     
     case class Closest(fields: Map[ChronoField, Int]) extends Anchor {
       
-      val chronoFields = fields.keySet
+      val minDuration = fields.keySet.map(_.getBaseUnit.getDuration).min
 
       def toDateTime(anchor: ZonedDateTime) = {
         anchor.plus(new ClosestAdjuster(fields))
@@ -229,7 +233,7 @@ object Temporal {
 
     case class Plus(anchor: Anchor, period: Period) extends Anchor {
 
-      val chronoFields = anchor.chronoFields
+      val minDuration = anchor.minDuration 
 
       def toDateTime(anchorDateTime: ZonedDateTime) = {
         var result = anchor.toDateTime(anchorDateTime)
@@ -242,7 +246,7 @@ object Temporal {
 
     case class Minus(anchor: Anchor, period: Period) extends Anchor {
 
-      val chronoFields = anchor.chronoFields
+      val minDuration = anchor.minDuration
 
       def toDateTime(anchorDateTime: ZonedDateTime) = {
         var result = anchor.toDateTime(anchorDateTime)
