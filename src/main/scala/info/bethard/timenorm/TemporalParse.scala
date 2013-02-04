@@ -173,6 +173,8 @@ object AnchorParse {
           Next(this.toFieldNameValuePairs(tail).toMap)
         case Tree.Terminal("Previous") :: tail =>
           Previous(this.toFieldNameValuePairs(tail).toMap)
+        case Tree.Terminal("CurrentOrPrevious") :: tail =>
+          CurrentOrPrevious(this.toFieldNameValuePairs(tail).toMap)
         case Tree.Terminal("Closest") :: tail =>
           Closest(this.toFieldNameValuePairs(tail).toMap)
         case Tree.Terminal("Plus") :: anchor :: period :: Nil =>
@@ -251,6 +253,9 @@ object AnchorParse {
 
   case class Previous(fields: Map[ChronoField, Int])
     extends DirectedFieldSearchingAnchorParse(fields, _.minus(1, _), _.minus(1, _))
+  
+  case class CurrentOrPrevious(fields: Map[ChronoField, Int])
+    extends DirectedFieldSearchingAnchorParse(fields, _.minus(0, _), _.minus(1, _))
 
   case class Closest(fields: Map[ChronoField, Int]) extends FieldSearchingAnchorParse(fields) {
     def toDateTime(dateTime: ZonedDateTime) = {

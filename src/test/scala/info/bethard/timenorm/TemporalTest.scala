@@ -82,6 +82,12 @@ class TemporalTest extends FunSuite {
     assertAnchor(
       Previous(Map(CLOCK_HOUR_OF_AMPM -> 11, MINUTE_OF_HOUR -> 18, AMPM_OF_DAY -> 0)),
       MINUTES, MINUTES, "2012-12-12T11:18", "2012-12-12T11:18")
+    assertAnchor(
+      CurrentOrPrevious(Map(DAY_OF_WEEK -> DayOfWeek.WEDNESDAY.getValue)),
+      DAYS, DAYS, "2012-12-12", "2012-12-12")
+    assertAnchor(
+      CurrentOrPrevious(Map(DAY_OF_WEEK -> DayOfWeek.TUESDAY.getValue)),
+      DAYS, DAYS, "2012-12-11", "2012-12-11")
   }
 
   test("resolves complex anchors") {

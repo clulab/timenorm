@@ -58,6 +58,7 @@ class ParserTest extends FunSuite {
     [Anchor] ||| [Period] ago ||| Minus TODAY [Period] ||| 1.0
     [Anchor] ||| last [Field] ||| Previous [Field] ||| 1.0
     [Anchor] ||| next [Field] ||| Next [Field] ||| 1.0
+    [Anchor] ||| [Field] ||| CurrentOrPrevious [Field] ||| 1.0
     [Anchor] ||| [Field] ||| Previous [Field] ||| 1.0
     [Anchor] ||| [Field] ||| Next [Field] ||| 1.0
     [Anchor] ||| [Field:HourOfAMPM] : [Field:MinuteOfHour] [Field:AMPMOfDay] ||| Previous [Field:HourOfAMPM] [Field:MinuteOfHour] [Field:AMPMOfDay] ||| 1.0
@@ -115,8 +116,10 @@ class ParserTest extends FunSuite {
     assert(this.parse("the", "day", "before", "yesterday") ===
       Minus(Minus(Today, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)))
     assert(this.parse("next", "October") === Next(Map(MONTH_OF_YEAR -> 10)))
-    assert(this.parseAll("January").toSet ===
-      Set(Next(Map(MONTH_OF_YEAR -> 1)), Previous(Map(MONTH_OF_YEAR -> 1))))
+    assert(this.parseAll("January").toSet === Set(
+        Previous(Map(MONTH_OF_YEAR -> 1)),
+        CurrentOrPrevious(Map(MONTH_OF_YEAR -> 1)),
+        Next(Map(MONTH_OF_YEAR -> 1))))
   }
 
   /*
