@@ -112,6 +112,44 @@ object FieldParse {
   }
 }
 
+sealed abstract class PeriodParse extends TemporalParse {
+  def toPeriod: Period
+}
+
+object PeriodParse {
+
+  def apply(tree: Tree): PeriodParse = tree match {
+    case unit: Tree.Terminal =>
+      SimplePeriod(1, UnitParse(unit).value)
+    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
+      case "[Period]" => tree.children match {
+        case unit :: Nil =>
+          SimplePeriod(1, UnitParse(unit).value)
+        case amount :: unit :: Nil =>
+          SimplePeriod(NumberParse(amount).value, UnitParse(unit).value)
+        case Tree.Terminal("Sum") :: period1 :: period2 :: Nil =>
+          Plus(PeriodParse(period1), PeriodParse(period2))
+        case _ =>
+          TemporalParse.fail("Period", tree)
+      }
+      case _ =>
+        TemporalParse.fail("Period", tree)
+    }
+  }
+
+  case class SimplePeriod(amount: Int, unit: ChronoUnit) extends PeriodParse {
+    def toPeriod = Period(Map(unit -> amount))
+  }
+
+  case class Plus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
+    def toPeriod = periodParse1.toPeriod + periodParse2.toPeriod
+  }
+
+  case class Minus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
+    def toPeriod = periodParse1.toPeriod - periodParse2.toPeriod
+  }
+}
+
 sealed abstract class AnchorParse extends TemporalParse {
   def toDateTime(anchor: ZonedDateTime): DateTime
 }
@@ -260,44 +298,6 @@ object AnchorParse {
         next
       }
     }
-  }
-}
-
-sealed abstract class PeriodParse extends TemporalParse {
-  def toPeriod: Period
-}
-
-object PeriodParse {
-
-  def apply(tree: Tree): PeriodParse = tree match {
-    case unit: Tree.Terminal =>
-      SimplePeriod(1, UnitParse(unit).value)
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Period]" => tree.children match {
-        case unit :: Nil =>
-          SimplePeriod(1, UnitParse(unit).value)
-        case amount :: unit :: Nil =>
-          SimplePeriod(NumberParse(amount).value, UnitParse(unit).value)
-        case Tree.Terminal("Sum") :: period1 :: period2 :: Nil =>
-          Plus(PeriodParse(period1), PeriodParse(period2))
-        case _ =>
-          TemporalParse.fail("Period", tree)
-      }
-      case _ =>
-        TemporalParse.fail("Period", tree)
-    }
-  }
-
-  case class SimplePeriod(amount: Int, unit: ChronoUnit) extends PeriodParse {
-    def toPeriod = Period(Map(unit -> amount))
-  }
-
-  case class Plus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
-    def toPeriod = periodParse1.toPeriod + periodParse2.toPeriod
-  }
-
-  case class Minus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
-    def toPeriod = periodParse1.toPeriod - periodParse2.toPeriod
   }
 }
 
