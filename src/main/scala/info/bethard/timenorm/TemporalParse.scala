@@ -15,36 +15,36 @@ class TemporalParser(grammar: SynchronousGrammar) {
 
   val parser = new SynchronousParser(grammar)
 
-  def parseAll(sourceTokens: Seq[String]): Seq[Temporal] = {
-    this.parser.parseAll(sourceTokens).map(Temporal.fromParse)
+  def parseAll(sourceTokens: Seq[String]): Seq[TemporalParse] = {
+    this.parser.parseAll(sourceTokens).map(TemporalParse.apply)
   }
 
-  def parseAll(sourceTokens: Array[String]): Array[Temporal] = {
+  def parseAll(sourceTokens: Array[String]): Array[TemporalParse] = {
     this.parseAll(sourceTokens.toIndexedSeq).toArray
   }
 
-  def parseAll(sourceText: String): Array[Temporal] = {
+  def parseAll(sourceText: String): Array[TemporalParse] = {
     this.parseAll(sourceText.split("\\s*\\b\\s*").filter(!_.matches("\\s*")))
   }
 }
 
-sealed abstract class Temporal
+sealed abstract class TemporalParse
 
-object Temporal {
+object TemporalParse {
 
-  def fromParse(tree: Tree): Temporal = tree match {
+  def apply(tree: Tree): TemporalParse = tree match {
     case tree: Tree.Terminal =>
       fail("[Temporal]", tree)
     case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Number]" => Temporal.Number.fromParse(tree)
-      case "[Unit]" => Temporal.Unit.fromParse(tree)
-      case "[Field]" => Temporal.Field.fromParse(tree)
-      case "[Period]" => Temporal.Period.fromParse(tree)
-      case "[Anchor]" => Temporal.Anchor.fromParse(tree)
+      case "[Number]" => NumberParse(tree)
+      case "[Unit]" => UnitParse(tree)
+      case "[Field]" => FieldParse(tree)
+      case "[Period]" => PeriodParse(tree)
+      case "[Anchor]" => AnchorParse(tree)
     }
   }
 
-  private[Temporal] def fail[T](name: String, tree: Tree): T = {
+  private[TemporalParse] def fail[T](name: String, tree: Tree): T = {
     throw new UnsupportedOperationException(
       "Don't know how to parse %s from %s".format(name, tree match {
         case tree: Tree.Terminal => tree.token
@@ -55,15 +55,15 @@ object Temporal {
       }))
   }
 
-  case class Number(value: Int) extends Temporal
-  object Number {
-    def fromParse(tree: Tree): Number = tree match {
+  case class NumberParse(value: Int) extends TemporalParse
+  object NumberParse {
+    def apply(tree: Tree): NumberParse = tree match {
       case tree: Tree.Terminal =>
-        Number(tree.token.toInt)
+        NumberParse(tree.token.toInt)
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Number]" => tree.children match {
           case tree :: Nil =>
-            Number.fromParse(tree)
+            NumberParse(tree)
           case _ =>
             fail("Number", tree)
         }
@@ -73,15 +73,15 @@ object Temporal {
     }
   }
 
-  case class Unit(value: ChronoUnit) extends Temporal
-  object Unit {
-    def fromParse(tree: Tree): Unit = tree match {
+  case class UnitParse(value: ChronoUnit) extends TemporalParse
+  object UnitParse {
+    def apply(tree: Tree): UnitParse = tree match {
       case tree: Tree.Terminal =>
-        Unit(ChronoUnit.valueOf(tree.token))
+        UnitParse(ChronoUnit.valueOf(tree.token))
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Unit]" => tree.children match {
           case tree :: Nil =>
-            Unit.fromParse(tree)
+            UnitParse(tree)
           case _ =>
             fail("Unit", tree)
         }
@@ -91,17 +91,17 @@ object Temporal {
     }
   }
 
-  case class Field(name: ChronoField, value: Int) extends Temporal
-  object Field {
-    def fromParse(tree: Tree): Field = tree match {
+  case class FieldParse(name: ChronoField, value: Int) extends TemporalParse
+  object FieldParse {
+    def apply(tree: Tree): FieldParse = tree match {
       case tree: Tree.Terminal =>
         fail("Field", tree)
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Field]" => tree.children match {
           case tree :: Nil =>
-            Field.fromParse(tree)
+            FieldParse(tree)
           case (tree: Tree.Terminal) :: number :: Nil =>
-            Field(ChronoField.valueOf(tree.token), Number.fromParse(number).value)
+            FieldParse(ChronoField.valueOf(tree.token), NumberParse(number).value)
           case _ =>
             fail("Field", tree)
         }
@@ -112,25 +112,25 @@ object Temporal {
   }
 
 
-  sealed abstract class Anchor extends Temporal {
+  sealed abstract class AnchorParse extends TemporalParse {
     def toDateTime(anchor: ZonedDateTime): DateTime
   }
 
-  object Anchor {
+  object AnchorParse {
 
-    def fromParse(tree: Tree): Anchor = tree match {
+    def apply(tree: Tree): AnchorParse = tree match {
       case Tree.Terminal("TODAY") =>
-        Temporal.Anchor.Today
+        Today
       case Tree.Terminal("NOW") =>
-        Temporal.Anchor.Now
+        Now
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Anchor]" => tree.children match {
           case Tree.Terminal("NOW") :: Nil =>
-            Temporal.Anchor.Now
+            Now
           case Tree.Terminal("TODAY") :: Nil =>
-            Temporal.Anchor.Today
+            Today
           case Tree.Terminal("Date") :: year :: month :: day :: Nil =>
-            Date(Field.fromParse(year).value, Field.fromParse(month).value, Field.fromParse(day).value)
+            Date(FieldParse(year).value, FieldParse(month).value, FieldParse(day).value)
           case Tree.Terminal("Next") :: tail =>
             Next(this.toFieldNameValuePairs(tail).toMap)
           case Tree.Terminal("Previous") :: tail =>
@@ -138,9 +138,9 @@ object Temporal {
           case Tree.Terminal("Closest") :: tail =>
             Closest(this.toFieldNameValuePairs(tail).toMap)
           case Tree.Terminal("Plus") :: anchor :: period :: Nil =>
-            Plus(Anchor.fromParse(anchor), Period.fromParse(period))
+            Plus(AnchorParse(anchor), PeriodParse(period))
           case Tree.Terminal("Minus") :: anchor :: period :: Nil =>
-            Minus(Anchor.fromParse(anchor), Period.fromParse(period))
+            Minus(AnchorParse(anchor), PeriodParse(period))
           case _ =>
             fail("Anchor", tree)
         }
@@ -154,20 +154,20 @@ object Temporal {
     private def toFieldNameValuePairs(trees: List[Tree]): List[(ChronoField, Int)] = {
       trees.map {
         case tree: Tree.NonTerminal =>
-          val field = Field.fromParse(tree)
+          val field = FieldParse(tree)
           (field.name, field.value)
         case tree: Tree.Terminal =>
           fail("Field", tree)
       }
     }
 
-    case object Today extends Anchor {
+    case object Today extends AnchorParse {
       def toDateTime(anchor: ZonedDateTime) = {
         DateTime(anchor, ChronoUnit.DAYS, ChronoUnit.DAYS)
       }
     }
 
-    case object Now extends Anchor {
+    case object Now extends AnchorParse {
       def toDateTime(anchor: ZonedDateTime) = {
         new DateTime(anchor, ChronoUnit.SECONDS, ChronoUnit.SECONDS) {
           override val baseTimeMLValue = "PRESENT_REF"
@@ -176,16 +176,16 @@ object Temporal {
       }
     }
 
-    case class Date(year: Int, month: Int, day: Int) extends Anchor {
+    case class Date(year: Int, month: Int, day: Int) extends AnchorParse {
       def toDateTime(anchor: ZonedDateTime) = {
         val dateTime = anchor.withYear(year).withMonth(month).withDayOfMonth(day)
         DateTime(dateTime, ChronoUnit.DAYS, ChronoUnit.DAYS)
       }
     }
 
-    abstract class FieldsAnchor(
+    abstract class FieldsAnchorParse(
         fields: Map[ChronoField, Int],
-        adjust: (ZonedDateTime => ZonedDateTime)) extends Anchor {
+        adjust: (ZonedDateTime => ZonedDateTime)) extends AnchorParse {
 
       val minUnit = fields.keySet.map(_.getBaseUnit).minBy(_.getDuration)
 
@@ -195,18 +195,18 @@ object Temporal {
     }
 
     case class Next(fields: Map[ChronoField, Int])
-      extends FieldsAnchor(fields, _.plus(new FollowingAdjuster(fields)))
+      extends FieldsAnchorParse(fields, _.plus(new FollowingAdjuster(fields)))
 
     case class Previous(fields: Map[ChronoField, Int])
-      extends FieldsAnchor(fields, _.minus(new PreviousAdjuster(fields)))
+      extends FieldsAnchorParse(fields, _.minus(new PreviousAdjuster(fields)))
 
     case class Closest(fields: Map[ChronoField, Int])
-      extends FieldsAnchor(fields, _.plus(new ClosestAdjuster(fields)))
+      extends FieldsAnchorParse(fields, _.plus(new ClosestAdjuster(fields)))
 
-    abstract class PeriodAnchor(
-        anchor: Anchor,
-        period: Period,
-        adjust: (ZonedDateTime, Int, TemporalUnit) => ZonedDateTime) extends Anchor {
+    abstract class PeriodAnchorParse(
+        anchor: AnchorParse,
+        period: PeriodParse,
+        adjust: (ZonedDateTime, Int, TemporalUnit) => ZonedDateTime) extends AnchorParse {
 
       def toDateTime(anchorDateTime: ZonedDateTime) = {
         val dateTime = anchor.toDateTime(anchorDateTime)
@@ -220,11 +220,11 @@ object Temporal {
 
     }
 
-    case class Plus(anchor: Anchor, period: Period)
-      extends PeriodAnchor(anchor, period, _.plus(_, _))
+    case class Plus(anchor: AnchorParse, period: PeriodParse)
+      extends PeriodAnchorParse(anchor, period, _.plus(_, _))
 
-    case class Minus(anchor: Anchor, period: Period)
-      extends PeriodAnchor(anchor, period, _.minus(_, _))
+    case class Minus(anchor: AnchorParse, period: PeriodParse)
+      extends PeriodAnchorParse(anchor, period, _.minus(_, _))
 
     private abstract class SearchingAdjuster(constraints: Map[ChronoField, Int]) {
       val unit = constraints.keySet.map(_.getBaseUnit).minBy(_.getDuration)
@@ -262,7 +262,7 @@ object Temporal {
     }
   }
 
-  sealed abstract class Period extends Temporal {
+  sealed abstract class PeriodParse extends TemporalParse {
 
     def toUnitCounts: Map[ChronoUnit, Int]
 
@@ -291,19 +291,19 @@ object Temporal {
       ChronoUnit.SECONDS -> "S")
   }
 
-  object Period {
+  object PeriodParse {
 
-    def fromParse(tree: Tree): Period = tree match {
+    def apply(tree: Tree): PeriodParse = tree match {
       case unit: Tree.Terminal =>
-        SimplePeriod(1, Unit.fromParse(unit).value)
+        SimplePeriod(1, UnitParse(unit).value)
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Period]" => tree.children match {
           case unit :: Nil =>
-            SimplePeriod(1, Unit.fromParse(unit).value)
+            SimplePeriod(1, UnitParse(unit).value)
           case amount :: unit :: Nil =>
-            SimplePeriod(Number.fromParse(amount).value, Unit.fromParse(unit).value)
+            SimplePeriod(NumberParse(amount).value, UnitParse(unit).value)
           case Tree.Terminal("Sum") :: period1 :: period2 :: Nil =>
-            Plus(Period.fromParse(period1), Period.fromParse(period2))
+            Plus(PeriodParse(period1), PeriodParse(period2))
           case _ =>
             fail("Period", tree)
         }
@@ -312,11 +312,11 @@ object Temporal {
       }
     }
 
-    case class SimplePeriod(amount: Int, unit: ChronoUnit) extends Period {
+    case class SimplePeriod(amount: Int, unit: ChronoUnit) extends PeriodParse {
       def toUnitCounts = Map(unit -> amount).withDefaultValue(0)
     }
 
-    case class Plus(period1: Period, period2: Period) extends Period {
+    case class Plus(period1: PeriodParse, period2: PeriodParse) extends PeriodParse {
       def toUnitCounts = {
         val counts1 = period1.toUnitCounts
         val counts2 = period2.toUnitCounts
@@ -327,7 +327,7 @@ object Temporal {
       }
     }
 
-    case class Minus(period1: Period, period2: Period) extends Period {
+    case class Minus(period1: PeriodParse, period2: PeriodParse) extends PeriodParse {
       def toUnitCounts = {
         val counts1 = period1.toUnitCounts
         val counts2 = period2.toUnitCounts
@@ -339,20 +339,20 @@ object Temporal {
     }
   }
 
-  sealed abstract class Mod extends Temporal
-  object Mod {
-    case object Exact extends Mod
-    case object Before extends Mod
-    case object After extends Mod
-    case object OnOrBefore extends Mod
-    case object OnOrAfter extends Mod
-    case object LessThan extends Mod
-    case object MoreThan extends Mod
-    case object EqualOrLess extends Mod
-    case object EqualOrMore extends Mod
-    case object Start extends Mod
-    case object Mid extends Mod
-    case object End extends Mod
-    case object Approx extends Mod
+  sealed abstract class ModParse extends TemporalParse
+  object ModParse {
+    case object Exact extends ModParse
+    case object Before extends ModParse
+    case object After extends ModParse
+    case object OnOrBefore extends ModParse
+    case object OnOrAfter extends ModParse
+    case object LessThan extends ModParse
+    case object MoreThan extends ModParse
+    case object EqualOrLess extends ModParse
+    case object EqualOrMore extends ModParse
+    case object Start extends ModParse
+    case object Mid extends ModParse
+    case object End extends ModParse
+    case object Approx extends ModParse
   }
 }

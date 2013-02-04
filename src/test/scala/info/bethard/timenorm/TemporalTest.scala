@@ -17,7 +17,7 @@ import org.threeten.bp.DayOfWeek
 class TemporalTest extends FunSuite {
 
   test("resolves simple periods") {
-    import Temporal.Period._
+    import TemporalParse.PeriodParse._
     assert(SimplePeriod(2, WEEKS).toTimeMLValue === "P2W")
     assert(SimplePeriod(10, DAYS).toTimeMLValue === "P10D")
     assert(SimplePeriod(1, MONTHS).toTimeMLValue === "P1M")
@@ -27,14 +27,14 @@ class TemporalTest extends FunSuite {
   }
 
   test("resolves complex periods") {
-    import Temporal.Period._
+    import TemporalParse.PeriodParse._
     assert(Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)).toTimeMLValue === "P2W1D")
   }
 
   val now = ZonedDateTime.of(LocalDateTime.of(2012, 12, 12, 12, 12, 12), ZoneId.of("-12:00"))
 
   test("resolves simple anchors") {
-    import Temporal.Anchor._
+    import TemporalParse.AnchorParse._
     assertAnchor(
       Today,
       DAYS, DAYS, "2012-12-12", "2012-12-12")
@@ -68,8 +68,8 @@ class TemporalTest extends FunSuite {
   }
 
   test("resolves complex anchors") {
-    import Temporal.Period.SimplePeriod
-    import Temporal.Anchor._
+    import TemporalParse.PeriodParse.SimplePeriod
+    import TemporalParse.AnchorParse._
     assertAnchor(
       Plus(Today, SimplePeriod(1, DAYS)),
       DAYS, DAYS, "2012-12-13", "2012-12-13")
@@ -97,7 +97,7 @@ class TemporalTest extends FunSuite {
   }
 
   private def assertAnchor(
-    anchor: Temporal.Anchor,
+    anchor: TemporalParse.AnchorParse,
     baseUnit: ChronoUnit,
     rangeUnit: ChronoUnit,
     baseTimeMLValue: String,

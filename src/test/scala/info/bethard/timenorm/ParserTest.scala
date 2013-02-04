@@ -65,7 +65,7 @@ class ParserTest extends FunSuite {
 
   val parser = new SynchronousParser(grammar)
 
-  private def parse(tokens: String*): Temporal = {
+  private def parse(tokens: String*): TemporalParse = {
     this.parseAll(tokens: _*) match {
       case Seq(tree) => tree
       case trees => throw new IllegalArgumentException(
@@ -73,25 +73,25 @@ class ParserTest extends FunSuite {
     }
   }
 
-  private def parseAll(tokens: String*): Seq[Temporal] = {
-    this.parser.parseAll(tokens.toIndexedSeq).map(Temporal.fromParse)
+  private def parseAll(tokens: String*): Seq[TemporalParse] = {
+    this.parser.parseAll(tokens.toIndexedSeq).map(TemporalParse.apply)
   }
 
   test("parses simple periods") {
-    import Temporal.Period._
+    import TemporalParse.PeriodParse._
     assert(this.parse("two", "weeks") === SimplePeriod(2, WEEKS))
     assert(this.parse("10", "days") === SimplePeriod(10, DAYS))
     assert(this.parse("a", "month") === SimplePeriod(1, MONTHS))
   }
 
   test("parses complex periods") {
-    import Temporal.Period._
+    import TemporalParse.PeriodParse._
     assert(this.parse("two", "weeks", "and", "a", "day") ===
       Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)))
   }
 
   test("parses simple anchors") {
-    import Temporal.Anchor._
+    import TemporalParse.AnchorParse._
     assert(this.parse("now") === Now)
     assert(this.parse("today") === Today)
     assert(this.parse("September", "21", "1976") === Date(1976, 9, 21))
@@ -104,8 +104,8 @@ class ParserTest extends FunSuite {
   }
 
   test("parses complex anchors") {
-    import Temporal.Anchor._
-    import Temporal.Period.SimplePeriod
+    import TemporalParse.AnchorParse._
+    import TemporalParse.PeriodParse.SimplePeriod
     assert(this.parse("tomorrow") === Plus(Today, SimplePeriod(1, DAYS)))
     assert(this.parse("yesterday") === Minus(Today, SimplePeriod(1, DAYS)))
     assert(this.parse("next", "week") === Plus(Today, SimplePeriod(1, WEEKS)))
