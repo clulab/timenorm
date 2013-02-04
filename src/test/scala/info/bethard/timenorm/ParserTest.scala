@@ -78,20 +78,20 @@ class ParserTest extends FunSuite {
   }
 
   test("parses simple periods") {
-    import TemporalParse.PeriodParse._
+    import PeriodParse._
     assert(this.parse("two", "weeks") === SimplePeriod(2, WEEKS))
     assert(this.parse("10", "days") === SimplePeriod(10, DAYS))
     assert(this.parse("a", "month") === SimplePeriod(1, MONTHS))
   }
 
   test("parses complex periods") {
-    import TemporalParse.PeriodParse._
+    import PeriodParse._
     assert(this.parse("two", "weeks", "and", "a", "day") ===
       Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)))
   }
 
   test("parses simple anchors") {
-    import TemporalParse.AnchorParse._
+    import AnchorParse._
     assert(this.parse("now") === Now)
     assert(this.parse("today") === Today)
     assert(this.parse("September", "21", "1976") === Date(1976, 9, 21))
@@ -104,8 +104,8 @@ class ParserTest extends FunSuite {
   }
 
   test("parses complex anchors") {
-    import TemporalParse.AnchorParse._
-    import TemporalParse.PeriodParse.SimplePeriod
+    import AnchorParse._
+    import PeriodParse.SimplePeriod
     assert(this.parse("tomorrow") === Plus(Today, SimplePeriod(1, DAYS)))
     assert(this.parse("yesterday") === Minus(Today, SimplePeriod(1, DAYS)))
     assert(this.parse("next", "week") === Plus(Today, SimplePeriod(1, WEEKS)))
