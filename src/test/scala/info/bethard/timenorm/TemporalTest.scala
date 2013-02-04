@@ -18,17 +18,34 @@ class TemporalTest extends FunSuite {
 
   test("resolves simple periods") {
     import PeriodParse._
-    assert(SimplePeriod(2, WEEKS).toTimeMLValue === "P2W")
-    assert(SimplePeriod(10, DAYS).toTimeMLValue === "P10D")
-    assert(SimplePeriod(1, MONTHS).toTimeMLValue === "P1M")
-    assert(SimplePeriod(16, HOURS).toTimeMLValue === "PT16H")
-    assert(SimplePeriod(20, MINUTES).toTimeMLValue === "PT20M")
-    assert(SimplePeriod(53, SECONDS).toTimeMLValue === "PT53S")
+    assertPeriod(SimplePeriod(2, WEEKS), "P2W", WEEKS -> 2)
+    assertPeriod(SimplePeriod(10, DAYS), "P10D", DAYS -> 10)
+    assertPeriod(SimplePeriod(1, MONTHS), "P1M", MONTHS -> 1)
+    assertPeriod(SimplePeriod(16, HOURS), "PT16H", HOURS -> 16)
+    assertPeriod(SimplePeriod(20, MINUTES), "PT20M", MINUTES -> 20)
+    assertPeriod(SimplePeriod(53, SECONDS), "PT53S", SECONDS -> 53)
   }
 
   test("resolves complex periods") {
     import PeriodParse._
-    assert(Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)).toTimeMLValue === "P2W1D")
+    assertPeriod(
+        Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)),
+        "P2W1D", WEEKS -> 2, DAYS -> 1)
+    assertPeriod(
+        Plus(SimplePeriod(2, DAYS), SimplePeriod(1, DAYS)),
+        "P3D", DAYS -> 3)
+    assertPeriod(
+        Minus(SimplePeriod(5, MONTHS), Minus(SimplePeriod(3, MONTHS), SimplePeriod(1, MONTHS))),
+        "P3M", MONTHS -> 3)
+  }
+
+  private def assertPeriod(
+    periodParse: PeriodParse,
+    timeMLValue: String,
+    unitAmounts: (ChronoUnit, Int)*) = {
+    val period = periodParse.toPeriod
+    assert(period.timeMLValue === timeMLValue)
+    assert(period.unitAmounts === unitAmounts.toMap)
   }
 
   val now = ZonedDateTime.of(LocalDateTime.of(2012, 12, 12, 12, 12, 12), ZoneId.of("-12:00"))

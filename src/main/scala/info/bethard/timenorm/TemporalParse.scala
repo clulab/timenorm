@@ -204,17 +204,18 @@ object AnchorParse {
     extends FieldsAnchorParse(fields, _.plus(new ClosestAdjuster(fields)))
 
   abstract class PeriodAnchorParse(
-      anchor: AnchorParse,
-      period: PeriodParse,
+      anchorParse: AnchorParse,
+      periodParse: PeriodParse,
       adjust: (ZonedDateTime, Int, TemporalUnit) => ZonedDateTime) extends AnchorParse {
 
     def toDateTime(anchorDateTime: ZonedDateTime) = {
-      val dateTime = anchor.toDateTime(anchorDateTime)
+      val dateTime = anchorParse.toDateTime(anchorDateTime)
       var fullDateTime = dateTime.fullDateTime
-      for ((unit, amount) <- period.toUnitCounts) {
+      val unitAmounts = periodParse.toPeriod.unitAmounts
+      for ((unit, amount) <- unitAmounts) {
         fullDateTime = adjust(fullDateTime, amount, unit)
       }
-      val minUnit = period.toUnitCounts.keySet.minBy(_.getDuration)
+      val minUnit = unitAmounts.keySet.minBy(_.getDuration)
       DateTime(fullDateTime, dateTime.baseUnit, minUnit)
     }
 
@@ -263,32 +264,7 @@ object AnchorParse {
 }
 
 sealed abstract class PeriodParse extends TemporalParse {
-
-  def toUnitCounts: Map[ChronoUnit, Int]
-
-  def toTimeMLValue: String = {
-    val counts = this.toUnitCounts
-    val dateParts = this.toParts(counts, this.dateChars)
-    val timeParts = this.toParts(counts, this.timeChars)
-    val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.mkString
-    "P" + dateParts.mkString + timeString
-  }
-
-  private def toParts(counts: Map[ChronoUnit, Int], unitChars: Seq[(ChronoUnit, String)]) = {
-    val partOptions = for ((unit, char) <- unitChars) yield counts.get(unit).map(_ + char)
-    partOptions.flatten
-  }
-
-  private val dateChars = Seq(
-    ChronoUnit.YEARS -> "Y",
-    ChronoUnit.MONTHS -> "M",
-    ChronoUnit.WEEKS -> "W",
-    ChronoUnit.DAYS -> "D")
-
-  private val timeChars = Seq(
-    ChronoUnit.HOURS -> "H",
-    ChronoUnit.MINUTES -> "M",
-    ChronoUnit.SECONDS -> "S")
+  def toPeriod: Period
 }
 
 object PeriodParse {
@@ -313,29 +289,15 @@ object PeriodParse {
   }
 
   case class SimplePeriod(amount: Int, unit: ChronoUnit) extends PeriodParse {
-    def toUnitCounts = Map(unit -> amount).withDefaultValue(0)
+    def toPeriod = Period(Map(unit -> amount))
   }
 
-  case class Plus(period1: PeriodParse, period2: PeriodParse) extends PeriodParse {
-    def toUnitCounts = {
-      val counts1 = period1.toUnitCounts
-      val counts2 = period2.toUnitCounts
-      val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
-        (unit, counts1(unit) + counts2(unit))
-      }
-      pairs.toMap
-    }
+  case class Plus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
+    def toPeriod = periodParse1.toPeriod + periodParse2.toPeriod
   }
 
-  case class Minus(period1: PeriodParse, period2: PeriodParse) extends PeriodParse {
-    def toUnitCounts = {
-      val counts1 = period1.toUnitCounts
-      val counts2 = period2.toUnitCounts
-      val pairs = for (unit <- counts1.keySet ++ counts2.keySet) yield {
-        (unit, counts1(unit) - counts2(unit))
-      }
-      pairs.toMap
-    }
+  case class Minus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
+    def toPeriod = periodParse1.toPeriod - periodParse2.toPeriod
   }
 }
 
