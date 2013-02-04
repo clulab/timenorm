@@ -220,26 +220,48 @@ object AnchorParse {
       DateTime(dateTime, ChronoUnit.DAYS, ChronoUnit.DAYS)
     }
   }
-
-  abstract class FieldsAnchorParse(
-      fields: Map[ChronoField, Int],
-      adjust: (ZonedDateTime => ZonedDateTime)) extends AnchorParse {
-
+  
+  abstract class FieldSearchingAnchorParse(fields: Map[ChronoField, Int]) extends AnchorParse {
+    
     val minUnit = fields.keySet.map(_.getBaseUnit).minBy(_.getDuration)
 
-    def toDateTime(dateTime: ZonedDateTime) = {
-      DateTime(this.adjust(dateTime), this.minUnit, this.minUnit)
+    def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
+      var curr = dateTime
+      while (fields.exists { case (field, value) => curr.get(field) != value }) {
+        curr = step(curr, this.minUnit)
+      }
+      curr
     }
   }
 
+  abstract class DirectedFieldSearchingAnchorParse(
+      fields: Map[ChronoField, Int],
+      stepFirst: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
+      step: (ZonedDateTime, TemporalUnit) => ZonedDateTime)
+      extends FieldSearchingAnchorParse(fields) {
+
+    def toDateTime(dateTime: ZonedDateTime) = {
+      val adjustedDateTime = this.searchFrom(this.stepFirst(dateTime, this.minUnit), this.step)
+      DateTime(adjustedDateTime, this.minUnit, this.minUnit)
+    }
+  }
+  
   case class Next(fields: Map[ChronoField, Int])
-    extends FieldsAnchorParse(fields, _.plus(new FollowingAdjuster(fields)))
+    extends DirectedFieldSearchingAnchorParse(fields, _.plus(1, _), _.plus(1, _))
 
   case class Previous(fields: Map[ChronoField, Int])
-    extends FieldsAnchorParse(fields, _.minus(new PreviousAdjuster(fields)))
+    extends DirectedFieldSearchingAnchorParse(fields, _.minus(1, _), _.minus(1, _))
 
-  case class Closest(fields: Map[ChronoField, Int])
-    extends FieldsAnchorParse(fields, _.plus(new ClosestAdjuster(fields)))
+  case class Closest(fields: Map[ChronoField, Int]) extends FieldSearchingAnchorParse(fields) {
+    def toDateTime(dateTime: ZonedDateTime) = {
+      val prev = this.searchFrom(dateTime, _.minus(1, _))
+      val next = this.searchFrom(dateTime, _.plus(1, _))
+      val distToPrev = prev.periodUntil(dateTime, this.minUnit)
+      val distToNext = dateTime.periodUntil(next, this.minUnit)
+      val adjustedDateTime = if (distToPrev < distToNext) prev else next
+      DateTime(adjustedDateTime, this.minUnit, this.minUnit)
+    }
+  }
 
   abstract class PeriodAnchorParse(
       anchorParse: AnchorParse,
@@ -264,41 +286,6 @@ object AnchorParse {
 
   case class Minus(anchor: AnchorParse, period: PeriodParse)
     extends PeriodAnchorParse(anchor, period, _.minus(_, _))
-
-  private abstract class SearchingAdjuster(constraints: Map[ChronoField, Int]) {
-    val unit = constraints.keySet.map(_.getBaseUnit).minBy(_.getDuration)
-    def adjustInto(temporal: JTemporal, adjust: JTemporal => JTemporal): JTemporal = {
-      var curr = temporal
-      while (constraints.exists { case (field, value) => curr.get(field) != value }) {
-        curr = adjust(curr)
-      }
-      curr
-    }
-  }
-
-  private class PreviousAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalSubtractor {
-    def subtractFrom(temporal: JTemporal): JTemporal = {
-      this.adjustInto(temporal.minus(1, this.unit), _.minus(1, this.unit))
-    }
-  }
-
-  private class FollowingAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalAdder {
-    def addTo(temporal: JTemporal): JTemporal = {
-      this.adjustInto(temporal.plus(1, this.unit), _.plus(1, this.unit))
-    }
-  }
-
-  private class ClosestAdjuster(constraints: Map[ChronoField, Int]) extends SearchingAdjuster(constraints) with TemporalAdder {
-    def addTo(temporal: JTemporal): JTemporal = {
-      val prev = this.adjustInto(temporal, _.minus(1, this.unit))
-      val next = this.adjustInto(temporal, _.plus(1, this.unit))
-      if (prev.periodUntil(temporal, this.unit) < temporal.periodUntil(next, this.unit)) {
-        prev
-      } else {
-        next
-      }
-    }
-  }
 }
 
 sealed abstract class ModParse extends TemporalParse
