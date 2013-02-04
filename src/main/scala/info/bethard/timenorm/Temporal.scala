@@ -143,8 +143,12 @@ object Temporal {
     def fromParse(tree: Tree): Anchor = tree match {
       case Tree.Terminal("TODAY") =>
         Temporal.Anchor.Today
+      case Tree.Terminal("NOW") =>
+        Temporal.Anchor.Now
       case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
         case "[Anchor]" => tree.children match {
+          case Tree.Terminal("NOW") :: Nil =>
+            Temporal.Anchor.Now
           case Tree.Terminal("TODAY") :: Nil =>
             Temporal.Anchor.Today
           case Tree.Terminal("Date") :: year :: month :: day :: Nil =>

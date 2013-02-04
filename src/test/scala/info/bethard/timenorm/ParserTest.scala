@@ -43,6 +43,7 @@ class ParserTest extends FunSuite {
     [Period] ||| [Unit] ||| [Unit] ||| 1.0
     [Period] ||| [Number] [Unit] ||| [Number] [Unit] ||| 1.0
     [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
+    [Anchor] ||| now ||| NOW ||| 1.0
     [Anchor] ||| today ||| TODAY ||| 1.0
     [Anchor] ||| yesterday ||| Minus TODAY ( Period 1 DAYS ) ||| 1.0
     [Anchor] ||| tomorrow ||| Plus TODAY ( Period 1 DAYS ) ||| 1.0
@@ -91,6 +92,7 @@ class ParserTest extends FunSuite {
 
   test("parses simple anchors") {
     import Temporal.Anchor._
+    assert(this.parse("now") === Now)
     assert(this.parse("today") === Today)
     assert(this.parse("September", "21", "1976") === Date(1976, 9, 21))
     assert(this.parse("9", "21", "1976") === Date(1976, 9, 21))
