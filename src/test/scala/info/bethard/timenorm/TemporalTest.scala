@@ -88,6 +88,15 @@ class TemporalTest extends FunSuite {
     assertAnchor(
       CurrentOrPrevious(Map(DAY_OF_WEEK -> DayOfWeek.TUESDAY.getValue)),
       DAYS, DAYS, "2012-12-11", "2012-12-11")
+    assertAnchor(
+      Previous(Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
+      DAYS, DAYS, "2011-12-12", "2011-12-12")
+    assertAnchor(
+      CurrentOrPrevious(Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
+      DAYS, DAYS, "2012-12-12", "2012-12-12")
+    assertAnchor(
+      Next(Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
+      DAYS, DAYS, "2013-12-12", "2013-12-12")
   }
 
   test("resolves complex anchors") {
