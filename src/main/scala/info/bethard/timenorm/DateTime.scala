@@ -29,14 +29,14 @@ case class DateTime(
     MINUTES -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR),
     SECONDS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE))
 
-  private def timeMLValue(unit: TemporalUnit): String = {
+  protected def toTimeMLValue(unit: TemporalUnit): String = {
     val parts =
       for (field <- this.unitToFields(unit))
         yield this.fieldFormats(field).format(this.fullDateTime.get(field))
     parts.mkString
   }
 
-  val baseTimeMLValue = this.timeMLValue(this.baseUnit)
+  val baseTimeMLValue = this.toTimeMLValue(this.baseUnit)
 
-  val rangeTimeMLValue = this.timeMLValue(this.rangeUnit)
+  val rangeTimeMLValue = this.toTimeMLValue(this.rangeUnit)
 }

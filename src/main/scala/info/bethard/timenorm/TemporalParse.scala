@@ -159,12 +159,20 @@ object AnchorParse {
   def apply(tree: Tree): AnchorParse = tree match {
     case Tree.Terminal("TODAY") =>
       Today
-    case Tree.Terminal("NOW") =>
-      Now
+    case Tree.Terminal("PAST") =>
+      Past
+    case Tree.Terminal("PRESENT") =>
+      Present
+    case Tree.Terminal("FUTURE") =>
+      Future
     case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
       case "[Anchor]" => tree.children match {
-        case Tree.Terminal("NOW") :: Nil =>
-          Now
+        case Tree.Terminal("PAST") :: Nil =>
+          Past
+        case Tree.Terminal("PRESENT") :: Nil =>
+          Present
+        case Tree.Terminal("FUTURE") :: Nil =>
+          Future
         case Tree.Terminal("TODAY") :: Nil =>
           Today
         case Tree.Terminal("CurrentField") :: Tree.Terminal(fieldName) :: Nil =>
@@ -208,12 +216,27 @@ object AnchorParse {
       DateTime(anchor, ChronoUnit.DAYS, ChronoUnit.DAYS)
     }
   }
-
-  case object Now extends AnchorParse {
+  
+  case object Past extends AnchorParse {
     def toDateTime(anchor: ZonedDateTime) = {
-      new DateTime(anchor, ChronoUnit.SECONDS, ChronoUnit.SECONDS) {
-        override val baseTimeMLValue = "PRESENT_REF"
-        override val rangeTimeMLValue = "PRESENT_REF"
+      new DateTime(anchor, ChronoUnit.FOREVER, ChronoUnit.FOREVER) {
+        override def toTimeMLValue(unit: TemporalUnit) = "PAST_REF"
+      }
+    }
+  }
+
+  case object Present extends AnchorParse {
+    def toDateTime(anchor: ZonedDateTime) = {
+      new DateTime(anchor, ChronoUnit.SECONDS, ChronoUnit.FOREVER) {
+        override def toTimeMLValue(unit: TemporalUnit) = "PRESENT_REF"
+      }
+    }
+  }
+
+  case object Future extends AnchorParse {
+    def toDateTime(anchor: ZonedDateTime) = {
+      new DateTime(anchor, ChronoUnit.FOREVER, ChronoUnit.FOREVER) {
+        override def toTimeMLValue(unit: TemporalUnit) = "FUTURE_REF"
       }
     }
   }

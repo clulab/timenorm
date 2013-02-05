@@ -56,8 +56,14 @@ class TemporalTest extends FunSuite {
       Today,
       DAYS, DAYS, "2012-12-12", "2012-12-12")
     assertAnchor(
-      Now,
-      SECONDS, SECONDS, "PRESENT_REF", "PRESENT_REF")
+      Past,
+      FOREVER, FOREVER, "PAST_REF", "PAST_REF")
+    assertAnchor(
+      Present,
+      SECONDS, FOREVER, "PRESENT_REF", "PRESENT_REF")
+    assertAnchor(
+      Future,
+      FOREVER, FOREVER, "FUTURE_REF", "FUTURE_REF")
     assertAnchor(
       Date(1976, 9, 21),
       DAYS, DAYS, "1976-09-21", "1976-09-21")
@@ -127,7 +133,7 @@ class TemporalTest extends FunSuite {
       Minus(Minus(Today, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)),
       DAYS, DAYS, "2012-12-10", "2012-12-10")
     assertAnchor(
-      Plus(Now, SimplePeriod(2, DAYS)),
+      Plus(Present, SimplePeriod(2, DAYS)),
       SECONDS, DAYS, "2012-12-14T12:12:12", "2012-12-14")
   }
 
