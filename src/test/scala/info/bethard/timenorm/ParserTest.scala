@@ -96,10 +96,14 @@ class ParserTest extends FunSuite {
     import AnchorParse._
     assert(this.parse("now") === Present)
     assert(this.parse("today") === Today)
-    assert(this.parse("September", "21", "1976") === Date(1976, 9, 21))
-    assert(this.parse("9", "21", "1976") === Date(1976, 9, 21))
-    assert(this.parse("21", "9", "1976") === Date(1976, 9, 21))
-    assert(this.parse("1976", "9", "21") === Date(1976, 9, 21))
+    assert(this.parse("September", "21", "1976") ===
+      Date(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+    assert(this.parse("9", "21", "1976") ===
+      Date(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+    assert(this.parse("21", "9", "1976") ===
+      Date(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+    assert(this.parse("1976", "9", "21") ===
+      Date(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
     assert(this.parse("October", "15") === Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
     assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
       Previous(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))

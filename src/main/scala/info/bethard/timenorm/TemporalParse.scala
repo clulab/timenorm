@@ -177,8 +177,8 @@ object AnchorParse {
           Today
         case Tree.Terminal("CurrentField") :: Tree.Terminal(fieldName) :: Nil =>
           CurrentField(ChronoField.valueOf(fieldName))
-        case Tree.Terminal("Date") :: year :: month :: day :: Nil =>
-          Date(FieldParse(year).value, FieldParse(month).value, FieldParse(day).value)
+        case Tree.Terminal("Date") :: tail =>
+          Date(this.toFieldNameValuePairs(tail).toMap)
         case Tree.Terminal("Next") :: tail =>
           Next(this.toFieldNameValuePairs(tail).toMap)
         case Tree.Terminal("Previous") :: tail =>
@@ -246,18 +246,22 @@ object AnchorParse {
       DateTime(anchor, field.getBaseUnit, field.getBaseUnit)
     }
   }
+  
+  abstract class FieldBasedAnchorParse(fields: Map[ChronoField, Int]) extends AnchorParse {
+    val minUnit = fields.keySet.map(_.getBaseUnit).minBy(_.getDuration)
+  }
 
-  case class Date(year: Int, month: Int, day: Int) extends AnchorParse {
+  case class Date(fields: Map[ChronoField, Int]) extends FieldBasedAnchorParse(fields) {
     def toDateTime(anchor: ZonedDateTime) = {
-      val dateTime = anchor.withYear(year).withMonth(month).withDayOfMonth(day)
-      DateTime(dateTime, ChronoUnit.DAYS, ChronoUnit.DAYS)
+      var curr = anchor
+      for ((field, value) <- fields) {
+        curr = curr.`with`(field, value)
+      }
+      DateTime(curr, this.minUnit, this.minUnit)
     }
   }
   
-  abstract class FieldSearchingAnchorParse(fields: Map[ChronoField, Int]) extends AnchorParse {
-    
-    val minUnit = fields.keySet.map(_.getBaseUnit).minBy(_.getDuration)
-
+  abstract class FieldSearchingAnchorParse(fields: Map[ChronoField, Int]) extends FieldBasedAnchorParse(fields) {
     def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
       var curr = dateTime
       while (fields.exists { case (field, value) => curr.get(field) != value }) {

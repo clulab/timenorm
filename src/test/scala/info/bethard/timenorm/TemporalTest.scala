@@ -65,8 +65,11 @@ class TemporalTest extends FunSuite {
       Future,
       FOREVER, FOREVER, "FUTURE_REF", "FUTURE_REF")
     assertAnchor(
-      Date(1976, 9, 21),
+      Date(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
       DAYS, DAYS, "1976-09-21", "1976-09-21")
+    assertAnchor(
+      Date(Map(YEAR -> 2030)),
+      YEARS, YEARS, "2030", "2030")
     assertAnchor(
       Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)),
       DAYS, DAYS, "2012-10-15", "2012-10-15")
