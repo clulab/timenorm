@@ -97,6 +97,9 @@ class TemporalTest extends FunSuite {
     assertAnchor(
       Next(Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
       DAYS, DAYS, "2013-12-12", "2013-12-12")
+    assertAnchor(
+      CurrentField(ALIGNED_WEEK_OF_YEAR),
+      WEEKS, WEEKS, "2012-W50", "2012-W50")
   }
 
   test("resolves complex anchors") {

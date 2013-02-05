@@ -47,6 +47,7 @@ class ParserTest extends FunSuite {
     [Anchor] ||| today ||| TODAY ||| 1.0
     [Anchor] ||| yesterday ||| Minus TODAY ( Period 1 DAYS ) ||| 1.0
     [Anchor] ||| tomorrow ||| Plus TODAY ( Period 1 DAYS ) ||| 1.0
+    [Anchor] ||| this week ||| CurrentField ALIGNED_WEEK_OF_YEAR ||| 1.0
     [Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] [Field:Year] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
     [Anchor] ||| [Field:DayOfMonth] [Field:MonthOfYear] [Field:Year] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
     [Anchor] ||| [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
@@ -102,6 +103,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("October", "15") === Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
     assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
       Previous(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
+    assert(this.parse("this", "week") === CurrentField(ALIGNED_WEEK_OF_YEAR))
   }
 
   test("parses complex anchors") {

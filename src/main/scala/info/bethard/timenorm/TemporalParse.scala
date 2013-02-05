@@ -167,6 +167,8 @@ object AnchorParse {
           Now
         case Tree.Terminal("TODAY") :: Nil =>
           Today
+        case Tree.Terminal("CurrentField") :: Tree.Terminal(fieldName) :: Nil =>
+          CurrentField(ChronoField.valueOf(fieldName))
         case Tree.Terminal("Date") :: year :: month :: day :: Nil =>
           Date(FieldParse(year).value, FieldParse(month).value, FieldParse(day).value)
         case Tree.Terminal("Next") :: tail =>
@@ -213,6 +215,12 @@ object AnchorParse {
         override val baseTimeMLValue = "PRESENT_REF"
         override val rangeTimeMLValue = "PRESENT_REF"
       }
+    }
+  }
+
+  case class CurrentField(field: ChronoField) extends AnchorParse {
+    def toDateTime(anchor: ZonedDateTime) = {
+      DateTime(anchor, field.getBaseUnit, field.getBaseUnit)
     }
   }
 
