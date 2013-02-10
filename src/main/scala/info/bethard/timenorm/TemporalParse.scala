@@ -191,6 +191,8 @@ object AnchorParse {
           Plus(AnchorParse(anchor), PeriodParse(period))
         case Tree.Terminal("Minus") :: anchor :: period :: Nil =>
           Minus(AnchorParse(anchor), PeriodParse(period))
+        case Tree.Terminal("Modifier") :: Tree.Terminal(modifier) :: anchor :: Nil =>
+          Modifier(modifier, AnchorParse(anchor))
         case _ =>
           TemporalParse.fail("Anchor", tree)
       }
@@ -326,21 +328,11 @@ object AnchorParse {
 
   case class Minus(anchor: AnchorParse, period: PeriodParse)
     extends PeriodAnchorParse(anchor, period, _.minus(_, _))
-}
-
-sealed abstract class ModParse extends TemporalParse
-object ModParse {
-  case object Exact extends ModParse
-  case object Before extends ModParse
-  case object After extends ModParse
-  case object OnOrBefore extends ModParse
-  case object OnOrAfter extends ModParse
-  case object LessThan extends ModParse
-  case object MoreThan extends ModParse
-  case object EqualOrLess extends ModParse
-  case object EqualOrMore extends ModParse
-  case object Start extends ModParse
-  case object Mid extends ModParse
-  case object End extends ModParse
-  case object Approx extends ModParse
+  
+  case class Modifier(modifier: String, anchor: AnchorParse) extends AnchorParse {
+    def toDateTime(zonedDateTime: ZonedDateTime) = {
+      val dateTime = anchor.toDateTime(zonedDateTime)
+      new DateTime(dateTime.fullDateTime, dateTime.baseUnit, dateTime.rangeUnit, modifier)
+    }
+  }
 }

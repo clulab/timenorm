@@ -9,7 +9,8 @@ import org.threeten.bp.temporal.ChronoUnit._
 case class DateTime(
     fullDateTime: ZonedDateTime,
     baseUnit: TemporalUnit,
-    rangeUnit: TemporalUnit) {
+    rangeUnit: TemporalUnit,
+    modifier: String = "EXACT") {
 
   private val fieldFormats = Map[TemporalField, String](
     YEAR -> "%04d",

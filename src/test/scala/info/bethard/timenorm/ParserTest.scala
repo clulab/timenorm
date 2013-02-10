@@ -63,6 +63,7 @@ class ParserTest extends FunSuite {
     [Anchor] ||| [Field] ||| Previous [Field] ||| 1.0
     [Anchor] ||| [Field] ||| Next [Field] ||| 1.0
     [Anchor] ||| [Field:HourOfAMPM] : [Field:MinuteOfHour] [Field:AMPMOfDay] ||| Previous [Field:HourOfAMPM] [Field:MinuteOfHour] [Field:AMPMOfDay] ||| 1.0
+    [Anchor] ||| early [Anchor] ||| Modifier START [Anchor] ||| 1.0
     """)
 
   val parser = new SynchronousParser(grammar)
@@ -126,6 +127,8 @@ class ParserTest extends FunSuite {
         Previous(Map(MONTH_OF_YEAR -> 1)),
         CurrentOrPrevious(Map(MONTH_OF_YEAR -> 1)),
         Next(Map(MONTH_OF_YEAR -> 1))))
+    assert(this.parse("early", "next", "week") ===
+      Modifier("START", Plus(Today, SimplePeriod(1, WEEKS))))
   }
 
   /*
