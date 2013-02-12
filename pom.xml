@@ -47,6 +47,12 @@
       <version>2.0.M5b</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>no.arktekk</groupId>
+      <artifactId>anti-xml_2.10</artifactId>
+      <version>0.5.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

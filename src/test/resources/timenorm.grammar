@@ -1,0 +1,139 @@
+ROOTS [Period] [Anchor]
+
+[Nil] ||| a ||| ||| 1.0
+[Nil] ||| the ||| ||| 1.0
+[Nil] ||| that ||| ||| 1.0
+
+[Number] ||| one ||| 2 ||| 1.0
+[Number] ||| two ||| 2 ||| 1.0
+[Number] ||| three ||| 3 ||| 1.0
+[Number] ||| four ||| 4 ||| 1.0
+[Number] ||| five ||| 5 ||| 1.0
+[Number] ||| six ||| 6 ||| 1.0
+[Number] ||| seven ||| 7 ||| 1.0
+[Number] ||| eight ||| 8 ||| 1.0
+[Number] ||| nine ||| 9 ||| 1.0
+[Number] ||| ten ||| 10 ||| 1.0
+[Number] ||| eleven ||| 11 ||| 1.0
+[Number] ||| twelve ||| 12 ||| 1.0
+[Number] ||| thirteen ||| 13 ||| 1.0
+[Number] ||| fourteen ||| 14 ||| 1.0
+[Number] ||| fifteen ||| 15 ||| 1.0
+[Number] ||| sixteen ||| 16 ||| 1.0
+[Number] ||| seventeen ||| 17 ||| 1.0
+[Number] ||| eighteen ||| 18 ||| 1.0
+[Number] ||| nineteen ||| 19 ||| 1.0
+[Number] ||| twenty ||| 20 ||| 1.0
+
+[Unit] ||| second ||| SECONDS ||| 1.0
+[Unit] ||| seconds ||| SECONDS ||| 1.0
+[Unit] ||| minute ||| MINUTES ||| 1.0
+[Unit] ||| minutes ||| MINUTES ||| 1.0
+[Unit] ||| hour ||| HOURS ||| 1.0
+[Unit] ||| hours ||| HOURS ||| 1.0
+[Unit] ||| day ||| DAYS ||| 1.0
+[Unit] ||| days ||| DAYS ||| 1.0
+[Unit] ||| week ||| WEEKS ||| 1.0
+[Unit] ||| weeks ||| WEEKS ||| 1.0
+[Unit] ||| month ||| MONTHS ||| 1.0
+[Unit] ||| months ||| MONTHS ||| 1.0
+[Unit] ||| year ||| YEARS ||| 1.0
+[Unit] ||| years ||| YEARS ||| 1.0
+
+[Field:HourOfDay] ||| [Number:0-23] ||| HOUR_OF_DAY [Number:0-23] ||| 1.0
+[Field:HourOfAMPM] ||| [Number:1-12] ||| HOUR_OF_AMPM [Number:1-12] ||| 1.0
+[Field:MinuteOfHour] ||| [Number:0-59] ||| MINUTE_OF_HOUR [Number:0-59] ||| 1.0
+[Field:SecondOfMinute] ||| [Number:0-59] ||| SECOND_OF_MINUTE [Number:0-59] ||| 1.0
+[Field:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
+[Field:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
+
+[Field:DayOfWeek] ||| Monday ||| DAY_OF_WEEK 1 ||| 1.0
+[Field:DayOfWeek] ||| Tuesday ||| DAY_OF_WEEK 2 ||| 1.0
+[Field:DayOfWeek] ||| Wednesday ||| DAY_OF_WEEK 3 ||| 1.0
+[Field:DayOfWeek] ||| Thursday ||| DAY_OF_WEEK 4 ||| 1.0
+[Field:DayOfWeek] ||| Friday ||| DAY_OF_WEEK 5 ||| 1.0
+[Field:DayOfWeek] ||| Saturday ||| DAY_OF_WEEK 6 ||| 1.0
+[Field:DayOfWeek] ||| Sunday ||| DAY_OF_WEEK 7 ||| 1.0
+
+[Field:DayOfMonth] ||| [Number:1-31] ||| DAY_OF_MONTH [Number:1-31] ||| 1.0
+
+[Field:MonthOfYear] ||| January ||| MONTH_OF_YEAR 1 ||| 1.0
+[Field:MonthOfYear] ||| February ||| MONTH_OF_YEAR 2 ||| 1.0
+[Field:MonthOfYear] ||| March ||| MONTH_OF_YEAR 3 ||| 1.0
+[Field:MonthOfYear] ||| April ||| MONTH_OF_YEAR 4 ||| 1.0
+[Field:MonthOfYear] ||| May ||| MONTH_OF_YEAR 5 ||| 1.0
+[Field:MonthOfYear] ||| June ||| MONTH_OF_YEAR 6 ||| 1.0
+[Field:MonthOfYear] ||| July ||| MONTH_OF_YEAR 7 ||| 1.0
+[Field:MonthOfYear] ||| August ||| MONTH_OF_YEAR 8 ||| 1.0
+[Field:MonthOfYear] ||| September ||| MONTH_OF_YEAR 9 ||| 1.0
+[Field:MonthOfYear] ||| October ||| MONTH_OF_YEAR 10 ||| 1.0
+[Field:MonthOfYear] ||| November ||| MONTH_OF_YEAR 11 ||| 1.0
+[Field:MonthOfYear] ||| December ||| MONTH_OF_YEAR 12 ||| 1.0
+[Field:MonthOfYear] ||| Jan . ||| MONTH_OF_YEAR 1 ||| 1.0
+[Field:MonthOfYear] ||| Feb . ||| MONTH_OF_YEAR 2 ||| 1.0
+[Field:MonthOfYear] ||| Mar . ||| MONTH_OF_YEAR 3 ||| 1.0
+[Field:MonthOfYear] ||| Apr . ||| MONTH_OF_YEAR 4 ||| 1.0
+[Field:MonthOfYear] ||| May . ||| MONTH_OF_YEAR 5 ||| 1.0
+[Field:MonthOfYear] ||| Jun . ||| MONTH_OF_YEAR 6 ||| 1.0
+[Field:MonthOfYear] ||| Jul . ||| MONTH_OF_YEAR 7 ||| 1.0
+[Field:MonthOfYear] ||| Aug . ||| MONTH_OF_YEAR 8 ||| 1.0
+[Field:MonthOfYear] ||| Sep . ||| MONTH_OF_YEAR 9 ||| 1.0
+[Field:MonthOfYear] ||| Sept . ||| MONTH_OF_YEAR 9 ||| 1.0
+[Field:MonthOfYear] ||| Oct . ||| MONTH_OF_YEAR 10 ||| 1.0
+[Field:MonthOfYear] ||| Nov . ||| MONTH_OF_YEAR 11 ||| 1.0
+[Field:MonthOfYear] ||| Dec . ||| MONTH_OF_YEAR 12 ||| 1.0
+[Field:MonthOfYear] ||| [Number:1-12] ||| MONTH_OF_YEAR [Number:1-12] ||| 1.0
+
+[Field:Year] ||| [Number:1900-2100] ||| YEAR [Number:1900-2100] ||| 1.0
+
+[Period] ||| [Unit] ||| [Unit] ||| 1.0
+[Period] ||| [Number] [Unit] ||| [Number] [Unit] ||| 1.0
+[Period] ||| [Number] - [Unit] ||| [Number] [Unit] ||| 1.0
+[Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
+
+[Anchor] ||| past ||| PAST ||| 1.0
+[Anchor] ||| the past ||| PAST ||| 1.0
+[Anchor] ||| now ||| PRESENT ||| 1.0
+[Anchor] ||| future ||| FUTURE ||| 1.0
+[Anchor] ||| the future ||| FUTURE ||| 1.0
+
+[Anchor] ||| today ||| TODAY ||| 1.0
+[Anchor] ||| yesterday ||| Minus TODAY ( Period 1 DAYS ) ||| 1.0
+[Anchor] ||| tomorrow ||| Plus TODAY ( Period 1 DAYS ) ||| 1.0
+
+[Anchor] ||| [Field:Year] ||| Date [Field:Year] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] [Field:Year] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+[Anchor] ||| [Field:DayOfMonth] [Field:MonthOfYear] [Field:Year] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+[Anchor] ||| [Field:Year] - [Field:MonthOfYear] - [Field:DayOfMonth] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] / [Field:DayOfMonth] / [Field:Year] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+[Anchor] ||| [Field:Year] - [Field:MonthOfYear] - [Field:DayOfMonth] [Field:HourOfDay] : [Field:MinuteOfHour] : [Field:SecondOfMinute] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] [Field:HourOfDay] [Field:MinuteOfHour] [Field:SecondOfMinute] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] / [Field:DayOfMonth] / [Field:Year] [Field:HourOfDay] : [Field:MinuteOfHour] : [Field:SecondOfMinute] ||| Date [Field:Year] [Field:MonthOfYear] [Field:DayOfMonth] [Field:HourOfDay] [Field:MinuteOfHour] [Field:SecondOfMinute] ||| 1.0
+
+[Anchor] ||| next [Period] ||| Plus TODAY [Period] ||| 1.0
+[Anchor] ||| Next [Period] ||| Plus TODAY [Period] ||| 1.0
+[Anchor] ||| last [Period] ||| Minus TODAY [Period] ||| 1.0
+[Anchor] ||| Last [Period] ||| Minus TODAY [Period] ||| 1.0
+
+[Anchor] ||| [Period] from [Anchor] ||| Plus [Anchor] [Period] ||| 1.0
+[Anchor] ||| [Period] before [Anchor] ||| Minus [Anchor] [Period] ||| 1.0
+[Anchor] ||| [Period] ago ||| Minus TODAY [Period] ||| 1.0
+
+[Anchor] ||| last [Field] ||| Previous [Field] ||| 1.0
+[Anchor] ||| Last [Field] ||| Previous [Field] ||| 1.0
+[Anchor] ||| next [Field] ||| Next [Field] ||| 1.0
+[Anchor] ||| Next [Field] ||| Next [Field] ||| 1.0
+
+[Anchor] ||| [Field:DayOfWeek] ||| CurrentOrPrevious [Field:DayOfWeek] ||| 1.0
+[Anchor] ||| [Field:DayOfWeek] ||| Next [Field:DayOfWeek] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] ||| CurrentOrPrevious [Field:MonthOfYear] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] ||| Next [Field:MonthOfYear] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] ||| CurrentOrPrevious [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+[Anchor] ||| [Field:MonthOfYear] [Field:DayOfMonth] ||| Next [Field:MonthOfYear] [Field:DayOfMonth] ||| 1.0
+
+[Anchor] ||| [Field:HourOfAMPM] : [Field:MinuteOfHour] [Field:AMPMOfDay] ||| Previous [Field:HourOfAMPM] [Field:MinuteOfHour] [Field:AMPMOfDay] ||| 1.0
+[Anchor] ||| [Field:HourOfAMPM] : [Field:MinuteOfHour] [Field:AMPMOfDay] ||| Next [Field:HourOfAMPM] [Field:MinuteOfHour] [Field:AMPMOfDay] ||| 1.0
+
+[Anchor] ||| this [Unit] ||| MinUnit TODAY [Unit] ||| 1.0
+[Anchor] ||| This [Unit] ||| MinUnit TODAY [Unit] ||| 1.0
+
+[Anchor] ||| early [Anchor] ||| Modifier START [Anchor] ||| 1.0
