@@ -175,8 +175,8 @@ object AnchorParse {
           Future
         case Tree.Terminal("TODAY") :: Nil =>
           Today
-        case Tree.Terminal("CurrentField") :: Tree.Terminal(fieldName) :: Nil =>
-          CurrentField(ChronoField.valueOf(fieldName))
+        case Tree.Terminal("MinUnit") :: anchor :: unit :: Nil =>
+          MinUnit(AnchorParse(anchor), UnitParse(unit).value)
         case Tree.Terminal("Date") :: tail =>
           Date(this.toFieldNameValuePairs(tail).toMap)
         case Tree.Terminal("Next") :: tail =>
@@ -243,9 +243,9 @@ object AnchorParse {
     }
   }
 
-  case class CurrentField(field: ChronoField) extends AnchorParse {
+  case class MinUnit(anchorParse: AnchorParse, unit: ChronoUnit) extends AnchorParse {
     def toDateTime(anchor: ZonedDateTime) = {
-      DateTime(anchor, field.getBaseUnit, field.getBaseUnit)
+      anchorParse.toDateTime(anchor).copy(baseUnit = unit, rangeUnit = unit)
     }
   }
   

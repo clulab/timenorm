@@ -107,7 +107,7 @@ class TemporalTest extends FunSuite {
       Next(Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
       DAYS, DAYS, "2013-12-12", "2013-12-12")
     assertAnchor(
-      CurrentField(ALIGNED_WEEK_OF_YEAR),
+      MinUnit(Today, WEEKS),
       WEEKS, WEEKS, "2012-W50", "2012-W50")
   }
 
