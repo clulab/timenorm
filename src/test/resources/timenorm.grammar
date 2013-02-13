@@ -4,6 +4,7 @@ ROOTS [Period] [Anchor]
 [Nil] ||| the ||| ||| 1.0
 [Nil] ||| that ||| ||| 1.0
 [Nil] ||| . ||| ||| 1.0
+[Nil] ||| , ||| ||| 1.0
 
 [Number] ||| one ||| 2 ||| 1.0
 [Number] ||| two ||| 2 ||| 1.0
