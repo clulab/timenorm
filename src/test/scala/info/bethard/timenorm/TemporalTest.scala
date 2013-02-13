@@ -138,6 +138,9 @@ class TemporalTest extends FunSuite {
     assertAnchor(
       Plus(Present, SimplePeriod(2, DAYS)),
       SECONDS, DAYS, "2012-12-14T12:12:12", "2012-12-14")
+    assertAnchor(
+      Minus(Today, SimplePeriod(1, DECADES)),
+      DAYS, DECADES, "2002-12-12", "200")
   }
 
   private def assertAnchor(

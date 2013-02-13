@@ -25,6 +25,10 @@ class ParserTest extends FunSuite {
     [Unit] ||| weeks ||| WEEKS ||| 1.0
     [Unit] ||| month ||| MONTHS ||| 1.0
     [Unit] ||| months ||| MONTHS ||| 1.0
+    [Unit] ||| year ||| YEARS ||| 1.0
+    [Unit] ||| years ||| YEARS ||| 1.0
+    [Unit] ||| decade ||| DECADES ||| 1.0
+    [Unit] ||| decades ||| DECADES ||| 1.0
     [Field:HourOfAMPM] ||| [Number:1-12] ||| HOUR_OF_AMPM [Number:1-12] ||| 1.0
     [Field:MinuteOfHour] ||| [Number:0-60] ||| MINUTE_OF_HOUR [Number:0-60] ||| 1.0
     [Field:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
@@ -137,6 +141,8 @@ class ParserTest extends FunSuite {
         Next(Map(MONTH_OF_YEAR -> 1))))
     assert(this.parse("early", "next", "week") ===
       Modifier("START", Plus(Today, SimplePeriod(1, WEEKS))))
+    assert(this.parse("a", "decade", "ago") ===
+      Minus(Today, SimplePeriod(1, DECADES)))
   }
 
   test("parses with nil") {
