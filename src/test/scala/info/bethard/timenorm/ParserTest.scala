@@ -11,8 +11,12 @@ import org.threeten.bp.temporal.ChronoField._
 class ParserTest extends FunSuite {
 
   val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [Anchor]
-    [Number] ||| a ||| 1 ||| 1.0
-    [Number] ||| the ||| 1 ||| 1.0
+    [Nil] ||| a ||| ||| 1.0
+    [Nil] ||| the ||| ||| 1.0
+    [Nil] ||| . ||| ||| 1.0
+    [Nil] ||| very ||| ||| 1.0
+    [Nil] ||| just ||| ||| 1.0
+    [Number] ||| one ||| 1 ||| 1.0
     [Number] ||| two ||| 2 ||| 1.0
     [Number] ||| three ||| 3 ||| 1.0
     [Unit] ||| day ||| DAYS ||| 1.0
@@ -130,6 +134,14 @@ class ParserTest extends FunSuite {
         Next(Map(MONTH_OF_YEAR -> 1))))
     assert(this.parse("early", "next", "week") ===
       Modifier("START", Plus(Today, SimplePeriod(1, WEEKS))))
+  }
+
+  test("parses with nil") {
+    import AnchorParse._
+    assert(this.parse("just", "now") === Present)
+    assert(this.parse("this", "week", ".") === MinUnit(Today, WEEKS))
+    assert(this.parse("this", "very", "month") === MinUnit(Today, MONTHS))
+    assert(this.parse("the", "next", "October") === Next(Map(MONTH_OF_YEAR -> 10)))
   }
 
   /*

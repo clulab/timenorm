@@ -80,6 +80,7 @@ object SynchronousGrammar {
 
   case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int]) {
     val basicSymbol = symbol.replaceAll(":[^\\]]*", "")
+    val isNilSymbol = this.basicSymbol == "[Nil]"
   }
 }
 

@@ -1,7 +1,7 @@
 package info.bethard.timenorm
 
 import scala.collection.immutable.{ Seq, IndexedSeq }
-import scala.collection.mutable.Buffer
+import scala.collection.mutable
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 import scala.collection.mutable.ListBuffer
@@ -99,22 +99,34 @@ class SynchronousParser(grammar: SynchronousGrammar) {
             }
           }
         }
-      }
 
+        // expand complete parses if there are Nil parses beside them
+        for (complete1 <- chart(size1)(start).completes) {
+          for (complete2 <- chart(size2)(start2).completes) {
+            if (!complete1.rule.isNilSymbol && complete2.rule.isNilSymbol) {
+              entry.completes += complete1
+            } else if (complete1.rule.isNilSymbol && !complete2.rule.isNilSymbol) {
+              entry.completes += complete2            
+            }
+          }
+        }
+      }
+      
       // create parses for rules that start with any of the currently complete parses
-      // NOTE: we have to use a while-loop here because the loop itself may add more completed
+      // NOTE: we have to use a queue here because the loop itself may add more completed
       // rules that we then also need to process
-      var i = 0
-      while (i < entry.completes.size) {
-        val complete = entry.completes(i)
+      val queue = mutable.Queue.empty ++ entry.completes
+      while (queue.nonEmpty) {
+        val complete = queue.dequeue
         for (rule <- grammar.sourceSeqStartsWith(complete.rule.symbol)) {
           if (rule.sourceSeq.tail.isEmpty) {
-            entry.completes += Parse(rule, IndexedSeq(complete))
+            val complete2 = Parse(rule, IndexedSeq(complete))
+            queue.enqueue(complete2)
+            entry.completes += complete2
           } else {
             entry.partials += PartialParse(rule, 1, IndexedSeq(complete))
           }
         }
-        i += 1
       }
     }
     chart
@@ -181,6 +193,6 @@ object SynchronousParser {
     nonTerminalRules: IndexedSeq[Parse])
 
   private[SynchronousParser] case class ChartEntry(
-    completes: Buffer[Parse] = Buffer.empty,
-    partials: Buffer[PartialParse] = Buffer.empty)
+    completes: mutable.Set[Parse] = mutable.Set.empty,
+    partials: mutable.Set[PartialParse] = mutable.Set.empty)
 }

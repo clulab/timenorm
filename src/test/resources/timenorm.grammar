@@ -3,6 +3,7 @@ ROOTS [Period] [Anchor]
 [Nil] ||| a ||| ||| 1.0
 [Nil] ||| the ||| ||| 1.0
 [Nil] ||| that ||| ||| 1.0
+[Nil] ||| . ||| ||| 1.0
 
 [Number] ||| one ||| 2 ||| 1.0
 [Number] ||| two ||| 2 ||| 1.0
@@ -98,6 +99,7 @@ ROOTS [Period] [Anchor]
 [Anchor] ||| the future ||| FUTURE ||| 1.0
 
 [Anchor] ||| today ||| TODAY ||| 1.0
+[Anchor] ||| same day ||| TODAY ||| 1.0
 [Anchor] ||| yesterday ||| Minus TODAY ( Period 1 DAYS ) ||| 1.0
 [Anchor] ||| tomorrow ||| Plus TODAY ( Period 1 DAYS ) ||| 1.0
 
