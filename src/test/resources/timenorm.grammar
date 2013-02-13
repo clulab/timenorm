@@ -40,6 +40,8 @@ ROOTS [Period] [Anchor]
 [Unit] ||| months ||| MONTHS ||| 1.0
 [Unit] ||| year ||| YEARS ||| 1.0
 [Unit] ||| years ||| YEARS ||| 1.0
+[Unit] ||| decade ||| DECADES ||| 1.0
+[Unit] ||| decades ||| DECADES ||| 1.0
 
 [Field:HourOfDay] ||| [Number:0-23] ||| HOUR_OF_DAY [Number:0-23] ||| 1.0
 [Field:HourOfAMPM] ||| [Number:1-12] ||| HOUR_OF_AMPM [Number:1-12] ||| 1.0
@@ -139,3 +141,4 @@ ROOTS [Period] [Anchor]
 [Anchor] ||| This [Unit] ||| MinUnit TODAY [Unit] ||| 1.0
 
 [Anchor] ||| early [Anchor] ||| Modifier START [Anchor] ||| 1.0
+[Period] ||| less than [Period] ||| Modifier LESS_THAN [Period] ||| 1.0

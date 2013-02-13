@@ -3,7 +3,7 @@ package info.bethard.timenorm
 import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.temporal.ChronoUnit._
 
-case class Period(unitAmounts: Map[TemporalUnit, Int]) {
+case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: String = "EXACT") {
 
   private val dateChars = Seq[(TemporalUnit, String)](
     YEARS -> "Y",
@@ -28,15 +28,12 @@ case class Period(unitAmounts: Map[TemporalUnit, Int]) {
     "P" + dateParts.mkString + timeString
   }
 
-  def +(that: Period): Period = Period(
-    for (unit <- this.unitAmounts.keySet ++ that.unitAmounts.keySet)
-      yield (unit, this.unitAmounts.getOrElse(unit, 0) + that.unitAmounts.getOrElse(unit, 0)))
+  def +(that: Period): Period = Period(this.mapOverUnion(that, _ + _).toMap)
 
-  def -(that: Period): Period = Period(
+  def -(that: Period): Period = Period(this.mapOverUnion(that, _ - _).toMap)
+  
+  private def mapOverUnion(that: Period, op: (Int, Int) => Int): Iterable[(TemporalUnit, Int)] = {
     for (unit <- this.unitAmounts.keySet ++ that.unitAmounts.keySet)
-      yield (unit, this.unitAmounts.getOrElse(unit, 0) - that.unitAmounts.getOrElse(unit, 0)))
-}
-
-object Period {
-  def apply(unitAmounts: Iterable[(TemporalUnit, Int)]): Period = Period(unitAmounts.toMap)
+      yield (unit, op(this.unitAmounts.getOrElse(unit, 0), that.unitAmounts.getOrElse(unit, 0)))
+  }
 }

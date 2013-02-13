@@ -129,6 +129,8 @@ object PeriodParse {
           SimplePeriod(NumberParse(amount).value, UnitParse(unit).value)
         case Tree.Terminal("Sum") :: period1 :: period2 :: Nil =>
           Plus(PeriodParse(period1), PeriodParse(period2))
+        case Tree.Terminal("Modifier") :: Tree.Terminal(modifier) :: period :: Nil =>
+          Modifier(modifier, PeriodParse(period))
         case _ =>
           TemporalParse.fail("Period", tree)
       }
@@ -147,6 +149,10 @@ object PeriodParse {
 
   case class Minus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
     def toPeriod = periodParse1.toPeriod - periodParse2.toPeriod
+  }
+  
+  case class Modifier(modifier: String, periodParse: PeriodParse) extends PeriodParse {
+    def toPeriod = periodParse.toPeriod.copy(modifier=modifier)
   }
 }
 

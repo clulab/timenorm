@@ -68,6 +68,7 @@ class ParserTest extends FunSuite {
     [Anchor] ||| [Field] ||| Next [Field] ||| 1.0
     [Anchor] ||| [Field:HourOfAMPM] : [Field:MinuteOfHour] [Field:AMPMOfDay] ||| Previous [Field:HourOfAMPM] [Field:MinuteOfHour] [Field:AMPMOfDay] ||| 1.0
     [Anchor] ||| early [Anchor] ||| Modifier START [Anchor] ||| 1.0
+    [Period] ||| less than [Period] ||| Modifier LESS_THAN [Period] ||| 1.0
     """)
 
   val parser = new SynchronousParser(grammar)
@@ -95,6 +96,8 @@ class ParserTest extends FunSuite {
     import PeriodParse._
     assert(this.parse("two", "weeks", "and", "a", "day") ===
       Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)))
+    assert(this.parse("less", "than", "a", "week") ===
+      Modifier("LESS_THAN", SimplePeriod(1, WEEKS)))
   }
 
   test("parses simple anchors") {
