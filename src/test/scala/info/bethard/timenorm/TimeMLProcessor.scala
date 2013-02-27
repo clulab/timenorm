@@ -62,12 +62,12 @@ object TimeMLProcessor {
           anchorZDT = toZonedDateTime(anchorValue)
           parse <- parser.parseAll(timeText)
         } yield parse match {
-            case parse: AnchorParse => {
+            case parse: TimeParse => {
               val dateTime = parse.toDateTime(anchorZDT)
               printf(
                 "%s %s %s %s\n",
-                dateTime.baseTimeMLValue,
                 dateTime.rangeTimeMLValue,
+                dateTime.baseTimeMLValue,
                 dateTime,
                 parse)
               Seq(dateTime.baseTimeMLValue, dateTime.rangeTimeMLValue)

@@ -28,25 +28,10 @@ class TemporalParser(grammar: SynchronousGrammar) {
   }
 }
 
-sealed abstract class TemporalParse
-
-object TemporalParse {
-
-  def apply(tree: Tree): TemporalParse = tree match {
-    case tree: Tree.Terminal =>
-      fail("[Temporal]", tree)
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Number]" => NumberParse(tree)
-      case "[Unit]" => UnitParse(tree)
-      case "[Field]" => FieldParse(tree)
-      case "[Period]" => PeriodParse(tree)
-      case "[Anchor]" => AnchorParse(tree)
-    }
-  }
-
-  private[timenorm] def fail[T](name: String, tree: Tree): T = {
+private[timenorm] abstract class CanFail(name: String) {
+  private[timenorm] def fail[T](tree: Tree): T = {
     throw new UnsupportedOperationException(
-      "Don't know how to parse %s from %s".format(name, tree match {
+      "Don't know how to parse %s from %s".format(this.name, tree match {
         case tree: Tree.Terminal => tree.token
         case tree: Tree.NonTerminal => tree.rule.basicSymbol + " -> " + tree.children.map {
           case child: Tree.Terminal => child.token
@@ -56,59 +41,49 @@ object TemporalParse {
   }
 }
 
-case class NumberParse(value: Int) extends TemporalParse
-object NumberParse {
+sealed abstract class TemporalParse
+
+object TemporalParse extends CanFail("[Temporal]") with (Tree => TemporalParse) {
+
+  def apply(tree: Tree): TemporalParse = tree match {
+    case tree @ Tree.NonTerminal("[Period]", _, _, _) =>
+      PeriodParse(tree)
+    case tree @ Tree.NonTerminal("[Time]", _, _, _) =>
+      TimeParse(tree)
+    case _ => fail(tree)
+  }
+}
+
+case class NumberParse(value: Int)
+object NumberParse extends CanFail("[Number]") with (Tree => NumberParse) {
   def apply(tree: Tree): NumberParse = tree match {
-    case tree: Tree.Terminal =>
-      NumberParse(tree.token.toInt)
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Number]" => tree.children match {
-        case tree :: Nil =>
-          NumberParse(tree)
-        case _ =>
-          TemporalParse.fail("Number", tree)
-      }
-      case _ =>
-        TemporalParse.fail("Number", tree)
-    }
+    case Tree.Terminal(number) =>
+      NumberParse(number.toInt)
+    case Tree.NonTerminal("[Number]", _, tree :: Nil, _) =>
+      NumberParse(tree)
+    case _ => fail(tree)
   }
 }
 
-case class UnitParse(value: ChronoUnit) extends TemporalParse
-object UnitParse {
+case class UnitParse(value: ChronoUnit)
+object UnitParse extends CanFail("[Unit]") with (Tree => UnitParse) {
   def apply(tree: Tree): UnitParse = tree match {
-    case tree: Tree.Terminal =>
-      UnitParse(ChronoUnit.valueOf(tree.token))
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Unit]" => tree.children match {
-        case tree :: Nil =>
-          UnitParse(tree)
-        case _ =>
-          TemporalParse.fail("Unit", tree)
-      }
-      case _ =>
-        TemporalParse.fail("Unit", tree)
-    }
+    case Tree.Terminal(unit) =>
+      UnitParse(ChronoUnit.valueOf(unit))
+    case Tree.NonTerminal("[Unit]", _, tree :: Nil, _) =>
+      UnitParse(tree)
+    case _ => fail(tree)
   }
 }
 
-case class FieldParse(name: ChronoField, value: Int) extends TemporalParse
-object FieldParse {
-  def apply(tree: Tree): FieldParse = tree match {
-    case tree: Tree.Terminal =>
-      TemporalParse.fail("Field", tree)
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Field]" => tree.children match {
-        case tree :: Nil =>
-          FieldParse(tree)
-        case (tree: Tree.Terminal) :: number :: Nil =>
-          FieldParse(ChronoField.valueOf(tree.token), NumberParse(number).value)
-        case _ =>
-          TemporalParse.fail("Field", tree)
-      }
-      case _ =>
-        TemporalParse.fail("Field", tree)
-    }
+case class FieldValueParse(name: ChronoField, value: Int)
+object FieldValueParse extends CanFail("[FieldValue]") with (Tree => FieldValueParse) {
+  def apply(tree: Tree): FieldValueParse = tree match {
+    case Tree.NonTerminal("[FieldValue]", _, tree :: Nil, _) =>
+      FieldValueParse(tree)
+    case Tree.NonTerminal("[FieldValue]", _, Tree.Terminal(field) :: number :: Nil, _) =>
+      FieldValueParse(ChronoField.valueOf(field), NumberParse(number).value)
+    case _ => fail(tree)
   }
 }
 
@@ -116,116 +91,80 @@ sealed abstract class PeriodParse extends TemporalParse {
   def toPeriod: Period
 }
 
-object PeriodParse {
+object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
 
   def apply(tree: Tree): PeriodParse = tree match {
-    case unit: Tree.Terminal =>
-      SimplePeriod(1, UnitParse(unit).value)
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Period]" => tree.children match {
-        case unit :: Nil =>
-          SimplePeriod(1, UnitParse(unit).value)
-        case amount :: unit :: Nil =>
-          SimplePeriod(NumberParse(amount).value, UnitParse(unit).value)
-        case Tree.Terminal("Sum") :: period1 :: period2 :: Nil =>
-          Plus(PeriodParse(period1), PeriodParse(period2))
-        case Tree.Terminal("Modifier") :: Tree.Terminal(modifier) :: period :: Nil =>
-          Modifier(modifier, PeriodParse(period))
-        case _ =>
-          TemporalParse.fail("Period", tree)
-      }
-      case _ =>
-        TemporalParse.fail("Period", tree)
-    }
+    case tree: Tree.Terminal =>
+      Simple(1, UnitParse(tree).value)
+    case Tree.NonTerminal(_, "[Period]", tree :: Nil, _) =>
+      PeriodParse(tree)
+    case Tree.NonTerminal(_, "[Period:Simple]", unit :: Nil, _) =>
+      Simple(1, UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[Period:Simple]", amount :: unit :: Nil, _) =>
+      Simple(NumberParse(amount).value, UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[Period:Sum]", children, _) =>
+      Sum(children.map(PeriodParse))
+    case Tree.NonTerminal(_, "[Period:Modifier]", Tree.Terminal(modifier) :: period :: Nil, _) =>
+      Modifier(modifier, PeriodParse(period))
+    case _ => fail(tree)
   }
 
-  case class SimplePeriod(amount: Int, unit: ChronoUnit) extends PeriodParse {
+  case class Simple(amount: Int, unit: ChronoUnit) extends PeriodParse {
     def toPeriod = Period(Map(unit -> amount))
   }
 
-  case class Plus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
-    def toPeriod = periodParse1.toPeriod + periodParse2.toPeriod
+  case class Sum(periodParses: Seq[PeriodParse]) extends PeriodParse {
+    def toPeriod = periodParses.foldLeft(Period(Map.empty))(_ + _.toPeriod)
   }
 
-  case class Minus(periodParse1: PeriodParse, periodParse2: PeriodParse) extends PeriodParse {
-    def toPeriod = periodParse1.toPeriod - periodParse2.toPeriod
-  }
-  
   case class Modifier(modifier: String, periodParse: PeriodParse) extends PeriodParse {
-    def toPeriod = periodParse.toPeriod.copy(modifier=modifier)
+    def toPeriod = periodParse.toPeriod.copy(modifier = modifier)
   }
 }
 
-sealed abstract class AnchorParse extends TemporalParse {
+sealed abstract class TimeParse extends TemporalParse {
   def toDateTime(anchor: ZonedDateTime): DateTime
 }
 
-object AnchorParse {
+object TimeParse extends CanFail("[Time]") with (Tree => TimeParse) {
 
-  def apply(tree: Tree): AnchorParse = tree match {
-    case Tree.Terminal("TODAY") =>
-      Today
+  def apply(tree: Tree): TimeParse = tree match {
     case Tree.Terminal("PAST") =>
       Past
     case Tree.Terminal("PRESENT") =>
       Present
     case Tree.Terminal("FUTURE") =>
       Future
-    case tree: Tree.NonTerminal => tree.rule.basicSymbol match {
-      case "[Anchor]" => tree.children match {
-        case Tree.Terminal("PAST") :: Nil =>
-          Past
-        case Tree.Terminal("PRESENT") :: Nil =>
-          Present
-        case Tree.Terminal("FUTURE") :: Nil =>
-          Future
-        case Tree.Terminal("TODAY") :: Nil =>
-          Today
-        case Tree.Terminal("MinUnit") :: anchor :: unit :: Nil =>
-          MinUnit(AnchorParse(anchor), UnitParse(unit).value)
-        case Tree.Terminal("Date") :: tail =>
-          Date(this.toFieldNameValuePairs(tail).toMap)
-        case Tree.Terminal("Next") :: tail =>
-          Next(this.toFieldNameValuePairs(tail).toMap)
-        case Tree.Terminal("Previous") :: tail =>
-          Previous(this.toFieldNameValuePairs(tail).toMap)
-        case Tree.Terminal("CurrentOrPrevious") :: tail =>
-          CurrentOrPrevious(this.toFieldNameValuePairs(tail).toMap)
-        case Tree.Terminal("Closest") :: tail =>
-          Closest(this.toFieldNameValuePairs(tail).toMap)
-        case Tree.Terminal("Plus") :: anchor :: period :: Nil =>
-          Plus(AnchorParse(anchor), PeriodParse(period))
-        case Tree.Terminal("Minus") :: anchor :: period :: Nil =>
-          Minus(AnchorParse(anchor), PeriodParse(period))
-        case Tree.Terminal("Modifier") :: Tree.Terminal(modifier) :: anchor :: Nil =>
-          Modifier(modifier, AnchorParse(anchor))
-        case _ =>
-          TemporalParse.fail("Anchor", tree)
-      }
-      case _ =>
-        TemporalParse.fail("Anchor", tree)
-    }
-    case _ =>
-      TemporalParse.fail("Anchor", tree)
+    case Tree.NonTerminal(_, "[Time]", tree :: Nil, _) =>
+      TimeParse(tree)
+    case Tree.NonTerminal(_, "[Time:Simple]", (tree: Tree.Terminal) :: Nil, _) =>
+      TimeParse(tree)
+    case Tree.NonTerminal(_, "[Time:Absolute]", children, _) =>
+      Absolute(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[Time:Next]", children, _) =>
+      Next(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[Time:Previous]", children, _) =>
+      Previous(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[Time:CurrentOrPrevious]", children, _) =>
+      CurrentOrPrevious(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[Time:Closest]", children, _) =>
+      Closest(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[Time:Plus]", time :: period :: Nil, _) =>
+      Plus(TimeParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[Time:Minus]", time :: period :: Nil, _) =>
+      Minus(TimeParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[Time:WithUnit]", time :: unit :: Nil, _) =>
+      WithUnit(TimeParse(time), UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[Time:Modifier]", Tree.Terminal(modifier) :: time :: Nil, _) =>
+      Modifier(modifier, TimeParse(time))
+    case _ => fail(tree)
   }
 
-  private def toFieldNameValuePairs(trees: List[Tree]): List[(ChronoField, Int)] = {
-    trees.map {
-      case tree: Tree.NonTerminal =>
-        val field = FieldParse(tree)
-        (field.name, field.value)
-      case tree: Tree.Terminal =>
-        TemporalParse.fail("Field", tree)
-    }
+  private def toFieldValues(trees: List[Tree]): Map[ChronoField, Int] = {
+    trees.map(FieldValueParse).map(field => (field.name, field.value)).toMap
   }
 
-  case object Today extends AnchorParse {
-    def toDateTime(anchor: ZonedDateTime) = {
-      DateTime(anchor, ChronoUnit.DAYS, ChronoUnit.DAYS)
-    }
-  }
-  
-  case object Past extends AnchorParse {
+  case object Past extends TimeParse {
     def toDateTime(anchor: ZonedDateTime) = {
       new DateTime(anchor, ChronoUnit.FOREVER, ChronoUnit.FOREVER) {
         override def toTimeMLValue(unit: TemporalUnit) = "PAST_REF"
@@ -233,7 +172,7 @@ object AnchorParse {
     }
   }
 
-  case object Present extends AnchorParse {
+  case object Present extends TimeParse {
     def toDateTime(anchor: ZonedDateTime) = {
       new DateTime(anchor, ChronoUnit.SECONDS, ChronoUnit.FOREVER) {
         override def toTimeMLValue(unit: TemporalUnit) = "PRESENT_REF"
@@ -241,7 +180,7 @@ object AnchorParse {
     }
   }
 
-  case object Future extends AnchorParse {
+  case object Future extends TimeParse {
     def toDateTime(anchor: ZonedDateTime) = {
       new DateTime(anchor, ChronoUnit.FOREVER, ChronoUnit.FOREVER) {
         override def toTimeMLValue(unit: TemporalUnit) = "FUTURE_REF"
@@ -249,17 +188,11 @@ object AnchorParse {
     }
   }
 
-  case class MinUnit(anchorParse: AnchorParse, unit: ChronoUnit) extends AnchorParse {
-    def toDateTime(anchor: ZonedDateTime) = {
-      anchorParse.toDateTime(anchor).copy(baseUnit = unit, rangeUnit = unit)
-    }
-  }
-  
-  abstract class FieldBasedAnchorParse(fields: Map[ChronoField, Int]) extends AnchorParse {
+  abstract class FieldBasedTimeParse(fields: Map[ChronoField, Int]) extends TimeParse {
     val minUnit = fields.keySet.map(_.getBaseUnit).minBy(_.getDuration)
   }
 
-  case class Date(fields: Map[ChronoField, Int]) extends FieldBasedAnchorParse(fields) {
+  case class Absolute(fields: Map[ChronoField, Int]) extends FieldBasedTimeParse(fields) {
     def toDateTime(anchor: ZonedDateTime) = {
       var curr = anchor
       for ((field, value) <- fields) {
@@ -268,8 +201,8 @@ object AnchorParse {
       DateTime(curr, this.minUnit, this.minUnit)
     }
   }
-  
-  abstract class FieldSearchingAnchorParse(fields: Map[ChronoField, Int]) extends FieldBasedAnchorParse(fields) {
+
+  abstract class FieldSearchingTimeParse(fields: Map[ChronoField, Int]) extends FieldBasedTimeParse(fields) {
     def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
       var curr = dateTime
       while (fields.exists { case (field, value) => curr.get(field) != value }) {
@@ -279,28 +212,28 @@ object AnchorParse {
     }
   }
 
-  abstract class DirectedFieldSearchingAnchorParse(
-      fields: Map[ChronoField, Int],
-      stepFirst: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
-      step: (ZonedDateTime, TemporalUnit) => ZonedDateTime)
-      extends FieldSearchingAnchorParse(fields) {
+  abstract class DirectedFieldSearchingTimeParse(
+    fields: Map[ChronoField, Int],
+    stepFirst: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
+    step: (ZonedDateTime, TemporalUnit) => ZonedDateTime)
+      extends FieldSearchingTimeParse(fields) {
 
     def toDateTime(dateTime: ZonedDateTime) = {
       val adjustedDateTime = this.searchFrom(this.stepFirst(dateTime, this.minUnit), this.step)
       DateTime(adjustedDateTime, this.minUnit, this.minUnit)
     }
   }
-  
+
   case class Next(fields: Map[ChronoField, Int])
-    extends DirectedFieldSearchingAnchorParse(fields, _.plus(1, _), _.plus(1, _))
+    extends DirectedFieldSearchingTimeParse(fields, _.plus(1, _), _.plus(1, _))
 
   case class Previous(fields: Map[ChronoField, Int])
-    extends DirectedFieldSearchingAnchorParse(fields, _.minus(1, _), _.minus(1, _))
-  
-  case class CurrentOrPrevious(fields: Map[ChronoField, Int])
-    extends DirectedFieldSearchingAnchorParse(fields, _.minus(0, _), _.minus(1, _))
+    extends DirectedFieldSearchingTimeParse(fields, _.minus(1, _), _.minus(1, _))
 
-  case class Closest(fields: Map[ChronoField, Int]) extends FieldSearchingAnchorParse(fields) {
+  case class CurrentOrPrevious(fields: Map[ChronoField, Int])
+    extends DirectedFieldSearchingTimeParse(fields, _.minus(0, _), _.minus(1, _))
+
+  case class Closest(fields: Map[ChronoField, Int]) extends FieldSearchingTimeParse(fields) {
     def toDateTime(dateTime: ZonedDateTime) = {
       val prev = this.searchFrom(dateTime, _.minus(1, _))
       val next = this.searchFrom(dateTime, _.plus(1, _))
@@ -311,10 +244,10 @@ object AnchorParse {
     }
   }
 
-  abstract class PeriodAnchorParse(
-      anchorParse: AnchorParse,
+  abstract class PeriodTimeParse(
+      anchorParse: TimeParse,
       periodParse: PeriodParse,
-      adjust: (ZonedDateTime, Int, TemporalUnit) => ZonedDateTime) extends AnchorParse {
+      adjust: (ZonedDateTime, Int, TemporalUnit) => ZonedDateTime) extends TimeParse {
 
     def toDateTime(anchorDateTime: ZonedDateTime) = {
       val dateTime = anchorParse.toDateTime(anchorDateTime)
@@ -329,13 +262,19 @@ object AnchorParse {
 
   }
 
-  case class Plus(anchor: AnchorParse, period: PeriodParse)
-    extends PeriodAnchorParse(anchor, period, _.plus(_, _))
+  case class Plus(anchor: TimeParse, period: PeriodParse)
+    extends PeriodTimeParse(anchor, period, _.plus(_, _))
 
-  case class Minus(anchor: AnchorParse, period: PeriodParse)
-    extends PeriodAnchorParse(anchor, period, _.minus(_, _))
-  
-  case class Modifier(modifier: String, anchor: AnchorParse) extends AnchorParse {
+  case class Minus(anchor: TimeParse, period: PeriodParse)
+    extends PeriodTimeParse(anchor, period, _.minus(_, _))
+
+  case class WithUnit(anchorParse: TimeParse, unit: ChronoUnit) extends TimeParse {
+    def toDateTime(anchor: ZonedDateTime) = {
+      anchorParse.toDateTime(anchor).copy(baseUnit = unit, rangeUnit = unit)
+    }
+  }
+
+  case class Modifier(modifier: String, anchor: TimeParse) extends TimeParse {
     def toDateTime(zonedDateTime: ZonedDateTime) = {
       val dateTime = anchor.toDateTime(zonedDateTime)
       new DateTime(dateTime.fullDateTime, dateTime.baseUnit, dateTime.rangeUnit, modifier)

@@ -18,25 +18,22 @@ class TemporalTest extends FunSuite {
 
   test("resolves simple periods") {
     import PeriodParse._
-    assertPeriod(SimplePeriod(2, WEEKS), "P2W", WEEKS -> 2)
-    assertPeriod(SimplePeriod(10, DAYS), "P10D", DAYS -> 10)
-    assertPeriod(SimplePeriod(1, MONTHS), "P1M", MONTHS -> 1)
-    assertPeriod(SimplePeriod(16, HOURS), "PT16H", HOURS -> 16)
-    assertPeriod(SimplePeriod(20, MINUTES), "PT20M", MINUTES -> 20)
-    assertPeriod(SimplePeriod(53, SECONDS), "PT53S", SECONDS -> 53)
+    assertPeriod(Simple(2, WEEKS), "P2W", WEEKS -> 2)
+    assertPeriod(Simple(10, DAYS), "P10D", DAYS -> 10)
+    assertPeriod(Simple(1, MONTHS), "P1M", MONTHS -> 1)
+    assertPeriod(Simple(16, HOURS), "PT16H", HOURS -> 16)
+    assertPeriod(Simple(20, MINUTES), "PT20M", MINUTES -> 20)
+    assertPeriod(Simple(53, SECONDS), "PT53S", SECONDS -> 53)
   }
 
   test("resolves complex periods") {
     import PeriodParse._
     assertPeriod(
-        Plus(SimplePeriod(2, WEEKS), SimplePeriod(1, DAYS)),
+        Sum(Seq(Simple(2, WEEKS), Simple(1, DAYS))),
         "P2W1D", WEEKS -> 2, DAYS -> 1)
     assertPeriod(
-        Plus(SimplePeriod(2, DAYS), SimplePeriod(1, DAYS)),
+        Sum(Seq(Simple(2, DAYS), Simple(1, DAYS))),
         "P3D", DAYS -> 3)
-    assertPeriod(
-        Minus(SimplePeriod(5, MONTHS), Minus(SimplePeriod(3, MONTHS), SimplePeriod(1, MONTHS))),
-        "P3M", MONTHS -> 3)
   }
 
   private def assertPeriod(
@@ -51,10 +48,7 @@ class TemporalTest extends FunSuite {
   val now = ZonedDateTime.of(LocalDateTime.of(2012, 12, 12, 12, 12, 12), ZoneId.of("-12:00"))
 
   test("resolves simple anchors") {
-    import AnchorParse._
-    assertAnchor(
-      Today,
-      DAYS, DAYS, "2012-12-12", "2012-12-12")
+    import TimeParse._
     assertAnchor(
       Past,
       FOREVER, FOREVER, "PAST_REF", "PAST_REF")
@@ -65,10 +59,10 @@ class TemporalTest extends FunSuite {
       Future,
       FOREVER, FOREVER, "FUTURE_REF", "FUTURE_REF")
     assertAnchor(
-      Date(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
+      Absolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
       DAYS, DAYS, "1976-09-21", "1976-09-21")
     assertAnchor(
-      Date(Map(YEAR -> 2030)),
+      Absolute(Map(YEAR -> 2030)),
       YEARS, YEARS, "2030", "2030")
     assertAnchor(
       Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)),
@@ -107,44 +101,47 @@ class TemporalTest extends FunSuite {
       Next(Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
       DAYS, DAYS, "2013-12-12", "2013-12-12")
     assertAnchor(
-      MinUnit(Today, WEEKS),
+      WithUnit(Present, DAYS),
+      DAYS, DAYS, "2012-12-12", "2012-12-12")
+    assertAnchor(
+      WithUnit(Present, WEEKS),
       WEEKS, WEEKS, "2012-W50", "2012-W50")
   }
 
   test("resolves complex anchors") {
-    import PeriodParse.SimplePeriod
-    import AnchorParse._
+    import PeriodParse.{ Simple => SimplePeriod }
+    import TimeParse._
     assertAnchor(
-      Plus(Today, SimplePeriod(1, DAYS)),
-      DAYS, DAYS, "2012-12-13", "2012-12-13")
+      Plus(Present, SimplePeriod(1, DAYS)),
+      SECONDS, DAYS, "2012-12-13T12:12:12", "2012-12-13")
     assertAnchor(
-      Minus(Today, SimplePeriod(1, DAYS)),
+      Minus(WithUnit(Present, DAYS), SimplePeriod(1, DAYS)),
       DAYS, DAYS, "2012-12-11", "2012-12-11")
     assertAnchor(
-      Plus(Today, SimplePeriod(1, WEEKS)),
+      Plus(WithUnit(Present, DAYS), SimplePeriod(1, WEEKS)),
       DAYS, WEEKS, "2012-12-19", "2012-W51")
     assertAnchor(
-      Minus(Today, SimplePeriod(1, WEEKS)),
+      Minus(WithUnit(Present, DAYS), SimplePeriod(1, WEEKS)),
       DAYS, WEEKS, "2012-12-05", "2012-W49")
     assertAnchor(
-      Plus(Today, SimplePeriod(1, MONTHS)),
+      Plus(WithUnit(Present, DAYS), SimplePeriod(1, MONTHS)),
       DAYS, MONTHS, "2013-01-12", "2013-01")
     assertAnchor(
-      Minus(Today, SimplePeriod(2, WEEKS)),
+      Minus(WithUnit(Present, DAYS), SimplePeriod(2, WEEKS)),
       DAYS, WEEKS, "2012-11-28", "2012-W48")
     assertAnchor(
-      Minus(Minus(Today, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)),
+      Minus(Minus(WithUnit(Present, DAYS), SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)),
       DAYS, DAYS, "2012-12-10", "2012-12-10")
     assertAnchor(
       Plus(Present, SimplePeriod(2, DAYS)),
       SECONDS, DAYS, "2012-12-14T12:12:12", "2012-12-14")
     assertAnchor(
-      Minus(Today, SimplePeriod(1, DECADES)),
+      Minus(WithUnit(Present, DAYS), SimplePeriod(1, DECADES)),
       DAYS, DECADES, "2002-12-12", "200")
   }
 
   private def assertAnchor(
-    anchor: AnchorParse,
+    anchor: TimeParse,
     baseUnit: ChronoUnit,
     rangeUnit: ChronoUnit,
     baseTimeMLValue: String,

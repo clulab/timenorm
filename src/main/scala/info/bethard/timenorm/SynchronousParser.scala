@@ -13,7 +13,7 @@ class SynchronousParser(grammar: SynchronousGrammar) {
   def parseAll(sourceTokens: Seq[String]): Seq[Tree.NonTerminal] = {
     val chart = this.parseChart(sourceTokens)
     val completes = chart(sourceTokens.size)(0).completes
-    val roots = completes.filter(parse => this.grammar.rootSymbols.contains(parse.rule.basicSymbol))
+    val roots = completes.filter(parse => this.grammar.rootSymbols.contains(parse.rule.symbol))
     val trees = roots.map(_.toTargetTree).toIndexedSeq
     if (trees.isEmpty) {
       val nTokens = sourceTokens.size
@@ -138,7 +138,7 @@ object SynchronousParser {
   sealed trait Tree
   object Tree {
     case class Terminal(token: String) extends Tree
-    case class NonTerminal(rule: SynchronousGrammar.Rule, children: List[Tree]) extends Tree
+    case class NonTerminal(basicSymbol: String, fullSymbol: String, children: List[Tree], rule: SynchronousGrammar.Rule) extends Tree
   }
 
   private[SynchronousParser] case class Parse(
@@ -156,7 +156,8 @@ object SynchronousParser {
           this.nonTerminalRules(nonTerminalRulesIndex).toTargetTree
         }
       }
-      Tree.NonTerminal(rule, this.insertSubtreesFromParentheses(children.iterator))
+      val subtrees = this.insertSubtreesFromParentheses(children.iterator)
+      Tree.NonTerminal(rule.basicSymbol, rule.symbol, subtrees, rule)
     }
     
     private def insertSubtreesFromParentheses(trees: Iterator[Tree]): List[Tree] = {
@@ -183,7 +184,7 @@ object SynchronousParser {
         }
       }
       val rule = SynchronousGrammar.Rule("[" + symbol + "]", IndexedSeq.empty, IndexedSeq.empty, Map.empty)
-      Tree.NonTerminal(rule, children.toList)
+      Tree.NonTerminal(rule.basicSymbol, rule.symbol, children.toList, rule)
     }
   }
 
