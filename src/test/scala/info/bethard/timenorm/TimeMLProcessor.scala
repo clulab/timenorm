@@ -57,31 +57,32 @@ object TimeMLProcessor {
           dctValue))
 
         // parse the expression, using both the DCT and the anchor (if present) as anchor times
-        val valueSeqs = for {
+        val valueOptions = for {
           anchorValue <- anchorValueOption ++ Seq(dctValue)
           anchorZDT = toZonedDateTime(anchorValue)
           parse <- parser.parseAll(timeText)
         } yield parse match {
-            case parse: TimeParse => {
-              val dateTime = parse.toDateTime(anchorZDT)
+            case parse: TimeSpanParse => {
+              val timeSpan = parse.toTimeSpan(anchorZDT)
+              val timemlValue = timeSpan.timeMLValueOption.getOrElse(
+                  "~%s~".format(timeSpan.period.timeMLValue))
               printf(
-                "%s %s %s %s\n",
-                dateTime.rangeTimeMLValue,
-                dateTime.baseTimeMLValue,
-                dateTime,
+                "%s %s %s\n",
+                timemlValue,
+                timeSpan,
                 parse)
-              Seq(dateTime.baseTimeMLValue, dateTime.rangeTimeMLValue)
+              timeSpan.timeMLValueOption
             }
             case parse: PeriodParse => {
               val period = parse.toPeriod
               printf("%s %s\n", period.timeMLValue, parse)
-              Seq(period.timeMLValue)
+              Some(period.timeMLValue)
             }
             case _ => throw new RuntimeException(parse.toString)
         }
         
         // check if the actual value of the TIMEX3 was present in one of the parsed values
-        if (!valueSeqs.flatten.toSet.contains(timeValue)) {
+        if (!valueOptions.toSet.flatten.contains(timeValue)) {
           println("!!! No correct value !!!")
         }
         println

@@ -1,6 +1,5 @@
 package info.bethard.timenorm
 import scala.collection.immutable.Seq
-
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.temporal.ChronoUnit
@@ -8,8 +7,10 @@ import org.threeten.bp.temporal.{ Temporal => JTemporal }
 import org.threeten.bp.temporal.TemporalAdder
 import org.threeten.bp.temporal.TemporalSubtractor
 import org.threeten.bp.temporal.TemporalUnit
-
 import info.bethard.timenorm.SynchronousParser.Tree
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
+import org.threeten.bp.temporal.TemporalField
 
 class TemporalParser(grammar: SynchronousGrammar) {
 
@@ -33,7 +34,7 @@ private[timenorm] abstract class CanFail(name: String) {
     throw new UnsupportedOperationException(
       "Don't know how to parse %s from %s".format(this.name, tree match {
         case tree: Tree.Terminal => tree.token
-        case tree: Tree.NonTerminal => tree.rule.basicSymbol + " -> " + tree.children.map {
+        case tree: Tree.NonTerminal => tree.rule.symbol + " -> " + tree.children.map {
           case child: Tree.Terminal => child.token
           case child: Tree.NonTerminal => child.rule.symbol
         }.mkString(" ")
@@ -48,8 +49,8 @@ object TemporalParse extends CanFail("[Temporal]") with (Tree => TemporalParse) 
   def apply(tree: Tree): TemporalParse = tree match {
     case tree @ Tree.NonTerminal("[Period]", _, _, _) =>
       PeriodParse(tree)
-    case tree @ Tree.NonTerminal("[Time]", _, _, _) =>
-      TimeParse(tree)
+    case tree @ Tree.NonTerminal("[TimeSpan]", _, _, _) =>
+      TimeSpanParse(tree)
     case _ => fail(tree)
   }
 }
@@ -104,180 +105,222 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
       Simple(NumberParse(amount).value, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Sum]", children, _) =>
       Sum(children.map(PeriodParse))
-    case Tree.NonTerminal(_, "[Period:Modifier]", Tree.Terminal(modifier) :: period :: Nil, _) =>
-      Modifier(modifier, PeriodParse(period))
+    case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
+      WithModifier(PeriodParse(period), Modifier.valueOf(modifier))
     case _ => fail(tree)
   }
 
   case class Simple(amount: Int, unit: ChronoUnit) extends PeriodParse {
-    def toPeriod = Period(Map(unit -> amount))
+    def toPeriod = Period(Map(unit -> amount), Modifier.Exact)
   }
 
-  case class Sum(periodParses: Seq[PeriodParse]) extends PeriodParse {
-    def toPeriod = periodParses.foldLeft(Period(Map.empty))(_ + _.toPeriod)
+  case class Sum(periods: Seq[PeriodParse]) extends PeriodParse {
+    def toPeriod = periods.foldLeft(Period.empty)(_ + _.toPeriod)
   }
 
-  case class Modifier(modifier: String, periodParse: PeriodParse) extends PeriodParse {
-    def toPeriod = periodParse.toPeriod.copy(modifier = modifier)
+  case class WithModifier(period: PeriodParse, modifier: Modifier) extends PeriodParse {
+    def toPeriod = period.toPeriod.copy(modifier = modifier)
   }
 }
 
-sealed abstract class TimeParse extends TemporalParse {
-  def toDateTime(anchor: ZonedDateTime): DateTime
+sealed abstract class TimeSpanParse extends TemporalParse {
+  def toTimeSpan(anchor: ZonedDateTime): TimeSpan
 }
 
-object TimeParse extends CanFail("[Time]") with (Tree => TimeParse) {
+object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) {
 
-  def apply(tree: Tree): TimeParse = tree match {
+  def apply(tree: Tree): TimeSpanParse = tree match {
     case Tree.Terminal("PAST") =>
       Past
     case Tree.Terminal("PRESENT") =>
       Present
     case Tree.Terminal("FUTURE") =>
       Future
-    case Tree.NonTerminal(_, "[Time]", tree :: Nil, _) =>
-      TimeParse(tree)
-    case Tree.NonTerminal(_, "[Time:Simple]", (tree: Tree.Terminal) :: Nil, _) =>
-      TimeParse(tree)
-    case Tree.NonTerminal(_, "[Time:Absolute]", children, _) =>
-      Absolute(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[Time:Next]", children, _) =>
-      Next(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[Time:Previous]", children, _) =>
-      Previous(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[Time:CurrentOrPrevious]", children, _) =>
-      CurrentOrPrevious(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[Time:Closest]", children, _) =>
-      Closest(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[Time:Plus]", time :: period :: Nil, _) =>
-      Plus(TimeParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[Time:Minus]", time :: period :: Nil, _) =>
-      Minus(TimeParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[Time:WithUnit]", time :: unit :: Nil, _) =>
-      WithUnit(TimeParse(time), UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[Time:Modifier]", Tree.Terminal(modifier) :: time :: Nil, _) =>
-      Modifier(modifier, TimeParse(time))
+    case Tree.NonTerminal(_, "[TimeSpan]", tree :: Nil, _) =>
+      TimeSpanParse(tree)
+    case Tree.NonTerminal(_, "[TimeSpan:Simple]", (tree: Tree.Terminal) :: Nil, _) =>
+      TimeSpanParse(tree)
+    case Tree.NonTerminal(_, "[TimeSpan:FindAbsolute]", children, _) =>
+      FindAbsolute(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[TimeSpan:FindLater]", children, _) =>
+      FindLater(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", children, _) =>
+      FindEarlier(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrEarlier]", children, _) =>
+      FindCurrentOrEarlier(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: unit :: Nil, _) =>
+      FindEnclosing(TimeSpanParse(time), UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf]", time :: period :: Nil, _) =>
+      StartAtEndOf(TimeSpanParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf+FindEnclosing]", time :: period :: Nil, _) =>
+      StartAtEndOf(TimeSpanParse(time), PeriodParse(period)).withFindEnclosing()
+    case Tree.NonTerminal(_, "[TimeSpan:EndAtStartOf]", time :: period :: Nil, _) =>
+      EndAtStartOf(TimeSpanParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[TimeSpan:EndAtStartOf+FindEnclosing]", time :: period :: Nil, _) =>
+      EndAtStartOf(TimeSpanParse(time), PeriodParse(period)).withFindEnclosing()
+    case Tree.NonTerminal(_, "[TimeSpan:MoveEarlier]", time :: period :: Nil, _) =>
+      MoveEarlier(TimeSpanParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[TimeSpan:MoveEarlier+FindEnclosing]", time :: period :: Nil, _) =>
+      MoveEarlier(TimeSpanParse(time), PeriodParse(period)).withFindEnclosing()
+    case Tree.NonTerminal(_, "[TimeSpan:MoveLater]", time :: period :: Nil, _) =>
+      MoveLater(TimeSpanParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[TimeSpan:MoveLater+FindEnclosing]", time :: period :: Nil, _) =>
+      MoveLater(TimeSpanParse(time), PeriodParse(period)).withFindEnclosing()
+    case Tree.NonTerminal(_, "[TimeSpan:WithModifier]", time :: Tree.Terminal(modifier) :: Nil, _) =>
+      WithModifier(TimeSpanParse(time), Modifier.valueOf(modifier))
     case _ => fail(tree)
   }
 
-  private def toFieldValues(trees: List[Tree]): Map[ChronoField, Int] = {
+  private def toFieldValues(trees: List[Tree]): Map[TemporalField, Int] = {
     trees.map(FieldValueParse).map(field => (field.name, field.value)).toMap
   }
 
-  case object Past extends TimeParse {
-    def toDateTime(anchor: ZonedDateTime) = {
-      new DateTime(anchor, ChronoUnit.FOREVER, ChronoUnit.FOREVER) {
-        override def toTimeMLValue(unit: TemporalUnit) = "PAST_REF"
+  case object Past extends TimeSpanParse {
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      new TimeSpan(null, anchor, null, Modifier.Approx) {
+        override def timeMLValueOption = Some("PAST_REF")
       }
     }
   }
 
-  case object Present extends TimeParse {
-    def toDateTime(anchor: ZonedDateTime) = {
-      new DateTime(anchor, ChronoUnit.SECONDS, ChronoUnit.FOREVER) {
-        override def toTimeMLValue(unit: TemporalUnit) = "PRESENT_REF"
+  case object Present extends TimeSpanParse {
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      new TimeSpan(anchor, anchor, Period.empty, Modifier.Exact) {
+        override def timeMLValueOption = Some("PRESENT_REF")
       }
     }
   }
 
-  case object Future extends TimeParse {
-    def toDateTime(anchor: ZonedDateTime) = {
-      new DateTime(anchor, ChronoUnit.FOREVER, ChronoUnit.FOREVER) {
-        override def toTimeMLValue(unit: TemporalUnit) = "FUTURE_REF"
+  case object Future extends TimeSpanParse {
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      new TimeSpan(anchor, null, null, Modifier.Approx) {
+        override def timeMLValueOption = Some("FUTURE_REF")
       }
     }
   }
 
-  abstract class FieldBasedTimeParse(fields: Map[ChronoField, Int]) extends TimeParse {
+  abstract class FieldBasedTimeSpanParse(fields: Map[TemporalField, Int]) extends TimeSpanParse {
     val minUnit = fields.keySet.map(_.getBaseUnit).minBy(_.getDuration)
   }
 
-  case class Absolute(fields: Map[ChronoField, Int]) extends FieldBasedTimeParse(fields) {
-    def toDateTime(anchor: ZonedDateTime) = {
-      var curr = anchor
-      for ((field, value) <- fields) {
-        curr = curr.`with`(field, value)
+  case class FindAbsolute(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val begin = fields.foldLeft(anchor) {
+        case (time, (field, value)) => time.`with`(field, value)
       }
-      DateTime(curr, this.minUnit, this.minUnit)
+      val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
+      TimeSpan.startingAt(TimeSpan.truncate(begin, this.minUnit), period, Modifier.Exact)
     }
   }
 
-  abstract class FieldSearchingTimeParse(fields: Map[ChronoField, Int]) extends FieldBasedTimeParse(fields) {
+  abstract class FieldSearchingTimeSpanParse(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
     def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
       var curr = dateTime
       while (fields.exists { case (field, value) => curr.get(field) != value }) {
         curr = step(curr, this.minUnit)
       }
-      curr
+      TimeSpan.truncate(curr, this.minUnit)
     }
   }
-
-  abstract class DirectedFieldSearchingTimeParse(
-    fields: Map[ChronoField, Int],
+  
+  abstract class DirectedFieldSearchingTimeSpanParse(
+    fields: Map[TemporalField, Int],
     stepFirst: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
     step: (ZonedDateTime, TemporalUnit) => ZonedDateTime)
-      extends FieldSearchingTimeParse(fields) {
+      extends FieldSearchingTimeSpanParse(fields) {
 
-    def toDateTime(dateTime: ZonedDateTime) = {
-      val adjustedDateTime = this.searchFrom(this.stepFirst(dateTime, this.minUnit), this.step)
-      DateTime(adjustedDateTime, this.minUnit, this.minUnit)
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val begin = this.searchFrom(this.stepFirst(anchor, this.minUnit), this.step)
+      val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
+      TimeSpan.startingAt(begin, period, Modifier.Exact)
     }
   }
 
-  case class Next(fields: Map[ChronoField, Int])
-    extends DirectedFieldSearchingTimeParse(fields, _.plus(1, _), _.plus(1, _))
+  case class FindLater(fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(fields, _.plus(1, _), _.plus(1, _))
 
-  case class Previous(fields: Map[ChronoField, Int])
-    extends DirectedFieldSearchingTimeParse(fields, _.minus(1, _), _.minus(1, _))
+  case class FindEarlier(fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(fields, _.minus(1, _), _.minus(1, _))
 
-  case class CurrentOrPrevious(fields: Map[ChronoField, Int])
-    extends DirectedFieldSearchingTimeParse(fields, _.minus(0, _), _.minus(1, _))
+  case class FindCurrentOrEarlier(fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(fields, _.minus(0, _), _.minus(1, _))
 
-  case class Closest(fields: Map[ChronoField, Int]) extends FieldSearchingTimeParse(fields) {
-    def toDateTime(dateTime: ZonedDateTime) = {
-      val prev = this.searchFrom(dateTime, _.minus(1, _))
-      val next = this.searchFrom(dateTime, _.plus(1, _))
-      val distToPrev = prev.periodUntil(dateTime, this.minUnit)
-      val distToNext = dateTime.periodUntil(next, this.minUnit)
-      val adjustedDateTime = if (distToPrev < distToNext) prev else next
-      DateTime(adjustedDateTime, this.minUnit, this.minUnit)
-    }
-  }
-
-  abstract class PeriodTimeParse(
-      anchorParse: TimeParse,
-      periodParse: PeriodParse,
-      adjust: (ZonedDateTime, Int, TemporalUnit) => ZonedDateTime) extends TimeParse {
-
-    def toDateTime(anchorDateTime: ZonedDateTime) = {
-      val dateTime = anchorParse.toDateTime(anchorDateTime)
-      var fullDateTime = dateTime.fullDateTime
-      val unitAmounts = periodParse.toPeriod.unitAmounts
-      for ((unit, amount) <- unitAmounts) {
-        fullDateTime = adjust(fullDateTime, amount, unit)
+  case class FindEnclosing(timeSpanParse: TimeSpanParse, unit: TemporalUnit) extends TimeSpanParse {
+    import ChronoUnit._
+    import ChronoField._
+    
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = timeSpanParse.toTimeSpan(anchor)
+      if (timeSpan.period > unit) {
+        throw new IllegalArgumentException("%s is larger than 1 %s".format(timeSpan, unit))
       }
-      val minUnit = unitAmounts.keySet.minBy(_.getDuration)
-      DateTime(fullDateTime, dateTime.baseUnit, minUnit)
-    }
-
-  }
-
-  case class Plus(anchor: TimeParse, period: PeriodParse)
-    extends PeriodTimeParse(anchor, period, _.plus(_, _))
-
-  case class Minus(anchor: TimeParse, period: PeriodParse)
-    extends PeriodTimeParse(anchor, period, _.minus(_, _))
-
-  case class WithUnit(anchorParse: TimeParse, unit: ChronoUnit) extends TimeParse {
-    def toDateTime(anchor: ZonedDateTime) = {
-      anchorParse.toDateTime(anchor).copy(baseUnit = unit, rangeUnit = unit)
+      var start = TimeSpan.truncate(timeSpan.start, unit)
+      if (start.isAfter(timeSpan.start)) {
+        start = start.minus(1, unit)
+      }
+      val period = Period(Map(unit -> 1), Modifier.Exact)
+      TimeSpan.startingAt(start, period, timeSpan.modifier & period.modifier)
     }
   }
+  
+  trait TimeSpanPeriodParse extends TimeSpanParse {
+    val timeSpanParse: TimeSpanParse
+    val periodParse: PeriodParse
+    def withFindEnclosing(): TimeSpanPeriodParse
+    
+    protected def encloseTimeSpan() = {
+      val unit = this.periodParse.toPeriod.unitAmounts.keySet.minBy(_.getDuration)
+      FindEnclosing(this.timeSpanParse, unit)
+    }
+  }
 
-  case class Modifier(modifier: String, anchor: TimeParse) extends TimeParse {
-    def toDateTime(zonedDateTime: ZonedDateTime) = {
-      val dateTime = anchor.toDateTime(zonedDateTime)
-      new DateTime(dateTime.fullDateTime, dateTime.baseUnit, dateTime.rangeUnit, modifier)
+  case class StartAtEndOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
+  extends TimeSpanPeriodParse {
+    def withFindEnclosing() = this.copy(timeSpanParse = this.encloseTimeSpan())
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = timeSpanParse.toTimeSpan(anchor)
+      val period = periodParse.toPeriod
+      TimeSpan.startingAt(timeSpan.end, period, timeSpan.modifier & period.modifier)
+    }
+  }
+
+  case class EndAtStartOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
+  extends TimeSpanPeriodParse {
+    def withFindEnclosing() = this.copy(timeSpanParse = this.encloseTimeSpan())
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = timeSpanParse.toTimeSpan(anchor)
+      val period = periodParse.toPeriod
+      TimeSpan.endingAt(timeSpan.start, period, timeSpan.modifier & period.modifier)
+    }
+  }
+
+  case class MoveEarlier(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
+  extends TimeSpanPeriodParse {
+    def withFindEnclosing() = this.copy(timeSpanParse = this.encloseTimeSpan())
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = timeSpanParse.toTimeSpan(anchor)
+      val period = periodParse.toPeriod
+      val start = period.subtractFrom(timeSpan.start)
+      val end = period.subtractFrom(timeSpan.end)
+      TimeSpan(start, end, timeSpan.period, timeSpan.modifier & period.modifier)
+    }
+  }
+
+  case class MoveLater(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
+  extends TimeSpanPeriodParse {
+    def withFindEnclosing() = this.copy(timeSpanParse = this.encloseTimeSpan())
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = timeSpanParse.toTimeSpan(anchor)
+      val period = periodParse.toPeriod
+      val start = period.addTo(timeSpan.start)
+      val end = period.addTo(timeSpan.end)
+      TimeSpan(start, end, timeSpan.period, timeSpan.modifier & period.modifier)
+    }
+  }
+
+  case class WithModifier(timeSpan: TimeSpanParse, modifier: Modifier) extends TimeSpanParse {
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      timeSpan.toTimeSpan(anchor).copy(modifier = modifier)
     }
   }
 }

@@ -10,7 +10,7 @@ import org.threeten.bp.temporal.ChronoField._
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [Time]
+  val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [TimeSpan]
     [Nil] ||| a ||| ||| 1.0
     [Nil] ||| the ||| ||| 1.0
     [Nil] ||| . ||| ||| 1.0
@@ -51,28 +51,29 @@ class ParserTest extends FunSuite {
     [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0
     [Period:Simple] ||| [Number] [Unit] ||| [Number] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
-    [Period:Modifier] ||| less than [Period] ||| LESS_THAN [Period] ||| 1.0
-    [Time:Simple] ||| now ||| PRESENT ||| 1.0
-    [Time:WithUnit] ||| today ||| PRESENT DAYS ||| 1.0
-    [Time:WithUnit] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
-    [Time:Absolute] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-    [Time:Absolute] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-    [Time:Absolute] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-    [Time:Plus] ||| tomorrow ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
-    [Time:Plus] ||| next [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-    [Time:Plus] ||| [Period] from [Time] ||| [Time] [Period] ||| 1.0
-    [Time:Minus] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
-    [Time:Minus] ||| last [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-    [Time:Minus] ||| [Period] before [Time] ||| [Time] [Period] ||| 1.0
-    [Time:Minus] ||| [Period] ago ||| PRESENT [Period] ||| 1.0
-    [Time:Previous] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-    [Time:Previous] ||| last [FieldValue] ||| [FieldValue] ||| 1.0
-    [Time:Previous] ||| [FieldValue] ||| [FieldValue] ||| 1.0
-    [Time:Previous] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
-    [Time:Next] ||| next [FieldValue] ||| [FieldValue] ||| 1.0
-    [Time:Next] ||| [FieldValue] ||| [FieldValue] ||| 1.0
-    [Time:CurrentOrPrevious] ||| [FieldValue] ||| [FieldValue] ||| 1.0
-    [Time:Modifier] ||| early [Time] ||| START [Time] ||| 1.0
+    [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
+    [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
+    [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
+    [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
+    [TimeSpan:FindAbsolute] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+    [TimeSpan:FindAbsolute] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+    [TimeSpan:FindAbsolute] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+    [TimeSpan:StartAtEndOf+FindEnclosing] ||| tomorrow ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
+    [TimeSpan:StartAtEndOf+FindEnclosing] ||| next [Period] ||| PRESENT [Period] ||| 1.0
+    [TimeSpan:StartAtEndOf+FindEnclosing] ||| [Period] from [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
+    [TimeSpan:EndAtStartOf+FindEnclosing] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
+    [TimeSpan:EndAtStartOf+FindEnclosing] ||| last [Period] ||| PRESENT [Period] ||| 1.0
+    [TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] before [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
+    [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:WithModifier PRESENT APPROX ) [Period] ||| 1.0
+    [TimeSpan:MoveEarlier+FindEnclosing] ||| [Period] ago ||| PRESENT [Period] ||| 1.0
+    [TimeSpan:FindEarlier] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+    [TimeSpan:FindEarlier] ||| last [FieldValue] ||| [FieldValue] ||| 1.0
+    [TimeSpan:FindEarlier] ||| [FieldValue] ||| [FieldValue] ||| 1.0
+    [TimeSpan:FindEarlier] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
+    [TimeSpan:FindLater] ||| next [FieldValue] ||| [FieldValue] ||| 1.0
+    [TimeSpan:FindLater] ||| [FieldValue] ||| [FieldValue] ||| 1.0
+    [TimeSpan:FindCurrentOrEarlier] ||| [FieldValue] ||| [FieldValue] ||| 1.0
+    [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
     """)
 
   val parser = new SynchronousParser(grammar)
@@ -101,56 +102,66 @@ class ParserTest extends FunSuite {
     assert(this.parse("two", "weeks", "and", "a", "day") ===
       Sum(Seq(Simple(2, WEEKS), Simple(1, DAYS))))
     assert(this.parse("less", "than", "a", "week") ===
-      Modifier("LESS_THAN", Simple(1, WEEKS)))
+      WithModifier(Simple(1, WEEKS), Modifier.LessThan))
   }
 
   test("parses simple anchors") {
-    import TimeParse._
+    import TimeSpanParse._
     assert(this.parse("now") === Present)
-    assert(this.parse("today") === WithUnit(Present, DAYS))
+    assert(this.parse("today") === FindEnclosing(Present, DAYS))
     assert(this.parse("September", "21", "1976") ===
-      Absolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+      FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
     assert(this.parse("9", "21", "1976") ===
-      Absolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+      FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
     assert(this.parse("21", "9", "1976") ===
-      Absolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+      FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
     assert(this.parse("1976", "9", "21") ===
-      Absolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
-    assert(this.parse("October", "15") === Previous(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
+      FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
+    assert(this.parse("October", "15") ===
+      FindEarlier(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
     assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
-      Previous(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
-    assert(this.parse("this", "week") === WithUnit(Present, WEEKS))
-    assert(this.parse("this", "month") === WithUnit(Present, MONTHS))
+      FindEarlier(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
   }
 
   test("parses complex anchors") {
-    import TimeParse._
+    import TimeSpanParse._
     import PeriodParse.{ Simple => SimplePeriod }
-    assert(this.parse("tomorrow") === Plus(Present, SimplePeriod(1, DAYS)))
-    assert(this.parse("yesterday") === Minus(Present, SimplePeriod(1, DAYS)))
-    assert(this.parse("next", "week") === Plus(Present, SimplePeriod(1, WEEKS)))
-    assert(this.parse("last", "week") === Minus(Present, SimplePeriod(1, WEEKS)))
-    assert(this.parse("next", "month") === Plus(Present, SimplePeriod(1, MONTHS)))
-    assert(this.parse("two", "weeks", "ago") === Minus(Present, SimplePeriod(2, WEEKS)))
+    
+    assert(this.parse("this", "week") === FindEnclosing(Present, WEEKS))
+    assert(this.parse("this", "month") === FindEnclosing(Present, MONTHS))
+    assert(this.parse("tomorrow") === StartAtEndOf(FindEnclosing(Present, DAYS), SimplePeriod(1, DAYS)))
+    assert(this.parse("yesterday") === EndAtStartOf(FindEnclosing(Present, DAYS), SimplePeriod(1, DAYS)))
+    assert(this.parse("next", "week") === StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS)))
+    assert(this.parse("last", "week") === EndAtStartOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS)))
+    assert(this.parse("next", "month") === StartAtEndOf(FindEnclosing(Present, MONTHS), SimplePeriod(1, MONTHS)))
+    assert(this.parseAll("two", "weeks", "ago").toSet === Set(
+      MoveEarlier(WithModifier(Present, Modifier.Approx), SimplePeriod(2, WEEKS)),
+      MoveEarlier(FindEnclosing(Present, WEEKS), SimplePeriod(2, WEEKS))))
+    assert(this.parse("last", "three", "weeks") === EndAtStartOf(FindEnclosing(Present, WEEKS), SimplePeriod(3, WEEKS)))
+    
     assert(this.parse("the", "day", "before", "yesterday") ===
-      Minus(Minus(Present, SimplePeriod(1, DAYS)), SimplePeriod(1, DAYS)))
-    assert(this.parse("next", "October") === Next(Map(MONTH_OF_YEAR -> 10)))
+      EndAtStartOf(
+          FindEnclosing(EndAtStartOf(FindEnclosing(Present, DAYS), SimplePeriod(1, DAYS)), DAYS),
+          SimplePeriod(1, DAYS)))
+      
+    assert(this.parse("next", "October") === FindLater(Map(MONTH_OF_YEAR -> 10)))
     assert(this.parseAll("January").toSet === Set(
-        Previous(Map(MONTH_OF_YEAR -> 1)),
-        CurrentOrPrevious(Map(MONTH_OF_YEAR -> 1)),
-        Next(Map(MONTH_OF_YEAR -> 1))))
+        FindEarlier(Map(MONTH_OF_YEAR -> 1)),
+        FindCurrentOrEarlier(Map(MONTH_OF_YEAR -> 1)),
+        FindLater(Map(MONTH_OF_YEAR -> 1))))
     assert(this.parse("early", "next", "week") ===
-      Modifier("START", Plus(Present, SimplePeriod(1, WEEKS))))
-    assert(this.parse("a", "decade", "ago") ===
-      Minus(Present, SimplePeriod(1, DECADES)))
+      WithModifier(StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS)), Modifier.Start))
+    assert(this.parseAll("a", "decade", "ago").toSet === Set(
+      MoveEarlier(WithModifier(Present, Modifier.Approx), SimplePeriod(1, DECADES)),
+      MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES))))
   }
 
   test("parses with nil") {
-    import TimeParse._
+    import TimeSpanParse._
     assert(this.parse("just", "now") === Present)
-    assert(this.parse("this", "week", ".") === WithUnit(Present, WEEKS))
-    assert(this.parse("this", "very", "month") === WithUnit(Present, MONTHS))
-    assert(this.parse("the", "next", "October") === Next(Map(MONTH_OF_YEAR -> 10)))
+    assert(this.parse("this", "week", ".") === FindEnclosing(Present, WEEKS))
+    assert(this.parse("this", "very", "month") === FindEnclosing(Present, MONTHS))
+    assert(this.parse("the", "next", "October") === FindLater(Map(MONTH_OF_YEAR -> 10)))
   }
 
   /*
