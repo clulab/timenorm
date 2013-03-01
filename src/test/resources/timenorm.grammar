@@ -1,8 +1,11 @@
 ROOTS [Period] [TimeSpan]
 
 [Nil] ||| a ||| ||| 1.0
+[Nil] ||| A ||| ||| 1.0
 [Nil] ||| the ||| ||| 1.0
+[Nil] ||| The ||| ||| 1.0
 [Nil] ||| that ||| ||| 1.0
+[Nil] ||| That ||| ||| 1.0
 [Nil] ||| . ||| ||| 1.0
 [Nil] ||| , ||| ||| 1.0
 
@@ -96,7 +99,7 @@ ROOTS [Period] [TimeSpan]
 
 [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
 
-[Period:Modifier] ||| less than [Period] ||| LESS_THAN [Period] ||| 1.0
+[Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
 
 [TimeSpan:Simple] ||| past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
@@ -148,3 +151,4 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindLater] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
 
 [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
+[TimeSpan:WithModifier] ||| almost [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
