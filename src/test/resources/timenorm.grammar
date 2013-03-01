@@ -46,6 +46,8 @@ ROOTS [Period] [TimeSpan]
 [Unit] ||| years ||| YEARS ||| 1.0
 [Unit] ||| decade ||| DECADES ||| 1.0
 [Unit] ||| decades ||| DECADES ||| 1.0
+[Unit] ||| century ||| CENTURIES ||| 1.0
+[Unit] ||| centuries ||| CENTURIES ||| 1.0
 
 [FieldValue:HourOfDay] ||| [Number:0-23] ||| HOUR_OF_DAY [Number:0-23] ||| 1.0
 [FieldValue:HourOfAMPM] ||| [Number:1-12] ||| HOUR_OF_AMPM [Number:1-12] ||| 1.0

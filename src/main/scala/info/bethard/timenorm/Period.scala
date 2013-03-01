@@ -3,31 +3,38 @@ package info.bethard.timenorm
 import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.ZonedDateTime
+import scala.collection.immutable.ListMap
 
 case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
+  
+  private val simplifyUnitMap = ListMap[TemporalUnit, (TemporalUnit, Int => Int)](
+    DECADES -> (YEARS, _ * 10),
+    CENTURIES -> (YEARS, _ * 100))
 
-  private val dateChars = Seq[(TemporalUnit, String)](
-    DECADES -> "0Y",
+  private val unitChars = ListMap[TemporalUnit, String](
     YEARS -> "Y",
     MONTHS -> "M",
     WEEKS -> "W",
-    DAYS -> "D")
-
-  private val timeChars = Seq[(TemporalUnit, String)](
+    DAYS -> "D",
     HOURS -> "H",
     MINUTES -> "M",
     SECONDS -> "S")
-
-  private def toParts(counts: Map[TemporalUnit, Int], unitChars: Seq[(TemporalUnit, String)]) = {
-    val partOptions = for ((unit, char) <- unitChars) yield counts.get(unit).map(_ + char)
-    partOptions.flatten
-  }
-
+  
   val timeMLValue: String = {
-    val dateParts = this.toParts(this.unitAmounts, this.dateChars)
-    val timeParts = this.toParts(this.unitAmounts, this.timeChars)
-    val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.mkString
-    "P" + dateParts.mkString + timeString
+    val simpleUnitAmounts = this.simplifyUnitMap.foldLeft(this.unitAmounts) {
+      case (counts, (unit, (simpleUnit, convert))) => counts.get(unit) match {
+        case None => counts
+        case Some(value) =>
+          val newValue = counts.getOrElse(simpleUnit, 0) + convert(value) 
+          counts - unit + (simpleUnit -> newValue)
+      }
+    }
+    val parts = for (unit <- simpleUnitAmounts.keySet.toSeq.sortBy(_.getDuration).reverse) yield {
+      (unit, simpleUnitAmounts(unit) + this.unitChars(unit))
+    }
+    val (dateParts, timeParts) = parts.partition(_._1.getDuration.isGreaterThan(HOURS.getDuration))
+    val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.map(_._2).mkString
+    "P" + dateParts.map(_._2).mkString + timeString
   }
 
   def +(that: Period): Period = {
@@ -47,7 +54,7 @@ case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
         (maxUnit == unit && this.unitAmounts(maxUnit) > 1)
     }
   }
-  
+
   def addTo(time: ZonedDateTime): ZonedDateTime = this.unitAmounts.foldLeft(time) {
     case (time, (unit, value)) => time.plus(value, unit)
   }

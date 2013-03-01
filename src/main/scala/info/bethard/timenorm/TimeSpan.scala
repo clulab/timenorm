@@ -26,6 +26,7 @@ object TimeSpan {
   }
 
   private val fieldFormats = Map[TemporalField, String](
+    CENTURY -> "%02d",
     DECADE -> "%03d",
     YEAR -> "%04d",
     MONTH_OF_YEAR -> "-%02d",
@@ -36,6 +37,7 @@ object TimeSpan {
     SECOND_OF_MINUTE -> ":%02d")
 
   private val unitToFieldsToDisplay = Map[TemporalUnit, Seq[TemporalField]](
+    CENTURIES -> Seq(CENTURY),
     DECADES -> Seq(DECADE),
     YEARS -> Seq(YEAR),
     MONTHS -> Seq(YEAR, MONTH_OF_YEAR),
@@ -46,6 +48,7 @@ object TimeSpan {
     SECONDS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE))
   
   private val unitToFieldsToTruncate = Map[TemporalUnit, Seq[TemporalField]](
+    CENTURIES -> Seq(YEAR_OF_CENTURY, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DECADES -> Seq(YEAR_OF_DECADE, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     YEARS -> Seq(MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MONTHS -> Seq(DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),

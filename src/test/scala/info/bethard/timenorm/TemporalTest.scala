@@ -18,6 +18,7 @@ class TemporalTest extends FunSuite {
 
   test("resolves simple periods") {
     import PeriodParse._
+    assertPeriod(Simple(3, CENTURIES), "P300Y", CENTURIES -> 3)
     assertPeriod(Simple(2, WEEKS), "P2W", WEEKS -> 2)
     assertPeriod(Simple(10, DAYS), "P10D", DAYS -> 10)
     assertPeriod(Simple(1, MONTHS), "P1M", MONTHS -> 1)
@@ -34,6 +35,9 @@ class TemporalTest extends FunSuite {
     assertPeriod(
         Sum(Seq(Simple(2, DAYS), Simple(1, DAYS))),
         "P3D", DAYS -> 3)
+    assertPeriod(
+        Sum(Seq(Simple(191, YEARS), Simple(2, DECADES), Simple(3, CENTURIES))),
+        "P511Y", YEARS -> 191, DECADES -> 2, CENTURIES -> 3)
   }
 
   private def assertPeriod(
@@ -166,6 +170,9 @@ class TemporalTest extends FunSuite {
     assertTimeSpan(
       MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES)),
       "2000-01-01T00:00", "2010-01-01T00:00", "P10Y", "200")
+    assertTimeSpan(
+      FindEnclosing(Present, CENTURIES),
+      "2000-01-01T00:00", "2100-01-01T00:00", "P100Y", "20")
   }
 
   private def assertTimeSpan(
