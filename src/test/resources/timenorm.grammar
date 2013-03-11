@@ -116,11 +116,13 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:Simple] ||| the future ||| FUTURE ||| 1.0
 
 [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
+[TimeSpan:FindEnclosing] ||| Today ||| PRESENT DAYS ||| 1.0
 [TimeSpan:FindEnclosing] ||| same day ||| PRESENT DAYS ||| 1.0
 [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| This [Unit] ||| PRESENT [Unit] ||| 1.0
 
 [TimeSpan:FindAbsolute] ||| [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
+[TimeSpan:FindAbsolute] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
 [TimeSpan:FindAbsolute] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [TimeSpan:FindAbsolute] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [TimeSpan:FindAbsolute] ||| [FieldValue:Year] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
@@ -137,6 +139,7 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| last [Period] ||| PRESENT [Period] ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| Last [Period] ||| PRESENT [Period] ||| 1.0
+[TimeSpan:EndAtStartOf+FindEnclosing] ||| past [Period] ||| PRESENT [Period] ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] before [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
 
 [TimeSpan:MoveEarlier+FindEnclosing] ||| [Period] ago ||| PRESENT [Period] ||| 1.0
