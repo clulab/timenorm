@@ -13,6 +13,7 @@ case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
 
   private val unitChars = ListMap[TemporalUnit, String](
     YEARS -> "Y",
+    SEASONS -> "S",
     MONTHS -> "M",
     WEEKS -> "W",
     DAYS -> "D",

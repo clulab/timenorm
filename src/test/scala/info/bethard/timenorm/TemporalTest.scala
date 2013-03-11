@@ -82,6 +82,12 @@ class TemporalTest extends FunSuite {
       FindEarlier(Map(CLOCK_HOUR_OF_AMPM -> 11, MINUTE_OF_HOUR -> 18, AMPM_OF_DAY -> 0)),
       "2012-12-12T11:18", "2012-12-12T11:19", "PT1M", "2012-12-12T11:18")
     assertTimeSpan(
+      FindEarlier(Map(SEASON_OF_YEAR -> 0)),
+      "2012-03-20T00:00", "2012-06-21T00:00", "P1S", "2012-SP")
+    assertTimeSpan(
+      FindLater(Map(SEASON_OF_YEAR -> 3)),
+      "2012-12-21T00:00", "2013-03-20T00:00", "P1S", "2012-WI")
+    assertTimeSpan(
       FindCurrentOrEarlier(Map(DAY_OF_WEEK -> DayOfWeek.WEDNESDAY.getValue)),
       "2012-12-12T00:00", "2012-12-13T00:00", "P1D", "2012-12-12")
     assertTimeSpan(

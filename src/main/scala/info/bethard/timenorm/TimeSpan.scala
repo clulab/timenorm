@@ -24,22 +24,26 @@ object TimeSpan {
       case (time, field) => time.`with`(field, field.range.getMinimum)
     }
   }
+  
+  private final val seasonNames = IndexedSeq("SP", "SU", "FA", "WI")
 
-  private val fieldFormats = Map[TemporalField, String](
-    CENTURY -> "%02d",
-    DECADE -> "%03d",
-    YEAR -> "%04d",
-    MONTH_OF_YEAR -> "-%02d",
-    DAY_OF_MONTH -> "-%02d",
-    ALIGNED_WEEK_OF_YEAR -> "-W%02d",
-    HOUR_OF_DAY -> "T%02d",
-    MINUTE_OF_HOUR -> ":%02d",
-    SECOND_OF_MINUTE -> ":%02d")
+  private val fieldFormats = Map[TemporalField, Int => String](
+    (CENTURY, "%02d".format(_)),
+    (DECADE, "%03d".format(_)),
+    (YEAR, "%04d".format(_)),
+    (SEASON_OF_YEAR, "-" + this.seasonNames(_)),
+    (MONTH_OF_YEAR, "-%02d".format(_)),
+    (DAY_OF_MONTH, "-%02d".format(_)),
+    (ALIGNED_WEEK_OF_YEAR, "-W%02d".format(_)),
+    (HOUR_OF_DAY, "T%02d".format(_)),
+    (MINUTE_OF_HOUR, ":%02d".format(_)),
+    (SECOND_OF_MINUTE, ":%02d".format(_)))
 
   private val unitToFieldsToDisplay = Map[TemporalUnit, Seq[TemporalField]](
     CENTURIES -> Seq(CENTURY),
     DECADES -> Seq(DECADE),
     YEARS -> Seq(YEAR),
+    SEASONS -> Seq(YEAR, SEASON_OF_YEAR),
     MONTHS -> Seq(YEAR, MONTH_OF_YEAR),
     WEEKS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
     DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH),
@@ -51,6 +55,7 @@ object TimeSpan {
     CENTURIES -> Seq(YEAR_OF_CENTURY, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DECADES -> Seq(YEAR_OF_DECADE, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     YEARS -> Seq(MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    SEASONS -> Seq(DAY_OF_SEASON, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MONTHS -> Seq(DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     WEEKS -> Seq(DAY_OF_WEEK, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DAYS -> Seq(HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
@@ -73,7 +78,7 @@ case class TimeSpan(
         case List((unit, 1)) if TimeSpan.truncate(this.start, unit) == this.start =>
           val parts =
             for (field <- TimeSpan.unitToFieldsToDisplay(unit))
-              yield TimeSpan.fieldFormats(field).format(this.start.get(field))
+              yield TimeSpan.fieldFormats(field)(this.start.get(field))
           Some(parts.mkString)
         case _ => None
       }

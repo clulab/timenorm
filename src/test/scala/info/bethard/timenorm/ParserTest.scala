@@ -48,6 +48,10 @@ class ParserTest extends FunSuite {
     [FieldValue:MonthOfYear] ||| [Number:1-12] ||| MONTH_OF_YEAR [Number:1-12] ||| 1.0
     [FieldValue:DayOfMonth] ||| [Number:1-31] ||| DAY_OF_MONTH [Number:1-31] ||| 1.0
     [FieldValue:Year] ||| [Number:1900-2100] ||| YEAR [Number:1900-2100] ||| 1.0
+    [FieldValue:SeasonOfYear] ||| spring ||| SEASON_OF_YEAR 0 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| summer ||| SEASON_OF_YEAR 1 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| fall ||| SEASON_OF_YEAR 2 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| winter ||| SEASON_OF_YEAR 3 ||| 1.0
     [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0
     [Period:Simple] ||| [Number] [Unit] ||| [Number] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
@@ -121,6 +125,8 @@ class ParserTest extends FunSuite {
       FindEarlier(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
     assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
       FindEarlier(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
+    assert(this.parse("last", "summer") ===
+      FindEarlier(Map(SEASON_OF_YEAR -> 1)))
   }
 
   test("parses complex anchors") {

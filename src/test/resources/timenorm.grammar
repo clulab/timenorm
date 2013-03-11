@@ -93,6 +93,12 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:MonthOfYear] ||| Dec . ||| MONTH_OF_YEAR 12 ||| 1.0
 [FieldValue:MonthOfYear] ||| [Number:1-12] ||| MONTH_OF_YEAR [Number:1-12] ||| 1.0
 
+[FieldValue:SeasonOfYear] ||| spring ||| SEASON_OF_YEAR 0 ||| 1.0
+[FieldValue:SeasonOfYear] ||| summer ||| SEASON_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| fall ||| SEASON_OF_YEAR 2 ||| 1.0
+[FieldValue:SeasonOfYear] ||| autumn ||| SEASON_OF_YEAR 2 ||| 1.0
+[FieldValue:SeasonOfYear] ||| winter ||| SEASON_OF_YEAR 3 ||| 1.0
+
 [FieldValue:Year] ||| [Number:1900-2100] ||| YEAR [Number:1900-2100] ||| 1.0
 
 [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0

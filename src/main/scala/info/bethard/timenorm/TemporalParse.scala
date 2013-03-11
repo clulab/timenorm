@@ -77,13 +77,13 @@ object UnitParse extends CanFail("[Unit]") with (Tree => UnitParse) {
   }
 }
 
-case class FieldValueParse(name: ChronoField, value: Int)
+case class FieldValueParse(name: TemporalField, value: Int)
 object FieldValueParse extends CanFail("[FieldValue]") with (Tree => FieldValueParse) {
   def apply(tree: Tree): FieldValueParse = tree match {
     case Tree.NonTerminal("[FieldValue]", _, tree :: Nil, _) =>
       FieldValueParse(tree)
     case Tree.NonTerminal("[FieldValue]", _, Tree.Terminal(field) :: number :: Nil, _) =>
-      FieldValueParse(ChronoField.valueOf(field), NumberParse(number).value)
+      FieldValueParse(TemporalFields.valueOf(field), NumberParse(number).value)
     case _ => fail(tree)
   }
 }
