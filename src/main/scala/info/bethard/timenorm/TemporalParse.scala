@@ -77,13 +77,13 @@ object UnitParse extends CanFail("[Unit]") with (Tree => UnitParse) {
   }
 }
 
-case class FieldValueParse(name: TemporalField, value: Int)
+case class FieldValueParse(fieldValues: Map[TemporalField, Int])
 object FieldValueParse extends CanFail("[FieldValue]") with (Tree => FieldValueParse) {
   def apply(tree: Tree): FieldValueParse = tree match {
-    case Tree.NonTerminal("[FieldValue]", _, tree :: Nil, _) =>
-      FieldValueParse(tree)
     case Tree.NonTerminal("[FieldValue]", _, Tree.Terminal(field) :: number :: Nil, _) =>
-      FieldValueParse(TemporalFields.valueOf(field), NumberParse(number).value)
+      FieldValueParse(Map(TemporalFields.valueOf(field) -> NumberParse(number).value))
+    case Tree.NonTerminal("[FieldValue]", _, children, _) =>
+      FieldValueParse(children.map(FieldValueParse).map(_.fieldValues).flatten.toMap)
     case _ => fail(tree)
   }
 }
@@ -140,14 +140,14 @@ object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) 
       TimeSpanParse(tree)
     case Tree.NonTerminal(_, "[TimeSpan:Simple]", (tree: Tree.Terminal) :: Nil, _) =>
       TimeSpanParse(tree)
-    case Tree.NonTerminal(_, "[TimeSpan:FindAbsolute]", children, _) =>
-      FindAbsolute(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[TimeSpan:FindLater]", children, _) =>
-      FindLater(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", children, _) =>
-      FindEarlier(this.toFieldValues(children))
-    case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrEarlier]", children, _) =>
-      FindCurrentOrEarlier(this.toFieldValues(children))
+    case Tree.NonTerminal(_, "[TimeSpan:FindAbsolute]", tree :: Nil, _) =>
+      FindAbsolute(FieldValueParse(tree).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindLater]", tree :: Nil, _) =>
+      FindLater(FieldValueParse(tree).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", tree :: Nil, _) =>
+      FindEarlier(FieldValueParse(tree).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrEarlier]", tree :: Nil, _) =>
+      FindCurrentOrEarlier(FieldValueParse(tree).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: unit :: Nil, _) =>
       FindEnclosing(TimeSpanParse(time), UnitParse(unit).value)
     case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf]", time :: period :: Nil, _) =>
@@ -169,10 +169,6 @@ object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) 
     case Tree.NonTerminal(_, "[TimeSpan:WithModifier]", time :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(TimeSpanParse(time), Modifier.valueOf(modifier))
     case _ => fail(tree)
-  }
-
-  private def toFieldValues(trees: List[Tree]): Map[TemporalField, Int] = {
-    trees.map(FieldValueParse).map(field => (field.name, field.value)).toMap
   }
 
   case object Past extends TimeSpanParse {
