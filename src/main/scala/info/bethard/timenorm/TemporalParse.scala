@@ -55,13 +55,13 @@ object TemporalParse extends CanFail("[Temporal]") with (Tree => TemporalParse) 
   }
 }
 
-case class NumberParse(value: Int)
-object NumberParse extends CanFail("[Number]") with (Tree => NumberParse) {
-  def apply(tree: Tree): NumberParse = tree match {
+case class IntParse(value: Int)
+object IntParse extends CanFail("[Int]") with (Tree => IntParse) {
+  def apply(tree: Tree): IntParse = tree match {
     case Tree.Terminal(number) =>
-      NumberParse(number.toInt)
-    case Tree.NonTerminal("[Number]", _, tree :: Nil, _) =>
-      NumberParse(tree)
+      IntParse(number.toInt)
+    case Tree.NonTerminal("[Int]", _, tree :: Nil, _) =>
+      IntParse(tree)
     case _ => fail(tree)
   }
 }
@@ -81,7 +81,7 @@ case class FieldValueParse(fieldValues: Map[TemporalField, Int])
 object FieldValueParse extends CanFail("[FieldValue]") with (Tree => FieldValueParse) {
   def apply(tree: Tree): FieldValueParse = tree match {
     case Tree.NonTerminal("[FieldValue]", _, Tree.Terminal(field) :: number :: Nil, _) =>
-      FieldValueParse(Map(TemporalFields.valueOf(field) -> NumberParse(number).value))
+      FieldValueParse(Map(TemporalFields.valueOf(field) -> IntParse(number).value))
     case Tree.NonTerminal("[FieldValue]", _, children, _) =>
       FieldValueParse(children.map(FieldValueParse).map(_.fieldValues).flatten.toMap)
     case _ => fail(tree)
@@ -102,7 +102,7 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
     case Tree.NonTerminal(_, "[Period:Simple]", unit :: Nil, _) =>
       Simple(1, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Simple]", amount :: unit :: Nil, _) =>
-      Simple(NumberParse(amount).value, UnitParse(unit).value)
+      Simple(IntParse(amount).value, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Sum]", children, _) =>
       Sum(children.map(PeriodParse))
     case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>

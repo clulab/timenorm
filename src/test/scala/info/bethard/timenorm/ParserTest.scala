@@ -16,9 +16,9 @@ class ParserTest extends FunSuite {
     [Nil] ||| . ||| ||| 1.0
     [Nil] ||| very ||| ||| 1.0
     [Nil] ||| just ||| ||| 1.0
-    [Number] ||| one ||| 1 ||| 1.0
-    [Number] ||| two ||| 2 ||| 1.0
-    [Number] ||| three ||| 3 ||| 1.0
+    [Int] ||| one ||| 1 ||| 1.0
+    [Int] ||| two ||| 2 ||| 1.0
+    [Int] ||| three ||| 3 ||| 1.0
     [Unit] ||| day ||| DAYS ||| 1.0
     [Unit] ||| days ||| DAYS ||| 1.0
     [Unit] ||| week ||| WEEKS ||| 1.0
@@ -29,8 +29,8 @@ class ParserTest extends FunSuite {
     [Unit] ||| years ||| YEARS ||| 1.0
     [Unit] ||| decade ||| DECADES ||| 1.0
     [Unit] ||| decades ||| DECADES ||| 1.0
-    [FieldValue:HourOfAMPM] ||| [Number:1-12] ||| HOUR_OF_AMPM [Number:1-12] ||| 1.0
-    [FieldValue:MinuteOfHour] ||| [Number:0-60] ||| MINUTE_OF_HOUR [Number:0-60] ||| 1.0
+    [FieldValue:HourOfAMPM] ||| [Int:1-12] ||| HOUR_OF_AMPM [Int:1-12] ||| 1.0
+    [FieldValue:MinuteOfHour] ||| [Int:0-60] ||| MINUTE_OF_HOUR [Int:0-60] ||| 1.0
     [FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
     [FieldValue:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
     [FieldValue:QuarterOfDay] ||| morning ||| QUARTER_OF_DAY 1 ||| 1.0
@@ -47,9 +47,9 @@ class ParserTest extends FunSuite {
     [FieldValue:MonthOfYear] ||| October ||| MONTH_OF_YEAR 10 ||| 1.0
     [FieldValue:MonthOfYear] ||| November ||| MONTH_OF_YEAR 11 ||| 1.0
     [FieldValue:MonthOfYear] ||| December ||| MONTH_OF_YEAR 12 ||| 1.0
-    [FieldValue:MonthOfYear] ||| [Number:1-12] ||| MONTH_OF_YEAR [Number:1-12] ||| 1.0
-    [FieldValue:DayOfMonth] ||| [Number:1-31] ||| DAY_OF_MONTH [Number:1-31] ||| 1.0
-    [FieldValue:Year] ||| [Number:1900-2100] ||| YEAR [Number:1900-2100] ||| 1.0
+    [FieldValue:MonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
+    [FieldValue:DayOfMonth] ||| [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
+    [FieldValue:Year] ||| [Int:1900-2100] ||| YEAR [Int:1900-2100] ||| 1.0
     [FieldValue:SeasonOfYear] ||| spring ||| SEASON_OF_YEAR 0 ||| 1.0
     [FieldValue:SeasonOfYear] ||| summer ||| SEASON_OF_YEAR 1 ||| 1.0
     [FieldValue:SeasonOfYear] ||| fall ||| SEASON_OF_YEAR 2 ||| 1.0
@@ -69,7 +69,7 @@ class ParserTest extends FunSuite {
     [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
     [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0
-    [Period:Simple] ||| [Number] [Unit] ||| [Number] [Unit] ||| 1.0
+    [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
     [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
     [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0

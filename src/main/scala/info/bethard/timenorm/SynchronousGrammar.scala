@@ -17,7 +17,7 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
     this.rulePrefixMap += (rule.sourceSeq, rule)
   }
   
-  private val numberRegex = "^\\[Number:(.*)-(.*)\\]$".r
+  private val numberRegex = "^\\[Int:(.*)-(.*)\\]$".r
   private val numberRanges: Set[Range.Inclusive] = (
     for {
       rule <- rules
@@ -29,8 +29,8 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
   def symbolsForNumber(number: Int): Set[String] = {
     val symbolsWithRanges =
       for (range <- this.numberRanges; if range.contains(number))
-        yield "[Number:%d-%d]".format(range.start, range.end)
-    symbolsWithRanges + "[Number]" 
+        yield "[Int:%d-%d]".format(range.start, range.end)
+    symbolsWithRanges + "[Int]" 
   }
 
   def sourceSeqStartsWith(tokens: Seq[String]) = {
