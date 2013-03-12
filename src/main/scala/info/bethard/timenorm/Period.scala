@@ -73,4 +73,23 @@ case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
 
 object Period {
   def empty = Period(Map.empty, Modifier.Exact)
+  def fromFractional(numerator: Int, denominator: Int, unit: TemporalUnit, modifier: Modifier): Period = {
+    var map = Map(unit -> (numerator / denominator))
+    var currRemainder = numerator % denominator
+    var currUnit = unit
+    while (currRemainder != 0) {
+      val (multiplier, nextUnit) = this.smallerUnit(currUnit)
+      val numerator = currRemainder * multiplier
+      map += nextUnit -> (numerator / denominator)
+      currUnit = nextUnit
+      currRemainder = numerator % denominator
+    }
+    Period(map, modifier)
+  }
+  
+  private final val smallerUnit = Map[TemporalUnit, (Int, TemporalUnit)](
+      WEEKS -> (7, DAYS),
+      DAYS -> (24, HOURS),
+      HOURS -> (60, MINUTES),
+      MINUTES -> (60, SECONDS))
 }

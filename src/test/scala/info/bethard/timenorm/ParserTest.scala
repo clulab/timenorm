@@ -19,6 +19,8 @@ class ParserTest extends FunSuite {
     [Int] ||| one ||| 1 ||| 1.0
     [Int] ||| two ||| 2 ||| 1.0
     [Int] ||| three ||| 3 ||| 1.0
+    [Unit] ||| hour ||| HOURS ||| 1.0
+    [Unit] ||| hours ||| HOURS ||| 1.0
     [Unit] ||| day ||| DAYS ||| 1.0
     [Unit] ||| days ||| DAYS ||| 1.0
     [Unit] ||| week ||| WEEKS ||| 1.0
@@ -70,6 +72,7 @@ class ParserTest extends FunSuite {
     [FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
     [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0
     [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
+    [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
     [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
     [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
@@ -112,6 +115,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("two", "weeks") === Simple(2, WEEKS))
     assert(this.parse("10", "days") === Simple(10, DAYS))
     assert(this.parse("a", "month") === Simple(1, MONTHS))
+    assert(this.parse("5", "1", "/", "2", "hours") === Fractional(11, 2, HOURS))
   }
 
   test("parses complex periods") {

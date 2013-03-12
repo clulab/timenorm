@@ -133,6 +133,7 @@ ROOTS [Period] [TimeSpan]
 [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0
 [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] - [Unit] ||| [Int] [Unit] ||| 1.0
+[Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
 
 [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
 

@@ -103,6 +103,11 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
       Simple(1, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Simple]", amount :: unit :: Nil, _) =>
       Simple(IntParse(amount).value, UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[Period:Fractional]", numerator :: denominator :: unit :: Nil, _) =>
+      Fractional(IntParse(numerator).value, IntParse(denominator).value, UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[Period:Fractional]", whole :: numerator :: denominator :: unit :: Nil, _) =>
+      val denominatorValue = IntParse(denominator).value
+      Fractional(IntParse(whole).value * denominatorValue + IntParse(numerator).value, denominatorValue, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Sum]", children, _) =>
       Sum(children.map(PeriodParse))
     case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
@@ -112,6 +117,10 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
 
   case class Simple(amount: Int, unit: ChronoUnit) extends PeriodParse {
     def toPeriod = Period(Map(unit -> amount), Modifier.Exact)
+  }
+  
+  case class Fractional(numerator: Int, denominator: Int, unit: ChronoUnit) extends PeriodParse {
+    def toPeriod = Period.fromFractional(numerator, denominator, unit, Modifier.Exact)
   }
 
   case class Sum(periods: Seq[PeriodParse]) extends PeriodParse {

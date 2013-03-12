@@ -25,6 +25,8 @@ class TemporalTest extends FunSuite {
     assertPeriod(Simple(16, HOURS), "PT16H", HOURS -> 16)
     assertPeriod(Simple(20, MINUTES), "PT20M", MINUTES -> 20)
     assertPeriod(Simple(53, SECONDS), "PT53S", SECONDS -> 53)
+    assertPeriod(Fractional(11, 2, HOURS), "PT5H30M", HOURS -> 5, MINUTES -> 30)
+    assertPeriod(Fractional(3, 2, WEEKS), "P1W3DT12H", WEEKS -> 1, DAYS -> 3, HOURS -> 12)
   }
 
   test("resolves complex periods") {
