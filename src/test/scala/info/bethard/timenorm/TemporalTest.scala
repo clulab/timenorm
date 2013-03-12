@@ -108,6 +108,18 @@ class TemporalTest extends FunSuite {
     assertTimeSpan(
       FindEnclosing(Present, WEEKS),
       "2012-12-10T00:00", "2012-12-17T00:00", "P1W", "2012-W50")
+    assertTimeSpan(
+      FindLater(Map(QUARTER_OF_DAY -> 0)),
+      "2012-12-13T00:00", "2012-12-13T06:00", "PT6H", "2012-12-13TNI")
+    assertTimeSpan(
+      FindEarlier(Map(QUARTER_OF_DAY -> 1)),
+      "2012-12-12T06:00", "2012-12-12T12:00", "PT6H", "2012-12-12TMO")
+    assertTimeSpan(
+      FindLater(Map(QUARTER_OF_DAY -> 2)),
+      "2012-12-13T12:00", "2012-12-13T18:00", "PT6H", "2012-12-13TAF")
+    assertTimeSpan(
+      FindLater(Map(QUARTER_OF_DAY -> 3)),
+      "2012-12-12T18:00", "2012-12-13T00:00", "PT6H", "2012-12-12TEV")
   }
 
   test("resolves complex anchors") {

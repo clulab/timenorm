@@ -18,6 +18,8 @@ import org.threeten.bp.MonthDay
 private[timenorm] object TemporalFields {
   def valueOf(name: String): TemporalField = {
     name match {
+      case "HOUR_OF_QUARTER" => HOUR_OF_QUARTER
+      case "QUARTER_OF_DAY" => QUARTER_OF_DAY
       case "DAY_OF_SEASON" => DAY_OF_SEASON
       case "SEASON_OF_YEAR" => SEASON_OF_YEAR
       case "YEAR_OF_DECADE" => YEAR_OF_DECADE
@@ -27,6 +29,56 @@ private[timenorm] object TemporalFields {
       case _ => ChronoField.valueOf(name)
     }
   }
+}
+
+private[timenorm] object HOUR_OF_QUARTER extends TemporalField {
+  def getName: String = "HourOfQuarter"
+  def getBaseUnit: TemporalUnit = HOURS
+  def getRangeUnit: TemporalUnit = QUARTER_DAYS
+  def range: ValueRange = ValueRange.of(0, 5)
+  def doGet(temporal: TemporalAccessor): Long = HOUR_OF_DAY.doGet(temporal) % 6
+  def doIsSupported(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+    HOURS.doPlus(temporal, (newValue - this.doGet(temporal)))
+  }
+  override def toString: String = this.getName
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+}
+
+private[timenorm] object QUARTER_OF_DAY extends TemporalField {
+  def getName: String = "QuarterOfDay"
+  def getBaseUnit: TemporalUnit = QUARTER_DAYS
+  def getRangeUnit: TemporalUnit = DAYS
+  def range: ValueRange = ValueRange.of(0, 3)
+  def doGet(temporal: TemporalAccessor): Long = {
+    val secondsPerPart = SECOND_OF_DAY.doRange(temporal).getMaximum()  / 4
+    SECOND_OF_DAY.doGet(temporal) / secondsPerPart
+  }
+  def doIsSupported(temporal: TemporalAccessor): Boolean = SECOND_OF_DAY.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+    QUARTER_DAYS.doPlus(temporal, (newValue - this.doGet(temporal)))
+  }
+  override def toString: String = this.getName
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+}
+
+private[timenorm] object QUARTER_DAYS extends TemporalUnit {
+  def getName: String = "QuarterDays"
+  def getDuration: Duration = Duration.of(6, HOURS)
+  def isDurationEstimated: Boolean = true
+  def isSupported(temporal: Temporal): Boolean = HOURS.isSupported(temporal)
+  def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
+    HOURS.doPlus(dateTime, periodToAdd * 6)
+  }
+  override def toString: String = this.getName
+
+  def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
 }
 
 private[timenorm] object DAY_OF_SEASON extends TemporalField {

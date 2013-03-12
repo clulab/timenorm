@@ -26,6 +26,7 @@ object TimeSpan {
   }
   
   private final val seasonNames = IndexedSeq("SP", "SU", "FA", "WI")
+  private final val quarterNames = IndexedSeq("NI", "MO", "AF", "EV")
 
   private val fieldFormats = Map[TemporalField, Int => String](
     (CENTURY, "%02d".format(_)),
@@ -35,6 +36,7 @@ object TimeSpan {
     (MONTH_OF_YEAR, "-%02d".format(_)),
     (DAY_OF_MONTH, "-%02d".format(_)),
     (ALIGNED_WEEK_OF_YEAR, "-W%02d".format(_)),
+    (QUARTER_OF_DAY, "T" + this.quarterNames(_)),
     (HOUR_OF_DAY, "T%02d".format(_)),
     (MINUTE_OF_HOUR, ":%02d".format(_)),
     (SECOND_OF_MINUTE, ":%02d".format(_)))
@@ -47,6 +49,7 @@ object TimeSpan {
     MONTHS -> Seq(YEAR, MONTH_OF_YEAR),
     WEEKS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
     DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH),
+    QUARTER_DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, QUARTER_OF_DAY),
     HOURS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY),
     MINUTES -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR),
     SECONDS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE))
@@ -59,6 +62,7 @@ object TimeSpan {
     MONTHS -> Seq(DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     WEEKS -> Seq(DAY_OF_WEEK, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DAYS -> Seq(HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    QUARTER_DAYS -> Seq(HOUR_OF_QUARTER, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     HOURS -> Seq(MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MINUTES -> Seq(SECOND_OF_MINUTE),
     SECONDS -> Seq())

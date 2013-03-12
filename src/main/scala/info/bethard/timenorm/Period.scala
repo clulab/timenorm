@@ -8,6 +8,7 @@ import scala.collection.immutable.ListMap
 case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
   
   private val simplifyUnitMap = ListMap[TemporalUnit, (TemporalUnit, Int => Int)](
+    QUARTER_DAYS -> (HOURS, _ * 6),
     DECADES -> (YEARS, _ * 10),
     CENTURIES -> (YEARS, _ * 100))
 

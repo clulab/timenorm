@@ -55,6 +55,10 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:SecondOfMinute] ||| [Number:0-59] ||| SECOND_OF_MINUTE [Number:0-59] ||| 1.0
 [FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
 [FieldValue:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:QuarterOfDay] ||| night ||| QUARTER_OF_DAY 0 ||| 1.0
+[FieldValue:QuarterOfDay] ||| morning ||| QUARTER_OF_DAY 1 ||| 1.0
+[FieldValue:QuarterOfDay] ||| afternoon ||| QUARTER_OF_DAY 2 ||| 1.0
+[FieldValue:QuarterOfDay] ||| evening ||| QUARTER_OF_DAY 3 ||| 1.0
 
 [FieldValue:DayOfWeek] ||| Monday ||| DAY_OF_WEEK 1 ||| 1.0
 [FieldValue:DayOfWeek] ||| Tuesday ||| DAY_OF_WEEK 2 ||| 1.0
@@ -105,6 +109,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
 
 [FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
