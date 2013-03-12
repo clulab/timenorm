@@ -9,7 +9,7 @@ ROOTS [Period] [TimeSpan]
 [Nil] ||| . ||| ||| 1.0
 [Nil] ||| , ||| ||| 1.0
 
-[Int] ||| one ||| 2 ||| 1.0
+[Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0
 [Int] ||| three ||| 3 ||| 1.0
 [Int] ||| four ||| 4 ||| 1.0
