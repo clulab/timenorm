@@ -122,6 +122,15 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpan(
       FindLater(Map(QUARTER_OF_DAY -> 3)),
       "2012-12-12T18:00", "2012-12-13T00:00", "PT6H", "2012-12-12TEV")
+    assertTimeSpan(
+      FindEnclosing(Present, WEEKDAYS_WEEKENDS),
+      "2012-12-10T00:00", "2012-12-15T00:00", "P1WDWE", "2012-W50-WD")
+    assertTimeSpan(
+      FindLater(Map(WEEKDAY_WEEKEND_OF_WEEK -> 0)),
+      "2012-12-17T00:00", "2012-12-22T00:00", "P1WDWE", "2012-W51-WD")
+    assertTimeSpan(
+      FindLater(Map(WEEKDAY_WEEKEND_OF_WEEK -> 1)),
+      "2012-12-15T00:00", "2012-12-17T00:00", "P1WDWE", "2012-W50-WE")
   }
 
   test("resolves complex time spans") {

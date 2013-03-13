@@ -20,6 +20,8 @@ private[timenorm] object TemporalFields {
     name match {
       case "HOUR_OF_QUARTER" => HOUR_OF_QUARTER
       case "QUARTER_OF_DAY" => QUARTER_OF_DAY
+      case "DAY_OF_WEEKDAY_WEEKEND" => DAY_OF_WEEKDAY_WEEKEND
+      case "WEEKDAY_WEEKEND_OF_WEEK" => WEEKDAY_WEEKEND_OF_WEEK
       case "DAY_OF_SEASON" => DAY_OF_SEASON
       case "SEASON_OF_YEAR" => SEASON_OF_YEAR
       case "YEAR_OF_DECADE" => YEAR_OF_DECADE
@@ -75,6 +77,84 @@ private[timenorm] object QUARTER_DAYS extends TemporalUnit {
   def isSupported(temporal: Temporal): Boolean = HOURS.isSupported(temporal)
   def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
     HOURS.doPlus(dateTime, periodToAdd * 6)
+  }
+  override def toString: String = this.getName
+
+  def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
+}
+
+private[timenorm] object DAY_OF_WEEKDAY_WEEKEND extends TemporalField {
+  def getName: String = "DayOfWeekdayWeekend"
+  def getBaseUnit: TemporalUnit = DAYS
+  def getRangeUnit: TemporalUnit = WEEKDAYS_WEEKENDS
+  def range: ValueRange = ValueRange.of(1, 2, 5)
+  def doGet(temporal: TemporalAccessor): Long = {
+    val dayOfWeek = DAY_OF_WEEK.doGet(temporal)
+    if (dayOfWeek <= WEEKDAY_WEEKEND_OF_WEEK.maxWeekDay) dayOfWeek
+    else dayOfWeek - WEEKDAY_WEEKEND_OF_WEEK.maxWeekDay
+  }
+  def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+    WEEKDAY_WEEKEND_OF_WEEK.doGet(temporal) match {
+      case 0 => DAY_OF_WEEK.doWith(temporal, newValue)
+      case 1 => DAY_OF_WEEK.doWith(temporal, newValue + WEEKDAY_WEEKEND_OF_WEEK.maxWeekDay)
+    }
+  }
+  override def toString: String = this.getName
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+}
+
+private[timenorm] object WEEKDAY_WEEKEND_OF_WEEK extends TemporalField {
+  private[timenorm] final val maxWeekDay = 5L
+  def getName: String = "WeekdayWeekendOfWeek"
+  def getBaseUnit: TemporalUnit = WEEKDAYS_WEEKENDS
+  def getRangeUnit: TemporalUnit = WEEKS
+  def range: ValueRange = ValueRange.of(0, 1)
+  def doGet(temporal: TemporalAccessor): Long = {
+    if (DAY_OF_WEEK.doGet(temporal) <= this.maxWeekDay) 0L else 1L
+  }
+  def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+    val dayOfWeek = DAY_OF_WEEK.doGet(temporal)
+    val isWeekDay = dayOfWeek <= this.maxWeekDay
+    val newDayOfWeek = newValue match {
+      case 0 => if (isWeekDay) dayOfWeek else dayOfWeek - this.maxWeekDay
+      case 1 => if (!isWeekDay) dayOfWeek else math.min(dayOfWeek + this.maxWeekDay, 7)
+    }
+    DAY_OF_WEEK.doWith(temporal, newDayOfWeek)
+  }
+  override def toString: String = this.getName
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+}
+
+private[timenorm] object WEEKDAYS_WEEKENDS extends TemporalUnit {
+  def getName: String = "WeekdaysWeekends"
+  def getDuration: Duration = Duration.of(3, DAYS)
+  def isDurationEstimated: Boolean = true
+  def isSupported(temporal: Temporal): Boolean = {
+    WEEKDAY_WEEKEND_OF_WEEK.doIsSupported(temporal) &&
+    DAYS.isSupported(temporal) && WEEKS.isSupported(temporal)
+  }
+  def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
+    val weekAdjusted = WEEKS.doPlus(dateTime, periodToAdd / 2L)
+    val weekdayWeekend = WEEKDAY_WEEKEND_OF_WEEK.doGet(dateTime)
+    periodToAdd % 2 match {
+      case -1 => weekdayWeekend match {
+        case 0 => WEEKDAY_WEEKEND_OF_WEEK.doWith(WEEKS.doPlus(weekAdjusted, -1L), 1L)
+        case 1 => WEEKDAY_WEEKEND_OF_WEEK.doWith(weekAdjusted, 0L)
+      }
+      case 0 => weekAdjusted
+      case 1 => weekdayWeekend match {
+        case 0 => WEEKDAY_WEEKEND_OF_WEEK.doWith(weekAdjusted, 1L)
+        case 1 => WEEKDAY_WEEKEND_OF_WEEK.doWith(WEEKS.doPlus(weekAdjusted, 1L), 0L)
+      }
+    }
   }
   override def toString: String = this.getName
 

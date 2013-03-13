@@ -15,6 +15,54 @@ import org.threeten.bp.DayOfWeek
 
 @RunWith(classOf[JUnitRunner])
 class TemporalFieldsTest extends FunSuite {
+  
+  test("getting week days and weekends") {
+    assert(LocalDate.of(2012, 12, 9).get(WEEKDAY_WEEKEND_OF_WEEK) === 1) // Sun
+    assert(LocalDate.of(2012, 12, 10).get(WEEKDAY_WEEKEND_OF_WEEK) === 0) // Mon
+    assert(LocalDate.of(2012, 12, 11).get(WEEKDAY_WEEKEND_OF_WEEK) === 0) // Tue
+    assert(LocalDate.of(2012, 12, 12).get(WEEKDAY_WEEKEND_OF_WEEK) === 0) // Wed
+    assert(LocalDate.of(2012, 12, 13).get(WEEKDAY_WEEKEND_OF_WEEK) === 0) // Thu
+    assert(LocalDate.of(2012, 12, 14).get(WEEKDAY_WEEKEND_OF_WEEK) === 0) // Fri
+    assert(LocalDate.of(2012, 12, 15).get(WEEKDAY_WEEKEND_OF_WEEK) === 1) // Sat
+    assert(LocalDate.of(2012, 12, 16).get(WEEKDAY_WEEKEND_OF_WEEK) === 1) // Sun
+  }
+
+  test("setting week days and weekends") {
+    // Mon => Mon
+    assert(LocalDate.of(2012, 12, 10).`with`(WEEKDAY_WEEKEND_OF_WEEK, 0)
+        === LocalDate.of(2012, 12, 10))
+    // Sat => Mon, Sun => Tue
+    assert(LocalDate.of(2012, 12, 8).`with`(WEEKDAY_WEEKEND_OF_WEEK, 0)
+        === LocalDate.of(2012, 12, 3))
+    assert(LocalDate.of(2012, 12, 9).`with`(WEEKDAY_WEEKEND_OF_WEEK, 0)
+        === LocalDate.of(2012, 12, 4))
+    // Mon => Sat, Tue => Sun, Wed => Sun, Thu => Sun, Fri => Sun
+    assert(LocalDate.of(2012, 12, 10).`with`(WEEKDAY_WEEKEND_OF_WEEK, 1)
+        === LocalDate.of(2012, 12, 15))
+    assert(LocalDate.of(2012, 12, 11).`with`(WEEKDAY_WEEKEND_OF_WEEK, 1)
+        === LocalDate.of(2012, 12, 16))
+    assert(LocalDate.of(2012, 12, 12).`with`(WEEKDAY_WEEKEND_OF_WEEK, 1)
+        === LocalDate.of(2012, 12, 16))
+    assert(LocalDate.of(2012, 12, 13).`with`(WEEKDAY_WEEKEND_OF_WEEK, 1)
+        === LocalDate.of(2012, 12, 16))
+    assert(LocalDate.of(2012, 12, 14).`with`(WEEKDAY_WEEKEND_OF_WEEK, 1)
+        === LocalDate.of(2012, 12, 16))
+  }
+
+  test("adding week days and weekends") {
+    // Mon => Mon
+    assert(LocalDate.of(2012, 12, 10).plus(2, WEEKDAYS_WEEKENDS)
+        === LocalDate.of(2012, 12, 17))
+    // Sat => Mon
+    assert(LocalDate.of(2012, 12, 8).plus(1, WEEKDAYS_WEEKENDS)
+        === LocalDate.of(2012, 12, 10))
+    // Mon => Sat
+    assert(LocalDate.of(2012, 12, 10).plus(1, WEEKDAYS_WEEKENDS)
+        === LocalDate.of(2012, 12, 15))
+    // Sun => Tue
+    assert(LocalDate.of(2012, 12, 16).minus(3, WEEKDAYS_WEEKENDS)
+        === LocalDate.of(2012, 12, 4))
+  }
 
   test("season days") {
     assertSeasonDay(LocalDate.of(2011, 3, 19), 3, 89)

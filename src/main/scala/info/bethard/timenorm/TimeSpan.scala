@@ -24,7 +24,8 @@ object TimeSpan {
       case (time, field) => time.`with`(field, field.range.getMinimum)
     }
   }
-  
+
+  private final val weekdayWeekendNames = IndexedSeq("WD", "WE")
   private final val seasonNames = IndexedSeq("SP", "SU", "FA", "WI")
   private final val quarterNames = IndexedSeq("NI", "MO", "AF", "EV")
 
@@ -36,6 +37,7 @@ object TimeSpan {
     (MONTH_OF_YEAR, "-%02d".format(_)),
     (DAY_OF_MONTH, "-%02d".format(_)),
     (ALIGNED_WEEK_OF_YEAR, "-W%02d".format(_)),
+    (WEEKDAY_WEEKEND_OF_WEEK, "-" + this.weekdayWeekendNames(_)),
     (QUARTER_OF_DAY, "T" + this.quarterNames(_)),
     (HOUR_OF_DAY, "T%02d".format(_)),
     (MINUTE_OF_HOUR, ":%02d".format(_)),
@@ -48,6 +50,7 @@ object TimeSpan {
     SEASONS -> Seq(YEAR, SEASON_OF_YEAR),
     MONTHS -> Seq(YEAR, MONTH_OF_YEAR),
     WEEKS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
+    WEEKDAYS_WEEKENDS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, WEEKDAY_WEEKEND_OF_WEEK),
     DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH),
     QUARTER_DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, QUARTER_OF_DAY),
     HOURS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY),
@@ -61,6 +64,7 @@ object TimeSpan {
     SEASONS -> Seq(DAY_OF_SEASON, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MONTHS -> Seq(DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     WEEKS -> Seq(DAY_OF_WEEK, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    WEEKDAYS_WEEKENDS -> Seq(DAY_OF_WEEKDAY_WEEKEND, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DAYS -> Seq(HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     QUARTER_DAYS -> Seq(HOUR_OF_QUARTER, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     HOURS -> Seq(MINUTE_OF_HOUR, SECOND_OF_MINUTE),

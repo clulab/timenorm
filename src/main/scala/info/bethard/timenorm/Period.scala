@@ -17,6 +17,7 @@ case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
     SEASONS -> "S",
     MONTHS -> "M",
     WEEKS -> "W",
+    WEEKDAYS_WEEKENDS -> "WDWE",
     DAYS -> "D",
     HOURS -> "H",
     MINUTES -> "M",
