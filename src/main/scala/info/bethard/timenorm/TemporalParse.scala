@@ -23,10 +23,6 @@ class TemporalParser(grammar: SynchronousGrammar) {
   def parseAll(sourceTokens: Array[String]): Array[TemporalParse] = {
     this.parseAll(sourceTokens.toIndexedSeq).toArray
   }
-
-  def parseAll(sourceText: String): Array[TemporalParse] = {
-    this.parseAll(sourceText.split("\\s*\\b\\s*").filter(!_.matches("\\s*")))
-  }
 }
 
 private[timenorm] abstract class CanFail(name: String) {

@@ -22,6 +22,10 @@ import com.codecommit.antixml.text
  * be parsed. To increase coverage, new rules can be added to the timenorm.grammar resource. 
  */
 object TimeMLProcessor {
+  
+  def toTokens(sourceText: String): Array[String] = {
+    sourceText.toLowerCase().split("\\s*\\b\\s*").filter(!_.matches("\\s*"))
+  }
 
   def main(args: Array[String]): Unit = {
     // load the grammar and create the parser
@@ -60,7 +64,7 @@ object TimeMLProcessor {
         val valueOptions = for {
           anchorValue <- anchorValueOption ++ Seq(dctValue)
           anchorZDT = toZonedDateTime(anchorValue)
-          parse <- parser.parseAll(timeText)
+          parse <- parser.parseAll(this.toTokens(timeText))
         } yield parse match {
             case parse: TimeSpanParse => {
               val timeSpan = parse.toTimeSpan(anchorZDT)
