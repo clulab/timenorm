@@ -5,7 +5,11 @@ import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.ZonedDateTime
 import scala.collection.immutable.ListMap
 
-case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
+case class Period(
+    unitAmounts: Map[TemporalUnit, Int],
+    modifier: Modifier = Modifier.Exact,
+    quantifier: Quantifier = Quantifier.None,
+    frequency: Frequency = Frequency(1)) {
   
   private val simplifyUnitMap = ListMap[TemporalUnit, Seq[(TemporalUnit, Int)]](
     QUARTER_DAYS -> Seq((HOURS, 6)),
@@ -50,13 +54,17 @@ case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
     "P" + dateParts.map(_._2).mkString + timeString
   }
 
-  def +(that: Period): Period = {
-    Period(this.mapOverUnion(that, _ + _).toMap, this.modifier & that.modifier)
-  }
+  def +(that: Period): Period = Period(
+    this.mapOverUnion(that, _ + _).toMap,
+    this.modifier & that.modifier,
+    this.quantifier & that.quantifier,
+    this.frequency & that.frequency)
 
-  def -(that: Period): Period = {
-    Period(this.mapOverUnion(that, _ - _).toMap, this.modifier & that.modifier)
-  }
+  def -(that: Period): Period = Period(
+    this.mapOverUnion(that, _ - _).toMap,
+    this.modifier & that.modifier,
+    this.quantifier & that.quantifier,
+    this.frequency & that.frequency)
 
   def >(unit: TemporalUnit): Boolean = {
     if (this.unitAmounts.isEmpty) {

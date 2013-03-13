@@ -144,6 +144,8 @@ ROOTS [Period] [TimeSpan]
 
 [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
 
+[Period:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
+
 [TimeSpan:Simple] ||| past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0

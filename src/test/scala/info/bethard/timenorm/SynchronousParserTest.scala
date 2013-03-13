@@ -78,6 +78,10 @@ class ParserTest extends FunSuite {
     [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
     [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
+    [Period:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
+    [Period:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
+    [Period:WithFrequency] ||| twice [Period] ||| [Period] 2 ||| 1.0
+    [Period:WithFrequency] ||| [Int] [Unit] [Period] ||| [Period] [Int] [Unit] ||| 1.0
     [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
     [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
     [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
@@ -128,6 +132,16 @@ class ParserTest extends FunSuite {
       Sum(Seq(Simple(2, WEEKS), Simple(1, DAYS))))
     assert(this.parse("less", "than", "a", "week") ===
       WithModifier(Simple(1, WEEKS), Modifier.LessThan))
+    assert(this.parse("daily") ===
+      WithQuantifier(Simple(1, DAYS), Quantifier.Every))
+    assert(this.parse("every", "week") ===
+      WithQuantifier(Simple(1, WEEKS), Quantifier.Every))
+    assert(this.parse("every", "two", "years") ===
+      WithQuantifier(Simple(2, YEARS), Quantifier.Every))
+    assert(this.parse("twice", "a", "month") ===
+      WithFrequency(Simple(1, MONTHS), Frequency(2)))
+    assert(this.parse("two", "days", "a", "week") ===
+      WithFrequency(Simple(1, WEEKS), Frequency(2, Some(DAYS))))
   }
 
   test("parses simple time spans") {

@@ -114,6 +114,12 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
       Sum(children.map(PeriodParse))
     case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(PeriodParse(period), Modifier.valueOf(modifier))
+    case Tree.NonTerminal(_, "[Period:WithQuantifier]", period :: Tree.Terminal(quantifier) :: Nil, _) =>
+      WithQuantifier(PeriodParse(period), Quantifier.valueOf(quantifier))
+    case Tree.NonTerminal(_, "[Period:WithFrequency]", period :: times :: Nil, _) =>
+      WithFrequency(PeriodParse(period), Frequency(IntParse(times).value))
+    case Tree.NonTerminal(_, "[Period:WithFrequency]", period :: times :: unit :: Nil, _) =>
+      WithFrequency(PeriodParse(period), Frequency(IntParse(times).value, Some(UnitParse(unit).value)))
     case _ => fail(tree)
   }
 
@@ -135,6 +141,14 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
 
   case class WithModifier(period: PeriodParse, modifier: Modifier) extends PeriodParse {
     def toPeriod = period.toPeriod.copy(modifier = modifier)
+  }
+  
+  case class WithQuantifier(period: PeriodParse, quantifier: Quantifier) extends PeriodParse {
+    def toPeriod = period.toPeriod.copy(quantifier = quantifier)
+  }
+  
+  case class WithFrequency(period: PeriodParse, frequency: Frequency) extends PeriodParse {
+    def toPeriod = period.toPeriod.copy(frequency = frequency)
   }
 }
 
