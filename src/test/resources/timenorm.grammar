@@ -114,7 +114,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:SeasonOfYear] ||| winter ||| SEASON_OF_YEAR 3 ||| 1.0
 
 [FieldValue:Time] ||| midday ||| ( FieldValue:HourOfDay HOUR_OF_DAY 12 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
-[FieldValue:Time] ||| [FieldValue:HourOfDay] ||| [FieldValue:HourOfDay] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] : [FieldValue:SecondOfMinute] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] [FieldValue:SecondOfMinute] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
 
@@ -133,7 +133,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
 
-[FieldValue:Year] ||| [Int:1900-2100] ||| YEAR [Int:1900-2100] ||| 1.0
+[FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
 
 [FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
 
@@ -151,13 +151,18 @@ ROOTS [Period] [TimeSpan]
 [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] - [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| [Unit:Plural] long ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| [Unit:Plural] - long ||| [Unit:Plural] ||| 1.0
 [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
 
 [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
 
 [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
+[Period:WithModifier] ||| more than [Period] ||| [Period] MORE_THAN ||| 1.0
 
 [Period:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
+[Period:WithQuantifier] ||| annually ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
+[Period:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
 
 [TimeSpan:Simple] ||| past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
@@ -190,7 +195,9 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
 
 [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
+[TimeSpan:WithModifier] ||| early - [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| earlier [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| late [TimeSpan] ||| [TimeSpan] END ||| 1.0
+[TimeSpan:WithModifier] ||| late - [TimeSpan] ||| [TimeSpan] END ||| 1.0
 [TimeSpan:WithModifier] ||| later [TimeSpan] ||| [TimeSpan] END ||| 1.0
 [TimeSpan:WithModifier] ||| almost [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
