@@ -186,5 +186,7 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:WithModifier] ||| Early [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| earlier [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| Earlier [TimeSpan] ||| [TimeSpan] START ||| 1.0
+[TimeSpan:WithModifier] ||| late [TimeSpan] ||| [TimeSpan] END ||| 1.0
+[TimeSpan:WithModifier] ||| Late [TimeSpan] ||| [TimeSpan] END ||| 1.0
 [TimeSpan:WithModifier] ||| almost [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| Almost [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
