@@ -19,18 +19,18 @@ class ParserTest extends FunSuite {
     [Int] ||| one ||| 1 ||| 1.0
     [Int] ||| two ||| 2 ||| 1.0
     [Int] ||| three ||| 3 ||| 1.0
-    [Unit] ||| hour ||| HOURS ||| 1.0
-    [Unit] ||| hours ||| HOURS ||| 1.0
-    [Unit] ||| day ||| DAYS ||| 1.0
-    [Unit] ||| days ||| DAYS ||| 1.0
-    [Unit] ||| week ||| WEEKS ||| 1.0
-    [Unit] ||| weeks ||| WEEKS ||| 1.0
-    [Unit] ||| month ||| MONTHS ||| 1.0
-    [Unit] ||| months ||| MONTHS ||| 1.0
-    [Unit] ||| year ||| YEARS ||| 1.0
-    [Unit] ||| years ||| YEARS ||| 1.0
-    [Unit] ||| decade ||| DECADES ||| 1.0
-    [Unit] ||| decades ||| DECADES ||| 1.0
+    [Unit:Singular] ||| hour ||| HOURS ||| 1.0
+    [Unit:Singular] ||| day ||| DAYS ||| 1.0
+    [Unit:Singular] ||| week ||| WEEKS ||| 1.0
+    [Unit:Singular] ||| month ||| MONTHS ||| 1.0
+    [Unit:Singular] ||| year ||| YEARS ||| 1.0
+    [Unit:Singular] ||| decade ||| DECADES ||| 1.0
+    [Unit:Plural] ||| hours ||| HOURS ||| 1.0
+    [Unit:Plural] ||| days ||| DAYS ||| 1.0
+    [Unit:Plural] ||| weeks ||| WEEKS ||| 1.0
+    [Unit:Plural] ||| months ||| MONTHS ||| 1.0
+    [Unit:Plural] ||| years ||| YEARS ||| 1.0
+    [Unit:Plural] ||| decades ||| DECADES ||| 1.0
     [FieldValue:HourOfAMPM] ||| [Int:1-12] ||| HOUR_OF_AMPM [Int:1-12] ||| 1.0
     [FieldValue:MinuteOfHour] ||| [Int:0-60] ||| MINUTE_OF_HOUR [Int:0-60] ||| 1.0
     [FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
@@ -72,8 +72,9 @@ class ParserTest extends FunSuite {
     [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
-    [Period:Simple] ||| [Unit] ||| [Unit] ||| 1.0
+    [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
     [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
+    [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
     [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
     [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
@@ -117,6 +118,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("two", "weeks") === Simple(2, WEEKS))
     assert(this.parse("10", "days") === Simple(10, DAYS))
     assert(this.parse("a", "month") === Simple(1, MONTHS))
+    assert(this.parse("weeks") === Unspecified(WEEKS))
     assert(this.parse("5", "1", "/", "2", "hours") === Fractional(11, 2, HOURS))
   }
 

@@ -103,6 +103,8 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
       Simple(1, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Simple]", amount :: unit :: Nil, _) =>
       Simple(IntParse(amount).value, UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[Period:Unspecified]", unit :: Nil, _) =>
+      Unspecified(UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Fractional]", numerator :: denominator :: unit :: Nil, _) =>
       Fractional(IntParse(numerator).value, IntParse(denominator).value, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Fractional]", whole :: numerator :: denominator :: unit :: Nil, _) =>
@@ -115,11 +117,15 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
     case _ => fail(tree)
   }
 
-  case class Simple(amount: Int, unit: ChronoUnit) extends PeriodParse {
+  case class Simple(amount: Int, unit: TemporalUnit) extends PeriodParse {
     def toPeriod = Period(Map(unit -> amount), Modifier.Exact)
   }
   
-  case class Fractional(numerator: Int, denominator: Int, unit: ChronoUnit) extends PeriodParse {
+  case class Unspecified(unit: TemporalUnit) extends PeriodParse {
+    def toPeriod = Period(Map(unit -> Int.MaxValue), Modifier.Exact)
+  }
+  
+  case class Fractional(numerator: Int, denominator: Int, unit: TemporalUnit) extends PeriodParse {
     def toPeriod = Period.fromFractional(numerator, denominator, unit, Modifier.Exact)
   }
 

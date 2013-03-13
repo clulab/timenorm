@@ -7,33 +7,43 @@ import scala.collection.immutable.ListMap
 
 case class Period(unitAmounts: Map[TemporalUnit, Int], modifier: Modifier) {
   
-  private val simplifyUnitMap = ListMap[TemporalUnit, (TemporalUnit, Int => Int)](
-    QUARTER_DAYS -> (HOURS, _ * 6),
-    DECADES -> (YEARS, _ * 10),
-    CENTURIES -> (YEARS, _ * 100))
+  private val simplifyUnitMap = ListMap[TemporalUnit, Seq[(TemporalUnit, Int)]](
+    QUARTER_DAYS -> Seq((HOURS, 6)),
+    DECADES -> Seq((YEARS, 10)),
+    CENTURIES -> Seq((DECADES, 10), (YEARS, 100)))
 
   private val unitChars = ListMap[TemporalUnit, String](
+    CENTURIES -> "CE",
+    DECADES -> "DE",
     YEARS -> "Y",
     SEASONS -> "S",
     MONTHS -> "M",
     WEEKS -> "W",
     WEEKDAYS_WEEKENDS -> "WDWE",
     DAYS -> "D",
+    QUARTER_DAYS -> "QD",
     HOURS -> "H",
     MINUTES -> "M",
     SECONDS -> "S")
   
   val timeMLValue: String = {
     val simpleUnitAmounts = this.simplifyUnitMap.foldLeft(this.unitAmounts) {
-      case (counts, (unit, (simpleUnit, convert))) => counts.get(unit) match {
+      case (counts, (unit, unitMultipliers)) => counts.get(unit) match {
         case None => counts
-        case Some(value) =>
-          val newValue = counts.getOrElse(simpleUnit, 0) + convert(value) 
-          counts - unit + (simpleUnit -> newValue)
+        case Some(Int.MaxValue) => counts
+        case Some(value) => unitMultipliers.find(um => counts.contains(um._1)) match {
+          case None => counts
+          case Some((newUnit, multiplier)) =>
+            counts - unit + (newUnit -> (counts(newUnit) + value * multiplier))
+        }
       }
     }
     val parts = for (unit <- simpleUnitAmounts.keySet.toSeq.sortBy(_.getDuration).reverse) yield {
-      (unit, simpleUnitAmounts(unit) + this.unitChars(unit))
+      val amount = simpleUnitAmounts(unit) match {
+        case Int.MaxValue => "X"
+        case i => i.toString
+      }
+      (unit, amount + this.unitChars(unit))
     }
     val (dateParts, timeParts) = parts.partition(_._1.getDuration.isGreaterThan(HOURS.getDuration))
     val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.map(_._2).mkString

@@ -7,6 +7,7 @@ import org.scalatest.FunSuite
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
+import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZonedDateTime
@@ -18,13 +19,17 @@ class TemporalParseTest extends FunSuite {
 
   test("resolves simple periods") {
     import PeriodParse._
-    assertPeriod(Simple(3, CENTURIES), "P300Y", CENTURIES -> 3)
+    assertPeriod(Simple(3, CENTURIES), "P3CE", CENTURIES -> 3)
     assertPeriod(Simple(2, WEEKS), "P2W", WEEKS -> 2)
     assertPeriod(Simple(10, DAYS), "P10D", DAYS -> 10)
     assertPeriod(Simple(1, MONTHS), "P1M", MONTHS -> 1)
     assertPeriod(Simple(16, HOURS), "PT16H", HOURS -> 16)
     assertPeriod(Simple(20, MINUTES), "PT20M", MINUTES -> 20)
     assertPeriod(Simple(53, SECONDS), "PT53S", SECONDS -> 53)
+    assertPeriod(Unspecified(DECADES), "PXDE", DECADES -> Int.MaxValue)
+    assertPeriod(Unspecified(WEEKS), "PXW", WEEKS -> Int.MaxValue)
+    assertPeriod(Unspecified(QUARTER_DAYS), "PXQD", QUARTER_DAYS -> Int.MaxValue)
+    assertPeriod(Unspecified(SECONDS), "PTXS", SECONDS -> Int.MaxValue)
     assertPeriod(Fractional(11, 2, HOURS), "PT5H30M", HOURS -> 5, MINUTES -> 30)
     assertPeriod(Fractional(3, 2, WEEKS), "P1W3DT12H", WEEKS -> 1, DAYS -> 3, HOURS -> 12)
   }
@@ -38,6 +43,9 @@ class TemporalParseTest extends FunSuite {
         Sum(Seq(Simple(2, DAYS), Simple(1, DAYS))),
         "P3D", DAYS -> 3)
     assertPeriod(
+        Sum(Seq(Simple(2, DECADES), Simple(3, CENTURIES))),
+        "P32DE", DECADES -> 2, CENTURIES -> 3)
+    assertPeriod(
         Sum(Seq(Simple(191, YEARS), Simple(2, DECADES), Simple(3, CENTURIES))),
         "P511Y", YEARS -> 191, DECADES -> 2, CENTURIES -> 3)
   }
@@ -45,7 +53,7 @@ class TemporalParseTest extends FunSuite {
   private def assertPeriod(
     periodParse: PeriodParse,
     timeMLValue: String,
-    unitAmounts: (ChronoUnit, Int)*) = {
+    unitAmounts: (TemporalUnit, Int)*) = {
     val period = periodParse.toPeriod
     assert(period.timeMLValue === timeMLValue)
     assert(period.unitAmounts === unitAmounts.toMap)
@@ -112,16 +120,16 @@ class TemporalParseTest extends FunSuite {
       "2012-12-10T00:00", "2012-12-17T00:00", "P1W", "2012-W50")
     assertTimeSpan(
       FindLater(Map(QUARTER_OF_DAY -> 0)),
-      "2012-12-13T00:00", "2012-12-13T06:00", "PT6H", "2012-12-13TNI")
+      "2012-12-13T00:00", "2012-12-13T06:00", "P1QD", "2012-12-13TNI")
     assertTimeSpan(
       FindEarlier(Map(QUARTER_OF_DAY -> 1)),
-      "2012-12-12T06:00", "2012-12-12T12:00", "PT6H", "2012-12-12TMO")
+      "2012-12-12T06:00", "2012-12-12T12:00", "P1QD", "2012-12-12TMO")
     assertTimeSpan(
       FindLater(Map(QUARTER_OF_DAY -> 2)),
-      "2012-12-13T12:00", "2012-12-13T18:00", "PT6H", "2012-12-13TAF")
+      "2012-12-13T12:00", "2012-12-13T18:00", "P1QD", "2012-12-13TAF")
     assertTimeSpan(
       FindLater(Map(QUARTER_OF_DAY -> 3)),
-      "2012-12-12T18:00", "2012-12-13T00:00", "PT6H", "2012-12-12TEV")
+      "2012-12-12T18:00", "2012-12-13T00:00", "P1QD", "2012-12-12TEV")
     assertTimeSpan(
       FindEnclosing(Present, WEEKDAYS_WEEKENDS),
       "2012-12-10T00:00", "2012-12-15T00:00", "P1WDWE", "2012-W50-WD")
@@ -198,10 +206,10 @@ class TemporalParseTest extends FunSuite {
       "2002-12-12T00:00", "2002-12-13T00:00", "P1D", "2002-12-12")
     assertTimeSpan(
       MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES)),
-      "2000-01-01T00:00", "2010-01-01T00:00", "P10Y", "200")
+      "2000-01-01T00:00", "2010-01-01T00:00", "P1DE", "200")
     assertTimeSpan(
       FindEnclosing(Present, CENTURIES),
-      "2000-01-01T00:00", "2100-01-01T00:00", "P100Y", "20")
+      "2000-01-01T00:00", "2100-01-01T00:00", "P1CE", "20")
   }
 
   private def assertTimeSpan(
