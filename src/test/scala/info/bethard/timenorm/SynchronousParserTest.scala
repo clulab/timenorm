@@ -126,7 +126,7 @@ class ParserTest extends FunSuite {
       WithModifier(Simple(1, WEEKS), Modifier.LessThan))
   }
 
-  test("parses simple anchors") {
+  test("parses simple time spans") {
     import TimeSpanParse._
     assert(this.parse("now") === Present)
     assert(this.parse("today") === FindEnclosing(Present, DAYS))
@@ -150,7 +150,7 @@ class ParserTest extends FunSuite {
       FindEarlier(Map(DAY_OF_WEEK -> 4, QUARTER_OF_DAY -> 1)))
   }
 
-  test("parses complex anchors") {
+  test("parses complex time spans") {
     import TimeSpanParse._
     import PeriodParse.{ Simple => SimplePeriod }
     

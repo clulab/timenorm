@@ -14,7 +14,7 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.DayOfWeek
 
 @RunWith(classOf[JUnitRunner])
-class TemporalTest extends FunSuite {
+class TemporalParseTest extends FunSuite {
 
   test("resolves simple periods") {
     import PeriodParse._
@@ -54,7 +54,7 @@ class TemporalTest extends FunSuite {
   val now = ZonedDateTime.of(LocalDateTime.of(2012, 12, 12, 12, 12, 12), ZoneId.of("-12:00"))
   val nowString = now.getDateTime.toString
 
-  test("resolves simple anchors") {
+  test("resolves simple time spans") {
     import TimeSpanParse._
     assertTimeSpan(
       Past,
@@ -124,7 +124,7 @@ class TemporalTest extends FunSuite {
       "2012-12-12T18:00", "2012-12-13T00:00", "PT6H", "2012-12-12TEV")
   }
 
-  test("resolves complex anchors") {
+  test("resolves complex time spans") {
     import PeriodParse.{ Simple => SimplePeriod }
     import TimeSpanParse._
     assertTimeSpan(
