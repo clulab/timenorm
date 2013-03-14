@@ -52,7 +52,12 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:MinuteOfHour] ||| [Int:0-59] ||| MINUTE_OF_HOUR [Int:0-59] ||| 1.0
 [FieldValue:SecondOfMinute] ||| [Int:0-59] ||| SECOND_OF_MINUTE [Int:0-59] ||| 1.0
 [FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| am ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| in the morning ||| AMPM_OF_DAY 0 ||| 1.0
 [FieldValue:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| pm ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| in the afternoon ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| in the evening ||| AMPM_OF_DAY 1 ||| 1.0
 [FieldValue:QuarterOfDay] ||| night ||| QUARTER_OF_DAY 0 ||| 1.0
 [FieldValue:QuarterOfDay] ||| morning ||| QUARTER_OF_DAY 1 ||| 1.0
 [FieldValue:QuarterOfDay] ||| afternoon ||| QUARTER_OF_DAY 2 ||| 1.0
@@ -117,18 +122,22 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] : [FieldValue:SecondOfMinute] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] [FieldValue:SecondOfMinute] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| 1.0
 
 [FieldValue:Holiday] ||| thanksgiving day ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
 [FieldValue:Holiday] ||| thanksgiving ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
 [FieldValue:Holiday] ||| christmas day ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
 [FieldValue:Holiday] ||| christmas ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
 
+[FieldValue:Day] ||| [FieldValue:Holiday] ||| [FieldValue:Holiday] ||| 1.0
+[FieldValue:Day] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
+[FieldValue:Day] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
+
 [FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:Holiday] ||| [FieldValue:Holiday] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:Day] ||| [FieldValue:Day] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:Time] [FieldValue:Day] ||| [FieldValue:Time] [FieldValue:Day] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:WeekdayWeekendOfWeek] ||| [FieldValue:WeekdayWeekendOfWeek] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
