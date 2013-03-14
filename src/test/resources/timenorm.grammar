@@ -127,13 +127,14 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| 1.0
 
-[FieldValue:Holiday] ||| thanksgiving day ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
-[FieldValue:Holiday] ||| thanksgiving ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
-[FieldValue:Holiday] ||| christmas day ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
-[FieldValue:Holiday] ||| christmas ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
-[FieldValue:Holiday] ||| easter ||| EASTER_DAY_OF_YEAR 1 ||| 1.0
+[FieldValue:NamedDay] ||| thanksgiving day ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
+[FieldValue:NamedDay] ||| thanksgiving ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
+[FieldValue:NamedDay] ||| christmas day ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
+[FieldValue:NamedDay] ||| christmas ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
+[FieldValue:NamedDay] ||| easter ||| EASTER_DAY_OF_YEAR 1 ||| 1.0
+[FieldValue:NamedDay] ||| election day ||| ( FieldValue DAY_OF_WEEK 2 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 1 ) ||| 1.0
 
-[FieldValue:Day] ||| [FieldValue:Holiday] ||| [FieldValue:Holiday] ||| 1.0
+[FieldValue:Day] ||| [FieldValue:NamedDay] ||| [FieldValue:NamedDay] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
