@@ -66,13 +66,13 @@ class TemporalParseTest extends FunSuite {
     import TimeSpanParse._
     assertTimeSpan(
       Past,
-      null, nowString, null, "PAST_REF", "APPROX")
+      "-999999999-01-01T00:00", nowString, "PX", "PAST_REF", "APPROX")
     assertTimeSpan(
       Present,
       nowString, nowString, "P", "PRESENT_REF")
     assertTimeSpan(
       Future,
-      nowString, null, null, "FUTURE_REF", "APPROX")
+      nowString, "+999999999-12-31T23:59:59.999999999", "PX", "FUTURE_REF", "APPROX")
     assertTimeSpan(
       FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
       "1976-09-21T00:00", "1976-09-22T00:00", "P1D", "1976-09-21")
@@ -226,18 +226,9 @@ class TemporalParseTest extends FunSuite {
     timeMLValue: String,
     timeMLModifier: String = null) = {
     val result = timeSpanParse.toTimeSpan(now)
-    Option(start) match {
-      case None => assert(result.start === null)
-      case Some(start) => assert(result.start.getDateTime.toString === start)
-    }
-    Option(end) match {
-      case None => assert(result.end === null)
-      case Some(end) => assert(result.end.getDateTime.toString === end) 
-    }
-    Option(periodTimeMLValue) match {
-      case None => assert(result.period === null)
-      case Some(periodTimeMLValue) => assert(result.period.timeMLValue === periodTimeMLValue)
-    }
+    assert(result.start.getDateTime.toString === start)
+    assert(result.end.getDateTime.toString === end) 
+    assert(result.period.timeMLValue === periodTimeMLValue)
     assert(result.timeMLValueOption === Option(timeMLValue))
     assert(result.modifier.timeMLValueOption === Option(timeMLModifier))
   }

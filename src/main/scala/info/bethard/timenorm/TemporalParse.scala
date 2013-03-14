@@ -1,16 +1,15 @@
 package info.bethard.timenorm
+
 import scala.collection.immutable.Seq
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.temporal.ChronoField
-import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.{ Temporal => JTemporal }
-import org.threeten.bp.temporal.TemporalAdder
-import org.threeten.bp.temporal.TemporalSubtractor
-import org.threeten.bp.temporal.TemporalUnit
-import info.bethard.timenorm.SynchronousParser.Tree
-import org.threeten.bp.Instant
+
+import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
+import org.threeten.bp.ZonedDateTime
+import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.TemporalField
+import org.threeten.bp.temporal.TemporalUnit
+
+import info.bethard.timenorm.SynchronousParser.Tree
 
 class TemporalParser(grammar: SynchronousGrammar) {
 
@@ -198,7 +197,11 @@ object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) 
 
   case object Past extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(null, anchor, null, Modifier.Approx) {
+      new TimeSpan(
+          ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("Z")),
+          anchor,
+          Period.infinite,
+          Modifier.Approx) {
         override def timeMLValueOption = Some("PAST_REF")
       }
     }
@@ -214,7 +217,11 @@ object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) 
 
   case object Future extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(anchor, null, null, Modifier.Approx) {
+      new TimeSpan(
+          anchor,
+          ZonedDateTime.of(LocalDateTime.MAX, ZoneId.of("Z")),
+          Period.infinite,
+          Modifier.Approx) {
         override def timeMLValueOption = Some("FUTURE_REF")
       }
     }
@@ -267,9 +274,6 @@ object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) 
     extends DirectedFieldSearchingTimeSpanParse(fields, _.minus(0, _), _.minus(1, _))
 
   case class FindEnclosing(timeSpanParse: TimeSpanParse, unit: TemporalUnit) extends TimeSpanParse {
-    import ChronoUnit._
-    import ChronoField._
-    
     def toTimeSpan(anchor: ZonedDateTime) = {
       val timeSpan = timeSpanParse.toTimeSpan(anchor)
       if (timeSpan.period > unit) {
