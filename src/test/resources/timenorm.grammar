@@ -5,6 +5,7 @@ ROOTS [Period] [TimeSpan]
 [Nil] ||| that ||| ||| 1.0
 [Nil] ||| . ||| ||| 1.0
 [Nil] ||| , ||| ||| 1.0
+[Nil] ||| edt ||| ||| 1.0
 
 [Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0
@@ -128,6 +129,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Holiday] ||| thanksgiving ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
 [FieldValue:Holiday] ||| christmas day ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
 [FieldValue:Holiday] ||| christmas ||| ( FieldValue MONTH_OF_YEAR 25 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
+[FieldValue:Holiday] ||| easter ||| EASTER_DAY_OF_YEAR 1 ||| 1.0
 
 [FieldValue:Day] ||| [FieldValue:Holiday] ||| [FieldValue:Holiday] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0

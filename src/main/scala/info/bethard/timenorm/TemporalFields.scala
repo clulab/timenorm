@@ -83,6 +83,48 @@ private[timenorm] object QUARTER_DAYS extends TemporalUnit {
   def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
 }
 
+private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
+  def getName: String = "EasterDayOfYear"
+  def getBaseUnit: TemporalUnit = DAYS
+  def getRangeUnit: TemporalUnit = YEARS
+  def range: ValueRange = ValueRange.of(0, 1)
+  def doGet(temporal: TemporalAccessor): Long = {
+    val (_, _, isEaster) = this.doGetEasterMonthDayIsEaster(temporal) 
+    if (isEaster) 1 else 0
+  }
+  def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+    val (easterMonth, easterDay, isEaster) = this.doGetEasterMonthDayIsEaster(temporal) 
+    newValue match {
+      case 0 => if (isEaster) DAYS.doPlus(temporal, 1) else temporal
+      case 1 => DAY_OF_MONTH.doWith(MONTH_OF_YEAR.doWith(temporal, easterMonth), easterDay)
+    }
+  }
+  override def toString: String = this.getName
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+
+  private def doGetEasterMonthDayIsEaster(temporal: TemporalAccessor): (Int, Int, Boolean) = {
+    val year = YEAR.checkValidIntValue(YEAR.doGet(temporal))
+    // from http://aa.usno.navy.mil/faq/docs/easter.php
+    val century = year / 100
+    val n = year - 19 * ( year / 19 )
+    val k = ( century - 17 ) / 25
+    var i = century - century / 4 - ( century - k ) / 3 + 19 * n + 15
+    i = i - 30 * ( i / 30 )
+    i = i - ( i / 28 ) * ( 1 - ( i / 28 ) * ( 29 / ( i + 1 ) )
+        * ( ( 21 - n ) / 11 ) )
+    var j = year + year / 4 + i + 2 - century + century / 4
+    j = j - 7 * ( j / 7 )
+    val l = i - j
+    val month = 3 + ( l + 40 ) / 44
+    val day = l + 28 - 31 * ( month / 4 )
+    (month, day, MONTH_OF_YEAR.doGet(temporal) == month && DAY_OF_MONTH.doGet(temporal) == day)
+  }
+}
+
 private[timenorm] object DAY_OF_WEEKDAY_WEEKEND extends TemporalField {
   def getName: String = "DayOfWeekdayWeekend"
   def getBaseUnit: TemporalUnit = DAYS
