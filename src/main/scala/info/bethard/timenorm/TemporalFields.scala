@@ -20,6 +20,7 @@ private[timenorm] object TemporalFields {
     name match {
       case "HOUR_OF_QUARTER" => HOUR_OF_QUARTER
       case "QUARTER_OF_DAY" => QUARTER_OF_DAY
+      case "EASTER_DAY_OF_YEAR" => EASTER_DAY_OF_YEAR
       case "DAY_OF_WEEKDAY_WEEKEND" => DAY_OF_WEEKDAY_WEEKEND
       case "WEEKDAY_WEEKEND_OF_WEEK" => WEEKDAY_WEEKEND_OF_WEEK
       case "DAY_OF_SEASON" => DAY_OF_SEASON

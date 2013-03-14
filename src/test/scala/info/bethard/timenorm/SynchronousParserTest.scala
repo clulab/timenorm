@@ -57,12 +57,14 @@ class ParserTest extends FunSuite {
     [FieldValue:SeasonOfYear] ||| summer ||| SEASON_OF_YEAR 1 ||| 1.0
     [FieldValue:SeasonOfYear] ||| fall ||| SEASON_OF_YEAR 2 ||| 1.0
     [FieldValue:SeasonOfYear] ||| winter ||| SEASON_OF_YEAR 3 ||| 1.0
+    [FieldValue:Easter] ||| easter ||| EASTER_DAY_OF_YEAR 1 ||| 1.0
     [FieldValue:DayQuarter] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| 1.0
     [FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
     [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:DayQuarter] ||| [FieldValue:DayQuarter] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:WeekdayWeekendOfWeek] ||| [FieldValue:WeekdayWeekendOfWeek] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:MonthDay] ||| [FieldValue:MonthDay] ||| 1.0
+    [FieldValue:PartialEarlier] ||| [FieldValue:Easter] ||| [FieldValue:Easter] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
     [FieldValue:Date] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
     [FieldValue:Date] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
@@ -168,6 +170,8 @@ class ParserTest extends FunSuite {
       FindEarlier(Map(DAY_OF_WEEK -> 4, QUARTER_OF_DAY -> 1)))
     assert(this.parse("the", "weekend") ===
       FindEarlier(Map(WEEKDAY_WEEKEND_OF_WEEK -> 1)))
+    assert(this.parse("easter") ===
+      FindEarlier(Map(EASTER_DAY_OF_YEAR -> 1)))
   }
 
   test("parses complex time spans") {

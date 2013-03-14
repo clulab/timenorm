@@ -183,6 +183,7 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindEnclosing] ||| same day ||| PRESENT DAYS ||| 1.0
 [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| that [Unit] ||| PRESENT [Unit] ||| 1.0
+[TimeSpan:FindEnclosing] ||| [TimeSpan] [Unit] ||| [TimeSpan] [Unit] ||| 1.0
 
 [TimeSpan:FindLater] ||| tonight ||| ( FieldValue QUARTER_OF_DAY 0 ) ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
