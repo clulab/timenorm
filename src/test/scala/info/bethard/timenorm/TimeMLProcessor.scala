@@ -23,8 +23,10 @@ import com.codecommit.antixml.text
  */
 object TimeMLProcessor {
   
+  private final val wordBoundary = "\\b|(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
+  
   def toTokens(sourceText: String): Array[String] = {
-    sourceText.toLowerCase().split("\\s*\\b\\s*").filter(!_.matches("\\s*"))
+    this.wordBoundary.split(sourceText.toLowerCase()).map(_.trim).filter(!_.matches("\\s*"))
   }
 
   def main(args: Array[String]): Unit = {

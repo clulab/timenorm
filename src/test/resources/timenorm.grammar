@@ -1,11 +1,13 @@
 ROOTS [Period] [TimeSpan]
 
 [Nil] ||| a ||| ||| 1.0
+[Nil] ||| an ||| ||| 1.0
 [Nil] ||| the ||| ||| 1.0
 [Nil] ||| that ||| ||| 1.0
 [Nil] ||| . ||| ||| 1.0
 [Nil] ||| , ||| ||| 1.0
 [Nil] ||| edt ||| ||| 1.0
+[Nil] ||| - old ||| ||| 1.0
 
 [Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0
@@ -134,6 +136,8 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Day] ||| [FieldValue:Holiday] ||| [FieldValue:Holiday] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:Day] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:Day] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 
 [FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:Day] ||| [FieldValue:Day] ||| 1.0
@@ -141,7 +145,6 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:WeekdayWeekendOfWeek] ||| [FieldValue:WeekdayWeekendOfWeek] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
 
 [FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
@@ -170,12 +173,13 @@ ROOTS [Period] [TimeSpan]
 
 [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
 [Period:WithModifier] ||| more than [Period] ||| [Period] MORE_THAN ||| 1.0
+[Period:WithModifier] ||| over [Period] ||| [Period] MORE_THAN ||| 1.0
 
 [Period:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
 [Period:WithQuantifier] ||| annually ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
 [Period:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
 
-[TimeSpan:Simple] ||| past ||| PAST ||| 1.0
+[TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| future ||| FUTURE ||| 1.0
 
@@ -184,6 +188,7 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| that [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| [TimeSpan] [Unit] ||| [TimeSpan] [Unit] ||| 1.0
+[TimeSpan:FindEnclosing] ||| [FieldValue:Year] s ||| ( TimeSpan:FindAbsolute [FieldValue:Year] ) DECADES ||| 1.0
 
 [TimeSpan:FindLater] ||| tonight ||| ( FieldValue QUARTER_OF_DAY 0 ) ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
