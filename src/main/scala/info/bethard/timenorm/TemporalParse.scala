@@ -6,10 +6,42 @@ import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.temporal.ChronoUnit
+import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalUnit
 
 import info.bethard.timenorm.SynchronousParser.Tree
+
+trait TokenParser {
+  def toInt(token: String): Int
+  def toTemporalUnit(token: String): TemporalUnit
+  def toTemporalField(token: String): TemporalField
+}
+
+class DefaultTokenParser extends TokenParser {
+  def toInt(token: String): Int = token.toInt
+  def toTemporalUnit(token: String): TemporalUnit = token match {
+    case "QUARTER_DAYS" => QUARTER_DAYS
+    case "WEEKDAYS_WEEKENDS" => WEEKDAYS_WEEKENDS
+    case "SEASONS" => SEASONS
+    case _ => ChronoUnit.valueOf(token)
+  }
+  def toTemporalField(token: String): TemporalField = token match {
+    case "HOUR_OF_QUARTER" => HOUR_OF_QUARTER
+    case "QUARTER_OF_DAY" => QUARTER_OF_DAY
+    case "EASTER_DAY_OF_YEAR" => EASTER_DAY_OF_YEAR
+    case "DAY_OF_WEEKDAY_WEEKEND" => DAY_OF_WEEKDAY_WEEKEND
+    case "WEEKDAY_WEEKEND_OF_WEEK" => WEEKDAY_WEEKEND_OF_WEEK
+    case "DAY_OF_SEASON" => DAY_OF_SEASON
+    case "SEASON_OF_YEAR" => SEASON_OF_YEAR
+    case "YEAR_OF_DECADE" => YEAR_OF_DECADE
+    case "DECADE" => DECADE
+    case "YEAR_OF_CENTURY" => YEAR_OF_CENTURY
+    case "CENTURY" => CENTURY
+    case _ => ChronoField.valueOf(token)
+  }
+}
+object DefaultTokenParser extends DefaultTokenParser
 
 private[timenorm] abstract class CanFail(name: String) {
   private[timenorm] def fail[T](tree: Tree): T = {
@@ -27,32 +59,43 @@ private[timenorm] abstract class CanFail(name: String) {
 sealed abstract class TemporalParse
 
 object TemporalParse extends CanFail("[Temporal]") with (Tree => TemporalParse) {
+  
+  def apply(tree: Tree): TemporalParse = {
+    this.applyNoImplicit(tree, DefaultTokenParser)
+  }
+  
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): TemporalParse = {
+    this.applyNoImplicit(tree, tokenParser)
+  }
 
-  def apply(tree: Tree): TemporalParse = tree match {
-    case tree @ Tree.NonTerminal("[Period]", _, _, _) =>
-      PeriodParse(tree)
-    case tree @ Tree.NonTerminal("[TimeSpan]", _, _, _) =>
-      TimeSpanParse(tree)
-    case _ => fail(tree)
+  private def applyNoImplicit(tree: Tree, tokenParser: TokenParser): TemporalParse = {
+    implicit val parser = tokenParser
+    tree match {
+      case tree @ Tree.NonTerminal("[Period]", _, _, _) =>
+        PeriodParse(tree)
+      case tree @ Tree.NonTerminal("[TimeSpan]", _, _, _) =>
+        TimeSpanParse(tree)
+      case _ => fail(tree)
+    }
   }
 }
 
 case class IntParse(value: Int)
-object IntParse extends CanFail("[Int]") with (Tree => IntParse) {
-  def apply(tree: Tree): IntParse = tree match {
+object IntParse extends CanFail("[Int]") {
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): IntParse = tree match {
     case Tree.Terminal(number) =>
-      IntParse(number.toInt)
+      IntParse(tokenParser.toInt(number))
     case Tree.NonTerminal("[Int]", _, tree :: Nil, _) =>
       IntParse(tree)
     case _ => fail(tree)
   }
 }
 
-case class UnitParse(value: ChronoUnit)
-object UnitParse extends CanFail("[Unit]") with (Tree => UnitParse) {
-  def apply(tree: Tree): UnitParse = tree match {
+case class UnitParse(value: TemporalUnit)
+object UnitParse extends CanFail("[Unit]") {
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): UnitParse = tree match {
     case Tree.Terminal(unit) =>
-      UnitParse(ChronoUnit.valueOf(unit))
+      UnitParse(tokenParser.toTemporalUnit(unit))
     case Tree.NonTerminal("[Unit]", _, tree :: Nil, _) =>
       UnitParse(tree)
     case _ => fail(tree)
@@ -60,12 +103,12 @@ object UnitParse extends CanFail("[Unit]") with (Tree => UnitParse) {
 }
 
 case class FieldValueParse(fieldValues: Map[TemporalField, Int])
-object FieldValueParse extends CanFail("[FieldValue]") with (Tree => FieldValueParse) {
-  def apply(tree: Tree): FieldValueParse = tree match {
+object FieldValueParse extends CanFail("[FieldValue]") {
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): FieldValueParse = tree match {
     case Tree.NonTerminal("[FieldValue]", _, Tree.Terminal(field) :: number :: Nil, _) =>
-      FieldValueParse(Map(TemporalFields.valueOf(field) -> IntParse(number).value))
+      FieldValueParse(Map(tokenParser.toTemporalField(field) -> IntParse(number).value))
     case Tree.NonTerminal("[FieldValue]", _, children, _) =>
-      FieldValueParse(children.map(FieldValueParse).map(_.fieldValues).flatten.toMap)
+      FieldValueParse(children.map(FieldValueParse.apply).map(_.fieldValues).flatten.toMap)
     case _ => fail(tree)
   }
 }
@@ -74,9 +117,9 @@ sealed abstract class PeriodParse extends TemporalParse {
   def toPeriod: Period
 }
 
-object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
+object PeriodParse extends CanFail("[Period]") {
 
-  def apply(tree: Tree): PeriodParse = tree match {
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): PeriodParse = tree match {
     case tree: Tree.Terminal =>
       Simple(1, UnitParse(tree).value)
     case Tree.NonTerminal(_, "[Period]", tree :: Nil, _) =>
@@ -93,7 +136,7 @@ object PeriodParse extends CanFail("[Period]") with (Tree => PeriodParse) {
       val denominatorValue = IntParse(denominator).value
       Fractional(IntParse(whole).value * denominatorValue + IntParse(numerator).value, denominatorValue, UnitParse(unit).value)
     case Tree.NonTerminal(_, "[Period:Sum]", children, _) =>
-      Sum(children.map(PeriodParse))
+      Sum(children.map(PeriodParse.apply))
     case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(PeriodParse(period), Modifier.valueOf(modifier))
     case Tree.NonTerminal(_, "[Period:WithQuantifier]", period :: Tree.Terminal(quantifier) :: Nil, _) =>
@@ -138,9 +181,9 @@ sealed abstract class TimeSpanParse extends TemporalParse {
   def toTimeSpan(anchor: ZonedDateTime): TimeSpan
 }
 
-object TimeSpanParse extends CanFail("[TimeSpan]") with (Tree => TimeSpanParse) {
+object TimeSpanParse extends CanFail("[TimeSpan]") {
 
-  def apply(tree: Tree): TimeSpanParse = tree match {
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): TimeSpanParse = tree match {
     case Tree.Terminal("PAST") =>
       Past
     case Tree.Terminal("PRESENT") =>

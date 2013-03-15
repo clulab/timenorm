@@ -116,7 +116,7 @@ class ParserTest extends FunSuite {
   }
 
   private def parseAll(tokens: String*): Seq[TemporalParse] = {
-    this.parser.parseAll(tokens.toIndexedSeq).map(TemporalParse.apply)
+    this.parser.parseAll(tokens.toIndexedSeq).map(TemporalParse)
   }
 
   test("parses simple periods") {

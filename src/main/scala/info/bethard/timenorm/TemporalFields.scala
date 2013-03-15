@@ -15,25 +15,6 @@ import org.threeten.bp.Year
 import org.threeten.bp.LocalDate
 import org.threeten.bp.MonthDay
 
-private[timenorm] object TemporalFields {
-  def valueOf(name: String): TemporalField = {
-    name match {
-      case "HOUR_OF_QUARTER" => HOUR_OF_QUARTER
-      case "QUARTER_OF_DAY" => QUARTER_OF_DAY
-      case "EASTER_DAY_OF_YEAR" => EASTER_DAY_OF_YEAR
-      case "DAY_OF_WEEKDAY_WEEKEND" => DAY_OF_WEEKDAY_WEEKEND
-      case "WEEKDAY_WEEKEND_OF_WEEK" => WEEKDAY_WEEKEND_OF_WEEK
-      case "DAY_OF_SEASON" => DAY_OF_SEASON
-      case "SEASON_OF_YEAR" => SEASON_OF_YEAR
-      case "YEAR_OF_DECADE" => YEAR_OF_DECADE
-      case "DECADE" => DECADE
-      case "YEAR_OF_CENTURY" => YEAR_OF_CENTURY
-      case "CENTURY" => CENTURY
-      case _ => ChronoField.valueOf(name)
-    }
-  }
-}
-
 private[timenorm] object HOUR_OF_QUARTER extends TemporalField {
   def getName: String = "HourOfQuarter"
   def getBaseUnit: TemporalUnit = HOURS
