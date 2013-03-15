@@ -9,8 +9,12 @@ import scala.collection.mutable.ListBuffer
 class SynchronousParser(grammar: SynchronousGrammar) {
 
   import SynchronousParser._
+  
+  def parseAll(sourceTokens: Array[String]): Array[Tree.NonTerminal] = {
+    this.parseAll(sourceTokens.toIndexedSeq).toArray
+  }
 
-  def parseAll(sourceTokens: Seq[String]): Seq[Tree.NonTerminal] = {
+  def parseAll(sourceTokens: IndexedSeq[String]): IndexedSeq[Tree.NonTerminal] = {
     val chart = this.parseChart(sourceTokens)
     val completes = chart(sourceTokens.size)(0).completes
     val roots = completes.filter(parse => this.grammar.rootSymbols.contains(parse.rule.symbol))
@@ -31,7 +35,7 @@ class SynchronousParser(grammar: SynchronousGrammar) {
     trees
   }
 
-  private def parseChart(sourceTokens: Seq[String]): Array[Array[ChartEntry]] = {
+  private def parseChart(sourceTokens: IndexedSeq[String]): Array[Array[ChartEntry]] = {
     val nTokens = sourceTokens.size
     val chart = Array.tabulate(nTokens + 1, nTokens) {
       (size, start) => if (size == 0 || start + size > nTokens) null else ChartEntry()

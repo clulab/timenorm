@@ -34,7 +34,7 @@ object TimeMLProcessor {
     val grammarURL = this.getClass.getResource("/timenorm.grammar")
     val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
     val grammar = SynchronousGrammar.fromString(grammarText)
-    val parser = new TemporalParser(grammar)
+    val parser = new SynchronousParser(grammar)
     
     // parse TIMEX3 elements from each TimeML file
     for (path <- args; file <- this.allFiles(new File(path))) {
@@ -66,7 +66,7 @@ object TimeMLProcessor {
         val valueOptions = for {
           anchorValue <- anchorValueOption ++ Seq(dctValue)
           anchorZDT = toZonedDateTime(anchorValue)
-          parse <- parser.parseAll(this.toTokens(timeText))
+          parse <- parser.parseAll(this.toTokens(timeText)).map(TemporalParse)
         } yield parse match {
             case parse: TimeSpanParse => {
               val timeSpan = parse.toTimeSpan(anchorZDT)

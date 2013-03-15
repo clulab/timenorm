@@ -11,19 +11,6 @@ import org.threeten.bp.temporal.TemporalUnit
 
 import info.bethard.timenorm.SynchronousParser.Tree
 
-class TemporalParser(grammar: SynchronousGrammar) {
-
-  val parser = new SynchronousParser(grammar)
-
-  def parseAll(sourceTokens: Seq[String]): Seq[TemporalParse] = {
-    this.parser.parseAll(sourceTokens).map(TemporalParse.apply)
-  }
-
-  def parseAll(sourceTokens: Array[String]): Array[TemporalParse] = {
-    this.parseAll(sourceTokens.toIndexedSeq).toArray
-  }
-}
-
 private[timenorm] abstract class CanFail(name: String) {
   private[timenorm] def fail[T](tree: Tree): T = {
     throw new UnsupportedOperationException(
