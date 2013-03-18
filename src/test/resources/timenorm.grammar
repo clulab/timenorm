@@ -57,10 +57,10 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:HourOfAMPM] ||| [Int:1-12] ||| HOUR_OF_AMPM [Int:1-12] ||| 1.0
 [FieldValue:MinuteOfHour] ||| [Int:0-59] ||| MINUTE_OF_HOUR [Int:0-59] ||| 1.0
 [FieldValue:SecondOfMinute] ||| [Int:0-59] ||| SECOND_OF_MINUTE [Int:0-59] ||| 1.0
-[FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| a . m ||| AMPM_OF_DAY 0 ||| 1.0
 [FieldValue:AMPMOfDay] ||| am ||| AMPM_OF_DAY 0 ||| 1.0
 [FieldValue:AMPMOfDay] ||| in the morning ||| AMPM_OF_DAY 0 ||| 1.0
-[FieldValue:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| p . m ||| AMPM_OF_DAY 1 ||| 1.0
 [FieldValue:AMPMOfDay] ||| pm ||| AMPM_OF_DAY 1 ||| 1.0
 [FieldValue:AMPMOfDay] ||| in the afternoon ||| AMPM_OF_DAY 1 ||| 1.0
 [FieldValue:AMPMOfDay] ||| in the evening ||| AMPM_OF_DAY 1 ||| 1.0
@@ -128,7 +128,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] : [FieldValue:SecondOfMinute] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] [FieldValue:SecondOfMinute] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
-[FieldValue:Time] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] ( FieldValue MINUTE_OF_HOUR 0 ) [FieldValue:AMPMOfDay] ||| 1.0
 
 [FieldValue:NamedDay] ||| thanksgiving day ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
 [FieldValue:NamedDay] ||| thanksgiving ||| ( FieldValue DAY_OF_WEEK 4 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 4 ) ||| 1.0
@@ -191,6 +191,7 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindEnclosing] ||| same day ||| PRESENT DAYS ||| 1.0
 [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| that [Unit] ||| PRESENT [Unit] ||| 1.0
+[TimeSpan:FindEnclosing] ||| [Unit] of [TimeSpan] ||| [TimeSpan] [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| [TimeSpan] [Unit] ||| [TimeSpan] [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| [FieldValue:Year] s ||| ( TimeSpan:FindAbsolute [FieldValue:Year] ) DECADES ||| 1.0
 
