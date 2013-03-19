@@ -114,7 +114,23 @@ object TimeMLProcessor {
       ("NYT19990505.0443.tml", "t10", "6 a.m", "1998-10-13T06:00") /* no anchor given */,
       ("NYT19990505.0443.tml", "t11", "10 days", "1998-10-13"),
       ("NYT20000224.0173.tml", "t3", "this week", "2000-W8") /* format should be Wxx */,
-      ("NYT20000224.0173.tml", "t5", "1960s", "196X")
+      ("NYT20000224.0173.tml", "t5", "1960s", "196X"),
+      ("NYT20000224.0173.tml", "t10", "early 1990s", "199X"),
+      ("NYT20000224.0173.tml", "t16", "the next morning", "2000-02-23"),
+      ("NYT20000329.0359.tml", "t4", "Thursday morning", "2000-03-30"),
+      ("NYT20000330.0406.tml", "t1", "Tuesday morning", "2000-04-04"),
+      ("NYT20000403.0463.tml", "t20", "9 a.m. EST Tuesday", "2000-04-03T09:00") /* not a Tuesday */,
+      ("NYT20000403.0463.tml", "t21", "the weekend", "P2D"),
+      ("NYT20000424.0319.tml", "t4", "the weekend", "2000-04-22"),
+      ("NYT20000601.0442.tml", "t5", "six months", "P6D"),
+      ("XIE19980808.0031.tml", "t3", "Friday morning", "1998-08-07"),
+      ("XIE19980814.0294.tml", "t0", "August 13", "1998-08-14"),
+      ("XIE19990210.0079.tml", "t3", "Wednesday", "1999-02-09") /* not a Wednesday */,
+      ("XIE19990210.0079.tml", "t6", "25", "1999-04-25") /* "April 24 and 25" ??? */,
+      ("XIE19990210.0079.tml", "t9", "Tuesday", "1999-02-08") /* not a Tuesday */,
+      ("XIE19990313.0031.tml", "t3", "day", "1999-03-12") /* "a great day" - no anchor given */,
+      ("XIE19990313.0229.tml", "t3", "day", "1999-03-12") /* "a great day" - no anchor given */,
+      ("XIE19990313.0229.tml", "t4", "this century,", "P100Y")
       )
 
   def main(args: Array[String]): Unit = {
@@ -134,7 +150,7 @@ object TimeMLProcessor {
       val idToTimeElem = timeElems.map(e => e.attrs("tid") -> e).toMap
       
       // find the document creation time and its value
-      val Seq(dctElem) = timeElems.filter(_.attrs("functionInDocument") == "CREATION_TIME")
+      val Seq(dctElem) = timeElems.filter(_.attrs.get("functionInDocument").exists(_ == "CREATION_TIME"))
       val dctValue = dctElem.attrs("value")
       
       // parse each of the TIMEX3 elements
