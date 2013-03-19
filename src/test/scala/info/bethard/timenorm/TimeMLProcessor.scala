@@ -112,7 +112,9 @@ object TimeMLProcessor {
       ("NYT19990419.0515.tml", "t15", "10 p.m", "1998-10-23T22:00") /* no anchor given */,
       ("NYT19990505.0443.tml", "t8", "days", "1998-10"),
       ("NYT19990505.0443.tml", "t10", "6 a.m", "1998-10-13T06:00") /* no anchor given */,
-      ("NYT19990505.0443.tml", "t11", "10 days", "1998-10-13")
+      ("NYT19990505.0443.tml", "t11", "10 days", "1998-10-13"),
+      ("NYT20000224.0173.tml", "t3", "this week", "2000-W8") /* format should be Wxx */,
+      ("NYT20000224.0173.tml", "t5", "1960s", "196X")
       )
 
   def main(args: Array[String]): Unit = {
