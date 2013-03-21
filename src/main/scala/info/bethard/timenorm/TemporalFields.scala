@@ -14,56 +14,205 @@ import org.threeten.bp.temporal.SimplePeriod
 import org.threeten.bp.Year
 import org.threeten.bp.LocalDate
 import org.threeten.bp.MonthDay
+import org.threeten.bp.LocalTime
 
-private[timenorm] object HOUR_OF_QUARTER extends TemporalField {
-  def getName: String = "HourOfQuarter"
-  def getBaseUnit: TemporalUnit = HOURS
-  def getRangeUnit: TemporalUnit = QUARTER_DAYS
-  def range: ValueRange = ValueRange.of(0, 5)
-  def doGet(temporal: TemporalAccessor): Long = HOUR_OF_DAY.doGet(temporal) % 6
-  def doIsSupported(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.doIsSupported(temporal)
-  def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
-    HOURS.doPlus(temporal, (newValue - this.doGet(temporal)))
-  }
-  override def toString: String = this.getName
 
-  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
-  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
-}
-
-private[timenorm] object QUARTER_OF_DAY extends TemporalField {
-  def getName: String = "QuarterOfDay"
-  def getBaseUnit: TemporalUnit = QUARTER_DAYS
-  def getRangeUnit: TemporalUnit = DAYS
-  def range: ValueRange = ValueRange.of(0, 3)
-  def doGet(temporal: TemporalAccessor): Long = {
-    val secondsPerPart = SECOND_OF_DAY.doRange(temporal).getMaximum()  / 4
-    SECOND_OF_DAY.doGet(temporal) / secondsPerPart
-  }
-  def doIsSupported(temporal: TemporalAccessor): Boolean = SECOND_OF_DAY.doIsSupported(temporal)
-  def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
-    QUARTER_DAYS.doPlus(temporal, (newValue - this.doGet(temporal)))
-  }
-  override def toString: String = this.getName
-
-  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
-  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
-}
-
-private[timenorm] object QUARTER_DAYS extends TemporalUnit {
-  def getName: String = "QuarterDays"
-  def getDuration: Duration = Duration.of(6, HOURS)
-  def isDurationEstimated: Boolean = true
-  def isSupported(temporal: Temporal): Boolean = HOURS.isSupported(temporal)
+private[timenorm] abstract class PartialRange(name: String, val field: TemporalField)
+extends TemporalUnit {
+  def first(temporal: TemporalAccessor): Long
+  def last(temporal: TemporalAccessor): Long
+  def doRange(temporal: TemporalAccessor): ValueRange
+  def doPlusSize(dateTime: Temporal, periodToAdd: Long): Long
+  def range: ValueRange
+  def getDuration: Duration
+  def isDurationEstimated: Boolean
+  
+  def getName: String = this.name
+  override def toString: String = this.name
+  def isSupported(temporal: Temporal): Boolean = this.field.doIsSupported(temporal)
   def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
-    HOURS.doPlus(dateTime, periodToAdd * 6)
+    val size = this.doPlusSize(dateTime, periodToAdd)
+    this.field.getBaseUnit().doPlus(dateTime, periodToAdd * size)
   }
-  override def toString: String = this.getName
 
   def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
+
+  protected def size(first: Long, last: Long, rangeMinimum: Long, rangeMaximum: Long): Long = {
+    if (first < last) {
+      last - first + 1L
+    } else {
+      val firstToMax = rangeMaximum - first + 1L
+      val minToLast = last - rangeMinimum + 1L
+      firstToMax + minToLast
+    }
+  }
 }
+
+private[timenorm] abstract class ConstantPartialRange(
+    name: String,
+    field: TemporalField,
+    first: Long,
+    last: Long) extends PartialRange(name, field) {
+  private val fixedSize = {
+    this.size(first, last, this.field.range().getMinimum(), this.field.range().getMaximum())
+  }
+  def first(temporal: TemporalAccessor): Long = this.first
+  def last(temporal: TemporalAccessor): Long = this.last
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doPlusSize(dateTime: Temporal, periodToAdd: Long): Long = this.fixedSize
+  private val rangeMin = this.field.range().getMinimum()
+  val range: ValueRange = ValueRange.of(this.rangeMin, this.rangeMin + this.fixedSize - 1)
+  val getDuration: Duration = Duration.of(this.fixedSize, this.field.getBaseUnit())
+  val isDurationEstimated: Boolean = false
+}
+
+private[timenorm] abstract class MonthDayPartialRange(
+    name: String,
+    first: MonthDay,
+    last: MonthDay) extends PartialRange(name, DAY_OF_YEAR) {
+  def first(temporal: TemporalAccessor): Long = {
+    this.first.atYear(YEAR.checkValidIntValue(YEAR.doGet(temporal))).get(DAY_OF_YEAR)
+  }
+  def last(temporal: TemporalAccessor): Long =  {
+    this.last.atYear(YEAR.checkValidIntValue(YEAR.doGet(temporal))).get(DAY_OF_YEAR)
+  }
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doPlusSize(dateTime: Temporal, periodToAdd: Long): Long = {
+    val first = this.first(dateTime)
+    val last = this.last(dateTime)
+    // partial range does not stretch across range boundaries
+    if (first < last) {
+      val range = this.field.doRange(dateTime)
+      this.size(first, last, range.getMinimum(), range.getMaximum())
+    }
+    // partial range stretches across two ranges; look at the first partial range
+    else if (periodToAdd < 0) {
+      val prevDateTime = this.field.getRangeUnit().doPlus(dateTime, -1L)
+      val prevFirst = this.first(prevDateTime) 
+      val max = this.field.doRange(prevDateTime).getMaximum()
+      val min = this.field.doRange(dateTime).getMinimum()
+      this.size(prevFirst, last, min, max)
+    }
+    // partial range stretches across two ranges; look at the second partial range
+    else {
+      val nextDateTime = this.field.getRangeUnit().doPlus(dateTime, 1L)
+      val nextLast = this.last(nextDateTime)
+      val max = this.field.doRange(dateTime).getMaximum()
+      val min = this.field.doRange(nextDateTime).getMinimum()
+      this.size(first, nextLast, min, max)
+    }
+  }
+  private val sizes = for (year <- Set(1999, 2000)) yield {
+    this.doPlusSize(LocalDate.of(year, 1, 1), +1L)
+  }
+  val range: ValueRange = ValueRange.of(1, this.sizes.min, this.sizes.max)
+  val getDuration: Duration = Duration.of(this.sizes.min, DAYS)
+  val isDurationEstimated: Boolean = true
+}
+
+private[timenorm] class BaseUnitOfPartial(name: String, partialRange: PartialRange)
+extends TemporalField {
+  def getName: String = this.name
+  override def toString: String = this.name
+  def getBaseUnit: TemporalUnit = this.partialRange.field.getBaseUnit()
+  def getRangeUnit: TemporalUnit = this.partialRange  
+  def range: ValueRange = this.partialRange.range
+  def doGet(temporal: TemporalAccessor): Long = {
+    val baseValue = this.partialRange.field.doGet(temporal) 
+    val first = this.partialRange.first(temporal)
+    if (baseValue >= first) {
+      this.partialRange.doRange(temporal).getMinimum() + baseValue - first
+    } else {
+      val maxValue = this.partialRange.field.doRange(temporal).getMaximum()
+      maxValue - first + 1 + baseValue
+    }
+  }
+  def doIsSupported(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.partialRange.doRange(temporal)
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+    val range = this.partialRange.field.doRange(temporal)
+    val rangeMin = range.getMinimum()
+    val rangeMax = range.getMaximum()
+    val first = this.partialRange.first(temporal)
+    val value = first + newValue - rangeMin
+    val adjustedValue = if (value <= rangeMax) value else value - rangeMax
+    this.partialRange.field.doWith(temporal, adjustedValue)
+  }
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+}
+
+private[timenorm] class PartialOfRangeUnit(name: String, partialRange: PartialRange)
+extends TemporalField {
+  def getName: String = this.name
+  override def toString: String = this.name
+  def getBaseUnit: TemporalUnit = this.partialRange
+  def getRangeUnit: TemporalUnit = this.partialRange.field.getRangeUnit()
+  def range: ValueRange = ValueRange.of(0, 1)
+  def doGet(temporal: TemporalAccessor): Long = {
+    if (this.contains(temporal)) 1L else 0L
+  }
+  def doIsSupported(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: Temporal](temporal: R, newValue: Long): R = newValue match {
+    case 1 =>
+      if (this.contains(temporal)) temporal
+      else this.partialRange.field.doWith(temporal, this.partialRange.first(temporal))
+  }
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+  
+  def contains(temporal: TemporalAccessor): Boolean = {
+    val first = this.partialRange.first(temporal)
+    val last = this.partialRange.last(temporal)
+    val value = this.partialRange.field.doGet(temporal)
+    if (first < last) first <= value && value <= last
+    else first <= value || value <= last
+  }
+}
+
+private[timenorm] object MORNINGS extends ConstantPartialRange("Mornings", HOUR_OF_DAY, 0L, 11L)
+private[timenorm] object MORNING_OF_DAY extends PartialOfRangeUnit("MorningOfDay", MORNINGS)
+private[timenorm] object HOUR_OF_MORNING extends BaseUnitOfPartial("HourOfMorning", MORNINGS)
+
+private[timenorm] object AFTERNOONS extends ConstantPartialRange("AfternoonOfDay", HOUR_OF_DAY, 12L, 17L)
+private[timenorm] object AFTERNOON_OF_DAY extends PartialOfRangeUnit("AfternoonOfDay", AFTERNOONS)
+private[timenorm] object HOUR_OF_AFTERNOON extends BaseUnitOfPartial("HourOfAfternoon", AFTERNOONS)
+
+private[timenorm] object EVENINGS extends ConstantPartialRange("EveningOfDay", HOUR_OF_DAY, 17L, 23L)
+private[timenorm] object EVENING_OF_DAY extends PartialOfRangeUnit("EveningOfDay", EVENINGS)
+private[timenorm] object HOUR_OF_EVENING extends BaseUnitOfPartial("HourOfEvening", EVENINGS)
+
+private[timenorm] object NIGHTS extends ConstantPartialRange("NightOfDay", HOUR_OF_DAY, 21L, 3L)
+private[timenorm] object NIGHT_OF_DAY extends PartialOfRangeUnit("NightOfDay", NIGHTS)
+private[timenorm] object HOUR_OF_NIGHT extends BaseUnitOfPartial("HourOfNight", NIGHTS)
+
+private[timenorm] object WEEKENDS extends ConstantPartialRange("Weekends", DAY_OF_WEEK, 6L, 7L)
+private[timenorm] object WEEKEND_OF_WEEK extends PartialOfRangeUnit("WeekendOfWeek", WEEKENDS)
+private[timenorm] object DAY_OF_WEEKEND extends BaseUnitOfPartial("DayOfWeekend", WEEKENDS)
+
+private[timenorm] object SPRINGS extends MonthDayPartialRange(
+    "Springs", MonthDay.of(3, 20), MonthDay.of(6, 20))
+private[timenorm] object SPRING_OF_YEAR extends PartialOfRangeUnit("SpringOfYear", SPRINGS)
+private[timenorm] object DAY_OF_SPRING extends BaseUnitOfPartial("DayOfSpring", SPRINGS)
+
+private[timenorm] object SUMMERS extends MonthDayPartialRange(
+    "Summers", MonthDay.of(6, 21), MonthDay.of(9, 21))
+private[timenorm] object SUMMER_OF_YEAR extends PartialOfRangeUnit("SummerOfYear", SUMMERS)
+private[timenorm] object DAY_OF_SUMMER extends BaseUnitOfPartial("DayOfSummer", SUMMERS)
+
+private[timenorm] object FALLS extends MonthDayPartialRange(
+    "Falls", MonthDay.of(9, 22), MonthDay.of(12, 20))
+private[timenorm] object FALL_OF_YEAR extends PartialOfRangeUnit("FallOfYear", FALLS)
+private[timenorm] object DAY_OF_FALL extends BaseUnitOfPartial("DayOfFall", FALLS)
+
+private[timenorm] object WINTERS extends MonthDayPartialRange(
+    "Winters", MonthDay.of(12, 21), MonthDay.of(3, 19))
+private[timenorm] object WINTER_OF_YEAR extends PartialOfRangeUnit("WinterOfYear", WINTERS)
+private[timenorm] object DAY_OF_WINTER extends BaseUnitOfPartial("DayOfWinter", WINTERS)
+
 
 private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
   def getName: String = "EasterDayOfYear"
@@ -105,179 +254,6 @@ private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
     val day = l + 28 - 31 * ( month / 4 )
     (month, day, MONTH_OF_YEAR.doGet(temporal) == month && DAY_OF_MONTH.doGet(temporal) == day)
   }
-}
-
-private[timenorm] object DAY_OF_WEEKDAY_WEEKEND extends TemporalField {
-  def getName: String = "DayOfWeekdayWeekend"
-  def getBaseUnit: TemporalUnit = DAYS
-  def getRangeUnit: TemporalUnit = WEEKDAYS_WEEKENDS
-  def range: ValueRange = ValueRange.of(1, 2, 5)
-  def doGet(temporal: TemporalAccessor): Long = {
-    val dayOfWeek = DAY_OF_WEEK.doGet(temporal)
-    if (dayOfWeek <= WEEKDAY_WEEKEND_OF_WEEK.maxWeekDay) dayOfWeek
-    else dayOfWeek - WEEKDAY_WEEKEND_OF_WEEK.maxWeekDay
-  }
-  def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.doIsSupported(temporal)
-  def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
-    WEEKDAY_WEEKEND_OF_WEEK.doGet(temporal) match {
-      case 0 => DAY_OF_WEEK.doWith(temporal, newValue)
-      case 1 => DAY_OF_WEEK.doWith(temporal, newValue + WEEKDAY_WEEKEND_OF_WEEK.maxWeekDay)
-    }
-  }
-  override def toString: String = this.getName
-
-  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
-  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
-}
-
-private[timenorm] object WEEKDAY_WEEKEND_OF_WEEK extends TemporalField {
-  private[timenorm] final val maxWeekDay = 5L
-  def getName: String = "WeekdayWeekendOfWeek"
-  def getBaseUnit: TemporalUnit = WEEKDAYS_WEEKENDS
-  def getRangeUnit: TemporalUnit = WEEKS
-  def range: ValueRange = ValueRange.of(0, 1)
-  def doGet(temporal: TemporalAccessor): Long = {
-    if (DAY_OF_WEEK.doGet(temporal) <= this.maxWeekDay) 0L else 1L
-  }
-  def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.doIsSupported(temporal)
-  def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
-    val dayOfWeek = DAY_OF_WEEK.doGet(temporal)
-    val isWeekDay = dayOfWeek <= this.maxWeekDay
-    val newDayOfWeek = newValue match {
-      case 0 => if (isWeekDay) dayOfWeek else dayOfWeek - this.maxWeekDay
-      case 1 => if (!isWeekDay) dayOfWeek else math.min(dayOfWeek + this.maxWeekDay, 7)
-    }
-    DAY_OF_WEEK.doWith(temporal, newDayOfWeek)
-  }
-  override def toString: String = this.getName
-
-  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
-  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
-}
-
-private[timenorm] object WEEKDAYS_WEEKENDS extends TemporalUnit {
-  def getName: String = "WeekdaysWeekends"
-  def getDuration: Duration = Duration.of(3, DAYS)
-  def isDurationEstimated: Boolean = true
-  def isSupported(temporal: Temporal): Boolean = {
-    WEEKDAY_WEEKEND_OF_WEEK.doIsSupported(temporal) &&
-    DAYS.isSupported(temporal) && WEEKS.isSupported(temporal)
-  }
-  def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
-    val weekAdjusted = WEEKS.doPlus(dateTime, periodToAdd / 2L)
-    val weekdayWeekend = WEEKDAY_WEEKEND_OF_WEEK.doGet(dateTime)
-    periodToAdd % 2 match {
-      case -1 => weekdayWeekend match {
-        case 0 => WEEKDAY_WEEKEND_OF_WEEK.doWith(WEEKS.doPlus(weekAdjusted, -1L), 1L)
-        case 1 => WEEKDAY_WEEKEND_OF_WEEK.doWith(weekAdjusted, 0L)
-      }
-      case 0 => weekAdjusted
-      case 1 => weekdayWeekend match {
-        case 0 => WEEKDAY_WEEKEND_OF_WEEK.doWith(weekAdjusted, 1L)
-        case 1 => WEEKDAY_WEEKEND_OF_WEEK.doWith(WEEKS.doPlus(weekAdjusted, 1L), 0L)
-      }
-    }
-  }
-  override def toString: String = this.getName
-
-  def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
-}
-
-private[timenorm] object DAY_OF_SEASON extends TemporalField {
-  def getName: String = "DayOfSeason"
-  def getBaseUnit: TemporalUnit = DAYS
-  def getRangeUnit: TemporalUnit = SEASONS
-  def range: ValueRange = ValueRange.of(1, 93)
-  def doGet(temporal: TemporalAccessor): Long = {
-    val year = YEAR.doGet(temporal)
-    val (index, begin, end) = this.find(temporal)
-    val dayOfSeason = DAY_OF_YEAR.doGet(temporal) - DAY_OF_YEAR.doGet(begin) + 1
-    if (dayOfSeason > 0) dayOfSeason
-    else dayOfSeason + DAY_OF_YEAR.doRange(begin).getMaximum()
-  }
-  def doIsSupported(temporal: TemporalAccessor): Boolean = {
-    YEAR.doIsSupported(temporal) && DAY_OF_YEAR.doIsSupported(temporal)
-  }
-  def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
-    val (index, begin, end) = this.find(temporal)
-    val atBegin = DAY_OF_YEAR.doWith(YEAR.doWith(temporal, begin.getYear()), begin.get(DAY_OF_YEAR))
-    DAYS.doPlus(atBegin, newValue - 1)
-  }
-
-  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
-  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
-
-  private[timenorm] def find(temporal: TemporalAccessor): (Int, LocalDate, LocalDate) = {
-    val year = YEAR.checkValidIntValue(YEAR.doGet(temporal))
-    val seasonMonthDayRanges = Seq(
-      (3, LocalDate.of(year - 1, 12, 21), LocalDate.of(year, 3, 19)),
-      (0, LocalDate.of(year, 3, 20), LocalDate.of(year, 6, 20)),
-      (1, LocalDate.of(year, 6, 21), LocalDate.of(year, 9, 21)),
-      (2, LocalDate.of(year, 9, 22), LocalDate.of(year, 12, 20)),
-      (3, LocalDate.of(year, 12, 21), LocalDate.of(year + 1, 3, 19)))
-    val dayOfYear = DAY_OF_YEAR.doGet(temporal)
-    seasonMonthDayRanges.find {
-      case (index, begin, end) => 
-        (begin.getYear() < year || DAY_OF_YEAR.doGet(begin) <= dayOfYear) && 
-        (year < end.getYear() || dayOfYear <= DAY_OF_YEAR.doGet(end))
-    }.get
-  }
-}
-
-private[timenorm] object SEASON_OF_YEAR extends TemporalField {
-  private final val firstDayOfSpring = 80 // March 20 or 21
-  
-  def getName: String = "SeasonOfYear"
-  def getBaseUnit: TemporalUnit = SEASONS
-  def getRangeUnit: TemporalUnit = YEARS
-  def range: ValueRange = ValueRange.of(0, 3)
-  def doGet(temporal: TemporalAccessor): Long = DAY_OF_SEASON.find(temporal)._1
-  def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_SEASON.doIsSupported(temporal)
-  def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
-    val oldValue = SEASON_OF_YEAR.doGet(temporal)
-    SEASONS.doPlus(temporal, newValue - oldValue)
-  }
-
-  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
-  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
-}
-
-private[timenorm] object SEASONS extends TemporalUnit {
-    def getName: String = "Seasons"
-    def getDuration: Duration = Duration.of(91, DAYS)
-    def isDurationEstimated: Boolean = true
-    def isSupported(temporal: Temporal): Boolean = {
-      DAYS.isSupported(temporal) && YEARS.isSupported(temporal)
-    }
-  def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
-    val oldDayOfSeason = DAY_OF_SEASON.doGet(dateTime)
-    val beginDateTime = DAY_OF_SEASON.doWith(dateTime, 1) 
-    val oldYear = YEAR.checkValidIntValue(YEAR.doGet(beginDateTime))
-    val oldSeason = SEASON_OF_YEAR.doGet(beginDateTime)
-    val newSeason = oldSeason + periodToAdd % 4
-    val (yearAdjustment, month, day) = newSeason match {
-      case -3 => (-1, 6, 21) // summer
-      case -2 => (-1, 9, 22) // fall
-      case -1 => (-1, 12, 21) // winter
-      case 0 => (0, 3, 20) // spring
-      case 1 => (0, 6, 21) // summer
-      case 2 => (0, 9, 22) // fall
-      case 3 => (0, 12, 21) // winter
-      case 4 => (+1, 3, 20) // spring
-      case 5 => (+1, 6, 21) // summer
-      case 6 => (+1, 9, 22) // fall
-    }
-    val withYear = YEARS.doPlus(beginDateTime, periodToAdd / 4 + yearAdjustment)
-    val withYearMonthDay = MONTH_OF_YEAR.doWith(DAY_OF_MONTH.doWith(withYear, day), month)
-    DAYS.doPlus(withYearMonthDay, oldDayOfSeason - 1)
-  }
-  
-    def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
-    override def toString: String = this.getName
 }
 
 private[timenorm] object DECADE extends TemporalField {

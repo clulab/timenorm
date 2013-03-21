@@ -12,7 +12,6 @@ case class Period(
     frequency: Frequency = Frequency(1)) {
   
   private val simplifyUnitMap = ListMap[TemporalUnit, Seq[(TemporalUnit, Int)]](
-    QUARTER_DAYS -> Seq((HOURS, 6)),
     DECADES -> Seq((YEARS, 10)),
     CENTURIES -> Seq((DECADES, 10), (YEARS, 100)))
 
@@ -21,12 +20,18 @@ case class Period(
     CENTURIES -> "CE",
     DECADES -> "DE",
     YEARS -> "Y",
-    SEASONS -> "S",
+    SPRINGS -> "SP",
+    SUMMERS -> "SU",
+    FALLS -> "FA",
+    WINTERS -> "WI",
     MONTHS -> "M",
     WEEKS -> "W",
-    WEEKDAYS_WEEKENDS -> "WDWE",
+    WEEKENDS -> "WE",
+    MORNINGS -> "MO",
+    AFTERNOONS -> "AF",
+    EVENINGS -> "EV",
+    NIGHTS -> "NI",
     DAYS -> "D",
-    QUARTER_DAYS -> "QD",
     HOURS -> "H",
     MINUTES -> "M",
     SECONDS -> "S")

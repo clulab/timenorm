@@ -28,7 +28,7 @@ class TemporalParseTest extends FunSuite {
     assertPeriod(Simple(53, SECONDS), "PT53S", SECONDS -> 53)
     assertPeriod(Unspecified(DECADES), "PXDE", DECADES -> Int.MaxValue)
     assertPeriod(Unspecified(WEEKS), "PXW", WEEKS -> Int.MaxValue)
-    assertPeriod(Unspecified(QUARTER_DAYS), "PXQD", QUARTER_DAYS -> Int.MaxValue)
+    assertPeriod(Unspecified(MORNINGS), "PXMO", MORNINGS -> Int.MaxValue)
     assertPeriod(Unspecified(SECONDS), "PTXS", SECONDS -> Int.MaxValue)
     assertPeriod(Fractional(11, 2, HOURS), "PT5H30M", HOURS -> 5, MINUTES -> 30)
     assertPeriod(Fractional(3, 2, WEEKS), "P1W3DT12H", WEEKS -> 1, DAYS -> 3, HOURS -> 12)
@@ -92,11 +92,17 @@ class TemporalParseTest extends FunSuite {
       FindEarlier(Map(CLOCK_HOUR_OF_AMPM -> 11, MINUTE_OF_HOUR -> 18, AMPM_OF_DAY -> 0)),
       "2012-12-12T11:18", "2012-12-12T11:19", "PT1M", "2012-12-12T11:18")
     assertTimeSpan(
-      FindEarlier(Map(SEASON_OF_YEAR -> 0)),
-      "2012-03-20T00:00", "2012-06-21T00:00", "P1S", "2012-SP")
+      FindEarlier(Map(SPRING_OF_YEAR -> 1)),
+      "2012-03-20T00:00", "2012-06-21T00:00", "P1SP", "2012-SP")
     assertTimeSpan(
-      FindLater(Map(SEASON_OF_YEAR -> 3)),
-      "2012-12-21T00:00", "2013-03-20T00:00", "P1S", "2012-WI")
+      FindLater(Map(SUMMER_OF_YEAR -> 1)),
+      "2013-06-21T00:00", "2013-09-22T00:00", "P1SU", "2013-SU")
+    assertTimeSpan(
+      FindEarlier(Map(FALL_OF_YEAR -> 1)),
+      "2011-09-22T00:00", "2011-12-21T00:00", "P1FA", "2011-FA")
+    assertTimeSpan(
+      FindLater(Map(WINTER_OF_YEAR -> 1)),
+      "2012-12-21T00:00", "2013-03-20T00:00", "P1WI", "2012-WI")
     assertTimeSpan(
       FindCurrentOrEarlier(Map(DAY_OF_WEEK -> DayOfWeek.WEDNESDAY.getValue)),
       "2012-12-12T00:00", "2012-12-13T00:00", "P1D", "2012-12-12")
@@ -119,32 +125,38 @@ class TemporalParseTest extends FunSuite {
       FindEnclosing(Present, WEEKS),
       "2012-12-10T00:00", "2012-12-17T00:00", "P1W", "2012-W50")
     assertTimeSpan(
-      FindLater(Map(QUARTER_OF_DAY -> 0)),
-      "2012-12-13T00:00", "2012-12-13T06:00", "P1QD", "2012-12-13TNI")
+      FindEarlier(Map(MORNING_OF_DAY -> 1)),
+      "2012-12-12T00:00", "2012-12-12T12:00", "P1MO", "2012-12-12TMO")
     assertTimeSpan(
-      FindEarlier(Map(QUARTER_OF_DAY -> 1)),
-      "2012-12-12T06:00", "2012-12-12T12:00", "P1QD", "2012-12-12TMO")
+      FindLater(Map(AFTERNOON_OF_DAY -> 1)),
+      "2012-12-13T12:00", "2012-12-13T18:00", "P1AF", "2012-12-13TAF")
     assertTimeSpan(
-      FindLater(Map(QUARTER_OF_DAY -> 2)),
-      "2012-12-13T12:00", "2012-12-13T18:00", "P1QD", "2012-12-13TAF")
+      FindEarlier(Map(EVENING_OF_DAY -> 1)),
+      "2012-12-11T17:00", "2012-12-12T00:00", "P1EV", "2012-12-11TEV")
     assertTimeSpan(
-      FindLater(Map(QUARTER_OF_DAY -> 3)),
-      "2012-12-12T18:00", "2012-12-13T00:00", "P1QD", "2012-12-12TEV")
+      FindLater(Map(NIGHT_OF_DAY -> 1)),
+      "2012-12-12T21:00", "2012-12-13T04:00", "P1NI", "2012-12-12TNI")
     assertTimeSpan(
-      FindEnclosing(Present, WEEKDAYS_WEEKENDS),
-      "2012-12-10T00:00", "2012-12-15T00:00", "P1WDWE", "2012-W50-WD")
+      FindEarlier(Map(NIGHT_OF_DAY -> 1)),
+      "2012-12-11T21:00", "2012-12-12T04:00", "P1NI", "2012-12-11TNI")
     assertTimeSpan(
-      FindLater(Map(WEEKDAY_WEEKEND_OF_WEEK -> 0)),
-      "2012-12-17T00:00", "2012-12-22T00:00", "P1WDWE", "2012-W51-WD")
+      FindEnclosing(Present, AFTERNOONS),
+      "2012-12-12T12:00", "2012-12-12T18:00", "P1AF", "2012-12-12TAF")
     assertTimeSpan(
-      FindLater(Map(WEEKDAY_WEEKEND_OF_WEEK -> 1)),
-      "2012-12-15T00:00", "2012-12-17T00:00", "P1WDWE", "2012-W50-WE")
+      FindLater(Map(WEEKEND_OF_WEEK -> 1)),
+      "2012-12-15T00:00", "2012-12-17T00:00", "P1WE", "2012-W50-WE")
     assertTimeSpan(
       FindLater(Map(EASTER_DAY_OF_YEAR -> 1)),
       "2013-03-31T00:00", "2013-04-01T00:00", "P1D", "2013-03-31")
     assertTimeSpan(
       FindEarlier(Map(EASTER_DAY_OF_YEAR -> 1)),
       "2012-04-08T00:00", "2012-04-09T00:00", "P1D", "2012-04-08")
+    
+    // this previously caused an infinite loop because searching one night at a time
+    // managed to skip past Sunday night; so the test here is just that it completes
+    val mar28 = ZonedDateTime.of(LocalDateTime.of(2000, 3, 28, 0, 0), ZoneId.of("Z"))
+    val mar26ni = FindEarlier(Map(DAY_OF_WEEK -> 7, NIGHT_OF_DAY -> 1)).toTimeSpan(mar28)
+    assert(mar26ni.timeMLValueOption === Some("2000-03-26TNI"))
   }
 
   test("resolves complex time spans") {

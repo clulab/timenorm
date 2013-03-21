@@ -75,10 +75,10 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:AMPMOfDay] ||| pm ||| AMPM_OF_DAY 1 ||| 1.0
 [FieldValue:AMPMOfDay] ||| in the afternoon ||| AMPM_OF_DAY 1 ||| 1.0
 [FieldValue:AMPMOfDay] ||| in the evening ||| AMPM_OF_DAY 1 ||| 1.0
-[FieldValue:QuarterOfDay] ||| night ||| QUARTER_OF_DAY 0 ||| 1.0
-[FieldValue:QuarterOfDay] ||| morning ||| QUARTER_OF_DAY 1 ||| 1.0
-[FieldValue:QuarterOfDay] ||| afternoon ||| QUARTER_OF_DAY 2 ||| 1.0
-[FieldValue:QuarterOfDay] ||| evening ||| QUARTER_OF_DAY 3 ||| 1.0
+[FieldValue:PartOfDay] ||| morning ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| afternoon ||| AFTERNOON_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| evening ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| night ||| NIGHT_OF_DAY 1 ||| 1.0
 
 [FieldValue:DayOfWeek] ||| monday ||| DAY_OF_WEEK 1 ||| 1.0
 [FieldValue:DayOfWeek] ||| tuesday ||| DAY_OF_WEEK 2 ||| 1.0
@@ -98,7 +98,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:DayOfWeek] ||| sat ||| DAY_OF_WEEK 6 ||| 1.0
 [FieldValue:DayOfWeek] ||| sun ||| DAY_OF_WEEK 7 ||| 1.0
 
-[FieldValue:WeekdayWeekendOfWeek] ||| weekend ||| WEEKDAY_WEEKEND_OF_WEEK 1 ||| 1.0
+[FieldValue:WeekendOfWeek] ||| weekend ||| WEEKEND_OF_WEEK 1 ||| 1.0
 
 [FieldValue:DayOfMonth] ||| [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
 
@@ -129,11 +129,11 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:MonthOfYear] ||| dec ||| MONTH_OF_YEAR 12 ||| 1.0
 [FieldValue:MonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
 
-[FieldValue:SeasonOfYear] ||| spring ||| SEASON_OF_YEAR 0 ||| 1.0
-[FieldValue:SeasonOfYear] ||| summer ||| SEASON_OF_YEAR 1 ||| 1.0
-[FieldValue:SeasonOfYear] ||| fall ||| SEASON_OF_YEAR 2 ||| 1.0
-[FieldValue:SeasonOfYear] ||| autumn ||| SEASON_OF_YEAR 2 ||| 1.0
-[FieldValue:SeasonOfYear] ||| winter ||| SEASON_OF_YEAR 3 ||| 1.0
+[FieldValue:SeasonOfYear] ||| spring ||| SPRING_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| summer ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| fall ||| FALL_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| autumn ||| FALL_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| winter ||| WINTER_OF_YEAR 1 ||| 1.0
 
 [FieldValue:Time] ||| midday ||| ( FieldValue:HourOfDay HOUR_OF_DAY 12 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
@@ -155,11 +155,11 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Day] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 
 [FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:QuarterOfDay] ||| [FieldValue:QuarterOfDay] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartOfDay] ||| [FieldValue:PartOfDay] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:Day] ||| [FieldValue:Day] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:Time] [FieldValue:Day] ||| [FieldValue:Time] [FieldValue:Day] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:WeekdayWeekendOfWeek] ||| [FieldValue:WeekdayWeekendOfWeek] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:WeekendOfWeek] ||| [FieldValue:WeekendOfWeek] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
 

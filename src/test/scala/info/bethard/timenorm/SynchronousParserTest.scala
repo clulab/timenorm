@@ -35,9 +35,9 @@ class ParserTest extends FunSuite {
     [FieldValue:MinuteOfHour] ||| [Int:0-60] ||| MINUTE_OF_HOUR [Int:0-60] ||| 1.0
     [FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0
     [FieldValue:AMPMOfDay] ||| p . m . ||| AMPM_OF_DAY 1 ||| 1.0
-    [FieldValue:QuarterOfDay] ||| morning ||| QUARTER_OF_DAY 1 ||| 1.0
+    [FieldValue:PartOfDay] ||| morning ||| MORNING_OF_DAY 1 ||| 1.0
     [FieldValue:DayOfWeek] ||| Thursday ||| DAY_OF_WEEK 4 ||| 1.0
-    [FieldValue:WeekdayWeekendOfWeek] ||| weekend ||| WEEKDAY_WEEKEND_OF_WEEK 1 ||| 1.0
+    [FieldValue:WeekendOfWeek] ||| weekend ||| WEEKEND_OF_WEEK 1 ||| 1.0
     [FieldValue:MonthOfYear] ||| January ||| MONTH_OF_YEAR 1 ||| 1.0
     [FieldValue:MonthOfYear] ||| February ||| MONTH_OF_YEAR 2 ||| 1.0
     [FieldValue:MonthOfYear] ||| March ||| MONTH_OF_YEAR 3 ||| 1.0
@@ -53,16 +53,16 @@ class ParserTest extends FunSuite {
     [FieldValue:MonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
     [FieldValue:DayOfMonth] ||| [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
     [FieldValue:Year] ||| [Int:1900-2100] ||| YEAR [Int:1900-2100] ||| 1.0
-    [FieldValue:SeasonOfYear] ||| spring ||| SEASON_OF_YEAR 0 ||| 1.0
-    [FieldValue:SeasonOfYear] ||| summer ||| SEASON_OF_YEAR 1 ||| 1.0
-    [FieldValue:SeasonOfYear] ||| fall ||| SEASON_OF_YEAR 2 ||| 1.0
-    [FieldValue:SeasonOfYear] ||| winter ||| SEASON_OF_YEAR 3 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| spring ||| SPRING_OF_YEAR 1 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| summer ||| SUMMER_OF_YEAR 1 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| fall ||| FALL_OF_YEAR 1 ||| 1.0
+    [FieldValue:SeasonOfYear] ||| winter ||| WINTER_OF_YEAR 1 ||| 1.0
     [FieldValue:Easter] ||| easter ||| EASTER_DAY_OF_YEAR 1 ||| 1.0
-    [FieldValue:DayQuarter] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:QuarterOfDay] ||| 1.0
+    [FieldValue:DayQuarter] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| 1.0
     [FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
     [FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:DayQuarter] ||| [FieldValue:DayQuarter] ||| 1.0
-    [FieldValue:PartialEarlier] ||| [FieldValue:WeekdayWeekendOfWeek] ||| [FieldValue:WeekdayWeekendOfWeek] ||| 1.0
+    [FieldValue:PartialEarlier] ||| [FieldValue:WeekendOfWeek] ||| [FieldValue:WeekendOfWeek] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:MonthDay] ||| [FieldValue:MonthDay] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:Easter] ||| [FieldValue:Easter] ||| 1.0
     [FieldValue:PartialEarlier] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
@@ -163,13 +163,13 @@ class ParserTest extends FunSuite {
     assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
       FindEarlier(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
     assert(this.parse("last", "summer") ===
-      FindEarlier(Map(SEASON_OF_YEAR -> 1)))
+      FindEarlier(Map(SUMMER_OF_YEAR -> 1)))
     assert(this.parse("1976", "9", "21", "11", ":", "00", "a", ".", "m", ".") ===
       FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21, HOUR_OF_AMPM -> 11, MINUTE_OF_HOUR -> 0, AMPM_OF_DAY -> 0)))
     assert(this.parse("Thursday", "morning") ===
-      FindEarlier(Map(DAY_OF_WEEK -> 4, QUARTER_OF_DAY -> 1)))
+      FindEarlier(Map(DAY_OF_WEEK -> 4, MORNING_OF_DAY -> 1)))
     assert(this.parse("the", "weekend") ===
-      FindEarlier(Map(WEEKDAY_WEEKEND_OF_WEEK -> 1)))
+      FindEarlier(Map(WEEKEND_OF_WEEK -> 1)))
     assert(this.parse("easter") ===
       FindEarlier(Map(EASTER_DAY_OF_YEAR -> 1)))
   }

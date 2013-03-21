@@ -21,24 +21,29 @@ object TimeSpan {
 
   def truncate(time: ZonedDateTime, unit: TemporalUnit): ZonedDateTime = {
     this.unitToFieldsToTruncate(unit).foldLeft(time) {
-      case (time, field) => time.`with`(field, field.range.getMinimum)
+      case (time, field) => {
+        val nUnits = time.get(field) - field.range.getMinimum
+        time.minus(nUnits, field.getBaseUnit)
+      }
     }
   }
-
-  private final val weekdayWeekendNames = IndexedSeq("WD", "WE")
-  private final val seasonNames = IndexedSeq("SP", "SU", "FA", "WI")
-  private final val quarterNames = IndexedSeq("NI", "MO", "AF", "EV")
 
   private val fieldFormats = Map[TemporalField, Int => String](
     (CENTURY, "%02d".format(_)),
     (DECADE, "%03d".format(_)),
     (YEAR, "%04d".format(_)),
-    (SEASON_OF_YEAR, "-" + this.seasonNames(_)),
+    (SPRING_OF_YEAR, _ match { case 1 => "-SP" }),
+    (SUMMER_OF_YEAR, _ match { case 1 => "-SU" }),
+    (FALL_OF_YEAR, _ match { case 1 => "-FA" }),
+    (WINTER_OF_YEAR, _ match { case 1 => "-WI" }),
     (MONTH_OF_YEAR, "-%02d".format(_)),
     (DAY_OF_MONTH, "-%02d".format(_)),
     (ALIGNED_WEEK_OF_YEAR, "-W%02d".format(_)),
-    (WEEKDAY_WEEKEND_OF_WEEK, "-" + this.weekdayWeekendNames(_)),
-    (QUARTER_OF_DAY, "T" + this.quarterNames(_)),
+    (WEEKEND_OF_WEEK, _ match { case 1 => "-WE" }),
+    (MORNING_OF_DAY, _ match { case 1 => "TMO" }),
+    (AFTERNOON_OF_DAY, _ match { case 1 => "TAF" }),
+    (EVENING_OF_DAY, _ match { case 1 => "TEV" }),
+    (NIGHT_OF_DAY, _ match { case 1 => "TNI" }),
     (HOUR_OF_DAY, "T%02d".format(_)),
     (MINUTE_OF_HOUR, ":%02d".format(_)),
     (SECOND_OF_MINUTE, ":%02d".format(_)))
@@ -47,12 +52,18 @@ object TimeSpan {
     CENTURIES -> Seq(CENTURY),
     DECADES -> Seq(DECADE),
     YEARS -> Seq(YEAR),
-    SEASONS -> Seq(YEAR, SEASON_OF_YEAR),
+    SPRINGS -> Seq(YEAR, SPRING_OF_YEAR),
+    SUMMERS -> Seq(YEAR, SUMMER_OF_YEAR),
+    FALLS -> Seq(YEAR, FALL_OF_YEAR),
+    WINTERS -> Seq(YEAR, WINTER_OF_YEAR),
     MONTHS -> Seq(YEAR, MONTH_OF_YEAR),
     WEEKS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
-    WEEKDAYS_WEEKENDS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, WEEKDAY_WEEKEND_OF_WEEK),
+    WEEKENDS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, WEEKEND_OF_WEEK),
     DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH),
-    QUARTER_DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, QUARTER_OF_DAY),
+    MORNINGS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, MORNING_OF_DAY),
+    AFTERNOONS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, AFTERNOON_OF_DAY),
+    EVENINGS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, EVENING_OF_DAY),
+    NIGHTS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, NIGHT_OF_DAY),
     HOURS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY),
     MINUTES -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR),
     SECONDS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE))
@@ -61,12 +72,18 @@ object TimeSpan {
     CENTURIES -> Seq(YEAR_OF_CENTURY, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DECADES -> Seq(YEAR_OF_DECADE, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     YEARS -> Seq(MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
-    SEASONS -> Seq(DAY_OF_SEASON, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    SPRINGS -> Seq(DAY_OF_SPRING, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    SUMMERS -> Seq(DAY_OF_SUMMER, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    FALLS -> Seq(DAY_OF_FALL, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    WINTERS -> Seq(DAY_OF_WINTER, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MONTHS -> Seq(DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     WEEKS -> Seq(DAY_OF_WEEK, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
-    WEEKDAYS_WEEKENDS -> Seq(DAY_OF_WEEKDAY_WEEKEND, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    WEEKENDS -> Seq(DAY_OF_WEEKEND, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DAYS -> Seq(HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
-    QUARTER_DAYS -> Seq(HOUR_OF_QUARTER, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    MORNINGS -> Seq(HOUR_OF_MORNING, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    AFTERNOONS -> Seq(HOUR_OF_AFTERNOON, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    EVENINGS -> Seq(HOUR_OF_EVENING, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    NIGHTS -> Seq(HOUR_OF_NIGHT, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     HOURS -> Seq(MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MINUTES -> Seq(SECOND_OF_MINUTE),
     SECONDS -> Seq())

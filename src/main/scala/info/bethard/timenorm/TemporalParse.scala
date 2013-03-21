@@ -21,19 +21,33 @@ trait TokenParser {
 class DefaultTokenParser extends TokenParser {
   def toInt(token: String): Int = token.toInt
   def toTemporalUnit(token: String): TemporalUnit = token match {
-    case "QUARTER_DAYS" => QUARTER_DAYS
-    case "WEEKDAYS_WEEKENDS" => WEEKDAYS_WEEKENDS
-    case "SEASONS" => SEASONS
+    case "MORNINGS" => MORNINGS
+    case "AFTERNOONS" => AFTERNOONS
+    case "EVENINGS" => EVENINGS
+    case "NIGHTS" => NIGHTS
+    case "WEEKENDS" => WEEKENDS
+    case "SPRINGS" => SPRINGS
+    case "SUMMERS" => SUMMERS
+    case "FALLS" => FALLS
+    case "WINTERS" => WINTERS
     case _ => ChronoUnit.valueOf(token)
   }
   def toTemporalField(token: String): TemporalField = token match {
-    case "HOUR_OF_QUARTER" => HOUR_OF_QUARTER
-    case "QUARTER_OF_DAY" => QUARTER_OF_DAY
+    case "MORNING_OF_DAY" => MORNING_OF_DAY
+    case "AFTERNOON_OF_DAY" => AFTERNOON_OF_DAY
+    case "EVENING_OF_DAY" => EVENING_OF_DAY
+    case "NIGHT_OF_DAY" => NIGHT_OF_DAY
     case "EASTER_DAY_OF_YEAR" => EASTER_DAY_OF_YEAR
-    case "DAY_OF_WEEKDAY_WEEKEND" => DAY_OF_WEEKDAY_WEEKEND
-    case "WEEKDAY_WEEKEND_OF_WEEK" => WEEKDAY_WEEKEND_OF_WEEK
-    case "DAY_OF_SEASON" => DAY_OF_SEASON
-    case "SEASON_OF_YEAR" => SEASON_OF_YEAR
+    case "DAY_OF_WEEKEND" => DAY_OF_WEEKEND
+    case "WEEKEND_OF_WEEK" => WEEKEND_OF_WEEK
+    case "DAY_OF_SPRING" => DAY_OF_SPRING
+    case "SPRING_OF_YEAR" => SPRING_OF_YEAR
+    case "DAY_OF_SUMMER" => DAY_OF_SUMMER
+    case "SUMMER_OF_YEAR" => SUMMER_OF_YEAR
+    case "DAY_OF_FALL" => DAY_OF_FALL
+    case "FALL_OF_YEAR" => FALL_OF_YEAR
+    case "DAY_OF_WINTER" => DAY_OF_WINTER
+    case "WINTER_OF_YEAR" => WINTER_OF_YEAR
     case "YEAR_OF_DECADE" => YEAR_OF_DECADE
     case "DECADE" => DECADE
     case "YEAR_OF_CENTURY" => YEAR_OF_CENTURY
@@ -102,7 +116,10 @@ object UnitParse extends CanFail("[Unit]") {
   }
 }
 
-case class FieldValueParse(fieldValues: Map[TemporalField, Int])
+case class FieldValueParse(fieldValues: Map[TemporalField, Int]) {
+  for ((field, value) <- fieldValues; if !field.range().isValidValue(value))
+    throw new UnsupportedOperationException("field %s cannot have value %s".format(field, value))
+}
 object FieldValueParse extends CanFail("[FieldValue]") {
   def apply(tree: Tree)(implicit tokenParser: TokenParser): FieldValueParse = tree match {
     case Tree.NonTerminal("[FieldValue]", _, Tree.Terminal(field) :: number :: Nil, _) =>
@@ -272,10 +289,16 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   }
 
   abstract class FieldSearchingTimeSpanParse(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
+    // search by base units for partial ranges (e.g. search by hours, not "mornings")
+    val searchUnit = fields.keySet.map(_.getBaseUnit).map(_  match {
+      case partialRange: PartialRange => partialRange.field.getBaseUnit
+      case unit => unit
+    }).minBy(_.getDuration)
+    
     def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
       var curr = dateTime
       while (fields.exists { case (field, value) => curr.get(field) != value }) {
-        curr = step(curr, this.minUnit)
+        curr = step(curr, this.searchUnit)
       }
       TimeSpan.truncate(curr, this.minUnit)
     }
