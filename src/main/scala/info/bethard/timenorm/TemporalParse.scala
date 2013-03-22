@@ -297,10 +297,22 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     
     def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
       var curr = dateTime
-      while (fields.exists { case (field, value) => curr.get(field) != value }) {
+      while (!this.satisfiesFieldValues(curr)) {
         curr = step(curr, this.searchUnit)
       }
       TimeSpan.truncate(curr, this.minUnit)
+    }
+  
+    private def satisfiesFieldValues(dateTime: ZonedDateTime): Boolean = {
+      // must match all field values
+      if (this.fields.exists { case (field, value) => dateTime.get(field) != value }) {
+        false
+      }
+      // must still match all field values after truncation
+      else {
+        val truncatedDateTime = TimeSpan.truncate(dateTime, this.minUnit)
+        fields.forall { case (field, value) => truncatedDateTime.get(field) == value }
+      }
     }
   }
   

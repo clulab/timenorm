@@ -157,6 +157,12 @@ class TemporalParseTest extends FunSuite {
     val mar28 = ZonedDateTime.of(LocalDateTime.of(2000, 3, 28, 0, 0), ZoneId.of("Z"))
     val mar26ni = FindEarlier(Map(DAY_OF_WEEK -> 7, NIGHT_OF_DAY -> 1)).toTimeSpan(mar28)
     assert(mar26ni.timeMLValueOption === Some("2000-03-26TNI"))
+    
+    // this previously failed, accepting as Wednesday night the night that starts on Tuesday
+    // (the problem was not checking that fields still match after truncation)
+    val feb16 = ZonedDateTime.of(LocalDateTime.of(2000, 2, 16, 0, 0), ZoneId.of("Z"))
+    val feb16ni = FindCurrentOrEarlier(Map(DAY_OF_WEEK -> 3, NIGHT_OF_DAY -> 1)).toTimeSpan(feb16)
+    assert(feb16ni.timeMLValueOption === Some("2000-02-09TNI"))
   }
 
   test("resolves complex time spans") {
