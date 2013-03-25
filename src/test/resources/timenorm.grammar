@@ -163,6 +163,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
 
+[FieldValue:Year] ||| [Int:50-99] ||| YEAR [Int:50-99] ||| 1.0
 [FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
 
 [FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
