@@ -12,9 +12,19 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
   private final val wordBoundary = "\\b|(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
 
   def parseAll(sourceText: String): Seq[TemporalParse] = {
-    val tokensWithWhitespace = this.wordBoundary.split(sourceText.toLowerCase())
-    val tokens = tokensWithWhitespace.map(_.trim).filter(!_.matches("\\s*"))
-    this.parser.parseAll(tokens).toSeq.map(TemporalParse)
+    val tokens = for (untrimmedToken <- this.wordBoundary.split(sourceText.toLowerCase())) yield {
+      val token = untrimmedToken.trim
+      if (token.isEmpty) {
+        Seq.empty[String]
+      } else if (token.matches("\\d{8}")) {
+        // special case for concatenated YYYYMMDD
+        Seq(token.substring(0, 4), "-", token.substring(4, 6), "-", token.substring(6, 8))
+      } else {
+        Seq(token)
+      }
+    }
+    val parses = this.parser.parseAll(tokens.flatten)
+    parses.toSeq.map(TemporalParse)
   }
   
   def normalize(parse: TemporalParse, anchor: ZonedDateTime): Either[Period, TimeSpan] = {
