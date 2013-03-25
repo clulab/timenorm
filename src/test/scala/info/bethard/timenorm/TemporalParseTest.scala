@@ -80,6 +80,9 @@ class TemporalParseTest extends FunSuite {
       FindAbsolute(Map(YEAR -> 2030)),
       "2030-01-01T00:00", "2031-01-01T00:00", "P1Y", "2030")
     assertTimeSpan(
+      FindCurrentOrEarlier(Map(YEAR_OF_CENTURY -> 76, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
+      "1976-09-21T00:00", "1976-09-22T00:00", "P1D", "1976-09-21")
+    assertTimeSpan(
       FindEarlier(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)),
       "2012-10-15T00:00", "2012-10-16T00:00", "P1D", "2012-10-15")
     assertTimeSpan(

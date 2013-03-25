@@ -163,6 +163,12 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
 
+[FieldValue:PartialYear] ||| [Int:0-99] ||| YEAR_OF_CENTURY [Int:0-99] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:MonthOfYear] / [FieldValue:DayOfMonth] / [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialYear] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+
 [FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
 
 [FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
