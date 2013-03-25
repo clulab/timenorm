@@ -143,34 +143,12 @@ object TimeMLProcessor {
     // parse TIMEX3 elements from each TimeML file
     val results = for (path <- args; file <- this.allFiles(new File(path))) yield {
       printf("=== %s ===\n", file)
-      val root = XML.fromSource(Source.fromFile(file, "US-ASCII"))
+      val doc = new TimeMLDocument(file)
 
-      // map times by their IDs (for looking up anchor times)
-      val timeElems = root \\ "TIMEX3"
-      val idToTimeElem = timeElems.map(e => e.attrs("tid") -> e).toMap
+      for (timex <- doc.timeExpressions) yield {
+        printf("%s \"%s\" %s\n", timex.value, timex.text, timex)
 
-      // find the document creation time and its value
-      val Seq(dctElem) = timeElems.filter(_.attrs.get("functionInDocument").exists(_ == "CREATION_TIME"))
-      val dctValue = dctElem.attrs("value")
-      val dctZDT = this.toZonedDateTime(dctValue)
-
-      // parse each of the TIMEX3 elements
-      for (timeElem <- timeElems) yield {
-        val timeId = timeElem.attrs("tid")
-        val timeText = (timeElem \\ text).mkString
-        val timeTokens = this.toTokens(timeText)
-        val timeValue = timeElem.attrs("value")
-        val anchorTimeOption = timeElem.attrs.get("anchorTimeID").map(idToTimeElem)
-        val anchorValueOption = anchorTimeOption.map(_.attrs("value"))
-        val anchorZDTOption = anchorValueOption.map(this.toZonedDateTime)
-        printf(
-          "%s \"%s\" anchor:%s dct:%s\n",
-          timeValue,
-          timeText,
-          anchorValueOption,
-          dctValue)
-
-        if (annotationErrors.contains((file.getName, timeId, timeText, timeValue))) {
+        if (annotationErrors.contains((file.getName, timex.id, timex.text, timex.value))) {
           println("-> Ignoring annotation error\n")
           
           // no annotation, none correct
@@ -178,7 +156,8 @@ object TimeMLProcessor {
         } else {
 
           // get all (anchor, parse, TimeML-value) parses
-          val anchors = anchorZDTOption ++ Seq(dctZDT)
+          val timeTokens = this.toTokens(timex.text)
+          val anchors = timex.anchor ++ Seq(doc.creationTime)
           val results = for (anchor <- anchors; parse <- parseAll(timeTokens).toSeq) yield {
             val (temporal, timeMLValue) = this.toTemporalAndTimeMLValue(parse, anchor)
             (anchor, parse, temporal, timeMLValue)
@@ -191,8 +170,8 @@ object TimeMLProcessor {
 
           // check if the actual value of the TIMEX3 was present in one of the parsed values
           val parsedValuesSet = results.map(_._4).toSet
-          if (!parsedValuesSet.contains(timeValue)) {
-            throw new RuntimeException("Expected %s, found %s".format(timeValue, parsedValuesSet))
+          if (!parsedValuesSet.contains(timex.value)) {
+            throw new RuntimeException("Expected %s, found %s".format(timex.value, parsedValuesSet))
           }
           
           // pick a single TimeML value to be evaluated
@@ -205,7 +184,7 @@ object TimeMLProcessor {
           // one annotation, correct or not
           println(parsedValue)
           println
-          (1, if (parsedValue == timeValue) 1 else 0)
+          (1, if (parsedValue == timex.value) 1 else 0)
         }
       }
     }
@@ -234,16 +213,6 @@ object TimeMLProcessor {
     } else {
       Iterator(fileOrDir)
     }
-  }
-
-  def toZonedDateTime(value: String): ZonedDateTime = {
-    val anchorLDT =
-      try {
-        LocalDateTime.parse(value)
-      } catch {
-        case e: DateTimeParseException => LocalDate.parse(value).atTime(0, 0)
-      }
-    anchorLDT.atZone(ZoneId.of("UTC"))
   }
 
   def toTokens(sourceText: String): Array[String] = {
