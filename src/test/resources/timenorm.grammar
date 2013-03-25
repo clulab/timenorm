@@ -212,7 +212,7 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| that [Unit] ||| PRESENT [Unit] ||| 1.0
 [TimeSpan:FindEnclosing] ||| [Unit] of [TimeSpan] ||| [TimeSpan] [Unit] ||| 1.0
-[TimeSpan:FindEnclosing] ||| [TimeSpan] [Unit] ||| [TimeSpan] [Unit] ||| 1.0
+[TimeSpan:FindEnclosing] ||| [TimeSpan] [Unit:Singular] ||| [TimeSpan] [Unit:Singular] ||| 1.0
 [TimeSpan:FindEnclosing] ||| [FieldValue:Year] s ||| ( TimeSpan:FindAbsolute [FieldValue:Year] ) DECADES ||| 1.0
 [TimeSpan:FindEnclosing] ||| last week ||| PRESENT WEEKS ||| 1.0
 
