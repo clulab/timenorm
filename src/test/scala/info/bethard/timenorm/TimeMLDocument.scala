@@ -11,14 +11,19 @@ import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeParseException
 
 object TimeMLDocument {
-  def toZonedDateTime(value: String): ZonedDateTime = {
-    val anchorLDT =
+  def toZonedDateTimeOption(value: String): Option[ZonedDateTime] = {
+    val dateTimeOption =
       try {
-        LocalDateTime.parse(value)
+        Some(LocalDateTime.parse(value))
       } catch {
-        case e: DateTimeParseException => LocalDate.parse(value).atTime(0, 0)
+        case e: DateTimeParseException =>
+          try {
+            Some(LocalDate.parse(value).atTime(0, 0))
+          } catch {
+            case e: DateTimeParseException => None
+          }
       }
-    anchorLDT.atZone(ZoneId.of("UTC"))
+    dateTimeOption.map(_.atZone(ZoneId.of("UTC")))
   }
 }
 
@@ -35,7 +40,7 @@ class TimeMLDocument(val file: File) {
   private val Seq(creationTimeElem) = timeElems.filter(_.attrs.get("functionInDocument").exists(_ == "CREATION_TIME"))
 
   // provide the parsed document creation time
-  val creationTime: ZonedDateTime = toZonedDateTime(creationTimeElem.attrs("value"))
+  val creationTime: ZonedDateTime = toZonedDateTimeOption(creationTimeElem.attrs("value")).get
 
   // provide the parsed time expressions
   val timeExpressions: Seq[TimeExpression] = for (timeElem <- timeElems) yield {
@@ -43,7 +48,7 @@ class TimeMLDocument(val file: File) {
     val coveredText = (timeElem \\ text).mkString
     val value = timeElem.attrs("value")
     val anchorTimeOption = timeElem.attrs.get("anchorTimeID").map(idToTimeElem)
-    val anchorOption = anchorTimeOption.map(_.attrs("value")).map(toZonedDateTime)
+    val anchorOption = anchorTimeOption.map(_.attrs("value")).map(toZonedDateTimeOption).flatten
     TimeExpression(id, coveredText, value, anchorOption)
   }
 }
