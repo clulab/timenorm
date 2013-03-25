@@ -133,12 +133,7 @@ object TimeMLProcessor {
     ("XIE19990313.0229.tml", "t4", "this century,", "P100Y"))
 
   def main(args: Array[String]): Unit = {
-    // load the grammar and create the parser
-    val grammarURL = this.getClass.getResource("/timenorm.grammar")
-    val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
-    val grammar = SynchronousGrammar.fromString(grammarText)
-    val parser = new SynchronousParser(grammar)
-    val parseAll = (sourceTokens: Array[String]) => parser.parseAll(sourceTokens).map(TemporalParse)
+    val normalizer = new TimeNormalizer
 
     // parse TIMEX3 elements from each TimeML file
     val results = for (path <- args; file <- this.allFiles(new File(path))) yield {
@@ -150,61 +145,42 @@ object TimeMLProcessor {
 
         if (annotationErrors.contains((file.getName, timex.id, timex.text, timex.value))) {
           println("-> Ignoring annotation error\n")
-          
+
           // no annotation, none correct
           (0, 0)
         } else {
 
-          // get all (anchor, parse, TimeML-value) parses
-          val timeTokens = this.toTokens(timex.text)
-          val anchors = timex.anchor ++ Seq(doc.creationTime)
-          val results = for (anchor <- anchors; parse <- parseAll(timeTokens).toSeq) yield {
-            val (temporal, timeMLValue) = this.toTemporalAndTimeMLValue(parse, anchor)
-            (anchor, parse, temporal, timeMLValue)
-          }
-
-          // print out results
-          for ((anchor, parse, temporal, timeMLValue) <- results) {
-            printf("%s %s %s\n", timeMLValue, parse, temporal)
+          // get all possible normalizations based on all possible parses and anchors 
+          val possibleAnchors = timex.anchor ++ Seq(doc.creationTime)
+          val possibleParses = normalizer.parseAll(timex.text).toSeq
+          val possibleValues = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
+            val temporal = normalizer.normalize(parse, anchor)
+            val value = this.toTimeMLValue(temporal)
+            printf("%s %s %s\n", value, parse, temporal)
+            value
           }
 
           // check if the actual value of the TIMEX3 was present in one of the parsed values
-          val parsedValuesSet = results.map(_._4).toSet
-          if (!parsedValuesSet.contains(timex.value)) {
-            throw new RuntimeException("Expected %s, found %s".format(timex.value, parsedValuesSet))
+          if (!possibleValues.toSet.contains(timex.value)) {
+            throw new RuntimeException("Expected %s, found %s".format(timex.value, possibleValues))
           }
-          
-          // pick a single TimeML value to be evaluated
-          val parsedValue = results.filter(_._1 eq anchors.head).toList match {
-            case Nil => throw new RuntimeException
-            case (_, _, _, parsedValue) :: Nil => parsedValue
-            case tail => tail.map(_._4).min // assuming only dates; choose earliest value
-          }
-          
+
+          // evaluate the single-choice normalization
+          val temporal = normalizer.normalize(possibleParses, possibleAnchors.head)
+          val value = temporal.map(this.toTimeMLValue).getOrElse("")
+
           // one annotation, correct or not
-          println(parsedValue)
+          println(value)
           println
-          (1, if (parsedValue == timex.value) 1 else 0)
+          (1, if (value == timex.value) 1 else 0)
         }
       }
     }
-    
+
     val totalAndCorrectCounts = results.flatten
     val total = totalAndCorrectCounts.map(_._1).sum
     val correct = totalAndCorrectCounts.map(_._2).sum
     printf("accuracy=%.3f total=%d correct=%d\n", correct.toDouble / total.toDouble, total, correct)
-  }
-
-  def toTemporalAndTimeMLValue(parse: TemporalParse, anchor: ZonedDateTime): (Any, String) = parse match {
-    case parse: PeriodParse => {
-      val period = parse.toPeriod
-      (period, period.timeMLValue)
-    }
-    case parse: TimeSpanParse => {
-      val timeSpan = parse.toTimeSpan(anchor)
-      (timeSpan, timeSpan.timeMLValueOption.getOrElse(timeSpan.period.timeMLValue))
-    }
-    case _ => throw new RuntimeException(parse.toString)
   }
 
   def allFiles(fileOrDir: File): Iterator[File] = {
@@ -215,9 +191,10 @@ object TimeMLProcessor {
     }
   }
 
-  def toTokens(sourceText: String): Array[String] = {
-    this.wordBoundary.split(sourceText.toLowerCase()).map(_.trim).filter(!_.matches("\\s*"))
+  def toTimeMLValue(temporal: Either[Period, TimeSpan]): String = {
+    temporal match {
+      case Left(period) => period.timeMLValue
+      case Right(timeSpan) => timeSpan.timeMLValueOption.getOrElse(timeSpan.period.timeMLValue)
+    }
   }
-
-  private final val wordBoundary = "\\b|(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
 }
