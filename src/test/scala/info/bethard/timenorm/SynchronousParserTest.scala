@@ -102,6 +102,7 @@ class ParserTest extends FunSuite {
     [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindCurrentOrEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindCurrentOrLater] ||| tonight ||| ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
     [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
     """)
 
@@ -205,6 +206,8 @@ class ParserTest extends FunSuite {
     assert(this.parseAll("a", "decade", "ago").toSet === Set(
       MoveEarlier(WithModifier(Present, Modifier.Approx), SimplePeriod(1, DECADES)),
       MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES))))
+    
+    assert(this.parse("tonight") === FindCurrentOrLater(Map(NIGHT_OF_DAY -> 1)))
   }
 
   test("parses with nil") {

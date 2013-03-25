@@ -137,7 +137,7 @@ class TemporalParseTest extends FunSuite {
       FindEarlier(Map(EVENING_OF_DAY -> 1)),
       "2012-12-11T17:00", "2012-12-12T00:00", "P1EV", "2012-12-11TEV")
     assertTimeSpan(
-      FindLater(Map(NIGHT_OF_DAY -> 1)),
+      FindCurrentOrLater(Map(NIGHT_OF_DAY -> 1)),
       "2012-12-12T21:00", "2012-12-13T04:00", "P1NI", "2012-12-12TNI")
     assertTimeSpan(
       FindEarlier(Map(NIGHT_OF_DAY -> 1)),

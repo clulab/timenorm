@@ -217,6 +217,8 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
       FindLater(FieldValueParse(tree).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", tree :: Nil, _) =>
       FindEarlier(FieldValueParse(tree).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrLater]", tree :: Nil, _) =>
+      FindCurrentOrLater(FieldValueParse(tree).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrEarlier]", tree :: Nil, _) =>
       FindCurrentOrEarlier(FieldValueParse(tree).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: unit :: Nil, _) =>
@@ -331,6 +333,9 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
 
   case class FindLater(fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(fields, _.plus(1, _), _.plus(1, _))
+
+  case class FindCurrentOrLater(fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(fields, _.plus(0, _), _.plus(1, _))
 
   case class FindEarlier(fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(fields, _.minus(1, _), _.minus(1, _))
