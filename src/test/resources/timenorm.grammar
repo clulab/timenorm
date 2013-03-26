@@ -222,8 +222,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan]
 [Period:WithModifier] ||| no more than [Period] ||| [Period] EQUAL_OR_LESS ||| 1.0
 [Period:WithModifier] ||| up to [Period] ||| [Period] EQUAL_OR_LESS ||| 1.0
 
-[Period:WithModifier] ||| several [Unit:Plural] ||| ( Period:Simple 4 [Unit:Plural] ) APPROX ||| 1.0
-
 [PeriodSet:WithQuantifier] ||| hourly ||| ( Period:Simple 1 HOURS ) EVERY ||| 1.0
 [PeriodSet:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
 [PeriodSet:WithQuantifier] ||| weekly ||| ( Period:Simple 1 WEEKS ) EVERY ||| 1.0
@@ -233,6 +231,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan]
 [PeriodSet:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
 
 [TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
+[TimeSpan:Simple] ||| several [Unit:Plural] ago ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| current ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| currently ||| PRESENT ||| 1.0
