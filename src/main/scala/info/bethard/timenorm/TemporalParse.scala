@@ -291,20 +291,34 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   }
 
   abstract class FieldSearchingTimeSpanParse(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
-    // search by base units for partial ranges (e.g. search by hours, not "mornings")
-    val searchUnit = fields.keySet.map(_.getBaseUnit).map(_  match {
-      case partialRange: PartialRange => partialRange.field.getBaseUnit
-      case unit => unit
-    }).minBy(_.getDuration)
-    
+
     def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
+      val searchField = this.fields.keySet.minBy(_.getBaseUnit.getDuration)
+
+      // search by base units for partial ranges (e.g. search by hours, not "mornings")
+      var searchUnit = searchField.getBaseUnit match {
+        case partialRange: PartialRange => partialRange.field.getBaseUnit
+        case unit => unit
+      }
+
+      // if the field's range is fixed and the range unit is not estimated,
+      // then we can move by range units once we satisfy the base unit
+      var canSwitchToRange = searchField.range().isFixed() && !searchField.getRangeUnit().isDurationEstimated()
+
+      // one step at a time, search for a time that satisfies the field requirements
       var curr = dateTime
       while (!this.satisfiesFieldValues(curr)) {
-        curr = step(curr, this.searchUnit)
+        curr = step(curr, searchUnit)
+
+        // if we've satisfied the search field's base unit, start moving by range units
+        if (canSwitchToRange && curr.get(searchField) == this.fields(searchField)) {
+          searchUnit = searchField.getRangeUnit()
+          canSwitchToRange = false
+        }
       }
       TimeSpan.truncate(curr, this.minUnit)
     }
-  
+    
     private def satisfiesFieldValues(dateTime: ZonedDateTime): Boolean = {
       // must match all field values
       if (this.fields.exists { case (field, value) => dateTime.get(field) != value }) {
