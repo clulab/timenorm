@@ -48,12 +48,14 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     temporals match {
       case Seq() => None
       case Seq(temporal) => Some(temporal)
-      case _ => Some(temporals.minBy{
+      case _ => Some(temporals.minBy {
         case timeSpan: TimeSpan => timeSpan.timeMLValueOption match {
           case Some(timeMLValue) => timeMLValue
-          case None => throw new UnsupportedOperationException
+          case None => throw new UnsupportedOperationException(
+            "Don't know how to get value of time span " + timeSpan)
         }
-        case _ => throw new UnsupportedOperationException
+        case _ => throw new UnsupportedOperationException(
+          "Don't know how to select minimum of:\n%s".format(temporals.mkString("\n")))
       })
     }
   }
