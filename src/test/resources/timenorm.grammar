@@ -22,6 +22,8 @@ ROOTS [Period] [TimeSpan]
 [Nil] ||| coming ||| ||| 1.0
 [Nil] ||| ' s ||| ||| 1.0
 [Nil] ||| recent ||| ||| 1.0
+[Nil] ||| crucial ||| ||| 1.0
+[Nil] ||| fairly ||| ||| 1.0
 
 [Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0
@@ -50,9 +52,11 @@ ROOTS [Period] [TimeSpan]
 [Int] ||| seventy ||| 70 ||| 1.0
 [Int] ||| eighty ||| 80 ||| 1.0
 [Int] ||| ninety ||| 90 ||| 1.0
+[Int] ||| hundred ||| 100 ||| 1.0
 
 [Int] ||| twenty four ||| 24 ||| 1.0
 
+[Int] ||| couple ||| 2 ||| 1.0
 [Int] ||| couple of ||| 2 ||| 1.0
 
 [Unit:Singular] ||| second ||| SECONDS ||| 1.0
@@ -179,6 +183,7 @@ ROOTS [Period] [TimeSpan]
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] / [FieldValue:DayOfMonth] / [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:PartialYear] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] - [FieldValue:PartialYear] [FieldValue:Time] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Time] ||| 1.0
 
 [FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
 
@@ -199,18 +204,26 @@ ROOTS [Period] [TimeSpan]
 [Period:Simple] ||| [Int] - [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] more [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| some time ||| ( Unit MONTHS ) ||| 1.0
+[Period:Unspecified] ||| lengthy period ||| ( Unit YEARS ) ||| 1.0
 [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
 [Period:Fractional] ||| [Unit:Singular] and a half ||| ( Int 1 ) ( Int 1 ) ( Int 2 ) [Unit:Singular] ||| 1.0
 [Period:Fractional] ||| [Int] and a half [Unit] ||| [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
 
 [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
 
+[Period:WithModifier] ||| almost [Period] ||| [Period] APPROX ||| 1.0
+[Period:WithModifier] ||| about [Period] ||| [Period] APPROX ||| 1.0
+[Period:WithModifier] ||| around [Period] ||| [Period] APPROX ||| 1.0
 [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
 [Period:WithModifier] ||| nearly [Period] ||| [Period] LESS_THAN ||| 1.0
 [Period:WithModifier] ||| more than [Period] ||| [Period] MORE_THAN ||| 1.0
 [Period:WithModifier] ||| over [Period] ||| [Period] MORE_THAN ||| 1.0
 [Period:WithModifier] ||| at least [Period] ||| [Period] EQUAL_OR_MORE ||| 1.0
 [Period:WithModifier] ||| no more than [Period] ||| [Period] EQUAL_OR_LESS ||| 1.0
+[Period:WithModifier] ||| up to [Period] ||| [Period] EQUAL_OR_LESS ||| 1.0
+
+[Period:WithModifier] ||| several [Unit:Plural] ||| ( Period:Simple 4 [Unit:Plural] ) APPROX ||| 1.0
 
 [Period:WithQuantifier] ||| hourly ||| ( Period:Simple 1 HOURS ) EVERY ||| 1.0
 [Period:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
@@ -224,6 +237,8 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| current ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| currently ||| PRESENT ||| 1.0
+[TimeSpan:Simple] ||| this moment ||| PRESENT ||| 1.0
+[TimeSpan:Simple] ||| this [Nil] moment ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| future ||| FUTURE ||| 1.0
 
 [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
@@ -234,6 +249,11 @@ ROOTS [Period] [TimeSpan]
 [TimeSpan:FindEnclosing] ||| [TimeSpan] [Unit:Singular] ||| [TimeSpan] [Unit:Singular] ||| 1.0
 [TimeSpan:FindEnclosing] ||| [FieldValue:Year] s ||| ( TimeSpan:FindAbsolute [FieldValue:Year] ) DECADES ||| 1.0
 [TimeSpan:FindEnclosing] ||| last week ||| PRESENT WEEKS ||| 1.0
+
+[TimeSpan:EndAtStartOf] ||| [Int] st century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
+[TimeSpan:EndAtStartOf] ||| [Int] nd century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
+[TimeSpan:EndAtStartOf] ||| [Int] rd century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
+[TimeSpan:EndAtStartOf] ||| [Int] th century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
 
 [TimeSpan:FindCurrentOrEarlier] ||| this morning ||| ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0 
 [TimeSpan:FindCurrentOrLater] ||| this evening ||| ( FieldValue EVENING_OF_DAY 1 ) ||| 1.0 
@@ -248,6 +268,7 @@ ROOTS [Period] [TimeSpan]
 
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| last [Period] ||| PRESENT [Period] ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| past [Period] ||| PRESENT [Period] ||| 1.0
+[TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] earlier ||| PRESENT [Period] ||| 1.0
 [TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] before [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
 
 [TimeSpan:MoveEarlier+FindEnclosing] ||| [Period] ago ||| PRESENT [Period] ||| 1.0
@@ -257,6 +278,17 @@ ROOTS [Period] [TimeSpan]
 
 [TimeSpan:FindCurrentOrEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
 [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
+
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| first [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| second [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| third [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| fourth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| fifth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| sixth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| seventh [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| eighth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| ninth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf+FindEnclosing] ||| tenth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
 
 [TimeSpan:WithModifier] ||| start of [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
