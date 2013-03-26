@@ -149,6 +149,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:SeasonOfYear] ||| autumn ||| FALL_OF_YEAR 1 ||| 1.0
 [FieldValue:SeasonOfYear] ||| winter ||| WINTER_OF_YEAR 1 ||| 1.0
 
+[FieldValue:Time] ||| noon ||| ( FieldValue:HourOfDay HOUR_OF_DAY 12 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
 [FieldValue:Time] ||| midday ||| ( FieldValue:HourOfDay HOUR_OF_DAY 12 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
 [FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] : [FieldValue:SecondOfMinute] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] [FieldValue:SecondOfMinute] ||| 1.0
