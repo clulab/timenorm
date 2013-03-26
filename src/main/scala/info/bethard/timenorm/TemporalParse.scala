@@ -91,6 +91,8 @@ object TemporalParse extends CanFail("[Temporal]") with (Tree => TemporalParse) 
         PeriodSetParse(tree)
       case tree @ Tree.NonTerminal("[TimeSpan]", _, _, _) =>
         TimeSpanParse(tree)
+      case tree @ Tree.NonTerminal("[TimeSpanSet]", _, _, _) =>
+        TimeSpanSetParse(tree)
       case _ => fail(tree)
     }
   }
@@ -474,5 +476,24 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     def toTimeSpan(anchor: ZonedDateTime) = {
       timeSpan.toTimeSpan(anchor).copy(modifier = modifier)
     }
+  }
+}
+
+sealed abstract class TimeSpanSetParse extends TemporalParse {
+  def toTimeSpanSet: TimeSpanSet
+}
+
+object TimeSpanSetParse extends CanFail("[TimeSpanSet]") {
+
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): TimeSpanSetParse = tree match {
+    case Tree.NonTerminal(_, "[TimeSpanSet]", tree :: Nil, _) =>
+      TimeSpanSetParse(tree)
+    case Tree.NonTerminal(_, "[TimeSpanSet:Simple]", tree :: Nil, _) =>
+      Simple(FieldValueParse(tree).fieldValues)
+    case _ => fail(tree)
+  }
+  
+  case class Simple(fields: Map[TemporalField, Int]) extends TimeSpanSetParse {
+    def toTimeSpanSet = TimeSpanSet(fields)
   }
 }

@@ -171,7 +171,7 @@ object TimeSpan {
     }
   }
 
-  private val fieldFormats = Map[TemporalField, Int => String](
+  private[timenorm] val fieldFormats = Map[TemporalField, Int => String](
     (CENTURY, "%02d".format(_)),
     (DECADE, "%03d".format(_)),
     (YEAR, "%04d".format(_)),
@@ -182,6 +182,7 @@ object TimeSpan {
     (MONTH_OF_YEAR, "-%02d".format(_)),
     (DAY_OF_MONTH, "-%02d".format(_)),
     (ALIGNED_WEEK_OF_YEAR, "-W%02d".format(_)),
+    (DAY_OF_WEEK, "-%d".format(_)),
     (WEEKEND_OF_WEEK, _ match { case 1 => "-WE" }),
     (MORNING_OF_DAY, _ match { case 1 => "TMO" }),
     (AFTERNOON_OF_DAY, _ match { case 1 => "TAF" }),
@@ -230,6 +231,62 @@ object TimeSpan {
     HOURS -> Seq(MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     MINUTES -> Seq(SECOND_OF_MINUTE),
     SECONDS -> Seq())
+}
+
+case class TimeSpanSet(fields: Map[TemporalField, Int]) extends Temporal {
+  val timeMLValue: String = {
+    val (timeFields, dayFields) = fields.keySet.partition(_.getBaseUnit().getDuration().isLessThan(DAYS.getDuration()))
+    val minDayField =
+      if (dayFields.isEmpty) DAY_OF_MONTH
+      else dayFields.minBy(_.getBaseUnit().getDuration())
+    val dayFieldsToDisplay = TimeSpanSet.fieldToDayFieldsToDisplay(minDayField)
+    val timeFieldsToDisplay =
+      if (timeFields.isEmpty) Seq.empty[TemporalField]
+      else TimeSpanSet.fieldToTimeFieldsToDisplay(timeFields.minBy(_.getBaseUnit().getDuration()))
+    val fieldsToDisplay = dayFieldsToDisplay ++ timeFieldsToDisplay
+    val parts =
+      for (field <- fieldsToDisplay) yield fields.get(field) match {
+        case Some(value) => TimeSpan.fieldFormats(field)(value)
+        case None => TimeSpanSet.unspecifiedFieldFormats(field)
+      }
+    parts.mkString
+  }
+}
+object TimeSpanSet {
+  
+  private val fieldToDayFieldsToDisplay = Map[TemporalField, Seq[TemporalField]](
+    CENTURY -> Seq(CENTURY),
+    DECADE -> Seq(DECADE),
+    YEAR -> Seq(YEAR),
+    SPRING_OF_YEAR -> Seq(YEAR, SPRING_OF_YEAR),
+    SUMMER_OF_YEAR -> Seq(YEAR, SUMMER_OF_YEAR),
+    FALL_OF_YEAR -> Seq(YEAR, FALL_OF_YEAR),
+    WINTER_OF_YEAR -> Seq(YEAR, WINTER_OF_YEAR),
+    MONTH_OF_YEAR -> Seq(YEAR, MONTH_OF_YEAR),
+    ALIGNED_WEEK_OF_YEAR -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
+    WEEKEND_OF_WEEK -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, WEEKEND_OF_WEEK),
+    DAY_OF_WEEK -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, DAY_OF_WEEK),
+    DAY_OF_MONTH -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH))
+    
+  private val fieldToTimeFieldsToDisplay = Map[TemporalField, Seq[TemporalField]](
+    MORNING_OF_DAY -> Seq(MORNING_OF_DAY),
+    AFTERNOON_OF_DAY -> Seq(AFTERNOON_OF_DAY),
+    EVENING_OF_DAY -> Seq(EVENING_OF_DAY),
+    NIGHT_OF_DAY -> Seq(NIGHT_OF_DAY),
+    HOUR_OF_DAY -> Seq(HOUR_OF_DAY),
+    MINUTE_OF_HOUR -> Seq(HOUR_OF_DAY, MINUTE_OF_HOUR),
+    SECOND_OF_MINUTE -> Seq(HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE))
+
+  private val unspecifiedFieldFormats = Map[TemporalField, String](
+    (CENTURY, "XX"),
+    (DECADE, "XXX"),
+    (YEAR, "XXXX"),
+    (MONTH_OF_YEAR, "-XX"),
+    (DAY_OF_MONTH, "-XX"),
+    (ALIGNED_WEEK_OF_YEAR, "-WXX"),
+    (HOUR_OF_DAY, "TXX"),
+    (MINUTE_OF_HOUR, ":XX"),
+    (SECOND_OF_MINUTE, ":XX"))
 }
 
 abstract class Modifier(val timeMLValueOption: Option[String]) {

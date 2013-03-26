@@ -241,7 +241,7 @@ class TemporalParseTest extends FunSuite {
       StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, DAYS)),
       "2012-01-01T00:00", "2012-01-02T00:00", "P1D", "2012-01-01")
   }
-
+  
   private def assertTimeSpan(
     timeSpanParse: TimeSpanParse,
     start: String,
@@ -256,4 +256,22 @@ class TemporalParseTest extends FunSuite {
     assert(result.timeMLValueOption === Option(timeMLValue))
     assert(result.modifier.timeMLValueOption === Option(timeMLModifier))
   }
+
+  test("resolves time span sets") {
+    import TimeSpanSetParse._
+    assertTimeSpanSet(Simple(Map(MONTH_OF_YEAR -> 3)), "XXXX-03")
+    assertTimeSpanSet(Simple(Map(YEAR -> 1998, DAY_OF_MONTH -> 22)), "1998-XX-22")
+    assertTimeSpanSet(Simple(Map(DAY_OF_WEEK -> 1)), "XXXX-WXX-1")
+    assertTimeSpanSet(Simple(Map(DAY_OF_WEEK -> 2, NIGHT_OF_DAY -> 1)), "XXXX-WXX-2TNI")
+    assertTimeSpanSet(Simple(Map(MINUTE_OF_HOUR -> 15)), "XXXX-XX-XXTXX:15")
+    assertTimeSpanSet(Simple(Map(ALIGNED_WEEK_OF_YEAR -> 12, MINUTE_OF_HOUR -> 15)), "XXXX-W12TXX:15")
+  }
+
+  private def assertTimeSpanSet(
+    timeSpanSetParse: TimeSpanSetParse,
+    timeMLValue: String) = {
+    val result = timeSpanSetParse.toTimeSpanSet
+    assert(result.timeMLValue === timeMLValue)
+  }
+
 }

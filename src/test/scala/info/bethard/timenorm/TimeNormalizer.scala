@@ -40,6 +40,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
       case parse: PeriodParse => parse.toPeriod
       case parse: PeriodSetParse => parse.toPeriodSet
       case parse: TimeSpanParse => parse.toTimeSpan(anchor)
+      case parse: TimeSpanSetParse => parse.toTimeSpanSet
     }
   }
 

@@ -1,4 +1,4 @@
-ROOTS [Period] [PeriodSet] [TimeSpan]
+ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [Nil] ||| a ||| ||| 1.0
 [Nil] ||| an ||| ||| 1.0
@@ -302,3 +302,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan]
 [TimeSpan:WithModifier] ||| around [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| post [TimeSpan] ||| [TimeSpan] AFTER ||| 1.0
 [TimeSpan:WithModifier] ||| post - [TimeSpan] ||| [TimeSpan] AFTER ||| 1.0
+
+[TimeSpanSet:Simple] ||| [FieldValue:Partial] mornings ||| ( FieldValue [FieldValue:Partial] ( FieldValue MORNING_OF_DAY 1 ) ) ||| 1.0
+[TimeSpanSet:Simple] ||| [FieldValue:Partial] afternoons ||| ( FieldValue [FieldValue:Partial] ( FieldValue AFTERNOON_OF_DAY 1 ) ) ||| 1.0
+[TimeSpanSet:Simple] ||| [FieldValue:Partial] evenings ||| ( FieldValue [FieldValue:Partial] ( FieldValue EVENING_OF_DAY 1 ) ) ||| 1.0
+[TimeSpanSet:Simple] ||| [FieldValue:Partial] nights ||| ( FieldValue [FieldValue:Partial] ( FieldValue NIGHT_OF_DAY 1 ) ) ||| 1.0
+
+[TimeSpanSet:Simple] ||| each [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0

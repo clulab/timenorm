@@ -10,7 +10,7 @@ import org.threeten.bp.temporal.ChronoField._
 @RunWith(classOf[JUnitRunner])
 class ParserTest extends FunSuite {
 
-  val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [PeriodSet] [TimeSpan]
+  val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
     [Nil] ||| a ||| ||| 1.0
     [Nil] ||| the ||| ||| 1.0
     [Nil] ||| . ||| ||| 1.0
@@ -75,6 +75,7 @@ class ParserTest extends FunSuite {
     [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
+    [FieldValue:Partial] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
     [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
     [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
     [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
@@ -106,6 +107,9 @@ class ParserTest extends FunSuite {
     [TimeSpan:FindCurrentOrEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindCurrentOrLater] ||| tonight ||| ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
     [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
+    [TimeSpanSet:Simple] ||| Mondays ||| ( FieldValue DAY_OF_WEEK 1 ) ||| 1.0
+    [TimeSpanSet:Simple] ||| [FieldValue:Partial] nights ||| ( FieldValue [FieldValue:Partial] ( FieldValue NIGHT_OF_DAY 1 ) ) ||| 1.0
+    [TimeSpanSet:Simple] ||| every [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
     """)
 
   val parser = new SynchronousParser(grammar)
@@ -216,6 +220,14 @@ class ParserTest extends FunSuite {
     assert(this.parse("tonight") === FindCurrentOrLater(Map(NIGHT_OF_DAY -> 1)))
     assert(this.parse("first", "week", "of", "2012") ===
       StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, WEEKS)))
+  }
+  
+  test("parses time span sets") {
+    import TimeSpanSetParse._
+    assert(this.parse("Mondays") === Simple(Map(DAY_OF_WEEK -> 1)))
+    assert(this.parse("Thursday", "nights") === Simple(Map(DAY_OF_WEEK -> 4, NIGHT_OF_DAY -> 1)))
+    assert(this.parse("every", "October") === Simple(Map(MONTH_OF_YEAR -> 10)))
+    
   }
 
   test("parses with nil") {
