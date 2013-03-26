@@ -133,7 +133,8 @@ object TimeMLProcessor {
     ("AP900815-0044.tml", "t210", "Monday", "1990-08-06") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t252", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t269", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
-    ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* wrong type of value and no anchor */)
+    ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* should be date, not period (and no anchor) */,
+    ("APW19980219.0476.tml", "t130", "almost two years ago", "P2Y") /* should be date, not period */)
   
   private final val knownFailures = Set(
     ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX"),
