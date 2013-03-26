@@ -237,6 +237,9 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpan(
       FindEnclosing(Present, CENTURIES),
       "2000-01-01T00:00", "2100-01-01T00:00", "P1CE", "20")
+    assertTimeSpan(
+      StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, DAYS)),
+      "2012-01-01T00:00", "2012-01-02T00:00", "P1D", "2012-01-01")
   }
 
   private def assertTimeSpan(

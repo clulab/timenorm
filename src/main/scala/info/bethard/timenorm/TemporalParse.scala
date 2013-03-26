@@ -223,6 +223,10 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
       FindCurrentOrEarlier(FieldValueParse(tree).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: unit :: Nil, _) =>
       FindEnclosing(TimeSpanParse(time), UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[TimeSpan:StartAtStartOf]", time :: period :: Nil, _) =>
+      StartAtStartOf(TimeSpanParse(time), PeriodParse(period))
+    case Tree.NonTerminal(_, "[TimeSpan:StartAtStartOf+FindEnclosing]", time :: period :: Nil, _) =>
+      StartAtStartOf(TimeSpanParse(time), PeriodParse(period)).withFindEnclosing()
     case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf]", time :: period :: Nil, _) =>
       StartAtEndOf(TimeSpanParse(time), PeriodParse(period))
     case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf+FindEnclosing]", time :: period :: Nil, _) =>
@@ -380,6 +384,16 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     protected def encloseTimeSpan() = {
       val unit = this.periodParse.toPeriod.unitAmounts.keySet.minBy(_.getDuration)
       FindEnclosing(this.timeSpanParse, unit)
+    }
+  }
+
+  case class StartAtStartOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
+  extends TimeSpanPeriodParse {
+    def withFindEnclosing() = this.copy(timeSpanParse = this.encloseTimeSpan())
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = timeSpanParse.toTimeSpan(anchor)
+      val period = periodParse.toPeriod
+      TimeSpan.startingAt(timeSpan.start, period, timeSpan.modifier & period.modifier)
     }
   }
 

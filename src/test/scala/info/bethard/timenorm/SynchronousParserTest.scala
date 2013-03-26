@@ -69,6 +69,7 @@ class ParserTest extends FunSuite {
     [FieldValue:Date] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
     [FieldValue:Date] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
     [FieldValue:Date] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+    [FieldValue:Absolute] ||| [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
     [FieldValue:Absolute] ||| [FieldValue:Date] ||| [FieldValue:Date] ||| 1.0
     [FieldValue:Absolute] ||| [FieldValue:Date] [FieldValue:Time] ||| [FieldValue:Date] [FieldValue:Time] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
@@ -88,6 +89,7 @@ class ParserTest extends FunSuite {
     [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
     [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
     [TimeSpan:FindAbsolute] ||| [FieldValue:Absolute] ||| [FieldValue:Absolute] ||| 1.0
+    [TimeSpan:StartAtStartOf] ||| first [Unit] of [TimeSpan] ||| [TimeSpan] ( Period:Simple 1 [Unit] ) ||| 1.0
     [TimeSpan:StartAtEndOf+FindEnclosing] ||| tomorrow ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
     [TimeSpan:StartAtEndOf+FindEnclosing] ||| next [Period] ||| PRESENT [Period] ||| 1.0
     [TimeSpan:StartAtEndOf+FindEnclosing] ||| [Period] from [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
@@ -208,6 +210,8 @@ class ParserTest extends FunSuite {
       MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES))))
     
     assert(this.parse("tonight") === FindCurrentOrLater(Map(NIGHT_OF_DAY -> 1)))
+    assert(this.parse("first", "week", "of", "2012") ===
+      StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, WEEKS)))
   }
 
   test("parses with nil") {
