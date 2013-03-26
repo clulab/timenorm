@@ -12,6 +12,7 @@ import scala.collection.mutable
 import com.codecommit.antixml.XML
 import scala.io.Source
 import com.codecommit.antixml.text
+import org.threeten.bp.DateTimeException
 
 /**
  * This is not actually a test, but it can be run over TimeML files to see what can and cannot
@@ -135,51 +136,69 @@ object TimeMLProcessor {
   def main(args: Array[String]): Unit = {
     val normalizer = new TimeNormalizer
 
-    // parse TIMEX3 elements from each TimeML file
-    val results = for (path <- args; file <- this.allFiles(new File(path))) yield {
-      printf("=== %s ===\n", file)
-      val doc = new TimeMLDocument(file)
+    val corpusStats = for (corpusPath <- args.toSeq) yield {
+      val resultsIter: Iterator[Boolean] = for {
+        file <- this.allFiles(new File(corpusPath))
+        doc = new TimeMLDocument(file)
+        timex <- doc.timeExpressions
+      } yield {
+        val isAnnotationError = annotationErrors.contains((file.getName, timex.id, timex.text, timex.value))
 
-      for (timex <- doc.timeExpressions) yield {
-        printf("%s \"%s\" %s\n", timex.value, timex.text, timex)
-
-        if (annotationErrors.contains((file.getName, timex.id, timex.text, timex.value))) {
-          println("-> Ignoring annotation error\n")
-
-          // no annotation, none correct
-          (0, 0)
-        } else {
-
-          // get all possible normalizations based on all possible parses and anchors 
-          val possibleAnchors = timex.anchor ++ Seq(doc.creationTime)
-          val possibleParses = normalizer.parseAll(timex.text).toSeq
-          val possibleValues = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
-            val temporal = normalizer.normalize(parse, anchor)
-            printf("%s %s %s\n", temporal.timeMLValue, parse, temporal)
-            temporal.timeMLValue
-          }
-
-          // check if the actual value of the TIMEX3 was present in one of the parsed values
-          if (!possibleValues.toSet.contains(timex.value)) {
-            throw new RuntimeException("Expected %s, found %s".format(timex.value, possibleValues))
-          }
-
-          // evaluate the single-choice normalization
-          val temporal = normalizer.normalize(possibleParses, possibleAnchors.head)
+        // pick the single best parse and evaluate it
+        val anchor = timex.anchor.getOrElse(doc.creationTime)
+        try {
+          val parses = normalizer.parseAll(timex.text).toSeq
+          val temporal = normalizer.normalize(parses, anchor)
           val value = temporal.map(_.timeMLValue).getOrElse("")
+          val isCorrect = value == timex.value
 
-          // one annotation, correct or not
-          println(value)
-          println
-          (1, if (value == timex.value) 1 else 0)
+          // if it's incorrect, log the error
+          if (!isCorrect) {
+
+            // see if any of the alternative parses had the correct value
+            val possibleAnchors = timex.anchor ++ Seq(doc.creationTime)
+            val possibleParses = normalizer.parseAll(timex.text).toSeq
+            val possibleValues = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
+              normalizer.normalize(parse, anchor).timeMLValue
+            }
+
+            // log the error
+            if (!isAnnotationError && !possibleValues.toSet.contains(timex.value)) {
+              printf("All incorrect values %s for %s from %s\n", possibleValues, timex, file)
+            } else {
+              printf("Incorrect value %s for %s from %s\n", value, timex, file)
+            }
+          }
+
+          // yield whether the prediction was correct or not
+          isCorrect
+
+        } catch {
+          // on an exception
+          case e @ (_: UnsupportedOperationException | _: DateTimeException) => {
+            if (!isAnnotationError) {
+              printf("Error parsing %s from %s\n", timex, file)
+              e.printStackTrace(System.out)
+            }
+            false
+          }
         }
       }
+
+      // calculate the total time expressions and the number of values that were correct
+      val results = resultsIter.toSeq
+      val total = results.size
+      val correct = results.count(_ == true)
+      (corpusPath, total, correct)
     }
 
-    val totalAndCorrectCounts = results.flatten
-    val total = totalAndCorrectCounts.map(_._1).sum
-    val correct = totalAndCorrectCounts.map(_._2).sum
-    printf("accuracy=%.3f total=%d correct=%d\n", correct.toDouble / total.toDouble, total, correct)
+    // print out performance on each corpus
+    for ((corpusPath, total, correct) <- corpusStats) {
+      printf("============================================================\n")
+      printf("Corpus: %s\n", corpusPath)
+      printf("Accuracy: %.3f\n", correct.toDouble / total.toDouble)
+    }
+    printf("============================================================\n")
   }
 
   def allFiles(fileOrDir: File): Iterator[File] = {
