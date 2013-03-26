@@ -1,18 +1,13 @@
 package info.bethard.timenorm
 
 import java.io.File
-import java.net.URL
-import org.threeten.bp.LocalDate
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.format.DateTimeParseException
+
 import scala.collection.JavaConverters._
-import scala.collection.mutable
-import com.codecommit.antixml.XML
-import scala.io.Source
-import com.codecommit.antixml.text
+
 import org.threeten.bp.DateTimeException
+
+import com.lexicalscope.jewel.cli.CliFactory
+import com.lexicalscope.jewel.cli.{Option => CliOption}
 
 /**
  * This is not actually a test, but it can be run over TimeML files to see what can and cannot
@@ -133,12 +128,31 @@ object TimeMLProcessor {
     ("XIE19990313.0229.tml", "t3", "day", "1999-03-12") /* "a great day" - no anchor given */ ,
     ("XIE19990313.0229.tml", "t4", "this century,", "P100Y"))
 
+  trait Options {
+    @CliOption(longName=Array("corpus-paths"))
+    def getCorpusPaths: java.util.List[File]
+    @CliOption(longName=Array("fail-on-no-correct-parse"))
+    def getFailOnNoCorrectParse: Boolean
+  }
+
   def main(args: Array[String]): Unit = {
+    val options = CliFactory.parseArguments(classOf[Options], args: _*)
+    def error(message: String, args: Any*) = {
+      println(message.format(args: _*))
+    }
+    def fatal(message: String, args: Any*) = {
+      if (options.getFailOnNoCorrectParse) {
+        throw new Exception(message.format(args: _*))
+      } else {
+        println(message.format(args: _*))
+      }
+    }
+    
     val normalizer = new TimeNormalizer
 
-    val corpusStats = for (corpusPath <- args.toSeq) yield {
+    val corpusStats = for (corpusFile <- options.getCorpusPaths.asScala) yield {
       val resultsIter: Iterator[Boolean] = for {
-        file <- this.allFiles(new File(corpusPath))
+        file <- this.allFiles(corpusFile)
         doc = new TimeMLDocument(file)
         timex <- doc.timeExpressions
       } yield {
@@ -164,9 +178,9 @@ object TimeMLProcessor {
 
             // log the error
             if (!isAnnotationError && !possibleValues.toSet.contains(timex.value)) {
-              printf("All incorrect values %s for %s from %s\n", possibleValues, timex, file)
+              fatal("All incorrect values %s for %s from %s", possibleValues, timex, file)
             } else {
-              printf("Incorrect value %s for %s from %s\n", value, timex, file)
+              error("Incorrect value %s for %s from %s", value, timex, file)
             }
           }
 
@@ -177,8 +191,7 @@ object TimeMLProcessor {
           // on an exception
           case e @ (_: UnsupportedOperationException | _: DateTimeException) => {
             if (!isAnnotationError) {
-              printf("Error parsing %s from %s\n", timex, file)
-              e.printStackTrace(System.out)
+              fatal("Error \"%s\" parsing %s from %s", e, timex, file)
             }
             false
           }
@@ -189,13 +202,13 @@ object TimeMLProcessor {
       val results = resultsIter.toSeq
       val total = results.size
       val correct = results.count(_ == true)
-      (corpusPath, total, correct)
+      (corpusFile, total, correct)
     }
 
     // print out performance on each corpus
-    for ((corpusPath, total, correct) <- corpusStats) {
+    for ((corpusFile, total, correct) <- corpusStats) {
       printf("============================================================\n")
-      printf("Corpus: %s\n", corpusPath)
+      printf("Corpus: %s\n", corpusFile)
       printf("Accuracy: %.3f\n", correct.toDouble / total.toDouble)
     }
     printf("============================================================\n")

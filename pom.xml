@@ -53,6 +53,11 @@
       <version>0.5.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>com.lexicalscope.jewelcli</groupId>
+    	<artifactId>jewelcli</artifactId>
+    	<version>0.8.5</version>
+    </dependency>
   </dependencies>
 
   <build>
