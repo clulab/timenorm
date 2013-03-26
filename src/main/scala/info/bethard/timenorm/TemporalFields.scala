@@ -63,7 +63,7 @@ private[timenorm] abstract class ConstantPartialRange(
   private val rangeMin = this.field.range().getMinimum()
   val range: ValueRange = ValueRange.of(this.rangeMin, this.rangeMin + this.fixedSize - 1)
   val getDuration: Duration = Duration.of(this.fixedSize, this.field.getBaseUnit())
-  val isDurationEstimated: Boolean = false
+  val isDurationEstimated: Boolean = this.field.getBaseUnit().isDurationEstimated()
 }
 
 private[timenorm] abstract class MonthDayPartialRange(
