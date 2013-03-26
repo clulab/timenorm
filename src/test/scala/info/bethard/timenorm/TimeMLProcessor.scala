@@ -126,7 +126,15 @@ object TimeMLProcessor {
     ("XIE19990210.0079.tml", "t9", "Tuesday", "1999-02-08") /* not a Tuesday */ ,
     ("XIE19990313.0031.tml", "t3", "day", "1999-03-12") /* "a great day" - no anchor given */ ,
     ("XIE19990313.0229.tml", "t3", "day", "1999-03-12") /* "a great day" - no anchor given */ ,
-    ("XIE19990313.0229.tml", "t4", "this century,", "P100Y"))
+    ("XIE19990313.0229.tml", "t4", "this century,", "P100Y"),
+    ("ABC19980108.1830.0711.tml", "t85", "the last twenty four hours", "P1D"),
+    ("AP900815-0044.tml", "t188", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
+    ("AP900815-0044.tml", "t204", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
+    ("AP900815-0044.tml", "t210", "Monday", "1990-08-06") /* wrong anchor: anchor is more than a week after "value" */,
+    ("AP900815-0044.tml", "t252", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
+    ("AP900815-0044.tml", "t269", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
+    ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX") /* not possible in TIDES, but maybe correct? */,
+    ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* wrong type of value and no anchor */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
