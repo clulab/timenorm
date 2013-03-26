@@ -13,9 +13,7 @@ sealed trait Temporal {
 
 case class Period(
     unitAmounts: Map[TemporalUnit, Int],
-    modifier: Modifier = Modifier.Exact,
-    quantifier: Quantifier = Quantifier.None,
-    frequency: Frequency = Frequency(1)) extends Temporal {
+    modifier: Modifier = Modifier.Exact) extends Temporal {
 
   private val simplifyUnitMap = ListMap[TemporalUnit, Seq[(TemporalUnit, Int)]](
     DECADES -> Seq((YEARS, 10)),
@@ -68,15 +66,11 @@ case class Period(
 
   def +(that: Period): Period = Period(
     this.mapOverUnion(that, _ + _).toMap,
-    this.modifier & that.modifier,
-    this.quantifier & that.quantifier,
-    this.frequency & that.frequency)
+    this.modifier & that.modifier)
 
   def -(that: Period): Period = Period(
     this.mapOverUnion(that, _ - _).toMap,
-    this.modifier & that.modifier,
-    this.quantifier & that.quantifier,
-    this.frequency & that.frequency)
+    this.modifier & that.modifier)
 
   def >(unit: TemporalUnit): Boolean = {
     if (this.unitAmounts.isEmpty) {
@@ -123,6 +117,14 @@ object Period {
     DAYS -> (24, HOURS),
     HOURS -> (60, MINUTES),
     MINUTES -> (60, SECONDS))
+}
+
+case class PeriodSet(
+    period: Period,
+    modifier: Modifier = Modifier.Exact,
+    quantifier: Quantifier = Quantifier.None,
+    frequency: Frequency = Frequency(1)) extends Temporal {
+  val timeMLValue = this.period.timeMLValue
 }
 
 case class TimeSpan(

@@ -87,6 +87,8 @@ object TemporalParse extends CanFail("[Temporal]") with (Tree => TemporalParse) 
     tree match {
       case tree @ Tree.NonTerminal("[Period]", _, _, _) =>
         PeriodParse(tree)
+      case tree @ Tree.NonTerminal("[PeriodSet]", _, _, _) =>
+        PeriodSetParse(tree)
       case tree @ Tree.NonTerminal("[TimeSpan]", _, _, _) =>
         TimeSpanParse(tree)
       case _ => fail(tree)
@@ -156,12 +158,6 @@ object PeriodParse extends CanFail("[Period]") {
       Sum(children.map(PeriodParse.apply))
     case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(PeriodParse(period), Modifier.valueOf(modifier))
-    case Tree.NonTerminal(_, "[Period:WithQuantifier]", period :: Tree.Terminal(quantifier) :: Nil, _) =>
-      WithQuantifier(PeriodParse(period), Quantifier.valueOf(quantifier))
-    case Tree.NonTerminal(_, "[Period:WithFrequency]", period :: times :: Nil, _) =>
-      WithFrequency(PeriodParse(period), Frequency(IntParse(times).value))
-    case Tree.NonTerminal(_, "[Period:WithFrequency]", period :: times :: unit :: Nil, _) =>
-      WithFrequency(PeriodParse(period), Frequency(IntParse(times).value, Some(UnitParse(unit).value)))
     case _ => fail(tree)
   }
 
@@ -184,13 +180,46 @@ object PeriodParse extends CanFail("[Period]") {
   case class WithModifier(period: PeriodParse, modifier: Modifier) extends PeriodParse {
     def toPeriod = period.toPeriod.copy(modifier = modifier)
   }
-  
-  case class WithQuantifier(period: PeriodParse, quantifier: Quantifier) extends PeriodParse {
-    def toPeriod = period.toPeriod.copy(quantifier = quantifier)
+}
+
+sealed abstract class PeriodSetParse extends TemporalParse {
+  def toPeriodSet: PeriodSet
+}
+
+object PeriodSetParse extends CanFail("[PeriodSet]") {
+
+  def apply(tree: Tree)(implicit tokenParser: TokenParser): PeriodSetParse = tree match {
+    case period @ Tree.NonTerminal("[Period]", _, _, _) =>
+      Simple(PeriodParse(period))
+    case Tree.NonTerminal(_, "[PeriodSet]", tree :: Nil, _) =>
+      PeriodSetParse(tree)
+    case Tree.NonTerminal(_, "[PeriodSet:Simple]", period :: Nil, _) =>
+      Simple(PeriodParse(period))
+    case Tree.NonTerminal(_, "[PeriodSet:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
+      WithModifier(PeriodSetParse(period), Modifier.valueOf(modifier))
+    case Tree.NonTerminal(_, "[PeriodSet:WithQuantifier]", period :: Tree.Terminal(quantifier) :: Nil, _) =>
+      WithQuantifier(PeriodSetParse(period), Quantifier.valueOf(quantifier))
+    case Tree.NonTerminal(_, "[PeriodSet:WithFrequency]", period :: times :: Nil, _) =>
+      WithFrequency(PeriodSetParse(period), Frequency(IntParse(times).value))
+    case Tree.NonTerminal(_, "[PeriodSet:WithFrequency]", period :: times :: unit :: Nil, _) =>
+      WithFrequency(PeriodSetParse(period), Frequency(IntParse(times).value, Some(UnitParse(unit).value)))
+    case _ => fail(tree)
+  }
+
+  case class Simple(periodParse: PeriodParse) extends PeriodSetParse {
+    def toPeriodSet = PeriodSet(periodParse.toPeriod, Modifier.Exact)
   }
   
-  case class WithFrequency(period: PeriodParse, frequency: Frequency) extends PeriodParse {
-    def toPeriod = period.toPeriod.copy(frequency = frequency)
+  case class WithModifier(periodSet: PeriodSetParse, modifier: Modifier) extends PeriodSetParse {
+    def toPeriodSet = periodSet.toPeriodSet.copy(modifier = modifier)
+  }
+  
+  case class WithQuantifier(periodSet: PeriodSetParse, quantifier: Quantifier) extends PeriodSetParse {
+    def toPeriodSet = periodSet.toPeriodSet.copy(quantifier = quantifier)
+  }
+  
+  case class WithFrequency(periodSet: PeriodSetParse, frequency: Frequency) extends PeriodSetParse {
+    def toPeriodSet = periodSet.toPeriodSet.copy(frequency = frequency)
   }
 }
 

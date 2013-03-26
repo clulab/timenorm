@@ -38,6 +38,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
   def normalize(parse: TemporalParse, anchor: ZonedDateTime): Temporal = {
     parse match {
       case parse: PeriodParse => parse.toPeriod
+      case parse: PeriodSetParse => parse.toPeriodSet
       case parse: TimeSpanParse => parse.toTimeSpan(anchor)
     }
   }
@@ -52,7 +53,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
           case Some(timeMLValue) => timeMLValue
           case None => throw new UnsupportedOperationException
         }
-        case period: Period => throw new UnsupportedOperationException
+        case _ => throw new UnsupportedOperationException
       })
     }
   }

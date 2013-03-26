@@ -1,4 +1,4 @@
-ROOTS [Period] [TimeSpan]
+ROOTS [Period] [PeriodSet] [TimeSpan]
 
 [Nil] ||| a ||| ||| 1.0
 [Nil] ||| an ||| ||| 1.0
@@ -225,13 +225,13 @@ ROOTS [Period] [TimeSpan]
 
 [Period:WithModifier] ||| several [Unit:Plural] ||| ( Period:Simple 4 [Unit:Plural] ) APPROX ||| 1.0
 
-[Period:WithQuantifier] ||| hourly ||| ( Period:Simple 1 HOURS ) EVERY ||| 1.0
-[Period:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
-[Period:WithQuantifier] ||| weekly ||| ( Period:Simple 1 WEEKS ) EVERY ||| 1.0
-[Period:WithQuantifier] ||| monthly ||| ( Period:Simple 1 MONTHS ) EVERY ||| 1.0
-[Period:WithQuantifier] ||| yearly ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
-[Period:WithQuantifier] ||| annually ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
-[Period:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| hourly ||| ( Period:Simple 1 HOURS ) EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| weekly ||| ( Period:Simple 1 WEEKS ) EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| monthly ||| ( Period:Simple 1 MONTHS ) EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| yearly ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| annually ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
 
 [TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
