@@ -7,7 +7,7 @@ import org.threeten.bp.temporal.ChronoField._
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ValueRange
 import org.threeten.bp.temporal.TemporalAccessor
-import org.threeten.bp.temporal.Temporal
+import org.threeten.bp.temporal.{ Temporal => JTemporal }
 import org.threeten.bp.format.DateTimeBuilder
 import org.threeten.bp.Duration
 import org.threeten.bp.temporal.SimplePeriod
@@ -22,20 +22,20 @@ extends TemporalUnit {
   def first(temporal: TemporalAccessor): Long
   def last(temporal: TemporalAccessor): Long
   def doRange(temporal: TemporalAccessor): ValueRange
-  def doPlusSize(dateTime: Temporal, periodToAdd: Long): Long
+  def doPlusSize(dateTime: JTemporal, periodToAdd: Long): Long
   def range: ValueRange
   def getDuration: Duration
   def isDurationEstimated: Boolean
   
   def getName: String = this.name
   override def toString: String = this.name
-  def isSupported(temporal: Temporal): Boolean = this.field.doIsSupported(temporal)
-  def doPlus[R <: Temporal](dateTime: R, periodToAdd: Long): R = {
+  def isSupported(temporal: JTemporal): Boolean = this.field.doIsSupported(temporal)
+  def doPlus[R <: JTemporal](dateTime: R, periodToAdd: Long): R = {
     val size = this.doPlusSize(dateTime, periodToAdd)
     this.field.getBaseUnit().doPlus(dateTime, periodToAdd * size)
   }
 
-  def between[R <: Temporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
+  def between[R <: JTemporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
 
   protected def size(first: Long, last: Long, rangeMinimum: Long, rangeMaximum: Long): Long = {
     if (first < last) {
@@ -59,7 +59,7 @@ private[timenorm] abstract class ConstantPartialRange(
   def first(temporal: TemporalAccessor): Long = this.first
   def last(temporal: TemporalAccessor): Long = this.last
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doPlusSize(dateTime: Temporal, periodToAdd: Long): Long = this.fixedSize
+  def doPlusSize(dateTime: JTemporal, periodToAdd: Long): Long = this.fixedSize
   private val rangeMin = this.field.range().getMinimum()
   val range: ValueRange = ValueRange.of(this.rangeMin, this.rangeMin + this.fixedSize - 1)
   val getDuration: Duration = Duration.of(this.fixedSize, this.field.getBaseUnit())
@@ -77,7 +77,7 @@ private[timenorm] abstract class MonthDayPartialRange(
     this.last.atYear(YEAR.checkValidIntValue(YEAR.doGet(temporal))).get(DAY_OF_YEAR)
   }
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doPlusSize(dateTime: Temporal, periodToAdd: Long): Long = {
+  def doPlusSize(dateTime: JTemporal, periodToAdd: Long): Long = {
     val first = this.first(dateTime)
     val last = this.last(dateTime)
     // partial range does not stretch across range boundaries
@@ -129,7 +129,7 @@ extends TemporalField {
   }
   def doIsSupported(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.partialRange.doRange(temporal)
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = {
     val range = this.partialRange.field.doRange(temporal)
     val rangeMin = range.getMinimum()
     val rangeMax = range.getMaximum()
@@ -155,7 +155,7 @@ extends TemporalField {
   }
   def doIsSupported(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = newValue match {
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = newValue match {
     case 1 =>
       if (this.contains(temporal)) temporal
       else this.partialRange.field.doWith(temporal, this.partialRange.first(temporal))
@@ -225,7 +225,7 @@ private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
   }
   def doIsSupported(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = {
     val (easterMonth, easterDay, isEaster) = this.doGetEasterMonthDayIsEaster(temporal) 
     newValue match {
       case 0 => if (isEaster) DAYS.doPlus(temporal, 1) else temporal
@@ -264,7 +264,7 @@ private[timenorm] object DECADE extends TemporalField {
   def doGet(temporal: TemporalAccessor): Long = YEAR.doGet(temporal) / 10
   def doIsSupported(temporal: TemporalAccessor): Boolean = YEAR.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = YEAR.doWith(temporal, newValue * 10)
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = YEAR.doWith(temporal, newValue * 10)
 
   def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
   def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
@@ -278,7 +278,7 @@ private[timenorm] object YEAR_OF_DECADE extends TemporalField {
   def doGet(temporal: TemporalAccessor): Long = YEAR.doGet(temporal) % 10
   def doIsSupported(temporal: TemporalAccessor): Boolean = YEAR.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = {
     val oldYear = YEAR.doGet(temporal)
     YEAR.doWith(temporal, oldYear - oldYear % 10L + newValue)
   }
@@ -295,7 +295,7 @@ private[timenorm] object CENTURY extends TemporalField {
   def doGet(temporal: TemporalAccessor): Long = YEAR.doGet(temporal) / 100
   def doIsSupported(temporal: TemporalAccessor): Boolean = YEAR.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = YEAR.doWith(temporal, newValue * 100)
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = YEAR.doWith(temporal, newValue * 100)
 
   def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
   def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
@@ -309,7 +309,7 @@ private[timenorm] object YEAR_OF_CENTURY extends TemporalField {
   def doGet(temporal: TemporalAccessor): Long = YEAR.doGet(temporal) % 100
   def doIsSupported(temporal: TemporalAccessor): Boolean = YEAR.doIsSupported(temporal)
   def doRange(temporal: TemporalAccessor): ValueRange = this.range
-  def doWith[R <: Temporal](temporal: R, newValue: Long): R = {
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = {
     val oldYear = YEAR.doGet(temporal)
     YEAR.doWith(temporal, oldYear - oldYear % 100L + newValue)
   }
