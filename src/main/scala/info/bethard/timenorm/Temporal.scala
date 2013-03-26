@@ -103,11 +103,14 @@ object Period {
     var currRemainder = numerator % denominator
     var currUnit = unit
     while (currRemainder != 0) {
-      val (multiplier, nextUnit) = this.smallerUnit(currUnit)
-      val numerator = currRemainder * multiplier
-      map += nextUnit -> (numerator / denominator)
-      currUnit = nextUnit
-      currRemainder = numerator % denominator
+      this.smallerUnit.get(currUnit) match {
+        case None => throw new UnsupportedOperationException("Don't know how to split " + currUnit)
+        case Some((multiplier, nextUnit)) =>
+          val numerator = currRemainder * multiplier
+          map += nextUnit -> (numerator / denominator)
+          currUnit = nextUnit
+          currRemainder = numerator % denominator
+      }
     }
     Period(map, modifier)
   }
