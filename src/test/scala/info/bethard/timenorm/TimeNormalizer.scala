@@ -35,19 +35,25 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     parses.toSeq.map(TemporalParse)
   }
 
-  def normalize(parse: TemporalParse, anchor: ZonedDateTime): Either[Period, TimeSpan] = {
+  def normalize(parse: TemporalParse, anchor: ZonedDateTime): Temporal = {
     parse match {
-      case parse: PeriodParse => Left(parse.toPeriod)
-      case parse: TimeSpanParse => Right(parse.toTimeSpan(anchor))
+      case parse: PeriodParse => parse.toPeriod
+      case parse: TimeSpanParse => parse.toTimeSpan(anchor)
     }
   }
 
-  def normalize(parses: Seq[TemporalParse], anchor: ZonedDateTime): Option[Either[Period, TimeSpan]] = {
+  def normalize(parses: Seq[TemporalParse], anchor: ZonedDateTime): Option[Temporal] = {
     val temporals = for (parse <- parses) yield this.normalize(parse, anchor)
     temporals match {
       case Seq() => None
       case Seq(temporal) => Some(temporal)
-      case _ => Some(temporals.minBy(_.right.get.timeMLValueOption.get))
+      case _ => Some(temporals.minBy{
+        case timeSpan: TimeSpan => timeSpan.timeMLValueOption match {
+          case Some(timeMLValue) => timeMLValue
+          case None => throw new UnsupportedOperationException
+        }
+        case period: Period => throw new UnsupportedOperationException
+      })
     }
   }
 

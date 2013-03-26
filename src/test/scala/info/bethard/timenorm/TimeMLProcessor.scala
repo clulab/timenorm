@@ -155,9 +155,8 @@ object TimeMLProcessor {
           val possibleParses = normalizer.parseAll(timex.text).toSeq
           val possibleValues = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
             val temporal = normalizer.normalize(parse, anchor)
-            val value = this.toTimeMLValue(temporal)
-            printf("%s %s %s\n", value, parse, temporal)
-            value
+            printf("%s %s %s\n", temporal.timeMLValue, parse, temporal)
+            temporal.timeMLValue
           }
 
           // check if the actual value of the TIMEX3 was present in one of the parsed values
@@ -167,7 +166,7 @@ object TimeMLProcessor {
 
           // evaluate the single-choice normalization
           val temporal = normalizer.normalize(possibleParses, possibleAnchors.head)
-          val value = temporal.map(this.toTimeMLValue).getOrElse("")
+          val value = temporal.map(_.timeMLValue).getOrElse("")
 
           // one annotation, correct or not
           println(value)
@@ -188,13 +187,6 @@ object TimeMLProcessor {
       fileOrDir.listFiles.iterator.map(this.allFiles).flatten
     } else {
       Iterator(fileOrDir)
-    }
-  }
-
-  def toTimeMLValue(temporal: Either[Period, TimeSpan]): String = {
-    temporal match {
-      case Left(period) => period.timeMLValue
-      case Right(timeSpan) => timeSpan.timeMLValueOption.getOrElse(timeSpan.period.timeMLValue)
     }
   }
 }

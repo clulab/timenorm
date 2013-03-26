@@ -7,7 +7,9 @@ import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
 import scala.collection.immutable.ListMap
 
-sealed trait Temporal
+sealed trait Temporal {
+  val timeMLValue: String
+}
 
 case class Period(
     unitAmounts: Map[TemporalUnit, Int],
@@ -143,6 +145,8 @@ case class TimeSpan(
       }
     }
   }
+  
+  val timeMLValue = this.timeMLValueOption.getOrElse(this.period.timeMLValue)
 }
 object TimeSpan {
   def startingAt(start: ZonedDateTime, period: Period, modifier: Modifier): TimeSpan = {
