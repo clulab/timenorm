@@ -133,8 +133,11 @@ object TimeMLProcessor {
     ("AP900815-0044.tml", "t210", "Monday", "1990-08-06") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t252", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t269", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
-    ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX") /* not possible in TIDES, but maybe correct? */,
     ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* wrong type of value and no anchor */)
+  
+  private final val knownFailures = Set(
+    ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX"),
+    ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"))
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
@@ -164,7 +167,10 @@ object TimeMLProcessor {
         doc = new TimeMLDocument(file)
         timex <- doc.timeExpressions
       } yield {
-        val isAnnotationError = annotationErrors.contains((file.getName, timex.id, timex.text, timex.value))
+        val key = (file.getName, timex.id, timex.text, timex.value)
+        val isAnnotationError = this.annotationErrors.contains(key)
+        val isKnownFailure = this.knownFailures.contains(key)
+        val isPossibleFailure = !isAnnotationError && !isKnownFailure
 
         // pick the single best parse and evaluate it
         val anchor = timex.anchor.getOrElse(doc.creationTime)
@@ -185,7 +191,7 @@ object TimeMLProcessor {
             }
 
             // log the error
-            if (!isAnnotationError && !possibleValues.toSet.contains(timex.value)) {
+            if (isPossibleFailure && !possibleValues.toSet.contains(timex.value)) {
               fatal("All incorrect values %s for %s from %s", possibleValues, timex, file)
             } else {
               error("Incorrect value %s for %s from %s", value, timex, file)
@@ -198,7 +204,7 @@ object TimeMLProcessor {
         } catch {
           // on an exception
           case e @ (_: UnsupportedOperationException | _: DateTimeException) => {
-            if (!isAnnotationError) {
+            if (isPossibleFailure) {
               fatal("Error \"%s\" parsing %s from %s", e, timex, file)
             }
             false
