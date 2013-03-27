@@ -116,6 +116,7 @@ object Period {
   }
 
   private final val smallerUnit = Map[TemporalUnit, (Int, TemporalUnit)](
+    YEARS -> (12, MONTHS),
     WEEKS -> (7, DAYS),
     DAYS -> (24, HOURS),
     HOURS -> (60, MINUTES),
