@@ -254,9 +254,9 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:EndAtStartOf] ||| [Int] rd century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
 [TimeSpan:EndAtStartOf] ||| [Int] th century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
 
-[TimeSpan:FindStartingEarlier] ||| this morning ||| PRESENT ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0 
-[TimeSpan:FindEndingLater] ||| this evening ||| PRESENT ( FieldValue EVENING_OF_DAY 1 ) ||| 1.0 
-[TimeSpan:FindEndingLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+[TimeSpan:FindAtOrEarlier] ||| this morning ||| PRESENT ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0 
+[TimeSpan:FindAtOrLater] ||| this evening ||| PRESENT ( FieldValue EVENING_OF_DAY 1 ) ||| 1.0 
+[TimeSpan:FindAtOrLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
 [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 
@@ -275,7 +275,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:StartAtEndOf] ||| [Period] from [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
 
-[TimeSpan:FindStartingEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:FindAtOrEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
 [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
 
 [TimeSpan:StartAtStartOf] ||| first [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0

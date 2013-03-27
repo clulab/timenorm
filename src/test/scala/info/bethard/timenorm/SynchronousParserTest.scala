@@ -104,8 +104,8 @@ class ParserTest extends FunSuite {
     [TimeSpan:FindEarlier] ||| [FieldValue:PartialEarlier] ||| PRESENT [FieldValue:PartialEarlier] ||| 1.0
     [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindStartingEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindEndingLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+    [TimeSpan:FindAtOrEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindAtOrLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
     [TimeSpan:FindEnclosed] ||| this [FieldValue:Partial] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindEnclosed] ||| this [FieldValue:PartialEarlier] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:PartialEarlier] ) [FieldValue:PartialEarlier] ||| 1.0
     [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
@@ -211,7 +211,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("next", "October") === FindLater(Present, Map(MONTH_OF_YEAR -> 10)))
     assert(this.parseAll("January").toSet === Set(
         FindEarlier(Present, Map(MONTH_OF_YEAR -> 1)),
-        FindStartingEarlier(Present, Map(MONTH_OF_YEAR -> 1)),
+        FindAtOrEarlier(Present, Map(MONTH_OF_YEAR -> 1)),
         FindLater(Present, Map(MONTH_OF_YEAR -> 1))))
     assert(this.parse("early", "next", "week") ===
       WithModifier(StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS)), Modifier.Start))
@@ -219,7 +219,7 @@ class ParserTest extends FunSuite {
       MoveEarlier(WithModifier(Present, Modifier.Approx), SimplePeriod(1, DECADES)),
       MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES))))
     
-    assert(this.parse("tonight") === FindEndingLater(Present, Map(NIGHT_OF_DAY -> 1)))
+    assert(this.parse("tonight") === FindAtOrLater(Present, Map(NIGHT_OF_DAY -> 1)))
     assert(this.parse("first", "week", "of", "2012") ===
       StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, WEEKS)))
     assert(this.parse("this", "January") ===

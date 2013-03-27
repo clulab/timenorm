@@ -196,7 +196,7 @@ object TimeMLProcessor {
               if (!possibleValues.toSet.contains(timex.value)) {
                 fatal("All incorrect values %s for %s from %s", possibleValues, timex, file)
               } else {
-                error("Incorrect value %s for %s from %s", value, timex, file)
+                error("Incorrect value %s chosen from %s for %s from %s", value, possibleValues, timex, file)
               }
             }
           }

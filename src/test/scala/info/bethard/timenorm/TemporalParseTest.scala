@@ -80,7 +80,7 @@ class TemporalParseTest extends FunSuite {
       FindAbsolute(Map(YEAR -> 2030)),
       "2030-01-01T00:00", "2031-01-01T00:00", "P1Y", "2030")
     assertTimeSpan(
-      FindStartingEarlier(Present, Map(YEAR_OF_CENTURY -> 76, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
+      FindAtOrEarlier(Present, Map(YEAR_OF_CENTURY -> 76, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
       "1976-09-21T00:00", "1976-09-22T00:00", "P1D", "1976-09-21")
     assertTimeSpan(
       FindEarlier(Present, Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)),
@@ -107,16 +107,16 @@ class TemporalParseTest extends FunSuite {
       FindLater(Present, Map(WINTER_OF_YEAR -> 1)),
       "2012-12-21T00:00", "2013-03-20T00:00", "P1WI", "2012-WI")
     assertTimeSpan(
-      FindStartingEarlier(Present, Map(DAY_OF_WEEK -> DayOfWeek.WEDNESDAY.getValue)),
+      FindAtOrEarlier(Present, Map(DAY_OF_WEEK -> DayOfWeek.WEDNESDAY.getValue)),
       "2012-12-12T00:00", "2012-12-13T00:00", "P1D", "2012-12-12")
     assertTimeSpan(
-      FindStartingEarlier(Present, Map(DAY_OF_WEEK -> DayOfWeek.TUESDAY.getValue)),
+      FindAtOrEarlier(Present, Map(DAY_OF_WEEK -> DayOfWeek.TUESDAY.getValue)),
       "2012-12-11T00:00", "2012-12-12T00:00", "P1D", "2012-12-11")
     assertTimeSpan(
       FindEarlier(Present, Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
       "2011-12-12T00:00", "2011-12-13T00:00", "P1D", "2011-12-12")
     assertTimeSpan(
-      FindStartingEarlier(Present, Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
+      FindAtOrEarlier(Present, Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
       "2012-12-12T00:00", "2012-12-13T00:00", "P1D", "2012-12-12")
     assertTimeSpan(
       FindLater(Present, Map(MONTH_OF_YEAR -> 12, DAY_OF_MONTH -> 12)),
@@ -137,7 +137,7 @@ class TemporalParseTest extends FunSuite {
       FindEarlier(Present, Map(EVENING_OF_DAY -> 1)),
       "2012-12-11T17:00", "2012-12-12T00:00", "P1EV", "2012-12-11TEV")
     assertTimeSpan(
-      FindEndingLater(Present, Map(NIGHT_OF_DAY -> 1)),
+      FindAtOrLater(Present, Map(NIGHT_OF_DAY -> 1)),
       "2012-12-12T21:00", "2012-12-13T04:00", "P1NI", "2012-12-12TNI")
     assertTimeSpan(
       FindEarlier(Present, Map(NIGHT_OF_DAY -> 1)),
@@ -164,7 +164,7 @@ class TemporalParseTest extends FunSuite {
     // this previously failed, accepting as Wednesday night the night that starts on Tuesday
     // (the problem was not checking that fields still match after truncation)
     val feb16 = ZonedDateTime.of(LocalDateTime.of(2000, 2, 16, 0, 0), ZoneId.of("Z"))
-    val feb16ni = FindStartingEarlier(Present, Map(DAY_OF_WEEK -> 3, NIGHT_OF_DAY -> 1)).toTimeSpan(feb16)
+    val feb16ni = FindAtOrEarlier(Present, Map(DAY_OF_WEEK -> 3, NIGHT_OF_DAY -> 1)).toTimeSpan(feb16)
     assert(feb16ni.timeMLValueOption === Some("2000-02-09TNI"))
   }
 
