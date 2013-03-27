@@ -256,6 +256,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [TimeSpan:FindEnclosed] ||| this [FieldValue:Partial] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0 
 [TimeSpan:FindEnclosed] ||| [FieldValue:Partial] this [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0 
+[TimeSpan:FindEnclosed] ||| [FieldValue:Partial] last [Unit] ||| ( TimeSpan:EndAtStartOf ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0 
 [TimeSpan:FindEnclosed] ||| tonight ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
 [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
