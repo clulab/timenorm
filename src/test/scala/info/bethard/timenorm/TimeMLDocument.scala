@@ -18,7 +18,7 @@ object TimeMLDocument {
       } catch {
         case e: DateTimeParseException =>
           try {
-            Some(LocalDate.parse(value).atTime(0, 0))
+            Some(LocalDate.parse(value).atTime(4, 0))
           } catch {
             case e: DateTimeParseException => None
           }
