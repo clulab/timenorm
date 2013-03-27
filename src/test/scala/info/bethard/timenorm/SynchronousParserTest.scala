@@ -106,6 +106,8 @@ class ParserTest extends FunSuite {
     [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindStartingEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindEndingLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+    [TimeSpan:FindEnclosed] ||| this [FieldValue:Partial] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindEnclosed] ||| this [FieldValue:PartialEarlier] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:PartialEarlier] ) [FieldValue:PartialEarlier] ||| 1.0
     [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
     [TimeSpanSet:Simple] ||| Mondays ||| ( FieldValue DAY_OF_WEEK 1 ) ||| 1.0
     [TimeSpanSet:Simple] ||| [FieldValue:Partial] nights ||| ( FieldValue [FieldValue:Partial] ( FieldValue NIGHT_OF_DAY 1 ) ) ||| 1.0
@@ -220,6 +222,10 @@ class ParserTest extends FunSuite {
     assert(this.parse("tonight") === FindEndingLater(Present, Map(NIGHT_OF_DAY -> 1)))
     assert(this.parse("first", "week", "of", "2012") ===
       StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, WEEKS)))
+    assert(this.parse("this", "January") ===
+      FindEnclosed(FindEnclosing(Present, YEARS), Map(MONTH_OF_YEAR -> 1)))
+    assert(this.parse("this", "10", ":", "30", "p", ".", "m", ".") ===
+      FindEnclosed(FindEnclosing(Present, DAYS), Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 30, AMPM_OF_DAY -> 1)))
   }
   
   test("parses time span sets") {

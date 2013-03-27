@@ -246,6 +246,18 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpan(
       FindLater(MoveLater(Present, SimplePeriod(2, DAYS)), Map(DAY_OF_MONTH -> 14)),
       "2013-01-14T00:00", "2013-01-15T00:00", "P1D", "2013-01-14")
+    assertTimeSpan(
+      FindEnclosed(FindEnclosing(Present, DAYS), Map(MORNING_OF_DAY -> 1)),
+      "2012-12-12T00:00", "2012-12-12T12:00", "P1MO", "2012-12-12TMO")
+    assertTimeSpan(
+      FindEnclosed(FindEnclosing(Present, DAYS), Map(AFTERNOON_OF_DAY -> 1)),
+      "2012-12-12T12:00", "2012-12-12T18:00", "P1AF", "2012-12-12TAF")
+    assertTimeSpan(
+      FindEnclosed(FindEnclosing(Present, DAYS), Map(EVENING_OF_DAY -> 1)),
+      "2012-12-12T17:00", "2012-12-13T00:00", "P1EV", "2012-12-12TEV")
+    assertTimeSpan(
+      FindEnclosed(FindEnclosing(Present, DAYS), Map(NIGHT_OF_DAY -> 1)),
+      "2012-12-12T21:00", "2012-12-13T04:00", "P1NI", "2012-12-12TNI")
   }
   
   private def assertTimeSpan(

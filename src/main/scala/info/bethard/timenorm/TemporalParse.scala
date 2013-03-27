@@ -253,10 +253,15 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     case Tree.NonTerminal(_, "[TimeSpan:FindEndingLater]", time :: fields :: Nil, _) =>
       FindEndingLater(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: (periodTree @ Tree.NonTerminal("[Period]", _, _, _)) :: Nil, _) =>
-      val unit = PeriodParse(periodTree).toPeriod.unitAmounts.keySet.minBy(_.getDuration())
+      val unit = PeriodParse(periodTree).toPeriod.unitAmounts.keySet.maxBy(_.getDuration())
+      FindEnclosing(TimeSpanParse(time), unit)
+    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: (fieldTree @ Tree.NonTerminal("[FieldValue]", _, _, _)) :: Nil, _) =>
+      val unit = FieldValueParse(fieldTree).fieldValues.keySet.map(_.getRangeUnit()).maxBy(_.getDuration())
       FindEnclosing(TimeSpanParse(time), unit)
     case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: unit :: Nil, _) =>
       FindEnclosing(TimeSpanParse(time), UnitParse(unit).value)
+    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosed]", time :: fields :: Nil, _) =>
+      FindEnclosed(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:StartAtStartOf]", time :: period :: Nil, _) =>
       StartAtStartOf(TimeSpanParse(time), PeriodParse(period))
     case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf]", time :: period :: Nil, _) =>
@@ -402,6 +407,17 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     extends DirectedFieldSearchingTimeSpanParse(
         timeSpanParse, fields, _.end, _.plus(1, _),
         (oldSpan, newSpan) => newSpan.end.isAfter(oldSpan.end))
+
+  case class FindEnclosed(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(
+        timeSpanParse, fields, _.start, _.plus(1, _),
+        (oldSpan, newSpan) => {
+          if (!newSpan.start.isBefore(oldSpan.end)) {
+            val message = "%s not found within %s".format(fields, timeSpanParse)
+            throw new UnsupportedOperationException(message)
+          }
+          !newSpan.start.isBefore(oldSpan.start)
+        })
 
   case class FindEnclosing(timeSpanParse: TimeSpanParse, unit: TemporalUnit) extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
