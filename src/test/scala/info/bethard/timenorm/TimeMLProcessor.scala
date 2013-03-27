@@ -136,12 +136,18 @@ object TimeMLProcessor {
     ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* should be date, not period (and no anchor) */,
     ("APW19980219.0476.tml", "t130", "almost two years ago", "P2Y") /* should be date, not period */,
     ("APW19980219.0476.tml", "t169", "July last year", "1997-06") /* July is 07 */,
-    ("APW19980227.0494.tml", "t154", "centuries", "PXE") /* centuries are CE */)
+    ("APW19980227.0494.tml", "t154", "centuries", "PXE") /* centuries are CE */,
+    ("APW19980306.1001.tml", "t1000", "daily", "XXXX-XX-XX") /* "daily" is P1D right in TimeML spec */,
+    ("APW19980301.0720.tml", "t1989", "six weeks ago", "1998-W02") /* ISO weeks start on Monday, not Sunday */,
+    ("APW19980308.0201.tml", "t71", "recent days", "PAST_REF") /* TIDES spec says, e.g. "recent decades" => PXDE */,
+    ("APW19980322.0749.tml", "t2023", "two weeks ago", "1998-03-08") /* possible interpretation, but usually these are -WXX values */,
+    ("APW19980322.0749.tml", "t138", "Sunday", "1998-02-22") /* wrong since ref time is 1998-03-22 */)
   
   private final val knownFailures = Set(
     ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX"),
     ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"),
-    ("APW19980219.0476.tml", "t137", "weeks or months", "PXW"))
+    ("APW19980219.0476.tml", "t137", "weeks or months", "PXW"),
+    ("APW19980301.0720.tml", "t1982", "last February", "1997-02") /* two Februaries before anchor */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
