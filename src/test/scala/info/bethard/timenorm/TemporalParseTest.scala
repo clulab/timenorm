@@ -258,7 +258,13 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpan(
       FindEnclosed(FindEnclosing(Present, DAYS), Map(NIGHT_OF_DAY -> 1)),
       "2012-12-12T21:00", "2012-12-13T04:00", "P1NI", "2012-12-12TNI")
-  }
+
+    // this previously failed because we were using aligned weeks instead of Monday-aligned weeks
+    val mar6 = ZonedDateTime.of(LocalDateTime.of(1998, 3, 6, 0, 0), ZoneId.of("Z"))
+    println(FindEnclosing(Present, WEEKS).toTimeSpan(mar6))
+    val nextWeek = StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS))
+    assert(nextWeek.toTimeSpan(mar6).timeMLValueOption === Some("1998-W11"))
+ }
   
   private def assertTimeSpan(
     timeSpanParse: TimeSpanParse,
@@ -282,7 +288,7 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpanSet(Simple(Map(DAY_OF_WEEK -> 1)), "XXXX-WXX-1")
     assertTimeSpanSet(Simple(Map(DAY_OF_WEEK -> 2, NIGHT_OF_DAY -> 1)), "XXXX-WXX-2TNI")
     assertTimeSpanSet(Simple(Map(MINUTE_OF_HOUR -> 15)), "XXXX-XX-XXTXX:15")
-    assertTimeSpanSet(Simple(Map(ALIGNED_WEEK_OF_YEAR -> 12, MINUTE_OF_HOUR -> 15)), "XXXX-W12TXX:15")
+    assertTimeSpanSet(Simple(Map(ISO_WEEK.OF_YEAR -> 12, MINUTE_OF_HOUR -> 15)), "XXXX-W12TXX:15")
   }
 
   private def assertTimeSpanSet(

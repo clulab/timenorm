@@ -6,6 +6,7 @@ import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
 import scala.collection.immutable.ListMap
+import org.threeten.bp.temporal.WeekFields
 
 sealed trait Temporal {
   val timeMLValue: String
@@ -182,7 +183,7 @@ object TimeSpan {
     (WINTER_OF_YEAR, _ match { case 1 => "-WI" }),
     (MONTH_OF_YEAR, "-%02d".format(_)),
     (DAY_OF_MONTH, "-%02d".format(_)),
-    (ALIGNED_WEEK_OF_YEAR, "-W%02d".format(_)),
+    (ISO_WEEK.OF_YEAR, "-W%02d".format(_)),
     (DAY_OF_WEEK, "-%d".format(_)),
     (WEEKEND_OF_WEEK, _ match { case 1 => "-WE" }),
     (MORNING_OF_DAY, _ match { case 1 => "TMO" }),
@@ -202,8 +203,8 @@ object TimeSpan {
     FALLS -> Seq(YEAR, FALL_OF_YEAR),
     WINTERS -> Seq(YEAR, WINTER_OF_YEAR),
     MONTHS -> Seq(YEAR, MONTH_OF_YEAR),
-    WEEKS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
-    WEEKENDS -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, WEEKEND_OF_WEEK),
+    WEEKS -> Seq(YEAR, ISO_WEEK.OF_YEAR),
+    WEEKENDS -> Seq(YEAR, ISO_WEEK.OF_YEAR, WEEKEND_OF_WEEK),
     DAYS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH),
     MORNINGS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, MORNING_OF_DAY),
     AFTERNOONS -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, AFTERNOON_OF_DAY),
@@ -264,9 +265,9 @@ object TimeSpanSet {
     FALL_OF_YEAR -> Seq(YEAR, FALL_OF_YEAR),
     WINTER_OF_YEAR -> Seq(YEAR, WINTER_OF_YEAR),
     MONTH_OF_YEAR -> Seq(YEAR, MONTH_OF_YEAR),
-    ALIGNED_WEEK_OF_YEAR -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR),
-    WEEKEND_OF_WEEK -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, WEEKEND_OF_WEEK),
-    DAY_OF_WEEK -> Seq(YEAR, ALIGNED_WEEK_OF_YEAR, DAY_OF_WEEK),
+    ISO_WEEK.OF_YEAR -> Seq(YEAR, ISO_WEEK.OF_YEAR),
+    WEEKEND_OF_WEEK -> Seq(YEAR, ISO_WEEK.OF_YEAR, WEEKEND_OF_WEEK),
+    DAY_OF_WEEK -> Seq(YEAR, ISO_WEEK.OF_YEAR, DAY_OF_WEEK),
     DAY_OF_MONTH -> Seq(YEAR, MONTH_OF_YEAR, DAY_OF_MONTH))
     
   private val fieldToTimeFieldsToDisplay = Map[TemporalField, Seq[TemporalField]](
@@ -284,7 +285,7 @@ object TimeSpanSet {
     (YEAR, "XXXX"),
     (MONTH_OF_YEAR, "-XX"),
     (DAY_OF_MONTH, "-XX"),
-    (ALIGNED_WEEK_OF_YEAR, "-WXX"),
+    (ISO_WEEK.OF_YEAR, "-WXX"),
     (HOUR_OF_DAY, "TXX"),
     (MINUTE_OF_HOUR, ":XX"),
     (SECOND_OF_MINUTE, ":XX"))

@@ -15,6 +15,7 @@ import org.threeten.bp.Year
 import org.threeten.bp.LocalDate
 import org.threeten.bp.MonthDay
 import org.threeten.bp.LocalTime
+import org.threeten.bp.temporal.WeekFields
 
 
 private[timenorm] abstract class PartialRange(name: String, val field: TemporalField)
@@ -254,6 +255,10 @@ private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
     val day = l + 28 - 31 * ( month / 4 )
     (month, day, MONTH_OF_YEAR.doGet(temporal) == month && DAY_OF_MONTH.doGet(temporal) == day)
   }
+}
+
+private[timenorm] object ISO_WEEK {
+  val OF_YEAR = WeekFields.ISO.weekOfYear()
 }
 
 private[timenorm] object DECADE extends TemporalField {
