@@ -134,11 +134,14 @@ object TimeMLProcessor {
     ("AP900815-0044.tml", "t252", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t269", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* should be date, not period (and no anchor) */,
-    ("APW19980219.0476.tml", "t130", "almost two years ago", "P2Y") /* should be date, not period */)
+    ("APW19980219.0476.tml", "t130", "almost two years ago", "P2Y") /* should be date, not period */,
+    ("APW19980219.0476.tml", "t169", "July last year", "1997-06") /* July is 07 */,
+    ("APW19980227.0494.tml", "t154", "centuries", "PXE") /* centuries are CE */)
   
   private final val knownFailures = Set(
     ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX"),
-    ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"))
+    ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"),
+    ("APW19980219.0476.tml", "t137", "weeks or months", "PXW"))
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
