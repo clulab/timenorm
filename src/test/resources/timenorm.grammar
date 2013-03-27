@@ -257,37 +257,37 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:FindCurrentOrEarlier] ||| this morning ||| ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0 
 [TimeSpan:FindCurrentOrLater] ||| this evening ||| ( FieldValue EVENING_OF_DAY 1 ) ||| 1.0 
 [TimeSpan:FindCurrentOrLater] ||| tonight ||| ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
-[TimeSpan:EndAtStartOf+FindEnclosing] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
-[TimeSpan:StartAtEndOf+FindEnclosing] ||| tomorrow ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
+[TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
+[TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 
 [TimeSpan:FindAbsolute] ||| [FieldValue:Absolute] ||| [FieldValue:Absolute] ||| 1.0
 
 [TimeSpan:FindEarlier] ||| last [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
 [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
 
-[TimeSpan:EndAtStartOf+FindEnclosing] ||| last [Period] ||| PRESENT [Period] ||| 1.0
-[TimeSpan:EndAtStartOf+FindEnclosing] ||| past [Period] ||| PRESENT [Period] ||| 1.0
-[TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] earlier ||| PRESENT [Period] ||| 1.0
-[TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] before [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
+[TimeSpan:EndAtStartOf] ||| last [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:EndAtStartOf] ||| past [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:EndAtStartOf] ||| [Period] earlier ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:EndAtStartOf] ||| [Period] before [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
 
-[TimeSpan:MoveEarlier+FindEnclosing] ||| [Period] ago ||| PRESENT [Period] ||| 1.0
+[TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 
-[TimeSpan:StartAtEndOf+FindEnclosing] ||| next [Period] ||| PRESENT [Period] ||| 1.0
-[TimeSpan:TimeSpan:StartAtEndOf+FindEnclosing] ||| [Period] from [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
+[TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:StartAtEndOf] ||| [Period] from [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
 
 [TimeSpan:FindCurrentOrEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
 [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
 
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| first [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| second [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| third [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| fourth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| fifth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| sixth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| seventh [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| eighth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| ninth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf+FindEnclosing] ||| tenth [Unit] ||| PRESENT ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| first [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| second [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| third [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| fourth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| fifth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| sixth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| seventh [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| eighth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| ninth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
+[TimeSpan:StartAtStartOf] ||| tenth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
 
 [TimeSpan:WithModifier] ||| start of [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0

@@ -91,14 +91,14 @@ class ParserTest extends FunSuite {
     [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
     [TimeSpan:FindAbsolute] ||| [FieldValue:Absolute] ||| [FieldValue:Absolute] ||| 1.0
     [TimeSpan:StartAtStartOf] ||| first [Unit] of [TimeSpan] ||| [TimeSpan] ( Period:Simple 1 [Unit] ) ||| 1.0
-    [TimeSpan:StartAtEndOf+FindEnclosing] ||| tomorrow ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
-    [TimeSpan:StartAtEndOf+FindEnclosing] ||| next [Period] ||| PRESENT [Period] ||| 1.0
-    [TimeSpan:StartAtEndOf+FindEnclosing] ||| [Period] from [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
-    [TimeSpan:EndAtStartOf+FindEnclosing] ||| yesterday ||| PRESENT ( Period:Simple 1 DAYS ) ||| 1.0
-    [TimeSpan:EndAtStartOf+FindEnclosing] ||| last [Period] ||| PRESENT [Period] ||| 1.0
-    [TimeSpan:EndAtStartOf+FindEnclosing] ||| [Period] before [TimeSpan] ||| [TimeSpan] [Period] ||| 1.0
+    [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
+    [TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+    [TimeSpan:StartAtEndOf] ||| [Period] from [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
+    [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
+    [TimeSpan:EndAtStartOf] ||| last [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+    [TimeSpan:EndAtStartOf] ||| [Period] before [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
     [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:WithModifier PRESENT APPROX ) [Period] ||| 1.0
-    [TimeSpan:MoveEarlier+FindEnclosing] ||| [Period] ago ||| PRESENT [Period] ||| 1.0
+    [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
     [TimeSpan:FindEarlier] ||| last [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
     [TimeSpan:FindEarlier] ||| [FieldValue:PartialEarlier] ||| [FieldValue:PartialEarlier] ||| 1.0
