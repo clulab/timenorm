@@ -244,14 +244,14 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
       TimeSpanParse(tree)
     case Tree.NonTerminal(_, "[TimeSpan:FindAbsolute]", tree :: Nil, _) =>
       FindAbsolute(FieldValueParse(tree).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindLater]", tree :: Nil, _) =>
-      FindLater(FieldValueParse(tree).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", tree :: Nil, _) =>
-      FindEarlier(FieldValueParse(tree).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrLater]", tree :: Nil, _) =>
-      FindCurrentOrLater(FieldValueParse(tree).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindCurrentOrEarlier]", tree :: Nil, _) =>
-      FindCurrentOrEarlier(FieldValueParse(tree).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", time :: fields :: Nil, _) =>
+      FindEarlier(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindStartingEarlier]", time :: fields :: Nil, _) =>
+      FindStartingEarlier(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindLater]", time :: fields :: Nil, _) =>
+      FindLater(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
+    case Tree.NonTerminal(_, "[TimeSpan:FindEndingLater]", time :: fields :: Nil, _) =>
+      FindEndingLater(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
     case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: (periodTree @ Tree.NonTerminal("[Period]", _, _, _)) :: Nil, _) =>
       val unit = PeriodParse(periodTree).toPeriod.unitAmounts.keySet.minBy(_.getDuration())
       FindEnclosing(TimeSpanParse(time), unit)
@@ -318,24 +318,35 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     }
   }
 
-  abstract class FieldSearchingTimeSpanParse(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
+  abstract class DirectedFieldSearchingTimeSpanParse(
+    timeSpanParse: TimeSpanParse,
+    fields: Map[TemporalField, Int],
+    getStart: TimeSpan => ZonedDateTime,
+    step: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
+    isAcceptable: (TimeSpan, TimeSpan) => Boolean) extends FieldBasedTimeSpanParse(fields) {
 
-    def searchFrom(dateTime: ZonedDateTime, step: (ZonedDateTime, TemporalUnit) => ZonedDateTime): ZonedDateTime = {
-      val searchField = this.fields.keySet.minBy(_.getBaseUnit.getDuration)
+    val searchField = this.fields.keySet.minBy(_.getBaseUnit.getDuration)
+    val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
+
+    def toTimeSpan(anchor: ZonedDateTime) = {
+      val timeSpan = this.timeSpanParse.toTimeSpan(anchor)
+      val start = this.getStart(timeSpan)
 
       // search by base units for partial ranges (e.g. search by hours, not "mornings")
-      var searchUnit = searchField.getBaseUnit match {
+      var searchUnit = this.searchField.getBaseUnit match {
         case partialRange: PartialRange => partialRange.field.getBaseUnit
         case unit => unit
       }
 
       // if the field's range is fixed and the range unit is not estimated,
       // then we can move by range units once we satisfy the base unit
-      var canSwitchToRange = searchField.range().isFixed() && !searchField.getRangeUnit().isDurationEstimated()
+      var canSwitchToRange = this.searchField.range().isFixed() &&
+      !this.searchField.getRangeUnit().isDurationEstimated()
 
       // one step at a time, search for a time that satisfies the field requirements
-      var curr = dateTime
-      while (!this.satisfiesFieldValues(curr)) {
+      var curr = start
+      var result = this.tryToCreateTimeSpan(timeSpan, curr)
+      while (result.isEmpty) {
         curr = step(curr, searchUnit)
 
         // if we've satisfied the search field's base unit, start moving by range units
@@ -343,47 +354,54 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
           searchUnit = searchField.getRangeUnit()
           canSwitchToRange = false
         }
+        
+        // check if the current time satisfies the requirements
+        result = this.tryToCreateTimeSpan(timeSpan, curr)
       }
-      TimeSpan.truncate(curr, this.minUnit)
+      
+      // result must be present because the while loop exited
+      result.get
     }
     
-    private def satisfiesFieldValues(dateTime: ZonedDateTime): Boolean = {
+    private def tryToCreateTimeSpan(oldTimeSpan: TimeSpan, dateTime: ZonedDateTime): Option[TimeSpan] = {
       // must match all field values
       if (this.fields.exists { case (field, value) => dateTime.get(field) != value }) {
-        false
+        None
       }
       // must still match all field values after truncation
       else {
-        val truncatedDateTime = TimeSpan.truncate(dateTime, this.minUnit)
-        fields.forall { case (field, value) => truncatedDateTime.get(field) == value }
+        val truncated = TimeSpan.truncate(dateTime, this.minUnit)
+        if (!fields.forall { case (field, value) => truncated.get(field) == value }) {
+          None
+        }
+        // must satisfy any acceptance criteria
+        else {
+          val timeSpan = TimeSpan.startingAt(truncated, this.period, Modifier.Exact)
+          if (!this.isAcceptable(oldTimeSpan, timeSpan)) None else Some(timeSpan)
+        }
       }
     }
   }
   
-  abstract class DirectedFieldSearchingTimeSpanParse(
-    fields: Map[TemporalField, Int],
-    stepFirst: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
-    step: (ZonedDateTime, TemporalUnit) => ZonedDateTime)
-      extends FieldSearchingTimeSpanParse(fields) {
+  case class FindEarlier(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(
+        timeSpanParse, fields, _.start, _.minus(1, _),
+        (oldSpan, newSpan) => !newSpan.end.isAfter(oldSpan.start))
 
-    def toTimeSpan(anchor: ZonedDateTime) = {
-      val begin = this.searchFrom(this.stepFirst(anchor, this.minUnit), this.step)
-      val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
-      TimeSpan.startingAt(begin, period, Modifier.Exact)
-    }
-  }
+  case class FindStartingEarlier(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(
+        timeSpanParse, fields, _.start, _.minus(1, _),
+        (oldSpan, newSpan) => newSpan.start.isBefore(oldSpan.start))
 
-  case class FindLater(fields: Map[TemporalField, Int])
-    extends DirectedFieldSearchingTimeSpanParse(fields, _.plus(1, _), _.plus(1, _))
+  case class FindLater(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(
+        timeSpanParse, fields, _.end, _.plus(1, _),
+        (oldSpan, newSpan) => !newSpan.start.isBefore(oldSpan.end))
 
-  case class FindCurrentOrLater(fields: Map[TemporalField, Int])
-    extends DirectedFieldSearchingTimeSpanParse(fields, _.plus(0, _), _.plus(1, _))
-
-  case class FindEarlier(fields: Map[TemporalField, Int])
-    extends DirectedFieldSearchingTimeSpanParse(fields, _.minus(1, _), _.minus(1, _))
-
-  case class FindCurrentOrEarlier(fields: Map[TemporalField, Int])
-    extends DirectedFieldSearchingTimeSpanParse(fields, _.minus(0, _), _.minus(1, _))
+  case class FindEndingLater(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
+    extends DirectedFieldSearchingTimeSpanParse(
+        timeSpanParse, fields, _.end, _.plus(1, _),
+        (oldSpan, newSpan) => newSpan.end.isAfter(oldSpan.end))
 
   case class FindEnclosing(timeSpanParse: TimeSpanParse, unit: TemporalUnit) extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {

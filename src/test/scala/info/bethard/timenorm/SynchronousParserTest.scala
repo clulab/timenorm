@@ -99,13 +99,13 @@ class ParserTest extends FunSuite {
     [TimeSpan:EndAtStartOf] ||| [Period] before [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
     [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:WithModifier PRESENT APPROX ) [Period] ||| 1.0
     [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-    [TimeSpan:FindEarlier] ||| last [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindEarlier] ||| [FieldValue:PartialEarlier] ||| [FieldValue:PartialEarlier] ||| 1.0
-    [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindCurrentOrEarlier] ||| [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindCurrentOrLater] ||| tonight ||| ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+    [TimeSpan:FindEarlier] ||| last [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindEarlier] ||| [FieldValue:PartialEarlier] ||| PRESENT [FieldValue:PartialEarlier] ||| 1.0
+    [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindStartingEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan:FindEndingLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
     [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
     [TimeSpanSet:Simple] ||| Mondays ||| ( FieldValue DAY_OF_WEEK 1 ) ||| 1.0
     [TimeSpanSet:Simple] ||| [FieldValue:Partial] nights ||| ( FieldValue [FieldValue:Partial] ( FieldValue NIGHT_OF_DAY 1 ) ) ||| 1.0
@@ -170,19 +170,19 @@ class ParserTest extends FunSuite {
     assert(this.parse("1976", "9", "21") ===
       FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)))
     assert(this.parse("October", "15") ===
-      FindEarlier(Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
+      FindEarlier(Present, Map(MONTH_OF_YEAR -> 10, DAY_OF_MONTH -> 15)))
     assert(this.parse("10", ":", "35", "a", ".", "m", ".") ===
-      FindEarlier(Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
+      FindEarlier(Present, Map(HOUR_OF_AMPM -> 10, MINUTE_OF_HOUR -> 35, AMPM_OF_DAY -> 0)))
     assert(this.parse("last", "summer") ===
-      FindEarlier(Map(SUMMER_OF_YEAR -> 1)))
+      FindEarlier(Present, Map(SUMMER_OF_YEAR -> 1)))
     assert(this.parse("1976", "9", "21", "11", ":", "00", "a", ".", "m", ".") ===
       FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21, HOUR_OF_AMPM -> 11, MINUTE_OF_HOUR -> 0, AMPM_OF_DAY -> 0)))
     assert(this.parse("Thursday", "morning") ===
-      FindEarlier(Map(DAY_OF_WEEK -> 4, MORNING_OF_DAY -> 1)))
+      FindEarlier(Present, Map(DAY_OF_WEEK -> 4, MORNING_OF_DAY -> 1)))
     assert(this.parse("the", "weekend") ===
-      FindEarlier(Map(WEEKEND_OF_WEEK -> 1)))
+      FindEarlier(Present, Map(WEEKEND_OF_WEEK -> 1)))
     assert(this.parse("easter") ===
-      FindEarlier(Map(EASTER_DAY_OF_YEAR -> 1)))
+      FindEarlier(Present, Map(EASTER_DAY_OF_YEAR -> 1)))
   }
 
   test("parses complex time spans") {
@@ -206,18 +206,18 @@ class ParserTest extends FunSuite {
           FindEnclosing(EndAtStartOf(FindEnclosing(Present, DAYS), SimplePeriod(1, DAYS)), DAYS),
           SimplePeriod(1, DAYS)))
       
-    assert(this.parse("next", "October") === FindLater(Map(MONTH_OF_YEAR -> 10)))
+    assert(this.parse("next", "October") === FindLater(Present, Map(MONTH_OF_YEAR -> 10)))
     assert(this.parseAll("January").toSet === Set(
-        FindEarlier(Map(MONTH_OF_YEAR -> 1)),
-        FindCurrentOrEarlier(Map(MONTH_OF_YEAR -> 1)),
-        FindLater(Map(MONTH_OF_YEAR -> 1))))
+        FindEarlier(Present, Map(MONTH_OF_YEAR -> 1)),
+        FindStartingEarlier(Present, Map(MONTH_OF_YEAR -> 1)),
+        FindLater(Present, Map(MONTH_OF_YEAR -> 1))))
     assert(this.parse("early", "next", "week") ===
       WithModifier(StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS)), Modifier.Start))
     assert(this.parseAll("a", "decade", "ago").toSet === Set(
       MoveEarlier(WithModifier(Present, Modifier.Approx), SimplePeriod(1, DECADES)),
       MoveEarlier(FindEnclosing(Present, DECADES), SimplePeriod(1, DECADES))))
     
-    assert(this.parse("tonight") === FindCurrentOrLater(Map(NIGHT_OF_DAY -> 1)))
+    assert(this.parse("tonight") === FindEndingLater(Present, Map(NIGHT_OF_DAY -> 1)))
     assert(this.parse("first", "week", "of", "2012") ===
       StartAtStartOf(FindAbsolute(Map(YEAR -> 2012)), SimplePeriod(1, WEEKS)))
   }
@@ -235,7 +235,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("just", "now") === Present)
     assert(this.parse("this", "week", ".") === FindEnclosing(Present, WEEKS))
     assert(this.parse("this", "very", "month") === FindEnclosing(Present, MONTHS))
-    assert(this.parse("the", "next", "October") === FindLater(Map(MONTH_OF_YEAR -> 10)))
+    assert(this.parse("the", "next", "October") === FindLater(Present, Map(MONTH_OF_YEAR -> 10)))
   }
 
   /*
