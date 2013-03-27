@@ -49,7 +49,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     temporals match {
       case Seq() => None
       case Seq(temporal) => Some(temporal)
-      case _ => Some(temporals.minBy {
+      case temporals if temporals.size == 2 => Some(temporals.minBy {
         case timeSpan: TimeSpan => timeSpan.timeMLValueOption match {
           case Some(timeMLValue) => timeMLValue
           case None => throw new UnsupportedOperationException(
@@ -58,6 +58,8 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
         case _ => throw new UnsupportedOperationException(
           "Don't know how to select minimum of:\n%s".format(temporals.mkString("\n")))
       })
+      case _ => throw new UnsupportedOperationException(
+        "Expected exactly two choices, found:\n%s".format(temporals.mkString("\n")))
     }
   }
 
