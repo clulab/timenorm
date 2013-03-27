@@ -22,6 +22,10 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
       else if (word.matches("^\\d{8}$")) {
         Seq(word.substring(0, 4), "-", word.substring(4, 6), "-", word.substring(6, 8))
       }
+      // special case for concatenated YYMMDD
+      else if (word.matches("^\\d{6}$")) {
+        Seq(word.substring(0, 2), "-", word.substring(2, 4), "-", word.substring(4, 6))
+      }
       // special case for concatenated HHMMTZ
       else if (word.matches("^\\d{4}[A-Z]{3,4}$")) {
         Seq(word.substring(0, 2), ":", word.substring(2, 4), word.substring(4).toLowerCase)

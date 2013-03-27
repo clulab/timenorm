@@ -142,13 +142,20 @@ object TimeMLProcessor {
     ("APW19980301.0720.tml", "t1989", "six weeks ago", "1998-W02") /* ISO weeks start on Monday, not Sunday */,
     ("APW19980308.0201.tml", "t71", "recent days", "PAST_REF") /* TIDES spec says, e.g. "recent decades" => PXDE */,
     ("APW19980322.0749.tml", "t2023", "two weeks ago", "1998-03-08") /* possible interpretation, but usually these are -WXX values */,
-    ("APW19980322.0749.tml", "t138", "Sunday", "1998-02-22") /* wrong since ref time is 1998-03-22 */)
+    ("APW19980322.0749.tml", "t138", "Sunday", "1998-02-22") /* wrong since ref time is 1998-03-22 */,
+    ("CNN19980213.2130.0155.tml", "t145", "next week", "1998-WXX") /* next week is clearly identifiable */,
+    ("CNN19980227.2130.0067.tml", "t108", "this week", "1998-WXX") /* this week is clearly identifiable */)
   
   private final val knownFailures = Set(
     ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX"),
     ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"),
     ("APW19980219.0476.tml", "t137", "weeks or months", "PXW"),
-    ("APW19980301.0720.tml", "t1982", "last February", "1997-02") /* two Februaries before anchor */)
+    ("APW19980301.0720.tml", "t1982", "last February", "1997-02") /* two Februaries before anchor */,
+    ("CNN19980213.2130.0155.tml", "t126", "the day", "1998-02-13") /* "later in the day" */,
+    ("CNN19980223.1130.0960.tml", "t24", "the winter of nineteen ninety-four", "1994-WI") /* need full number grammar */,
+    ("CNN19980227.2130.0067.tml", "t95", "nineteen ninety-six", "1996") /* need full number grammar */,
+    ("CNN19980227.2130.0067.tml", "t96", "January nineteen ninety-seven", "1997-01") /* need full number grammar */,
+    ("CNN19980227.2130.0067.tml", "t107", "nineteen ninety-seven", "1997") /* need full number grammar */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
