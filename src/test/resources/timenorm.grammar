@@ -220,6 +220,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| some time ||| ( Unit MONTHS ) ||| 1.0
 [Period:Unspecified] ||| lengthy period ||| ( Unit YEARS ) ||| 1.0
+[Period:Unspecified] ||| several [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
 [Period:Fractional] ||| [Unit:Singular] and a half ||| ( Int 1 ) ( Int 1 ) ( Int 2 ) [Unit:Singular] ||| 1.0
 [Period:Fractional] ||| [Int] and a half [Unit] ||| [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
@@ -247,7 +248,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| the time ||| PAST ||| 1.0
-[TimeSpan:Simple] ||| several [Unit:Plural] ago ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| previous ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| previously ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| recent ||| PAST ||| 1.0
