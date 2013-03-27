@@ -7,6 +7,7 @@ import org.scalatest.FunSuite
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
+import org.threeten.bp.temporal.ISOFields._
 import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
@@ -154,6 +155,15 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpan(
       FindEarlier(Present, Map(EASTER_DAY_OF_YEAR -> 1)),
       "2012-04-08T00:00", "2012-04-09T00:00", "P1D", "2012-04-08")
+    assertTimeSpan(
+      FindEnclosing(Present, QUARTER_YEARS),
+      "2012-10-01T00:00", "2013-01-01T00:00", "P1Q", "2012-Q4")
+    assertTimeSpan(
+      FindEarlier(Present, Map(QUARTER_OF_YEAR -> 1)),
+      "2012-01-01T00:00", "2012-04-01T00:00", "P1Q", "2012-Q1")
+    assertTimeSpan(
+      FindLater(Present, Map(QUARTER_OF_YEAR -> 2)),
+      "2013-04-01T00:00", "2013-07-01T00:00", "P1Q", "2013-Q2")
     
     // this previously caused an infinite loop because searching one night at a time
     // managed to skip past Sunday night; so the test here is just that it completes
@@ -261,7 +271,6 @@ class TemporalParseTest extends FunSuite {
 
     // this previously failed because we were using aligned weeks instead of Monday-aligned weeks
     val mar6 = ZonedDateTime.of(LocalDateTime.of(1998, 3, 6, 0, 0), ZoneId.of("Z"))
-    println(FindEnclosing(Present, WEEKS).toTimeSpan(mar6))
     val nextWeek = StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS))
     assert(nextWeek.toTimeSpan(mar6).timeMLValueOption === Some("1998-W11"))
  }

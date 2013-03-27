@@ -5,6 +5,7 @@ import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
+import org.threeten.bp.temporal.ISOFields._
 import scala.collection.immutable.ListMap
 import org.threeten.bp.temporal.WeekFields
 
@@ -25,6 +26,7 @@ case class Period(
     CENTURIES -> "CE",
     DECADES -> "DE",
     YEARS -> "Y",
+    QUARTER_YEARS -> "Q",
     SPRINGS -> "SP",
     SUMMERS -> "SU",
     FALLS -> "FA",
@@ -58,7 +60,11 @@ case class Period(
         case Int.MaxValue => "X"
         case i => i.toString
       }
-      (unit, amount + this.unitChars(unit))
+      val suffix = this.unitChars.get(unit) match {
+        case None => throw new UnsupportedOperationException("Don't know how to format " + unit)
+        case Some(string) => string
+      }
+      (unit, amount + suffix)
     }
     val (dateParts, timeParts) = parts.partition(_._1.getDuration.isGreaterThan(HOURS.getDuration))
     val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.map(_._2).mkString
@@ -144,9 +150,16 @@ case class TimeSpan(
     } else {
       this.period.unitAmounts.toList match {
         case List((unit, 1)) if TimeSpan.truncate(this.start, unit) == this.start =>
-          val parts =
-            for (field <- TimeSpan.unitToFieldsToDisplay(unit))
-              yield TimeSpan.fieldFormats(field)(this.start.get(field))
+          val fields = TimeSpan.unitToFieldsToDisplay.get(unit) match {
+            case None => throw new UnsupportedOperationException("Don't know how to display " + unit)
+            case Some(fields) => fields
+          }
+          val parts = for (field <- fields) yield {
+            TimeSpan.fieldFormats.get(field) match {
+              case None => throw new UnsupportedOperationException("Don't know how to format " + field)
+              case Some(format) => format(this.start.get(field))
+            }
+          }
           Some(parts.mkString)
         case _ => None
       }
@@ -165,10 +178,13 @@ object TimeSpan {
   }
 
   def truncate(time: ZonedDateTime, unit: TemporalUnit): ZonedDateTime = {
-    this.unitToFieldsToTruncate(unit).foldLeft(time) {
-      case (time, field) => {
-        val nUnits = time.get(field) - field.range.getMinimum
-        time.minus(nUnits, field.getBaseUnit)
+    this.unitToFieldsToTruncate.get(unit) match {
+      case None => throw new UnsupportedOperationException("Don't know how to truncate " + unit)
+      case Some(fields) => fields.foldLeft(time) {
+        case (time, field) => {
+          val nUnits = time.get(field) - field.range.getMinimum
+          time.minus(nUnits, field.getBaseUnit)
+        }
       }
     }
   }
@@ -177,6 +193,7 @@ object TimeSpan {
     (CENTURY, "%02d".format(_)),
     (DECADE, "%03d".format(_)),
     (YEAR, "%04d".format(_)),
+    (QUARTER_OF_YEAR, "-Q%d".format(_)),
     (SPRING_OF_YEAR, _ match { case 1 => "-SP" }),
     (SUMMER_OF_YEAR, _ match { case 1 => "-SU" }),
     (FALL_OF_YEAR, _ match { case 1 => "-FA" }),
@@ -198,6 +215,7 @@ object TimeSpan {
     CENTURIES -> Seq(CENTURY),
     DECADES -> Seq(DECADE),
     YEARS -> Seq(YEAR),
+    QUARTER_YEARS -> Seq(YEAR, QUARTER_OF_YEAR),
     SPRINGS -> Seq(YEAR, SPRING_OF_YEAR),
     SUMMERS -> Seq(YEAR, SUMMER_OF_YEAR),
     FALLS -> Seq(YEAR, FALL_OF_YEAR),
@@ -218,6 +236,7 @@ object TimeSpan {
     CENTURIES -> Seq(YEAR_OF_CENTURY, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     DECADES -> Seq(YEAR_OF_DECADE, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     YEARS -> Seq(MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
+    QUARTER_YEARS -> Seq(DAY_OF_QUARTER, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     SPRINGS -> Seq(DAY_OF_SPRING, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     SUMMERS -> Seq(DAY_OF_SUMMER, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),
     FALLS -> Seq(DAY_OF_FALL, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE),

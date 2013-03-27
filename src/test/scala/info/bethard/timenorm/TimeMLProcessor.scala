@@ -133,6 +133,7 @@ object TimeMLProcessor {
     ("AP900815-0044.tml", "t210", "Monday", "1990-08-06") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t252", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
     ("AP900815-0044.tml", "t269", "Tuesday", "1990-08-07") /* wrong anchor: anchor is more than a week after "value" */,
+    ("AP900815-0044.tml", "t276", "eighth day", "1990-08-15") /* eighth day of Desert Storm, but anchor is not first day of Desert Storm */,
     ("AP900816-0139.tml", "t352", "A day earlier", "P1D") /* should be date, not period (and no anchor) */,
     ("APW19980219.0476.tml", "t130", "almost two years ago", "P2Y") /* should be date, not period */,
     ("APW19980219.0476.tml", "t169", "July last year", "1997-06") /* July is 07 */,

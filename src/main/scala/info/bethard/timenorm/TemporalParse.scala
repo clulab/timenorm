@@ -1,7 +1,6 @@
 package info.bethard.timenorm
 
 import scala.collection.immutable.Seq
-
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.ZonedDateTime
@@ -9,8 +8,8 @@ import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalUnit
-
 import info.bethard.timenorm.SynchronousParser.Tree
+import org.threeten.bp.temporal.ISOFields
 
 trait TokenParser {
   def toInt(token: String): Int
@@ -30,6 +29,8 @@ class DefaultTokenParser extends TokenParser {
     case "SUMMERS" => SUMMERS
     case "FALLS" => FALLS
     case "WINTERS" => WINTERS
+    case "QUARTER_YEARS" => ISOFields.QUARTER_YEARS
+    case "WEEK_BASED_YEARS" => ISOFields.WEEK_BASED_YEARS
     case _ => ChronoUnit.valueOf(token)
   }
   def toTemporalField(token: String): TemporalField = token match {
@@ -52,6 +53,10 @@ class DefaultTokenParser extends TokenParser {
     case "DECADE" => DECADE
     case "YEAR_OF_CENTURY" => YEAR_OF_CENTURY
     case "CENTURY" => CENTURY
+    case "DAY_OF_QUARTER" => ISOFields.DAY_OF_QUARTER
+    case "QUARTER_OF_YEAR" => ISOFields.QUARTER_OF_YEAR
+    case "WEEK_BASED_YEAR" => ISOFields.WEEK_BASED_YEAR
+    case "WEEK_OF_WEEK_BASED_YEAR" => ISOFields.WEEK_OF_WEEK_BASED_YEAR
     case _ => ChronoField.valueOf(token)
   }
 }

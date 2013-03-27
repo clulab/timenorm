@@ -23,6 +23,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| recent ||| ||| 1.0
 [Nil] ||| crucial ||| ||| 1.0
 [Nil] ||| fairly ||| ||| 1.0
+[Nil] ||| fiscal ||| ||| 1.0
+[Nil] ||| fiscal - ||| ||| 1.0
 
 [Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0
@@ -64,6 +66,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Unit:Singular] ||| day ||| DAYS ||| 1.0
 [Unit:Singular] ||| week ||| WEEKS ||| 1.0
 [Unit:Singular] ||| month ||| MONTHS ||| 1.0
+[Unit:Singular] ||| quarter ||| QUARTER_YEARS ||| 1.0
 [Unit:Singular] ||| year ||| YEARS ||| 1.0
 [Unit:Singular] ||| decade ||| DECADES ||| 1.0
 [Unit:Singular] ||| century ||| CENTURIES ||| 1.0
@@ -74,6 +77,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Unit:Plural] ||| days ||| DAYS ||| 1.0
 [Unit:Plural] ||| weeks ||| WEEKS ||| 1.0
 [Unit:Plural] ||| months ||| MONTHS ||| 1.0
+[Unit:Plural] ||| quarters ||| QUARTER_YEARS ||| 1.0
 [Unit:Plural] ||| years ||| YEARS ||| 1.0
 [Unit:Plural] ||| decades ||| DECADES ||| 1.0
 [Unit:Plural] ||| centuries ||| CENTURIES ||| 1.0
@@ -143,6 +147,16 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:MonthOfYear] ||| dec ||| MONTH_OF_YEAR 12 ||| 1.0
 [FieldValue:MonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
 
+[FieldValue:QuarterOfYear] ||| first quarter ||| QUARTER_OF_YEAR 1 ||| 1.0
+[FieldValue:QuarterOfYear] ||| second quarter ||| QUARTER_OF_YEAR 2 ||| 1.0
+[FieldValue:QuarterOfYear] ||| third quarter ||| QUARTER_OF_YEAR 3 ||| 1.0
+[FieldValue:QuarterOfYear] ||| fourth quarter ||| QUARTER_OF_YEAR 4 ||| 1.0
+
+[FieldValue:QuarterOfYear] ||| first - quarter ||| QUARTER_OF_YEAR 1 ||| 1.0
+[FieldValue:QuarterOfYear] ||| second - quarter ||| QUARTER_OF_YEAR 2 ||| 1.0
+[FieldValue:QuarterOfYear] ||| third - quarter ||| QUARTER_OF_YEAR 3 ||| 1.0
+[FieldValue:QuarterOfYear] ||| fourth - quarter ||| QUARTER_OF_YEAR 4 ||| 1.0
+
 [FieldValue:SeasonOfYear] ||| spring ||| SPRING_OF_YEAR 1 ||| 1.0
 [FieldValue:SeasonOfYear] ||| summer ||| SUMMER_OF_YEAR 1 ||| 1.0
 [FieldValue:SeasonOfYear] ||| fall ||| FALL_OF_YEAR 1 ||| 1.0
@@ -175,6 +189,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:Partial] ||| [FieldValue:WeekendOfWeek] ||| [FieldValue:WeekendOfWeek] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:QuarterOfYear] ||| [FieldValue:QuarterOfYear] ||| 1.0
 
 [FieldValue:PartialYear] ||| [Int:0-99] ||| YEAR_OF_CENTURY [Int:0-99] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
@@ -193,6 +208,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:YearMonthDay] ||| [FieldValue:Year] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 
 [FieldValue:Absolute] ||| [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| 1.0
 [FieldValue:Absolute] ||| [FieldValue:YearMonth] ||| [FieldValue:YearMonth] ||| 1.0
 [FieldValue:Absolute] ||| [FieldValue:YearMonthDay] ||| [FieldValue:YearMonthDay] ||| 1.0
 [FieldValue:Absolute] ||| [FieldValue:YearMonthDay] [FieldValue:Time] ||| [FieldValue:YearMonthDay] [FieldValue:Time] ||| 1.0
@@ -283,17 +299,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [TimeSpan:FindAtOrEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
 [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-
-[TimeSpan:StartAtStartOf] ||| first [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| second [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| third [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| fourth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| fifth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| sixth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| seventh [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| eighth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| ninth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
-[TimeSpan:StartAtStartOf] ||| tenth [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) ( Period:Simple 1 [Unit] ) ||| 1.0
 
 [TimeSpan:WithModifier] ||| start of [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
