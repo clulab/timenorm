@@ -254,9 +254,9 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:EndAtStartOf] ||| [Int] rd century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
 [TimeSpan:EndAtStartOf] ||| [Int] th century ||| ( TimeSpan:FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period:Simple 1 CENTURIES ) ||| 1.0 
 
-[TimeSpan:FindAtOrEarlier] ||| this morning ||| PRESENT ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0 
-[TimeSpan:FindAtOrLater] ||| this evening ||| PRESENT ( FieldValue EVENING_OF_DAY 1 ) ||| 1.0 
-[TimeSpan:FindAtOrLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+[TimeSpan:FindEnclosed] ||| this [FieldValue:Partial] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0 
+[TimeSpan:FindEnclosed] ||| [FieldValue:Partial] this [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0 
+[TimeSpan:FindEnclosed] ||| tonight ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
 [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 
