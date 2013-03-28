@@ -144,10 +144,20 @@ object TimeMLProcessor {
     ("APW19980322.0749.tml", "t2023", "two weeks ago", "1998-03-08") /* possible interpretation, but usually these are -WXX values */,
     ("APW19980322.0749.tml", "t138", "Sunday", "1998-02-22") /* wrong since ref time is 1998-03-22 */,
     ("CNN19980213.2130.0155.tml", "t145", "next week", "1998-WXX") /* next week is clearly identifiable */,
-    ("CNN19980227.2130.0067.tml", "t108", "this week", "1998-WXX") /* this week is clearly identifiable */)
+    ("CNN19980227.2130.0067.tml", "t108", "this week", "1998-WXX") /* this week is clearly identifiable */,
+    ("ed980111.1130.0089.tml", "t15", "the next several days", "PXD") /* TIDES spec says, e.g. "several weeks ago" => PAST_REF */,
+    ("NYT19980206.0460.tml", "t201", "coming months", "FUTURE_REF") /* TIDES spec says, e.g. "recent decades" => PXDE */,
+    ("NYT19980206.0460.tml", "t1002", "two decades", "P20Y") /* decades are DE */,
+    ("NYT19980206.0466.tml", "t35", "the past few weeks", "PXW") /* TIDES spec says, e.g. "several weeks ago" => PAST_REF */,
+    ("NYT19980212.0019.tml", "t47", "a few years ago", "199X") /* TIDES spec says, e.g. "several weeks ago" => PAST_REF */,
+    ("PRI19980121.2000.2591.tml", "t1982", "centuries", "PXC") /* centuries are CE */,
+    ("PRI19980121.2000.2591.tml", "t1986", "a few minutes", "PXM") /* PXM is months, PXTM is minutes */,
+    ("PRI19980306.2000.1675.tml", "t31", "the second day", "1998-03-06") /* "second day of an offensive", but anchor is not first day of the offensive */)
+
   
   private final val knownFailures = Set(
-    ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX"),
+    ("AP900815-0044.tml", "t47", "some time", "PXM") /* should be PXX if the other PXX annotations are right */,
+    ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX") /* PXX is not in the spec... */,
     ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"),
     ("APW19980219.0476.tml", "t137", "weeks or months", "PXW"),
     ("APW19980301.0720.tml", "t1982", "last February", "1997-02") /* two Februaries before anchor */,
@@ -155,7 +165,15 @@ object TimeMLProcessor {
     ("CNN19980223.1130.0960.tml", "t24", "the winter of nineteen ninety-four", "1994-WI") /* need full number grammar */,
     ("CNN19980227.2130.0067.tml", "t95", "nineteen ninety-six", "1996") /* need full number grammar */,
     ("CNN19980227.2130.0067.tml", "t96", "January nineteen ninety-seven", "1997-01") /* need full number grammar */,
-    ("CNN19980227.2130.0067.tml", "t107", "nineteen ninety-seven", "1997") /* need full number grammar */)
+    ("CNN19980227.2130.0067.tml", "t107", "nineteen ninety-seven", "1997") /* need full number grammar */,
+    ("ed980111.1130.0089.tml", "t20", "a while", "PXX") /* PXX is not in the spec... */,
+    ("PRI19980115.2000.0186.tml", "t30", "nineteen ninety-one", "1991") /* need full number grammar */,
+    ("PRI19980115.2000.0186.tml", "t31", "nineteen ninety-six", "1996") /* need full number grammar */,
+    ("PRI19980121.2000.2591.tml", "t34", "nineteen seventy-nine", "1979") /* need full number grammar */,
+    ("PRI19980121.2000.2591.tml", "t1991", "more than two thousand years", "P2L") /* need full number grammar */,
+    ("PRI19980205.2000.1998.tml", "t45", "the year two thousand", "2000") /* need full number grammar */,
+    ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */,
+    ("VOA19980303.1600.2745.tml", "t168", "the past year", "1997") /* parsed as [the past][year], like [Thanksgiving][day] */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))

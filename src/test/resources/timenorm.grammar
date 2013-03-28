@@ -18,9 +18,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| - old ||| ||| 1.0
 [Nil] ||| long ||| ||| 1.0
 [Nil] ||| - long ||| ||| 1.0
-[Nil] ||| coming ||| ||| 1.0
 [Nil] ||| ' s ||| ||| 1.0
-[Nil] ||| recent ||| ||| 1.0
 [Nil] ||| crucial ||| ||| 1.0
 [Nil] ||| fairly ||| ||| 1.0
 [Nil] ||| fiscal ||| ||| 1.0
@@ -178,12 +176,14 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:Day] ||| [FieldValue:NamedDay] ||| [FieldValue:NamedDay] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:Day] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:Day] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+
+[FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 
 [FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:PartOfDay] ||| [FieldValue:PartOfDay] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:Day] ||| [FieldValue:Day] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:MonthDay] ||| [FieldValue:MonthDay] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:Time] [FieldValue:Day] ||| [FieldValue:Time] [FieldValue:Day] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:WeekendOfWeek] ||| [FieldValue:WeekendOfWeek] ||| 1.0
@@ -202,10 +202,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
 
-[FieldValue:YearMonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:YearMonthDay] ||| [FieldValue:MonthOfYear] / [FieldValue:DayOfMonth] / [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:YearMonthDay] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
 [FieldValue:YearMonthDay] ||| [FieldValue:Year] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:YearMonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:YearMonthDay] ||| [FieldValue:MonthDay] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
 
 [FieldValue:Absolute] ||| [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
 [FieldValue:Absolute] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| 1.0
@@ -215,12 +215,14 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
 [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
+[Period:Simple] ||| first [Int] [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] - [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] more [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
-[Period:Unspecified] ||| some time ||| ( Unit MONTHS ) ||| 1.0
-[Period:Unspecified] ||| lengthy period ||| ( Unit YEARS ) ||| 1.0
 [Period:Unspecified] ||| several [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| few [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| coming [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| recent [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
 [Period:Fractional] ||| [Unit:Singular] and a half ||| ( Int 1 ) ( Int 1 ) ( Int 2 ) [Unit:Singular] ||| 1.0
 [Period:Fractional] ||| [Int] and a half [Unit] ||| [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
@@ -251,7 +253,11 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Simple] ||| previous ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| previously ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| recent ||| PAST ||| 1.0
+[TimeSpan:Simple] ||| more recent ||| PAST ||| 1.0
+[TimeSpan:Simple] ||| most recent ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| recently ||| PAST ||| 1.0
+[TimeSpan:Simple] ||| more recently ||| PAST ||| 1.0
+[TimeSpan:Simple] ||| most recently ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| current ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| currently ||| PRESENT ||| 1.0
