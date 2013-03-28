@@ -51,6 +51,7 @@ class DefaultTokenParser extends TokenParser {
     case "WINTER_OF_YEAR" => WINTER_OF_YEAR
     case "YEAR_OF_DECADE" => YEAR_OF_DECADE
     case "DECADE" => DECADE
+    case "DECADE_OF_CENTURY" => DECADE_OF_CENTURY
     case "YEAR_OF_CENTURY" => YEAR_OF_CENTURY
     case "CENTURY" => CENTURY
     case "DAY_OF_QUARTER" => ISOFields.DAY_OF_QUARTER

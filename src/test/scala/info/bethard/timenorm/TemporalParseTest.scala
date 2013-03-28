@@ -164,6 +164,12 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpan(
       FindLater(Present, Map(QUARTER_OF_YEAR -> 2)),
       "2013-04-01T00:00", "2013-07-01T00:00", "P1Q", "2013-Q2")
+    assertTimeSpan(
+      FindLater(Present, Map(DECADE_OF_CENTURY -> 3)),
+      "2030-01-01T00:00", "2040-01-01T00:00", "P1DE", "203")
+    assertTimeSpan(
+      FindEnclosing(Present, DECADES),
+      "2010-01-01T00:00", "2020-01-01T00:00", "P1DE", "201")
     
     // this previously caused an infinite loop because searching one night at a time
     // managed to skip past Sunday night; so the test here is just that it completes

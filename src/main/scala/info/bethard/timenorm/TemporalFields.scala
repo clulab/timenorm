@@ -306,6 +306,23 @@ private[timenorm] object CENTURY extends TemporalField {
   def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
 }
 
+private[timenorm] object DECADE_OF_CENTURY extends TemporalField {
+  def getName: String = "DecadeOfCentury"
+  def getBaseUnit: TemporalUnit = DECADES
+  def getRangeUnit: TemporalUnit = CENTURIES
+  def range: ValueRange = ValueRange.of(0, 9)
+  def doGet(temporal: TemporalAccessor): Long = DECADE.doGet(temporal) % 10L
+  def doIsSupported(temporal: TemporalAccessor): Boolean = DECADE.doIsSupported(temporal)
+  def doRange(temporal: TemporalAccessor): ValueRange = this.range
+  def doWith[R <: JTemporal](temporal: R, newValue: Long): R = {
+    val oldDecade = DECADE.doGet(temporal)
+    DECADE.doWith(temporal, oldDecade - oldDecade % 10L + newValue)
+  }
+
+  def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
+  def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
+}
+
 private[timenorm] object YEAR_OF_CENTURY extends TemporalField {
   def getName: String = "YearOfCentury"
   def getBaseUnit: TemporalUnit = YEARS
