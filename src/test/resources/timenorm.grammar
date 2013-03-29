@@ -251,6 +251,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [PeriodSet:WithQuantifier] ||| yearly ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
 [PeriodSet:WithQuantifier] ||| annually ||| ( Period:Simple 1 YEARS ) EVERY ||| 1.0
 [PeriodSet:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
+[PeriodSet:WithQuantifier] ||| each [Period] ||| [Period] EACH ||| 1.0
 
 [TimeSpan:Simple] ||| the past ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| the time ||| PAST ||| 1.0

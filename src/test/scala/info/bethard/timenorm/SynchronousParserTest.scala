@@ -85,6 +85,7 @@ class ParserTest extends FunSuite {
     [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
     [PeriodSet:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
     [PeriodSet:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
+    [PeriodSet:WithQuantifier] ||| each [Period] ||| [Period] EACH ||| 1.0
     [PeriodSet:WithFrequency] ||| twice [Period] ||| [Period] 2 ||| 1.0
     [PeriodSet:WithFrequency] ||| [Int] [Unit] [Period] ||| [Period] [Int] [Unit] ||| 1.0
     [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
@@ -153,6 +154,8 @@ class ParserTest extends FunSuite {
       WithQuantifier(Simple(PeriodParse.Simple(1, DAYS)), Quantifier.Every))
     assert(this.parse("every", "week") ===
       WithQuantifier(Simple(PeriodParse.Simple(1, WEEKS)), Quantifier.Every))
+    assert(this.parse("each", "month") ===
+      WithQuantifier(Simple(PeriodParse.Simple(1, MONTHS)), Quantifier.Each))
     assert(this.parse("every", "two", "years") ===
       WithQuantifier(Simple(PeriodParse.Simple(2, YEARS)), Quantifier.Every))
     assert(this.parse("twice", "a", "month") ===

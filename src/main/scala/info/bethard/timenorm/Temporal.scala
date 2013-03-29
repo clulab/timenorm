@@ -392,8 +392,9 @@ abstract class Quantifier(val timeMLValue: Option[String]) {
 object Quantifier {
   case object None extends Quantifier(scala.None)
   case object Every extends Quantifier(Some("EVERY"))
+  case object Each extends Quantifier(Some("EACH"))
 
-  val values = Seq[Quantifier](Every)
+  val values = Seq[Quantifier](None, Every, Each)
 
   private val stringToQuantifier =
     (for (quantifier <- values; name <- quantifier.timeMLValue) yield name -> quantifier).toMap
