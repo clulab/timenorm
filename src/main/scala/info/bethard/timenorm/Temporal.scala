@@ -8,6 +8,8 @@ import org.threeten.bp.temporal.ChronoField._
 import org.threeten.bp.temporal.ISOFields._
 import scala.collection.immutable.ListMap
 import org.threeten.bp.temporal.WeekFields
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.ZoneId
 
 sealed trait Temporal {
   val timeMLValue: String
@@ -169,6 +171,9 @@ case class TimeSpan(
   val timeMLValue = this.timeMLValueOption.getOrElse(this.period.timeMLValue)
 }
 object TimeSpan {
+  final val unspecifiedStart = ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("Z"))
+  final val unspecifiedEnd = ZonedDateTime.of(LocalDateTime.MAX, ZoneId.of("Z"))
+  
   def startingAt(start: ZonedDateTime, period: Period, modifier: Modifier): TimeSpan = {
     TimeSpan(start, period.addTo(start), period, modifier)
   }

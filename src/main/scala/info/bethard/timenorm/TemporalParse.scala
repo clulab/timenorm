@@ -282,14 +282,10 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
       WithModifier(TimeSpanParse(time), Modifier.valueOf(modifier))
     case _ => fail(tree)
   }
-
+  
   case object Past extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(
-          ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("Z")),
-          anchor,
-          Period.infinite,
-          Modifier.Approx) {
+      new TimeSpan(TimeSpan.unspecifiedStart, anchor, Period.infinite, Modifier.Approx) {
         override def timeMLValueOption = Some("PAST_REF")
       }
     }
@@ -305,11 +301,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
 
   case object Future extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(
-          anchor,
-          ZonedDateTime.of(LocalDateTime.MAX, ZoneId.of("Z")),
-          Period.infinite,
-          Modifier.Approx) {
+      new TimeSpan(anchor, TimeSpan.unspecifiedEnd, Period.infinite, Modifier.Approx) {
         override def timeMLValueOption = Some("FUTURE_REF")
       }
     }
@@ -438,61 +430,72 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
 
   abstract class MoveSpanParse(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
     extends TimeSpanParse {
-    def forUnspecifiedPeriod: TimeSpanParse
-    def toTimeSpan(timeSpan: TimeSpan, period: Period): TimeSpan
+    def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier): TimeSpan
+    def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier): TimeSpan
     def toTimeSpan(anchor: ZonedDateTime) = {
       val timeSpan = timeSpanParse.toTimeSpan(anchor)
       val period = periodParse.toPeriod
+      val modifier = timeSpan.modifier & period.modifier
       val isUnspecified = period.unitAmounts.values.exists(_ == Int.MaxValue)
       if (isUnspecified) {
-        this.forUnspecifiedPeriod.toTimeSpan(anchor)
+        this.toUnspecifiedTimeSpan(timeSpan, period, modifier & Modifier.Approx)
       } else {
-        this.toTimeSpan(timeSpan, period)
+        this.toTimeSpan(timeSpan, period, modifier)
       }
     }
   }
 
   case class StartAtStartOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
   extends MoveSpanParse(timeSpanParse, periodParse) {
-    def forUnspecifiedPeriod = Future
-    def toTimeSpan(timeSpan: TimeSpan, period: Period) = {
-      TimeSpan.startingAt(timeSpan.start, period, timeSpan.modifier & period.modifier)
+    def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan(timeSpan.start, TimeSpan.unspecifiedEnd, period, modifier)
+    }
+    def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan.startingAt(timeSpan.start, period, modifier)
     }
   }
 
   case class StartAtEndOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
   extends MoveSpanParse(timeSpanParse, periodParse) {
-    def forUnspecifiedPeriod = Future
-    def toTimeSpan(timeSpan: TimeSpan, period: Period) = {
-      TimeSpan.startingAt(timeSpan.end, period, timeSpan.modifier & period.modifier)
+    def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan(timeSpan.end, TimeSpan.unspecifiedEnd, period, modifier)
+    }
+    def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan.startingAt(timeSpan.end, period, modifier)
     }
   }
 
   case class EndAtStartOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
   extends MoveSpanParse(timeSpanParse, periodParse) {
-    def forUnspecifiedPeriod = Past
-    def toTimeSpan(timeSpan: TimeSpan, period: Period) = {
-      TimeSpan.endingAt(timeSpan.start, period, timeSpan.modifier & period.modifier)
+    def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan(TimeSpan.unspecifiedStart, timeSpan.end, period, modifier)
+    }
+    def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan.endingAt(timeSpan.start, period, modifier)
     }
   }
 
   case class MoveEarlier(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
   extends MoveSpanParse(timeSpanParse, periodParse) {
-    def forUnspecifiedPeriod = Past
-    def toTimeSpan(timeSpan: TimeSpan, period: Period) = {
+    def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan(TimeSpan.unspecifiedStart, timeSpan.end, period, modifier)
+    }
+    def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
       val start = period.subtractFrom(timeSpan.start)
       val end = period.subtractFrom(timeSpan.end)
-      TimeSpan(start, end, timeSpan.period, timeSpan.modifier & period.modifier)
+      TimeSpan(start, end, timeSpan.period, modifier)
     }
   }
 
   case class MoveLater(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
   extends MoveSpanParse(timeSpanParse, periodParse) {
-    def forUnspecifiedPeriod = Future
-    def toTimeSpan(timeSpan: TimeSpan, period: Period) = {
+    def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
+      TimeSpan(timeSpan.start, TimeSpan.unspecifiedEnd, period, modifier)
+    }
+    def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
       val start = period.addTo(timeSpan.start)
       val end = period.addTo(timeSpan.end)
-      TimeSpan(start, end, timeSpan.period, timeSpan.modifier & period.modifier)
+      TimeSpan(start, end, timeSpan.period, modifier)
     }
   }
 

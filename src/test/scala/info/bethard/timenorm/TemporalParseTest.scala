@@ -278,16 +278,16 @@ class TemporalParseTest extends FunSuite {
     // moving with underspecified periods
     assertTimeSpan(
       MoveEarlier(Present, UnspecifiedPeriod(DAYS)),
-      "-999999999-01-01T00:00", nowString, "PX", "PAST_REF", "APPROX")
+      "-999999999-01-01T00:00", nowString, "PXD", null, "APPROX")
     assertTimeSpan(
       EndAtStartOf(Present, UnspecifiedPeriod(WEEKS)),
-      "-999999999-01-01T00:00", nowString, "PX", "PAST_REF", "APPROX")
+      "-999999999-01-01T00:00", nowString, "PXW", null, "APPROX")
     assertTimeSpan(
       MoveLater(Present, UnspecifiedPeriod(MONTHS)),
-      nowString, "+999999999-12-31T23:59:59.999999999", "PX", "FUTURE_REF", "APPROX")
+      nowString, "+999999999-12-31T23:59:59.999999999", "PXM", null, "APPROX")
     assertTimeSpan(
       StartAtEndOf(Present, UnspecifiedPeriod(YEARS)),
-      nowString, "+999999999-12-31T23:59:59.999999999", "PX", "FUTURE_REF", "APPROX")
+      nowString, "+999999999-12-31T23:59:59.999999999", "PXY", null, "APPROX")
 
     // this previously failed because we were using aligned weeks instead of Monday-aligned weeks
     val mar6 = ZonedDateTime.of(LocalDateTime.of(1998, 3, 6, 0, 0), ZoneId.of("Z"))
