@@ -57,7 +57,8 @@ object SynchronousGrammar {
       throw new IllegalArgumentException("First line must define root symbols, e.g. ROOTS [XXX] [YYY]")
     }
     val rootSymbols = firstLine.split("\\s+").tail.toSet
-    val rules = for (line <- lines) yield line.trim.split("\\s*[|][|][|]\\s*") match {
+    val nonCommentLines = lines.filterNot(_.startsWith("//"))
+    val rules = for (line <- nonCommentLines) yield line.trim.split("\\s*[|][|][|]\\s*") match {
       case Array(symbol, sourceSeqString, targetSeqString, scoreString) => {
         val sourceSeqItems = sourceSeqString.split("\\s+").toIndexedSeq
         val targetSeqItems = targetSeqString.split("\\s+").toIndexedSeq
