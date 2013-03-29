@@ -152,7 +152,9 @@ object TimeMLProcessor {
     ("NYT19980212.0019.tml", "t47", "a few years ago", "199X") /* TIDES spec says, e.g. "several weeks ago" => PAST_REF */,
     ("PRI19980121.2000.2591.tml", "t1982", "centuries", "PXC") /* centuries are CE */,
     ("PRI19980121.2000.2591.tml", "t1986", "a few minutes", "PXM") /* PXM is months, PXTM is minutes */,
-    ("PRI19980306.2000.1675.tml", "t31", "the second day", "1998-03-06") /* "second day of an offensive", but anchor is not first day of the offensive */)
+    ("PRI19980306.2000.1675.tml", "t31", "the second day", "1998-03-06") /* "second day of an offensive", but anchor is not first day of the offensive */,
+    ("VOA19980305.1800.2603.tml", "t87", "today", "PRESENT_REF") /* "today" should be a date */,
+    ("VOA19980331.1700.1533.tml", "t105", "a year or two", "FUTURE_REF") /* should probably be "PXY" */)
 
   
   private final val knownFailures = Set(
@@ -171,7 +173,9 @@ object TimeMLProcessor {
     ("PRI19980121.2000.2591.tml", "t1991", "more than two thousand years", "P2L") /* need full number grammar */,
     ("PRI19980205.2000.1998.tml", "t45", "the year two thousand", "2000") /* need full number grammar */,
     ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */,
-    ("VOA19980303.1600.2745.tml", "t121", "the year two thousand", "2000") /* need full number grammar */)
+    ("VOA19980303.1600.2745.tml", "t121", "the year two thousand", "2000") /* need full number grammar */,
+    ("VOA19980305.1800.2603.tml", "t66", "this coming Sunday, March eighth", "1998-03-08") /* need full number grammar and handling of "this coming" */,
+    ("VOA19980331.1700.1533.tml", "t3000", "two", "P2D") /* from "two to six days" */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))

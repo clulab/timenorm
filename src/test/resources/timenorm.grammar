@@ -178,7 +178,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:Day] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
 
 [FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:DayOfWeek] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthDay] ||| 1.0
 
 [FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:PartOfDay] ||| [FieldValue:PartOfDay] ||| 1.0
@@ -222,8 +222,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| several [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| few [Unit:Plural] ||| [Unit:Plural] ||| 1.0
-[Period:Unspecified] ||| coming [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| recent [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| early [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| a while ||| UNSPECIFIED ||| 1.0
 [Period:Unspecified] ||| lengthy period ||| UNSPECIFIED ||| 1.0
 
@@ -306,6 +306,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [TimeSpan:FindEarlier] ||| last [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
 [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:FindLater] ||| coming [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
 
 [TimeSpan:EndAtStartOf] ||| last [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:EndAtStartOf] ||| past [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
@@ -319,6 +320,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:StartAtEndOf] ||| following [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:StartAtEndOf] ||| coming [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:StartAtEndOf] ||| [Period] from [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
 
 [TimeSpan:FindAtOrEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
