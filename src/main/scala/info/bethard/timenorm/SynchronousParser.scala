@@ -29,8 +29,8 @@ class SynchronousParser(grammar: SynchronousGrammar) {
         } yield {
           "%s(%s)".format(complete.rule.symbol, sourceTokens.slice(start, start + size).mkString(","))
         }
-      val message = "Could not parse %s. Partial parses: %s"
-      throw new UnsupportedOperationException(message.format(sourceTokens, completes))
+      val message = "Could not parse %s. Partial parses:\n%s"
+      throw new UnsupportedOperationException(message.format(sourceTokens, completes.mkString("\n")))
     }
     trees
   }
