@@ -23,6 +23,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| fiscal ||| ||| 1.0
 [Nil] ||| each of ||| ||| 1.0
 [Nil] ||| period ||| ||| 1.0
+[Nil] ||| more ||| ||| 1.0
+[Nil] ||| most ||| ||| 1.0
+[Nil] ||| additional ||| ||| 1.0
+[Nil] ||| extra ||| ||| 1.0
 
 [Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0
@@ -218,11 +222,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
 [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| first [Int] [Unit] ||| [Int] [Unit] ||| 1.0
-[Period:Simple] ||| [Int] more [Unit] ||| [Int] [Unit] ||| 1.0
 
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
-[Period:Unspecified] ||| several [Unit:Plural] ||| [Unit:Plural] ||| 1.0
-[Period:Unspecified] ||| few [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| several [Unit] ||| [Unit] ||| 1.0
+[Period:Unspecified] ||| few [Unit] ||| [Unit] ||| 1.0
 [Period:Unspecified] ||| recent [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| early [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| first [Unit:Plural] ||| [Unit:Plural] ||| 1.0
@@ -261,14 +264,11 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Simple] ||| previous ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| previously ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| recent ||| PAST ||| 1.0
-[TimeSpan:Simple] ||| more recent ||| PAST ||| 1.0
-[TimeSpan:Simple] ||| most recent ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| recently ||| PAST ||| 1.0
-[TimeSpan:Simple] ||| more recently ||| PAST ||| 1.0
-[TimeSpan:Simple] ||| most recently ||| PAST ||| 1.0
 [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| current ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| currently ||| PRESENT ||| 1.0
+[TimeSpan:Simple] ||| already ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| this moment ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| this [Nil] moment ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| future ||| FUTURE ||| 1.0

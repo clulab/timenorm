@@ -162,17 +162,14 @@ object TimeMLProcessor {
     ("wsj_0006.tml", "t10", "year-end", "1989-12-31") /* should be 1989 with an END modifier */,
     ("wsj_0026.tml", "t1000", "that year", "1988") /* no anchor, but one is necessary */,
     ("wsj_0068.tml", "t134", "the year-ago quarter", "1988-Q3") /* wrong anchor: annotated anchor is in November */,
-    ("wsj_0124.tml", "t31", "a year earlier", "1988-Q3") /* no anchor, but one is necessary */,
     ("wsj_0124.tml", "t36", "Sept. 27, 1989", "1989-11-27") /* September is 9, not 11 */,
     ("wsj_0127.tml", "t27", "1988", "1998") /* 1998 != 1988 */,
     ("wsj_0136.tml", "t2027", "fourth quarter", "1998-Q4") /* document is written in 1989, not 1998 */,
     ("wsj_0136.tml", "t2023", "Sept. 30", "1989-09") /* missing the days */,
     ("wsj_0136.tml", "t2024", "the fiscal year", "1989") /* should be P1Y, as it is in most other places */,
     ("wsj_0136.tml", "t37", "fiscal 1988", "1989") /* 1998 != 1989 */,
-    ("wsj_0144.tml", "t40", "a year ago", "1988-Q3") /* no anchor, and there must be one to go from quarter to quarter */,
-    ("wsj_0144.tml", "t51", "a year ago", "1988-Q3") /* no anchor, and there must be one to go from quarter to quarter */,
-    ("wsj_0144.tml", "t56", "last year", "1988-Q3") /* no anchor, and there must be one to go from quarter to quarter */)
-
+    ("wsj_0157.tml", "t29", "five years", "1994") /* wrongly interpreted as "in five years" */,
+    ("wsj_0168.tml", "t23", "one-year term", "P1Y") /* "term" should not be part of the expression */)
   
   private final val knownFailures = Set(
     ("AP900815-0044.tml", "t47", "some time", "PXM") /* should be PXX if the other PXX annotations are right */,
@@ -193,7 +190,17 @@ object TimeMLProcessor {
     ("VOA19980303.1600.2745.tml", "t121", "the year two thousand", "2000") /* need full number grammar */,
     ("VOA19980305.1800.2603.tml", "t66", "this coming Sunday, March eighth", "1998-03-08") /* need full number grammar and handling of "this coming" */,
     ("VOA19980331.1700.1533.tml", "t3000", "two", "P2D") /* from "two to six days" */,
-    ("wsj_0127.tml", "t2127", "a year earlier", "1988-11-02") /* ambiguous with 1988 */)
+    ("wsj_0124.tml", "t31", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0127.tml", "t2127", "a year earlier", "1988-11-02") /* ambiguous with 1988 */,
+    ("wsj_0144.tml", "t40", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0144.tml", "t51", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0144.tml", "t56", "last year", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0160.tml", "t31", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0160.tml", "t33", "the quarter", "1989-Q3") /* ambiguous with P1Q */,
+    ("wsj_0160.tml", "t38", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0161.tml", "t31", "A year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0167.tml", "t22", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */)
+
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
