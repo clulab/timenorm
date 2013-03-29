@@ -170,7 +170,8 @@ object TimeMLProcessor {
     ("PRI19980121.2000.2591.tml", "t34", "nineteen seventy-nine", "1979") /* need full number grammar */,
     ("PRI19980121.2000.2591.tml", "t1991", "more than two thousand years", "P2L") /* need full number grammar */,
     ("PRI19980205.2000.1998.tml", "t45", "the year two thousand", "2000") /* need full number grammar */,
-    ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */)
+    ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */,
+    ("VOA19980303.1600.2745.tml", "t121", "the year two thousand", "2000") /* need full number grammar */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
