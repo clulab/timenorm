@@ -154,7 +154,24 @@ object TimeMLProcessor {
     ("PRI19980121.2000.2591.tml", "t1986", "a few minutes", "PXM") /* PXM is months, PXTM is minutes */,
     ("PRI19980306.2000.1675.tml", "t31", "the second day", "1998-03-06") /* "second day of an offensive", but anchor is not first day of the offensive */,
     ("VOA19980305.1800.2603.tml", "t87", "today", "PRESENT_REF") /* "today" should be a date */,
-    ("VOA19980331.1700.1533.tml", "t105", "a year or two", "FUTURE_REF") /* should probably be "PXY" */)
+    ("VOA19980331.1700.1533.tml", "t105", "a year or two", "FUTURE_REF") /* should probably be "PXY" */,
+    ("WSJ900813-0157.tml", "t456", "the end of the month", "1990-08-30") /* should be 1990-08 with END modifier */,
+    ("WSJ910225-0066.tml", "t496", "a week or so ago", "1991-02-18") /* possible interpretation, but usually these are -WXX values */,
+    ("WSJ910225-0066.tml", "t507", "noon Saturday", "1991-02-16T12:00") /* wrong anchor: anchor is more than a week after "value" */,
+    ("WSJ910225-0066.tml", "t514", "Saturday night", "1991-02-16TNI") /* wrong anchor: anchor is more than a week after "value" */,
+    ("wsj_0006.tml", "t10", "year-end", "1989-12-31") /* should be 1989 with an END modifier */,
+    ("wsj_0026.tml", "t1000", "that year", "1988") /* no anchor, but one is necessary */,
+    ("wsj_0068.tml", "t134", "the year-ago quarter", "1988-Q3") /* wrong anchor: annotated anchor is in November */,
+    ("wsj_0124.tml", "t31", "a year earlier", "1988-Q3") /* no anchor, but one is necessary */,
+    ("wsj_0124.tml", "t36", "Sept. 27, 1989", "1989-11-27") /* September is 9, not 11 */,
+    ("wsj_0127.tml", "t27", "1988", "1998") /* 1998 != 1988 */,
+    ("wsj_0136.tml", "t2027", "fourth quarter", "1998-Q4") /* document is written in 1989, not 1998 */,
+    ("wsj_0136.tml", "t2023", "Sept. 30", "1989-09") /* missing the days */,
+    ("wsj_0136.tml", "t2024", "the fiscal year", "1989") /* should be P1Y, as it is in most other places */,
+    ("wsj_0136.tml", "t37", "fiscal 1988", "1989") /* 1998 != 1989 */,
+    ("wsj_0144.tml", "t40", "a year ago", "1988-Q3") /* no anchor, and there must be one to go from quarter to quarter */,
+    ("wsj_0144.tml", "t51", "a year ago", "1988-Q3") /* no anchor, and there must be one to go from quarter to quarter */,
+    ("wsj_0144.tml", "t56", "last year", "1988-Q3") /* no anchor, and there must be one to go from quarter to quarter */)
 
   
   private final val knownFailures = Set(
@@ -175,7 +192,8 @@ object TimeMLProcessor {
     ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */,
     ("VOA19980303.1600.2745.tml", "t121", "the year two thousand", "2000") /* need full number grammar */,
     ("VOA19980305.1800.2603.tml", "t66", "this coming Sunday, March eighth", "1998-03-08") /* need full number grammar and handling of "this coming" */,
-    ("VOA19980331.1700.1533.tml", "t3000", "two", "P2D") /* from "two to six days" */)
+    ("VOA19980331.1700.1533.tml", "t3000", "two", "P2D") /* from "two to six days" */,
+    ("wsj_0127.tml", "t2127", "a year earlier", "1988-11-02") /* ambiguous with 1988 */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
