@@ -63,15 +63,27 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     temporals match {
       case Seq() => None
       case Seq(temporal) => Some(temporal)
-      case temporals if temporals.size == 2 => Some(temporals.minBy {
-        case timeSpan: TimeSpan => timeSpan.timeMLValueOption match {
-          case Some(timeMLValue) => timeMLValue
-          case None => throw new UnsupportedOperationException(
-            "Don't know how to get value of time span " + timeSpan)
+      case temporals if temporals.size == 2 => {
+        val timeSpans = temporals.collect{ case t : TimeSpan => t }
+        val periods = temporals.collect{ case p : Period => p }
+        // select the earlier of the two time spans
+        if (timeSpans.size == 2) {
+          Some(timeSpans.minBy(timeSpan => timeSpan.timeMLValueOption match {
+            case Some(timeMLValue) => timeMLValue
+            case None => throw new UnsupportedOperationException(
+              "Don't know how to get value of time span " + timeSpan)
+          }))
         }
-        case _ => throw new UnsupportedOperationException(
+        // prefer time spans over periods
+        else if (periods.size == 1 && timeSpans.size == 1) {
+          Some(timeSpans.head)
+        }
+        // otherwise, give up
+        else {
+          throw new UnsupportedOperationException(
           "Don't know how to select minimum of:\n%s".format(temporals.mkString("\n")))
-      })
+        }
+      }
       case _ => throw new UnsupportedOperationException(
         "Expected exactly two choices, found:\n%s".format(temporals.mkString("\n")))
     }
