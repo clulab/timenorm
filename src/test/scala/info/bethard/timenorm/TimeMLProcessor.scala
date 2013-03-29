@@ -172,8 +172,7 @@ object TimeMLProcessor {
     ("PRI19980121.2000.2591.tml", "t34", "nineteen seventy-nine", "1979") /* need full number grammar */,
     ("PRI19980121.2000.2591.tml", "t1991", "more than two thousand years", "P2L") /* need full number grammar */,
     ("PRI19980205.2000.1998.tml", "t45", "the year two thousand", "2000") /* need full number grammar */,
-    ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */,
-    ("VOA19980303.1600.2745.tml", "t168", "the past year", "1997") /* parsed as [the past][year], like [Thanksgiving][day] */)
+    ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */)
 
   trait Options {
     @CliOption(longName=Array("corpus-paths"))
@@ -187,9 +186,9 @@ object TimeMLProcessor {
     def error(message: String, args: Any*) = {
       println(message.format(args: _*))
     }
-    def fatal(message: String, args: Any*) = {
+    def fatal(message: String, cause: Throwable, args: Any*) = {
       if (options.getFailOnNoCorrectParse) {
-        throw new Exception(message.format(args: _*))
+        throw new Exception(message.format(args: _*), cause)
       } else {
         println(message.format(args: _*))
       }
@@ -229,7 +228,7 @@ object TimeMLProcessor {
             // log the error
             if (isPossibleFailure) {
               if (!possibleValues.toSet.contains(timex.value)) {
-                fatal("All incorrect values %s for %s from %s", possibleValues, timex, file)
+                fatal("All incorrect values %s for %s from %s", null, possibleValues, timex, file)
               } else {
                 error("Incorrect value %s chosen from %s for %s from %s", value, possibleValues, timex, file)
               }
@@ -243,7 +242,7 @@ object TimeMLProcessor {
           // on an exception
           case e @ (_: UnsupportedOperationException | _: DateTimeException) => {
             if (isPossibleFailure) {
-              fatal("Error \"%s\" parsing %s from %s", e, timex, file)
+              fatal("Error parsing %s from %s", e, timex, file)
             }
             false
           }

@@ -49,7 +49,17 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
   }
 
   def normalize(parses: Seq[TemporalParse], anchor: ZonedDateTime): Option[Temporal] = {
-    val temporals = for (parse <- parses) yield this.normalize(parse, anchor)
+    // find only the semantically possible parses
+    val temporalTries = for (parse <- parses) yield {
+      try {
+        Some(this.normalize(parse, anchor))
+      } catch {
+        case e: UnsupportedOperationException => None
+      }
+    }
+    val temporals = temporalTries.flatten
+    
+    // heuristically pick a temporal when there were multiple parses
     temporals match {
       case Seq() => None
       case Seq(temporal) => Some(temporal)
