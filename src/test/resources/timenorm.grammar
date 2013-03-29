@@ -5,6 +5,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| the ||| ||| 1.0
 [Nil] ||| . ||| ||| 1.0
 [Nil] ||| , ||| ||| 1.0
+[Nil] ||| - ||| ||| 1.0
+[Nil] ||| / ||| ||| 1.0
 [Nil] ||| edt ||| ||| 1.0
 [Nil] ||| est ||| ||| 1.0
 [Nil] ||| cdt ||| ||| 1.0
@@ -14,14 +16,11 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| pdt ||| ||| 1.0
 [Nil] ||| pst ||| ||| 1.0
 [Nil] ||| old ||| ||| 1.0
-[Nil] ||| - old ||| ||| 1.0
 [Nil] ||| long ||| ||| 1.0
-[Nil] ||| - long ||| ||| 1.0
 [Nil] ||| ' s ||| ||| 1.0
 [Nil] ||| crucial ||| ||| 1.0
 [Nil] ||| fairly ||| ||| 1.0
 [Nil] ||| fiscal ||| ||| 1.0
-[Nil] ||| fiscal - ||| ||| 1.0
 [Nil] ||| each of ||| ||| 1.0
 [Nil] ||| period ||| ||| 1.0
 
@@ -118,7 +117,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [FieldValue:WeekendOfWeek] ||| weekend ||| WEEKEND_OF_WEEK 1 ||| 1.0
 
-[FieldValue:DayOfMonth] ||| [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
+[FieldValue:NumericDayOfMonth] ||| [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
 
 [FieldValue:MonthOfYear] ||| january ||| MONTH_OF_YEAR 1 ||| 1.0
 [FieldValue:MonthOfYear] ||| february ||| MONTH_OF_YEAR 2 ||| 1.0
@@ -145,7 +144,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:MonthOfYear] ||| oct ||| MONTH_OF_YEAR 10 ||| 1.0
 [FieldValue:MonthOfYear] ||| nov ||| MONTH_OF_YEAR 11 ||| 1.0
 [FieldValue:MonthOfYear] ||| dec ||| MONTH_OF_YEAR 12 ||| 1.0
-[FieldValue:MonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
+
+[FieldValue:NumericMonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
 
 [FieldValue:QuarterOfYear] ||| first quarter ||| QUARTER_OF_YEAR 1 ||| 1.0
 [FieldValue:QuarterOfYear] ||| second quarter ||| QUARTER_OF_YEAR 2 ||| 1.0
@@ -177,35 +177,35 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [FieldValue:Day] ||| [FieldValue:NamedDay] ||| [FieldValue:NamedDay] ||| 1.0
 [FieldValue:Day] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
-[FieldValue:Day] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
 
 [FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
 [FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthDay] ||| 1.0
 
-[FieldValue:Partial] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:PartOfDay] ||| [FieldValue:PartOfDay] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:Day] ||| [FieldValue:Day] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:MonthDay] ||| [FieldValue:MonthDay] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:Time] [FieldValue:Day] ||| [FieldValue:Time] [FieldValue:Day] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| [FieldValue:DayOfWeek] [FieldValue:PartOfDay] ||| 1.0
+[FieldValue:PartialYear] ||| [Int:0-99] ||| YEAR_OF_CENTURY [Int:0-99] ||| 1.0
+
+[FieldValue:PartialTime] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
+[FieldValue:PartialTime] ||| [FieldValue:PartOfDay] ||| [FieldValue:PartOfDay] ||| 1.0
+
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:Day] ||| [FieldValue:Day] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:MonthDay] ||| [FieldValue:MonthDay] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:MonthDay] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| 1.0
+
+[FieldValue:Partial] ||| [FieldValue:PartialTime] ||| [FieldValue:PartialTime] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialYearMonthDay] ||| [FieldValue:PartialYearMonthDay] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialYearMonthDay] [FieldValue:PartialTime] ||| [FieldValue:PartialYearMonthDay] [FieldValue:PartialTime] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialTime] [FieldValue:PartialYearMonthDay] ||| [FieldValue:PartialYearMonthDay] [FieldValue:PartialTime] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:WeekendOfWeek] ||| [FieldValue:WeekendOfWeek] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:Month] ||| [FieldValue:Month] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
 [FieldValue:Partial] ||| [FieldValue:QuarterOfYear] ||| [FieldValue:QuarterOfYear] ||| 1.0
 
-[FieldValue:PartialYear] ||| [Int:0-99] ||| YEAR_OF_CENTURY [Int:0-99] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:MonthOfYear] / [FieldValue:DayOfMonth] / [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:DayOfMonth] [FieldValue:MonthOfYear] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:PartialYear] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:Partial] ||| [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] - [FieldValue:PartialYear] [FieldValue:Time] ||| [FieldValue:PartialYear] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] [FieldValue:Time] ||| 1.0
-
 [FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
-
 [FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
-
-[FieldValue:YearMonthDay] ||| [FieldValue:MonthOfYear] / [FieldValue:DayOfMonth] / [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
-[FieldValue:YearMonthDay] ||| [FieldValue:Year] - [FieldValue:MonthOfYear] - [FieldValue:DayOfMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:YearMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:YearMonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
 [FieldValue:YearMonthDay] ||| [FieldValue:MonthDay] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
 
@@ -218,7 +218,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
 [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| first [Int] [Unit] ||| [Int] [Unit] ||| 1.0
-[Period:Simple] ||| [Int] - [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] more [Unit] ||| [Int] [Unit] ||| 1.0
 
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
@@ -306,7 +305,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:WithModifier] ||| end of [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) END ||| 1.0 
-[TimeSpan:WithModifier] ||| [Unit] - end ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) END ||| 1.0 
 [TimeSpan:WithModifier] ||| [Unit] end ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) END ||| 1.0 
 
 [TimeSpan:FindAbsolute] ||| [FieldValue:Absolute] ||| [FieldValue:Absolute] ||| 1.0
@@ -320,11 +318,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:EndAtStartOf] ||| preceding [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:EndAtStartOf] ||| latest [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:EndAtStartOf] ||| [Period] earlier ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:EndAtStartOf] ||| [Period] - earlier ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:EndAtStartOf] ||| [Period] before [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
 
 [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:FindEnclosing] ||| [Period] - ago [Unit] ||| ( TimeSpan:MoveEarlier PRESENT [Period] ) [Unit] ||| 1.0
+[TimeSpan:FindEnclosing] ||| [Period] ago [Unit] ||| ( TimeSpan:MoveEarlier PRESENT [Period] ) [Unit] ||| 1.0
 
 [TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:StartAtEndOf] ||| following [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
@@ -336,20 +333,16 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 
 [TimeSpan:WithModifier] ||| start of [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
-[TimeSpan:WithModifier] ||| early - [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| earlier [TimeSpan] ||| [TimeSpan] START ||| 1.0
 [TimeSpan:WithModifier] ||| mid [TimeSpan] ||| [TimeSpan] MID ||| 1.0
-[TimeSpan:WithModifier] ||| mid - [TimeSpan] ||| [TimeSpan] MID ||| 1.0
 [TimeSpan:WithModifier] ||| middle of [TimeSpan] ||| [TimeSpan] MID ||| 1.0
 [TimeSpan:WithModifier] ||| late [TimeSpan] ||| [TimeSpan] END ||| 1.0
-[TimeSpan:WithModifier] ||| late - [TimeSpan] ||| [TimeSpan] END ||| 1.0
 [TimeSpan:WithModifier] ||| later [TimeSpan] ||| [TimeSpan] END ||| 1.0
 [TimeSpan:WithModifier] ||| end of [TimeSpan] ||| [TimeSpan] END ||| 1.0
 [TimeSpan:WithModifier] ||| almost [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| about [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| around [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| post [TimeSpan] ||| [TimeSpan] AFTER ||| 1.0
-[TimeSpan:WithModifier] ||| post - [TimeSpan] ||| [TimeSpan] AFTER ||| 1.0
 
 [FieldValue:Unspecified] ||| mornings ||| MORNING_OF_DAY 1 ||| 1.0
 [FieldValue:Unspecified] ||| afternoons ||| AFTERNOON_OF_DAY 1 ||| 1.0
