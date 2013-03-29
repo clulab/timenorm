@@ -24,7 +24,7 @@ case class Period(
     CENTURIES -> Seq((DECADES, 10), (YEARS, 100)))
 
   private val unitChars = ListMap[TemporalUnit, String](
-    FOREVER -> "",
+    UNSPECIFIED -> "X",
     CENTURIES -> "CE",
     DECADES -> "DE",
     YEARS -> "Y",
@@ -105,8 +105,11 @@ case class Period(
   }
 }
 object Period {
-  def empty = Period(Map.empty)
-  def infinite = Period(Map(FOREVER -> Int.MaxValue))
+
+  final val empty = Period(Map.empty)
+
+  final val unspecified = Period(Map(UNSPECIFIED -> Int.MaxValue))
+
   def fromFractional(numerator: Int, denominator: Int, unit: TemporalUnit, modifier: Modifier): Period = {
     var map = Map(unit -> (numerator / denominator))
     var currRemainder = numerator % denominator

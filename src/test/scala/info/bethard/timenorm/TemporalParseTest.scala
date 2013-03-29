@@ -67,13 +67,13 @@ class TemporalParseTest extends FunSuite {
     import TimeSpanParse._
     assertTimeSpan(
       Past,
-      "-999999999-01-01T00:00", nowString, "PX", "PAST_REF", "APPROX")
+      "-999999999-01-01T00:00", nowString, "PXX", "PAST_REF", "APPROX")
     assertTimeSpan(
       Present,
       nowString, nowString, "P", "PRESENT_REF")
     assertTimeSpan(
       Future,
-      nowString, "+999999999-12-31T23:59:59.999999999", "PX", "FUTURE_REF", "APPROX")
+      nowString, "+999999999-12-31T23:59:59.999999999", "PXX", "FUTURE_REF", "APPROX")
     assertTimeSpan(
       FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
       "1976-09-21T00:00", "1976-09-22T00:00", "P1D", "1976-09-21")

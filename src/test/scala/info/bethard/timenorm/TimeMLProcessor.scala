@@ -157,7 +157,6 @@ object TimeMLProcessor {
   
   private final val knownFailures = Set(
     ("AP900815-0044.tml", "t47", "some time", "PXM") /* should be PXX if the other PXX annotations are right */,
-    ("AP900816-0139.tml", "t339", "a fairly lengthy period", "PXX") /* PXX is not in the spec... */,
     ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI"),
     ("APW19980219.0476.tml", "t137", "weeks or months", "PXW"),
     ("APW19980301.0720.tml", "t1982", "last February", "1997-02") /* two Februaries before anchor */,
@@ -166,7 +165,6 @@ object TimeMLProcessor {
     ("CNN19980227.2130.0067.tml", "t95", "nineteen ninety-six", "1996") /* need full number grammar */,
     ("CNN19980227.2130.0067.tml", "t96", "January nineteen ninety-seven", "1997-01") /* need full number grammar */,
     ("CNN19980227.2130.0067.tml", "t107", "nineteen ninety-seven", "1997") /* need full number grammar */,
-    ("ed980111.1130.0089.tml", "t20", "a while", "PXX") /* PXX is not in the spec... */,
     ("PRI19980115.2000.0186.tml", "t30", "nineteen ninety-one", "1991") /* need full number grammar */,
     ("PRI19980115.2000.0186.tml", "t31", "nineteen ninety-six", "1996") /* need full number grammar */,
     ("PRI19980121.2000.2591.tml", "t34", "nineteen seventy-nine", "1979") /* need full number grammar */,

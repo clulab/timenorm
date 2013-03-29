@@ -79,6 +79,7 @@ class ParserTest extends FunSuite {
     [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
     [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
     [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+    [Period:Unspecified] ||| a while ||| UNSPECIFIED ||| 1.0
     [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
     [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
     [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
@@ -135,6 +136,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("a", "month") === Simple(1, MONTHS))
     assert(this.parse("weeks") === Unspecified(WEEKS))
     assert(this.parse("5", "1", "/", "2", "hours") === Fractional(11, 2, HOURS))
+    assert(this.parse("a", "while") === Unspecified(UNSPECIFIED))
   }
 
   test("parses complex periods") {

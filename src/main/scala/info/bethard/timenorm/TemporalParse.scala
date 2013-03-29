@@ -31,6 +31,7 @@ class DefaultTokenParser extends TokenParser {
     case "WINTERS" => WINTERS
     case "QUARTER_YEARS" => ISOFields.QUARTER_YEARS
     case "WEEK_BASED_YEARS" => ISOFields.WEEK_BASED_YEARS
+    case "UNSPECIFIED" => UNSPECIFIED
     case _ => ChronoUnit.valueOf(token)
   }
   def toTemporalField(token: String): TemporalField = token match {
@@ -285,7 +286,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   
   case object Past extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(TimeSpan.unspecifiedStart, anchor, Period.infinite, Modifier.Approx) {
+      new TimeSpan(TimeSpan.unspecifiedStart, anchor, Period.unspecified, Modifier.Approx) {
         override def timeMLValueOption = Some("PAST_REF")
       }
     }
@@ -301,7 +302,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
 
   case object Future extends TimeSpanParse {
     def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(anchor, TimeSpan.unspecifiedEnd, Period.infinite, Modifier.Approx) {
+      new TimeSpan(anchor, TimeSpan.unspecifiedEnd, Period.unspecified, Modifier.Approx) {
         override def timeMLValueOption = Some("FUTURE_REF")
       }
     }

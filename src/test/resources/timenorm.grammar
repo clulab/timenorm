@@ -218,11 +218,15 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Simple] ||| first [Int] [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] - [Unit] ||| [Int] [Unit] ||| 1.0
 [Period:Simple] ||| [Int] more [Unit] ||| [Int] [Unit] ||| 1.0
+
 [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| several [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| few [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| coming [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| recent [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+[Period:Unspecified] ||| a while ||| UNSPECIFIED ||| 1.0
+[Period:Unspecified] ||| lengthy period ||| UNSPECIFIED ||| 1.0
+
 [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
 [Period:Fractional] ||| [Unit:Singular] and a half ||| ( Int 1 ) ( Int 1 ) ( Int 2 ) [Unit:Singular] ||| 1.0
 [Period:Fractional] ||| [Int] and a half [Unit] ||| [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0

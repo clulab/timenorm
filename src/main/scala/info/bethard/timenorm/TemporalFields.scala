@@ -339,3 +339,13 @@ private[timenorm] object YEAR_OF_CENTURY extends TemporalField {
   def compare(temporal1: TemporalAccessor, temporal2: TemporalAccessor): Int = ???
   def resolve(builder: DateTimeBuilder, value: Long): Boolean = ???
 }
+
+private[timenorm] object UNSPECIFIED extends TemporalUnit {
+  def getName: String = "Unspecified"
+  override def toString: String = getName
+  def getDuration: Duration = FOREVER.getDuration()
+  def isDurationEstimated: Boolean = true
+  def isSupported(temporal: JTemporal): Boolean = false
+  def doPlus[R <: JTemporal](dateTime: R, periodToAdd: Long): R = ???
+  def between[R <: JTemporal](dateTime1: R, dateTime2: R): SimplePeriod = ???
+}
