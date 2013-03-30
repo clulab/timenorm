@@ -3,6 +3,7 @@ package info.bethard.timenorm
 import java.net.URL
 import scala.io.Source
 import org.threeten.bp.ZonedDateTime
+import org.threeten.bp.DateTimeException
 
 class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/timenorm.grammar")) {
   private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
@@ -54,7 +55,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
       try {
         Some(this.normalize(parse, anchor))
       } catch {
-        case e: UnsupportedOperationException => None
+        case e @ (_: UnsupportedOperationException | _: DateTimeException) => None
       }
     }
     val temporals = temporalTries.flatten
