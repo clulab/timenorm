@@ -180,7 +180,16 @@ object TimeMLProcessor {
     ("wsj_0348.tml", "t55", "a year", "1988-Q3") /* annotation missed trailing "earlier" */,
     ("wsj_0520.tml", "t92", "this year", "1989-10-30") /* should either be 1989 or annotation should include preceding "so far" */,
     ("wsj_0533.tml", "t124", "last week", "1989-WXX") /* last week is clearly identifiable */,
-    ("wsj_0542.tml", "t87", "5 p.m. EST, Nov. 6", "1989-11-06T17") /* all other am/pm references add the :00 */)
+    ("wsj_0542.tml", "t87", "5 p.m. EST, Nov. 6", "1989-11-06T17") /* all other am/pm references add the :00 */,
+    ("wsj_0542.tml", "t90", "midnight Friday", "1989-10-27T24") /* TIDES spec says this should be T24:00 */,
+    ("wsj_0542.tml", "t102", "Late last week", "1989-WXX") /* last week is clearly identifiable */,
+    ("wsj_0551.tml", "t17", "around year end", "1989-12") /* should be 1989 with an END modifier */,
+    ("wsj_0558.tml", "t57", "nearly two weeks ago", "1989-WXX") /* week is clearly identifiable */,
+    ("wsj_0568.tml", "t237", "future quarters", "FUTURE_REF") /* TIDES spec says, e.g. "recent decades" => PXDE */,
+    ("wsj_0568.tml", "t249", "the past several quarters", "PAST_REF") /* TIDES spec says, e.g. "recent decades" => PXDE */,
+    ("wsj_0568.tml", "t2013", "a year", "1988") /* annotation missed trailing "earlier" */,
+    ("wsj_0575.tml", "t213", "that time", "P5Y") /* no anchor, but one is necessary */,
+    ("wsj_0575.tml", "t238", "Last week", "1989-WXX") /* last week is clearly identifiable */)
   
   private final val knownFailures = Set(
     ("AP900815-0044.tml", "t47", "some time", "PXM") /* should be PXX if the other PXX annotations are right */,
@@ -207,12 +216,10 @@ object TimeMLProcessor {
     ("wsj_0144.tml", "t51", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0144.tml", "t56", "last year", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0160.tml", "t31", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
-    ("wsj_0160.tml", "t33", "the quarter", "1989-Q3") /* ambiguous with P1Q */,
     ("wsj_0160.tml", "t38", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0161.tml", "t31", "A year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0167.tml", "t22", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0171.tml", "t29", "a year ago", "1988-Q3")  /* requires knowledge that granularity is quarters */,
-    ("wsj_0171.tml", "t32", "the quarter", "1989-Q3") /* ambiguous with P1Q */,
     ("wsj_0171.tml", "t33", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0189.tml", "t39", "a year earlier", "1988-Q4") /* requires knowledge that granularity is quarters */,
     ("wsj_0189.tml", "t43", "last year", "1988-Q4") /* requires knowledge that granularity is quarters */,
@@ -221,12 +228,9 @@ object TimeMLProcessor {
     ("wsj_0189.tml", "t48", "the year", "1989") /* ambiguous with P1Y */,
     ("wsj_0263.tml", "t2096", "A year earlier", "1988-11-01") /* ambiguous with 1988 */,
     ("wsj_0292.tml", "t78", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
-    ("wsj_0292.tml", "t85", "the year-earlier period", "1988-Q3") /* really means "the last year-earlier period" */,
     ("wsj_0292.tml", "t86", "the 1989 period", "1989-Q3") /* "quarter-to-quarter comparison" */,
     ("wsj_0292.tml", "t87", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0313.tml", "t65", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
-    ("wsj_0325.tml", "t48", "the quarter", "1989-Q3") /* ambiguous with P1Q */,
-    ("wsj_0325.tml", "t49", "the year-ago quarter", "1988-Q3") /* really means "the last year-ago quarter" */,
     ("wsj_0325.tml", "t51", "year-ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0344.tml", "t46", "the corresponding period last year", "1988-Q3") /* requires handling of "corresponding" */,
     ("wsj_0344.tml", "t47", "This quarter", "1989-Q3") /* really means "last quarter" */,
@@ -237,7 +241,9 @@ object TimeMLProcessor {
     ("wsj_0527.tml", "t95", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0527.tml", "t111", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0527.tml", "t122", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
-    ("wsj_0534.tml", "t22", "then", "1989-11-30") /* should be handled like PRESENT but not display PRESENT_REF */)
+    ("wsj_0534.tml", "t22", "then", "1989-11-30") /* should be handled like PRESENT but not display PRESENT_REF */,
+    ("wsj_0558.tml", "t69", "last year", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0570.tml", "t88", "from time to time", "FUTURE_REF") /* occurs only once (might be better interpreted as a set instead) */)
 
 
   trait Options {

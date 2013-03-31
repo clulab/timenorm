@@ -256,9 +256,11 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Simple] ||| currently ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| already ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| this moment ||| PRESENT ||| 1.0
-[TimeSpan:Simple] ||| this [Nil] moment ||| PRESENT ||| 1.0
 [TimeSpan:Simple] ||| future ||| FUTURE ||| 1.0
 [TimeSpan:Simple] ||| soon ||| FUTURE ||| 1.0
+
+// when non-grammar words are filtered things like "the long term" will look like "the term"
+[TimeSpan:Simple] ||| the term ||| FUTURE ||| 1.0
 
 [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
 [TimeSpan:FindEnclosing] ||| same day ||| PRESENT DAYS ||| 1.0
@@ -293,7 +295,16 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
 [TimeSpan:WithModifier] ||| end of [Unit] ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) END ||| 1.0 
-[TimeSpan:WithModifier] ||| [Unit] end ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) END ||| 1.0 
+[TimeSpan:WithModifier] ||| [Unit] end ||| ( TimeSpan:FindEnclosing PRESENT [Unit] ) END ||| 1.0
+
+// "the quarter" usually means "the last quarter" 
+[TimeSpan:EndAtStartOf] ||| the quarter ||| ( TimeSpan:FindEnclosing PRESENT QUARTER_YEARS ) ( Period:Simple 1 QUARTER_YEARS ) ||| 1.0
+
+// "the [Period] ago/earlier quarter/period" usually means "one [Period] before last quarter"
+[TimeSpan:MoveEarlier] ||| the [Period] ago quarter ||| ( TimeSpan:EndAtStartOf ( TimeSpan:FindEnclosing PRESENT QUARTER_YEARS ) ( Period:Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+[TimeSpan:MoveEarlier] ||| the [Period] ago period ||| ( TimeSpan:EndAtStartOf ( TimeSpan:FindEnclosing PRESENT QUARTER_YEARS ) ( Period:Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+[TimeSpan:MoveEarlier] ||| the [Period] earlier quarter ||| ( TimeSpan:EndAtStartOf ( TimeSpan:FindEnclosing PRESENT QUARTER_YEARS ) ( Period:Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+[TimeSpan:MoveEarlier] ||| the [Period] earlier period ||| ( TimeSpan:EndAtStartOf ( TimeSpan:FindEnclosing PRESENT QUARTER_YEARS ) ( Period:Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
 
 [TimeSpan:FindAbsolute] ||| [FieldValue:Absolute] ||| [FieldValue:Absolute] ||| 1.0
 
@@ -309,7 +320,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:EndAtStartOf] ||| [Period] before [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
 
 [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:FindEnclosing] ||| [Period] ago [Unit] ||| ( TimeSpan:MoveEarlier PRESENT [Period] ) [Unit] ||| 1.0
 
 [TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:StartAtEndOf] ||| following [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
@@ -330,6 +340,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:WithModifier] ||| almost [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| about [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| around [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
+[TimeSpan:WithModifier] ||| part of [TimeSpan] ||| [TimeSpan] APPROX ||| 1.0
 [TimeSpan:WithModifier] ||| post [TimeSpan] ||| [TimeSpan] AFTER ||| 1.0
 
 [FieldValue:Unspecified] ||| mornings ||| MORNING_OF_DAY 1 ||| 1.0
