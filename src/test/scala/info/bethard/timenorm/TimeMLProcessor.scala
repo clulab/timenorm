@@ -169,7 +169,12 @@ object TimeMLProcessor {
     ("wsj_0136.tml", "t2024", "the fiscal year", "1989") /* should be P1Y, as it is in most other places */,
     ("wsj_0136.tml", "t37", "fiscal 1988", "1989") /* 1998 != 1989 */,
     ("wsj_0157.tml", "t29", "five years", "1994") /* wrongly interpreted as "in five years" */,
-    ("wsj_0168.tml", "t23", "one-year term", "P1Y") /* "term" should not be part of the expression */)
+    ("wsj_0168.tml", "t23", "one-year term", "P1Y") /* "term" should not be part of the expression */,
+    ("wsj_0176.tml", "t23", "the next three quarters", "P9M") /* should be P3Q */,
+    ("wsj_0176.tml", "t25", "recent quarters", "PXM") /* should be PXQ */,
+    ("wsj_0189.tml", "t42", "the latest period", "1989-Q4") /* doc is in November, so latest period should be Q3 */,
+    ("wsj_0266.tml", "t39", "about two years ago", "P2Y") /* "ago" means it should be 1987 */,
+    ("wsj_0266.tml", "t40", "the 20th century", "19XX") /* should be 19 */)
   
   private final val knownFailures = Set(
     ("AP900815-0044.tml", "t47", "some time", "PXM") /* should be PXX if the other PXX annotations are right */,
@@ -199,7 +204,21 @@ object TimeMLProcessor {
     ("wsj_0160.tml", "t33", "the quarter", "1989-Q3") /* ambiguous with P1Q */,
     ("wsj_0160.tml", "t38", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0161.tml", "t31", "A year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
-    ("wsj_0167.tml", "t22", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */)
+    ("wsj_0167.tml", "t22", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0171.tml", "t29", "a year ago", "1988-Q3")  /* requires knowledge that granularity is quarters */,
+    ("wsj_0171.tml", "t32", "the quarter", "1989-Q3") /* ambiguous with P1Q */,
+    ("wsj_0171.tml", "t33", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0189.tml", "t39", "a year earlier", "1988-Q4") /* requires knowledge that granularity is quarters */,
+    ("wsj_0189.tml", "t43", "last year", "1988-Q4") /* requires knowledge that granularity is quarters */,
+    ("wsj_0189.tml", "t41", "the year", "1989") /* ambiguous with P1Y */,
+    ("wsj_0189.tml", "t44", "the full year", "1989") /* ambiguous with P1Y */,
+    ("wsj_0189.tml", "t48", "the year", "1989") /* ambiguous with P1Y */,
+    ("wsj_0263.tml", "t2096", "A year earlier", "1988-11-01") /* ambiguous with 1988 */,
+    ("wsj_0292.tml", "t78", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0292.tml", "t85", "the year-earlier period", "1988-Q3") /* really means "the last year-earlier period" */,
+    ("wsj_0292.tml", "t86", "the 1989 period", "1989-Q3") /* "quarter-to-quarter comparison" */,
+    ("wsj_0292.tml", "t87", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0313.tml", "t65", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */)
 
 
   trait Options {
@@ -249,9 +268,14 @@ object TimeMLProcessor {
             // see if any of the alternative parses had the correct value
             val possibleAnchors = timex.anchor ++ Seq(doc.creationTime)
             val possibleParses = normalizer.parseAll(timex.text).toSeq
-            val possibleValues = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
-              normalizer.normalize(parse, anchor).timeMLValue
+            val possibleValueOptions = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
+              try {
+                Some(normalizer.normalize(parse, anchor).timeMLValue)
+		      } catch {
+		        case e @ (_: UnsupportedOperationException | _: DateTimeException) => None
+		      }
             }
+            val possibleValues = possibleValueOptions.flatten
 
             // log the error
             if (isPossibleFailure) {
