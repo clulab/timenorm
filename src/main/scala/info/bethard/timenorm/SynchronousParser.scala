@@ -15,6 +15,9 @@ class SynchronousParser(grammar: SynchronousGrammar) {
   }
 
   def parseAll(sourceTokens: IndexedSeq[String]): IndexedSeq[Tree.NonTerminal] = {
+    if (sourceTokens.isEmpty) {
+      throw new UnsupportedOperationException("Cannot parse empty token sequence")
+    }
     val chart = this.parseChart(sourceTokens)
     val completes = chart(sourceTokens.size)(0).completes
     val roots = completes.filter(parse => this.grammar.rootSymbols.contains(parse.rule.symbol))
