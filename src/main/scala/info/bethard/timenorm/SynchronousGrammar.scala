@@ -40,6 +40,10 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
   def sourceSeqStartsWith(token: String) = {
     this.rulePrefixMap.getAllWithPrefix(Seq(token))
   }
+  
+  def sourceSymbols(): Set[String] = {
+    this.rules.flatMap(_.sourceSeq).toSet
+  }
 }
 
 object SynchronousGrammar {

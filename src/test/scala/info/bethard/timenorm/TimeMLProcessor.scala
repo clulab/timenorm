@@ -292,7 +292,7 @@ object TimeMLProcessor {
 
         } catch {
           // on an exception
-          case e @ (_: UnsupportedOperationException | _: DateTimeException) => {
+          case e: Exception => {
             if (isPossibleFailure) {
               fatal("Error parsing %s from %s", e, timex, file)
             }

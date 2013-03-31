@@ -7,29 +7,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| , ||| ||| 1.0
 [Nil] ||| - ||| ||| 1.0
 [Nil] ||| / ||| ||| 1.0
-[Nil] ||| edt ||| ||| 1.0
-[Nil] ||| est ||| ||| 1.0
-[Nil] ||| cdt ||| ||| 1.0
-[Nil] ||| cst ||| ||| 1.0
-[Nil] ||| mdt ||| ||| 1.0
-[Nil] ||| mst ||| ||| 1.0
-[Nil] ||| pdt ||| ||| 1.0
-[Nil] ||| pst ||| ||| 1.0
-[Nil] ||| old ||| ||| 1.0
-[Nil] ||| long ||| ||| 1.0
 [Nil] ||| ' s ||| ||| 1.0
-[Nil] ||| crucial ||| ||| 1.0
-[Nil] ||| fairly ||| ||| 1.0
-[Nil] ||| fiscal ||| ||| 1.0
 [Nil] ||| each of ||| ||| 1.0
 [Nil] ||| period ||| ||| 1.0
 [Nil] ||| more ||| ||| 1.0
-[Nil] ||| most ||| ||| 1.0
-[Nil] ||| additional ||| ||| 1.0
-[Nil] ||| extra ||| ||| 1.0
-[Nil] ||| full ||| ||| 1.0
-[Nil] ||| flat ||| ||| 1.0
-[Nil] ||| near ||| ||| 1.0
 
 [Int] ||| one ||| 1 ||| 1.0
 [Int] ||| two ||| 2 ||| 1.0

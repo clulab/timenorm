@@ -8,6 +8,7 @@ import org.threeten.bp.DateTimeException
 class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/timenorm.grammar")) {
   private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
   private val grammar = SynchronousGrammar.fromString(grammarText)
+  private val sourceSymbols = grammar.sourceSymbols()
   private val parser = new SynchronousParser(grammar)
 
   private final val wordBoundary = "\\b".r
@@ -36,7 +37,12 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
         this.letterNonLetterBoundary.split(word).toSeq.map(_.trim.toLowerCase).filterNot(_.isEmpty)
       }
     }
-    val parses = this.parser.parseAll(tokens.flatten)
+    // filter out any tokens not in the grammar
+    val filteredTokens = tokens.flatten.filter{ token =>
+      this.sourceSymbols.contains(token) || SynchronousGrammar.isNumber(token)
+    }
+    // parse the tokens into TemporalParses
+    val parses = this.parser.parseAll(filteredTokens)
     parses.toSeq.map(TemporalParse)
   }
 
