@@ -9,14 +9,6 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
     this.rulePrefixMap += (rule.sourceSeq, rule)
   }
   
-  private val delexicalizedSymbols = 
-    for (rule <- rules; if rule.symbol != rule.basicSymbol)
-      yield rule.symbol -> rule.basicSymbol
-  for ((symbol, basicSymbol) <- this.delexicalizedSymbols.toMap) {
-    val rule = SynchronousGrammar.Rule(basicSymbol, IndexedSeq(symbol), IndexedSeq(symbol), Map(0->0))
-    this.rulePrefixMap += (rule.sourceSeq, rule)
-  }
-  
   private val numberRegex = "^\\[Int:(.*)-(.*)\\]$".r
   private val numberRanges: Set[Range.Inclusive] = (
     for {

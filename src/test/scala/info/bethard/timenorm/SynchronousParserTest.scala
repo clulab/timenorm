@@ -25,12 +25,14 @@ class ParserTest extends FunSuite {
     [Unit:Singular] ||| month ||| MONTHS ||| 1.0
     [Unit:Singular] ||| year ||| YEARS ||| 1.0
     [Unit:Singular] ||| decade ||| DECADES ||| 1.0
+    [Unit] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
     [Unit:Plural] ||| hours ||| HOURS ||| 1.0
     [Unit:Plural] ||| days ||| DAYS ||| 1.0
     [Unit:Plural] ||| weeks ||| WEEKS ||| 1.0
     [Unit:Plural] ||| months ||| MONTHS ||| 1.0
     [Unit:Plural] ||| years ||| YEARS ||| 1.0
     [Unit:Plural] ||| decades ||| DECADES ||| 1.0
+    [Unit] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
     [FieldValue:HourOfAMPM] ||| [Int:1-12] ||| HOUR_OF_AMPM [Int:1-12] ||| 1.0
     [FieldValue:MinuteOfHour] ||| [Int:0-60] ||| MINUTE_OF_HOUR [Int:0-60] ||| 1.0
     [FieldValue:AMPMOfDay] ||| a . m . ||| AMPM_OF_DAY 0 ||| 1.0

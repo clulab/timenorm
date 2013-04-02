@@ -69,6 +69,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Unit:Singular] ||| year ||| YEARS ||| 1.0
 [Unit:Singular] ||| decade ||| DECADES ||| 1.0
 [Unit:Singular] ||| century ||| CENTURIES ||| 1.0
+[Unit] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
 [Unit:Plural] ||| seconds ||| SECONDS ||| 1.0
 [Unit:Plural] ||| minutes ||| MINUTES ||| 1.0
 [Unit:Plural] ||| hours ||| HOURS ||| 1.0
@@ -79,6 +80,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Unit:Plural] ||| years ||| YEARS ||| 1.0
 [Unit:Plural] ||| decades ||| DECADES ||| 1.0
 [Unit:Plural] ||| centuries ||| CENTURIES ||| 1.0
+[Unit] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
 
 // =========================================
 // expressions that identify a part of a day
@@ -297,6 +299,12 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [PeriodSet] ||| every [Period] ||| WithQuantifier [Period] EVERY ||| 1.0
 [PeriodSet] ||| each [Period] ||| WithQuantifier [Period] EACH ||| 1.0
 
+// =======================================
+// time spans are either :Solo or :Regular
+// =======================================
+[TimeSpan] ||| [TimeSpan:Solo] ||| [TimeSpan:Solo] ||| 1.0
+[TimeSpan] ||| [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+
 // ==============================================================
 // expressions of time spans that can't be combined with anything
 // ==============================================================
@@ -352,13 +360,14 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // =================================
 [TimeSpan:Regular] ||| yesterday ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
 // e.g. "last October"
-[TimeSpan:Regular] ||| last [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
-[TimeSpan:Regular] ||| past [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| last [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| past [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
 // e.g. "the last three weeks", "almost four years ago"
-[TimeSpan:Regular] ||| last [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| past [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| preceding [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| latest [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| last [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| past [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| preceding [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| latest [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// e.g. "three years earlier"
 [TimeSpan:Regular] ||| [Period] earlier ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:Regular] ||| [Period] ago ||| MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 // e.g. "the day before last Tuesday"
@@ -378,14 +387,20 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // ===============================
 [TimeSpan:Regular] ||| tomorrow ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
 // e.g. "next Tuesday"
-[TimeSpan:Regular] ||| next [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
-[TimeSpan:Regular] ||| coming [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| next [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| coming [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
 // e.g. "next year" 
-[TimeSpan:Regular] ||| next [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| following [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| coming [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| next [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| following [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| coming [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 // e.g. "January next year"
 [TimeSpan:Regular] ||| [FieldValue:Partial] next [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+
+// ======================================================================
+// allows rules tagged with :AllowsThis to be prefixed by "this" (or not)
+// ======================================================================
+[TimeSpan:Regular] ||| [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| this [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
 
 // ==========================================
 // expressions that could be earlier or later
@@ -416,7 +431,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // e.g. "mid-afternoon yesterday"
 [TimeSpan:Regular] ||| [FieldValue:PartOfDay] [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:PartOfDay] ||| 1.0
 // e.g. "this year's third quarter"
-[TimeSpan:Regular] ||| [TimeSpan:Regular] ' s [FieldValue] ||| FindEnclosed [TimeSpan:Regular] [FieldValue] ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] ' s [FieldValue:Partial] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
 
 // ========================================
 // expressions that set time span modifiers
