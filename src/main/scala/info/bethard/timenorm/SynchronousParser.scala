@@ -145,7 +145,7 @@ object SynchronousParser {
   sealed trait Tree
   object Tree {
     case class Terminal(token: String) extends Tree
-    case class NonTerminal(basicSymbol: String, fullSymbol: String, children: List[Tree], rule: SynchronousGrammar.Rule) extends Tree
+    case class NonTerminal(rule: SynchronousGrammar.Rule, children: List[Tree]) extends Tree
   }
 
   private[SynchronousParser] case class Parse(
@@ -164,7 +164,7 @@ object SynchronousParser {
         }
       }
       val subtrees = this.insertSubtreesFromParentheses(children.iterator)
-      Tree.NonTerminal(rule.basicSymbol, rule.symbol, subtrees, rule)
+      Tree.NonTerminal(rule, subtrees)
     }
     
     private def insertSubtreesFromParentheses(trees: Iterator[Tree]): List[Tree] = {
@@ -191,7 +191,7 @@ object SynchronousParser {
         }
       }
       val rule = SynchronousGrammar.Rule("[" + symbol + "]", IndexedSeq.empty, IndexedSeq.empty, Map.empty)
-      Tree.NonTerminal(rule.basicSymbol, rule.symbol, children.toList, rule)
+      Tree.NonTerminal(rule, children.toList)
     }
   }
 
