@@ -152,20 +152,20 @@ object PeriodParse extends CanFail("[Period]") {
       Simple(1, UnitParse(tree).value)
     case Tree.NonTerminal(_, "[Period]", tree :: Nil, _) =>
       PeriodParse(tree)
-    case Tree.NonTerminal(_, "[Period:Simple]", unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("Simple") :: unit :: Nil, _) =>
       Simple(1, UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[Period:Simple]", amount :: unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("Simple") :: amount :: unit :: Nil, _) =>
       Simple(IntParse(amount).value, UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[Period:Unspecified]", unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("Unspecified") :: unit :: Nil, _) =>
       Unspecified(UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[Period:Fractional]", numerator :: denominator :: unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("Fractional") :: numerator :: denominator :: unit :: Nil, _) =>
       Fractional(IntParse(numerator).value, IntParse(denominator).value, UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[Period:Fractional]", whole :: numerator :: denominator :: unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("Fractional") :: whole :: numerator :: denominator :: unit :: Nil, _) =>
       val denominatorValue = IntParse(denominator).value
       Fractional(IntParse(whole).value * denominatorValue + IntParse(numerator).value, denominatorValue, UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[Period:Sum]", children, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("Sum") :: children, _) =>
       Sum(children.map(PeriodParse.apply))
-    case Tree.NonTerminal(_, "[Period:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[Period]", Tree.Terminal("WithModifier") :: period :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(PeriodParse(period), Modifier.valueOf(modifier))
     case _ => fail(tree)
   }
@@ -202,15 +202,15 @@ object PeriodSetParse extends CanFail("[PeriodSet]") {
       Simple(PeriodParse(period))
     case Tree.NonTerminal(_, "[PeriodSet]", tree :: Nil, _) =>
       PeriodSetParse(tree)
-    case Tree.NonTerminal(_, "[PeriodSet:Simple]", period :: Nil, _) =>
+    case Tree.NonTerminal(_, "[PeriodSet]", Tree.Terminal("Simple") :: period :: Nil, _) =>
       Simple(PeriodParse(period))
-    case Tree.NonTerminal(_, "[PeriodSet:WithModifier]", period :: Tree.Terminal(modifier) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[PeriodSet]", Tree.Terminal("WithModifier") :: period :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(PeriodSetParse(period), Modifier.valueOf(modifier))
-    case Tree.NonTerminal(_, "[PeriodSet:WithQuantifier]", period :: Tree.Terminal(quantifier) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[PeriodSet]", Tree.Terminal("WithQuantifier") :: period :: Tree.Terminal(quantifier) :: Nil, _) =>
       WithQuantifier(PeriodSetParse(period), Quantifier.valueOf(quantifier))
-    case Tree.NonTerminal(_, "[PeriodSet:WithFrequency]", period :: times :: Nil, _) =>
+    case Tree.NonTerminal(_, "[PeriodSet]", Tree.Terminal("WithFrequency") :: period :: times :: Nil, _) =>
       WithFrequency(PeriodSetParse(period), Frequency(IntParse(times).value))
-    case Tree.NonTerminal(_, "[PeriodSet:WithFrequency]", period :: times :: unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[PeriodSet]", Tree.Terminal("WithFrequency") :: period :: times :: unit :: Nil, _) =>
       WithFrequency(PeriodSetParse(period), Frequency(IntParse(times).value, Some(UnitParse(unit).value)))
     case _ => fail(tree)
   }
@@ -247,39 +247,39 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
       Future
     case Tree.NonTerminal(_, "[TimeSpan]", tree :: Nil, _) =>
       TimeSpanParse(tree)
-    case Tree.NonTerminal(_, "[TimeSpan:Simple]", (tree: Tree.Terminal) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("Simple") :: (tree: Tree.Terminal) :: Nil, _) =>
       TimeSpanParse(tree)
-    case Tree.NonTerminal(_, "[TimeSpan:FindAbsolute]", tree :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindAbsolute") :: tree :: Nil, _) =>
       FindAbsolute(FieldValueParse(tree).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindEarlier]", time :: fields :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindEarlier") :: time :: fields :: Nil, _) =>
       FindEarlier(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindAtOrEarlier]", time :: fields :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindAtOrEarlier") :: time :: fields :: Nil, _) =>
       FindAtOrEarlier(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindLater]", time :: fields :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindLater") :: time :: fields :: Nil, _) =>
       FindLater(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindAtOrLater]", time :: fields :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindAtOrLater") :: time :: fields :: Nil, _) =>
       FindAtOrLater(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: (periodTree @ Tree.NonTerminal("[Period]", _, _, _)) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindEnclosing") :: time :: (periodTree @ Tree.NonTerminal("[Period]", _, _, _)) :: Nil, _) =>
       val unit = PeriodParse(periodTree).toPeriod.unitAmounts.keySet.maxBy(_.getDuration())
       FindEnclosing(TimeSpanParse(time), unit)
-    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: (fieldTree @ Tree.NonTerminal("[FieldValue]", _, _, _)) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindEnclosing") :: time :: (fieldTree @ Tree.NonTerminal("[FieldValue]", _, _, _)) :: Nil, _) =>
       val unit = FieldValueParse(fieldTree).fieldValues.keySet.map(_.getRangeUnit()).maxBy(_.getDuration())
       FindEnclosing(TimeSpanParse(time), unit)
-    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosing]", time :: unit :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindEnclosing") :: time :: unit :: Nil, _) =>
       FindEnclosing(TimeSpanParse(time), UnitParse(unit).value)
-    case Tree.NonTerminal(_, "[TimeSpan:FindEnclosed]", time :: fields :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("FindEnclosed") :: time :: fields :: Nil, _) =>
       FindEnclosed(TimeSpanParse(time), FieldValueParse(fields).fieldValues)
-    case Tree.NonTerminal(_, "[TimeSpan:StartAtStartOf]", time :: period :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("StartAtStartOf") :: time :: period :: Nil, _) =>
       StartAtStartOf(TimeSpanParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[TimeSpan:StartAtEndOf]", time :: period :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("StartAtEndOf") :: time :: period :: Nil, _) =>
       StartAtEndOf(TimeSpanParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[TimeSpan:EndAtStartOf]", time :: period :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("EndAtStartOf") :: time :: period :: Nil, _) =>
       EndAtStartOf(TimeSpanParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[TimeSpan:MoveEarlier]", time :: period :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("MoveEarlier") :: time :: period :: Nil, _) =>
       MoveEarlier(TimeSpanParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[TimeSpan:MoveLater]", time :: period :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("MoveLater") :: time :: period :: Nil, _) =>
       MoveLater(TimeSpanParse(time), PeriodParse(period))
-    case Tree.NonTerminal(_, "[TimeSpan:WithModifier]", time :: Tree.Terminal(modifier) :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpan]", Tree.Terminal("WithModifier") :: time :: Tree.Terminal(modifier) :: Nil, _) =>
       WithModifier(TimeSpanParse(time), Modifier.valueOf(modifier))
     case _ => fail(tree)
   }
@@ -516,7 +516,7 @@ object TimeSpanSetParse extends CanFail("[TimeSpanSet]") {
   def apply(tree: Tree)(implicit tokenParser: TokenParser): TimeSpanSetParse = tree match {
     case Tree.NonTerminal(_, "[TimeSpanSet]", tree :: Nil, _) =>
       TimeSpanSetParse(tree)
-    case Tree.NonTerminal(_, "[TimeSpanSet:Simple]", tree :: Nil, _) =>
+    case Tree.NonTerminal(_, "[TimeSpanSet]", Tree.Terminal("Simple") :: tree :: Nil, _) =>
       Simple(FieldValueParse(tree).fieldValues)
     case _ => fail(tree)
   }

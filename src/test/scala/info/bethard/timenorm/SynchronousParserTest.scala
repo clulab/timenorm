@@ -76,44 +76,44 @@ class ParserTest extends FunSuite {
     [FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:DayOfMonth] ||| [FieldValue:DayOfMonth] ||| 1.0
     [FieldValue:Partial] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
-    [Period:Simple] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
-    [Period:Simple] ||| [Int] [Unit] ||| [Int] [Unit] ||| 1.0
-    [Period:Unspecified] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
-    [Period:Unspecified] ||| a while ||| UNSPECIFIED ||| 1.0
-    [Period:Fractional] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
-    [Period:Sum] ||| [Period,1] and [Period,2] ||| [Period,1] [Period,2] ||| 1.0
-    [Period:WithModifier] ||| less than [Period] ||| [Period] LESS_THAN ||| 1.0
-    [PeriodSet:WithQuantifier] ||| daily ||| ( Period:Simple 1 DAYS ) EVERY ||| 1.0
-    [PeriodSet:WithQuantifier] ||| every [Period] ||| [Period] EVERY ||| 1.0
-    [PeriodSet:WithQuantifier] ||| each [Period] ||| [Period] EACH ||| 1.0
-    [PeriodSet:WithFrequency] ||| twice [Period] ||| [Period] 2 ||| 1.0
-    [PeriodSet:WithFrequency] ||| [Int] [Unit] [Period] ||| [Period] [Int] [Unit] ||| 1.0
-    [TimeSpan:Simple] ||| now ||| PRESENT ||| 1.0
-    [TimeSpan:FindEnclosing] ||| today ||| PRESENT DAYS ||| 1.0
-    [TimeSpan:FindEnclosing] ||| this [Unit] ||| PRESENT [Unit] ||| 1.0
-    [TimeSpan:FindAbsolute] ||| [FieldValue:Absolute] ||| [FieldValue:Absolute] ||| 1.0
-    [TimeSpan:StartAtStartOf] ||| first [Unit] of [TimeSpan] ||| [TimeSpan] ( Period:Simple 1 [Unit] ) ||| 1.0
-    [TimeSpan:StartAtEndOf] ||| tomorrow ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
-    [TimeSpan:StartAtEndOf] ||| next [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-    [TimeSpan:StartAtEndOf] ||| [Period] from [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
-    [TimeSpan:EndAtStartOf] ||| yesterday ||| ( TimeSpan:FindEnclosing PRESENT DAYS ) ( Period:Simple 1 DAYS ) ||| 1.0
-    [TimeSpan:EndAtStartOf] ||| last [Period] ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-    [TimeSpan:EndAtStartOf] ||| [Period] before [TimeSpan] ||| ( TimeSpan:FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
-    [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:WithModifier PRESENT APPROX ) [Period] ||| 1.0
-    [TimeSpan:MoveEarlier] ||| [Period] ago ||| ( TimeSpan:FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
-    [TimeSpan:FindEarlier] ||| last [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindEarlier] ||| [FieldValue:PartialEarlier] ||| PRESENT [FieldValue:PartialEarlier] ||| 1.0
-    [TimeSpan:FindLater] ||| next [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindLater] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindAtOrEarlier] ||| [FieldValue:Partial] ||| PRESENT [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindAtOrLater] ||| tonight ||| PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
-    [TimeSpan:FindEnclosed] ||| this [FieldValue:Partial] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
-    [TimeSpan:FindEnclosed] ||| this [FieldValue:PartialEarlier] ||| ( TimeSpan:FindEnclosing PRESENT [FieldValue:PartialEarlier] ) [FieldValue:PartialEarlier] ||| 1.0
-    [TimeSpan:WithModifier] ||| early [TimeSpan] ||| [TimeSpan] START ||| 1.0
-    [TimeSpanSet:Simple] ||| Mondays ||| ( FieldValue DAY_OF_WEEK 1 ) ||| 1.0
-    [TimeSpanSet:Simple] ||| [FieldValue:Partial] nights ||| ( FieldValue [FieldValue:Partial] ( FieldValue NIGHT_OF_DAY 1 ) ) ||| 1.0
-    [TimeSpanSet:Simple] ||| every [FieldValue:Partial] ||| [FieldValue:Partial] ||| 1.0
+    [Period] ||| [Unit:Singular] ||| Simple [Unit:Singular] ||| 1.0
+    [Period] ||| [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+    [Period] ||| [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+    [Period] ||| a while ||| Unspecified UNSPECIFIED ||| 1.0
+    [Period] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| Fractional [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
+    [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
+    [Period] ||| less than [Period] ||| WithModifier [Period] LESS_THAN ||| 1.0
+    [PeriodSet] ||| daily ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+    [PeriodSet] ||| every [Period] ||| WithQuantifier [Period] EVERY ||| 1.0
+    [PeriodSet] ||| each [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+    [PeriodSet] ||| twice [Period] ||| WithFrequency [Period] 2 ||| 1.0
+    [PeriodSet] ||| [Int] [Unit] [Period] ||| WithFrequency [Period] [Int] [Unit] ||| 1.0
+    [TimeSpan] ||| now ||| Simple PRESENT ||| 1.0
+    [TimeSpan] ||| today ||| FindEnclosing PRESENT DAYS ||| 1.0
+    [TimeSpan] ||| this [Unit] ||| FindEnclosing PRESENT [Unit] ||| 1.0
+    [TimeSpan] ||| [FieldValue:Absolute] ||| FindAbsolute [FieldValue:Absolute] ||| 1.0
+    [TimeSpan] ||| first [Unit] of [TimeSpan] ||| StartAtStartOf [TimeSpan] ( Period Simple 1 [Unit] ) ||| 1.0
+    [TimeSpan] ||| tomorrow ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
+    [TimeSpan] ||| next [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+    [TimeSpan] ||| [Period] from [TimeSpan] ||| StartAtEndOf ( TimeSpan FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
+    [TimeSpan] ||| yesterday ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
+    [TimeSpan] ||| last [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+    [TimeSpan] ||| [Period] before [TimeSpan] ||| EndAtStartOf ( TimeSpan FindEnclosing [TimeSpan] [Period] ) [Period] ||| 1.0
+    [TimeSpan] ||| [Period] ago ||| MoveEarlier ( TimeSpan WithModifier PRESENT APPROX ) [Period] ||| 1.0
+    [TimeSpan] ||| [Period] ago ||| MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+    [TimeSpan] ||| last [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan] ||| [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan] ||| [FieldValue:PartialEarlier] ||| FindEarlier PRESENT [FieldValue:PartialEarlier] ||| 1.0
+    [TimeSpan] ||| next [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan] ||| [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan] ||| [FieldValue:Partial] ||| FindAtOrEarlier PRESENT [FieldValue:Partial] ||| 1.0
+    [TimeSpan] ||| tonight ||| FindAtOrLater PRESENT ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+    [TimeSpan] ||| this [FieldValue:Partial] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
+    [TimeSpan] ||| this [FieldValue:PartialEarlier] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [FieldValue:PartialEarlier] ) [FieldValue:PartialEarlier] ||| 1.0
+    [TimeSpan] ||| early [TimeSpan] ||| WithModifier [TimeSpan] START ||| 1.0
+    [TimeSpanSet] ||| Mondays ||| Simple ( FieldValue DAY_OF_WEEK 1 ) ||| 1.0
+    [TimeSpanSet] ||| [FieldValue:Partial] nights ||| Simple ( FieldValue [FieldValue:Partial] ( FieldValue NIGHT_OF_DAY 1 ) ) ||| 1.0
+    [TimeSpanSet] ||| every [FieldValue:Partial] ||| Simple [FieldValue:Partial] ||| 1.0
     """)
 
   val parser = new SynchronousParser(grammar)
