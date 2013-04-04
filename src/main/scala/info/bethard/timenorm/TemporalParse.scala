@@ -109,8 +109,18 @@ object IntParse extends CanFail("[Int]") {
   def apply(tree: Tree)(implicit tokenParser: TokenParser): IntParse = tree match {
     case Tree.Terminal(number) =>
       IntParse(tokenParser.toInt(number))
-    case Tree.NonTerminal(rule, tree :: Nil) if rule.basicSymbol == "[Int]" =>
-      IntParse(tree)
+    case tree =>
+      val number = this.toDigits(tree).reverse.zipWithIndex.foldLeft(0){
+        case (sum, (digit, index)) => sum + digit * math.pow(10, index).toInt
+      }
+      IntParse(number)
+  }
+  
+  private def toDigits(tree: Tree): List[Int] = tree match {
+    case Tree.Terminal(number) =>
+      number.toInt :: Nil
+    case Tree.NonTerminal(rule, children) if rule.basicSymbol == "[Int]" =>
+      children.flatMap(this.toDigits)
     case _ => fail(tree)
   }
 }

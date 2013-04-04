@@ -17,43 +17,53 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // ====================================
 // expressions that identify an integer
 // ====================================
-[Int] ||| one ||| 1 ||| 1.0
-[Int] ||| two ||| 2 ||| 1.0
-[Int] ||| three ||| 3 ||| 1.0
-[Int] ||| four ||| 4 ||| 1.0
-[Int] ||| five ||| 5 ||| 1.0
-[Int] ||| six ||| 6 ||| 1.0
-[Int] ||| seven ||| 7 ||| 1.0
-[Int] ||| eight ||| 8 ||| 1.0
-[Int] ||| nine ||| 9 ||| 1.0
-[Int] ||| ten ||| 10 ||| 1.0
-[Int] ||| eleven ||| 11 ||| 1.0
-[Int] ||| twelve ||| 12 ||| 1.0
-[Int] ||| thirteen ||| 13 ||| 1.0
-[Int] ||| fourteen ||| 14 ||| 1.0
-[Int] ||| fifteen ||| 15 ||| 1.0
-[Int] ||| sixteen ||| 16 ||| 1.0
-[Int] ||| seventeen ||| 17 ||| 1.0
-[Int] ||| eighteen ||| 18 ||| 1.0
-[Int] ||| nineteen ||| 19 ||| 1.0
-[Int] ||| twenty ||| 20 ||| 1.0
-[Int] ||| thirty ||| 30 ||| 1.0
-[Int] ||| forty ||| 40 ||| 1.0
-[Int] ||| fifty ||| 50 ||| 1.0
-[Int] ||| sixty ||| 60 ||| 1.0
-[Int] ||| seventy ||| 70 ||| 1.0
-[Int] ||| eighty ||| 80 ||| 1.0
-[Int] ||| ninety ||| 90 ||| 1.0
-[Int] ||| hundred ||| 100 ||| 1.0
+[Int:1Digit] ||| one ||| 1 ||| 1.0
+[Int:1Digit] ||| two ||| 2 ||| 1.0
+[Int:1Digit] ||| three ||| 3 ||| 1.0
+[Int:1Digit] ||| four ||| 4 ||| 1.0
+[Int:1Digit] ||| five ||| 5 ||| 1.0
+[Int:1Digit] ||| six ||| 6 ||| 1.0
+[Int:1Digit] ||| seven ||| 7 ||| 1.0
+[Int:1Digit] ||| eight ||| 8 ||| 1.0
+[Int:1Digit] ||| nine ||| 9 ||| 1.0
+[Int:Teens] ||| ten ||| 10 ||| 1.0
+[Int:Teens] ||| eleven ||| 11 ||| 1.0
+[Int:Teens] ||| twelve ||| 12 ||| 1.0
+[Int:Teens] ||| thirteen ||| 13 ||| 1.0
+[Int:Teens] ||| fourteen ||| 14 ||| 1.0
+[Int:Teens] ||| fifteen ||| 15 ||| 1.0
+[Int:Teens] ||| sixteen ||| 16 ||| 1.0
+[Int:Teens] ||| seventeen ||| 17 ||| 1.0
+[Int:Teens] ||| eighteen ||| 18 ||| 1.0
+[Int:Teens] ||| nineteen ||| 19 ||| 1.0
+[Int:Tens] ||| twenty ||| 2 ||| 1.0
+[Int:Tens] ||| thirty ||| 3 ||| 1.0
+[Int:Tens] ||| forty ||| 4 ||| 1.0
+[Int:Tens] ||| fifty ||| 5 ||| 1.0
+[Int:Tens] ||| sixty ||| 6 ||| 1.0
+[Int:Tens] ||| seventy ||| 7 ||| 1.0
+[Int:Tens] ||| eighty ||| 8 ||| 1.0
+[Int:Tens] ||| ninety ||| 9 ||| 1.0
+[Int:2Digit] ||| [Int:Teens] ||| [Int:Teens] ||| 1.0
+[Int:2Digit] ||| [Int:Tens] ||| [Int:Tens] 0 ||| 1.0
+[Int:2Digit] ||| [Int:Tens] [Int:1Digit] ||| [Int:Tens] [Int:1Digit] ||| 1.0
+[Int:3Digit] ||| hundred ||| 1 0 0 ||| 1.0
+[Int:3Digit] ||| [Int:1Digit] hundred ||| [Int:1Digit] 0 0 ||| 1.0
+[Int:3Digit] ||| [Int:1Digit] hundred [Int:2Digit] ||| [Int:1Digit] [Int:2Digit] ||| 1.0
+[Int:4Digit] ||| thousand ||| 1 0 0 0 ||| 1.0
+[Int:4Digit] ||| [Int:1Digit] thousand ||| [Int:1Digit] 0 0 0 ||| 1.0
+[Int:4Digit] ||| [Int:1Digit] thousand [Int:3Digit] ||| [Int:1Digit] [Int:3Digit] ||| 1.0
+[Int:4Digit] ||| [Int:2Digit,1] [Int:2Digit,2] ||| [Int:2Digit,1] [Int:2Digit,2] ||| 1.0
+[Int] ||| [Int:1Digit] ||| [Int:1Digit] ||| 1.0
+[Int] ||| [Int:2Digit] ||| [Int:2Digit] ||| 1.0
+[Int] ||| [Int:3Digit] ||| [Int:3Digit] ||| 1.0
+[Int] ||| [Int:4Digit] ||| [Int:4Digit] ||| 1.0
 
 // =================================================
 // other common expressions that identify an integer
 // =================================================
 [Int] ||| couple ||| 2 ||| 1.0
 [Int] ||| couple of ||| 2 ||| 1.0
-// there should really be a full number grammar here, but for
-// the moment, we just include this common expression here
-[Int] ||| twenty four ||| 24 ||| 1.0
 
 // =========================================
 // expressions that identify a temporal unit
@@ -233,7 +243,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // ===============================================================
 // combinations of time fields that fully specify an absolute time
 // ===============================================================
-[FieldValue:Year] ||| [Int:1800-2100] ||| YEAR [Int:1800-2100] ||| 1.0
+[FieldValue:Year] ||| [Int:1000-9999] ||| YEAR [Int:1000-9999] ||| 1.0
+[FieldValue:Year] ||| [Int:4Digit] ||| YEAR [Int:4Digit] ||| 1.0
+// e.g. "the year 2000"
+[FieldValue:Year] ||| year [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
 [FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:YearMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
 [FieldValue:YearMonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
@@ -430,6 +443,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| [TimeSpan:Regular] [Unit:Singular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
 // e.g. "mid-afternoon yesterday"
 [TimeSpan:Regular] ||| [FieldValue:PartOfDay] [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:PartOfDay] ||| 1.0
+// e.g. "winter of 1994"
+[TimeSpan:Regular] ||| [FieldValue:Partial] of [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
 // e.g. "this year's third quarter"
 [TimeSpan:Regular] ||| [TimeSpan:Regular] ' s [FieldValue:Partial] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
 

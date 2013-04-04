@@ -9,7 +9,7 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
     this.rulePrefixMap += (rule.sourceSeq, rule)
   }
   
-  private val numberRegex = "^\\[Int:(.*)-(.*)\\]$".r
+  private val numberRegex = "^\\[Int:(\\d*)-(\\d*)\\]$".r
   private val numberRanges: Set[Range.Inclusive] = (
     for {
       rule <- rules

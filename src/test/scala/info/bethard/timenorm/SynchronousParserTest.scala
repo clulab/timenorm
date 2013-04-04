@@ -16,9 +16,12 @@ class ParserTest extends FunSuite {
     [Nil] ||| . ||| ||| 1.0
     [Nil] ||| very ||| ||| 1.0
     [Nil] ||| just ||| ||| 1.0
-    [Int] ||| one ||| 1 ||| 1.0
-    [Int] ||| two ||| 2 ||| 1.0
-    [Int] ||| three ||| 3 ||| 1.0
+    [Int:Ones] ||| one ||| 1 ||| 1.0
+    [Int:Ones] ||| two ||| 2 ||| 1.0
+    [Int:Ones] ||| three ||| 3 ||| 1.0
+    [Int:Tens] ||| twenty ||| 2 ||| 1.0
+    [Int] ||| [Int:Ones] ||| [Int:Ones] ||| 1.0
+    [Int] ||| [Int:Tens] [Int:Ones] ||| [Int:Tens] [Int:Ones] ||| 1.0
     [Unit:Singular] ||| hour ||| HOURS ||| 1.0
     [Unit:Singular] ||| day ||| DAYS ||| 1.0
     [Unit:Singular] ||| week ||| WEEKS ||| 1.0
@@ -137,6 +140,7 @@ class ParserTest extends FunSuite {
     assert(this.parse("two", "weeks") === Simple(2, WEEKS))
     assert(this.parse("10", "days") === Simple(10, DAYS))
     assert(this.parse("a", "month") === Simple(1, MONTHS))
+    assert(this.parse("twenty", "two", "years") === Simple(22, YEARS))
     assert(this.parse("weeks") === Unspecified(WEEKS))
     assert(this.parse("5", "1", "/", "2", "hours") === Fractional(11, 2, HOURS))
     assert(this.parse("a", "while") === Unspecified(UNSPECIFIED))
