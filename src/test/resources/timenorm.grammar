@@ -110,6 +110,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:PartOfDay] ||| afternoon ||| AFTERNOON_OF_DAY 1 ||| 1.0
 [FieldValue:PartOfDay] ||| evening ||| EVENING_OF_DAY 1 ||| 1.0
 [FieldValue:PartOfDay] ||| night ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| overnight ||| NIGHT_OF_DAY 1 ||| 1.0
 
 // ===========================================
 // expressions that identify a day of the week
@@ -276,6 +277,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // expressions of unspecified periods
 // ==================================
 [Period] ||| a while ||| Unspecified UNSPECIFIED ||| 1.0
+[Period] ||| some time ||| Unspecified UNSPECIFIED ||| 1.0
 [Period] ||| lengthy period ||| Unspecified UNSPECIFIED ||| 1.0
 [Period] ||| several [Unit] ||| Unspecified [Unit] ||| 1.0
 [Period] ||| few [Unit] ||| Unspecified [Unit] ||| 1.0
@@ -333,6 +335,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Solo] ||| currently ||| Simple PRESENT ||| 1.0
 [TimeSpan:Solo] ||| already ||| Simple PRESENT ||| 1.0
 [TimeSpan:Solo] ||| this moment ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| these days ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| yet ||| Simple PRESENT ||| 1.0
 [TimeSpan:Solo] ||| future ||| Simple FUTURE ||| 1.0
 [TimeSpan:Solo] ||| soon ||| Simple FUTURE ||| 1.0
 // e.g. "the long term"
@@ -357,6 +361,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| today ||| FindEnclosing PRESENT DAYS ||| 1.0
 [TimeSpan:Regular] ||| tonight ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
 [TimeSpan:Regular] ||| same day ||| FindEnclosing PRESENT DAYS ||| 1.0
+[TimeSpan:Regular] ||| the [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
 [TimeSpan:Regular] ||| this [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
 [TimeSpan:Regular] ||| that [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
 // e.g. "the current week"
@@ -375,6 +380,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // e.g. "last October"
 [TimeSpan:AllowsThis] ||| last [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
 [TimeSpan:AllowsThis] ||| past [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| previous [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
 // e.g. "the last three weeks", "almost four years ago"
 [TimeSpan:AllowsThis] ||| last [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:AllowsThis] ||| past [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
@@ -387,13 +393,14 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| [Period] before [TimeSpan:Regular] ||| EndAtStartOf ( TimeSpan FindEnclosing [TimeSpan:Regular] [Period] ) [Period] ||| 1.0
 // e.g. "January last year"
 [TimeSpan:Regular] ||| [FieldValue:Partial] last [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
-// in TimeBank, "the quarter" usually means "the last quarter" 
-[TimeSpan:Regular] ||| the quarter ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ||| 1.0
+
 // in TimeBank, "the [Period] ago/earlier quarter/period" usually means "one [Period] before last quarter"
-[TimeSpan:Regular] ||| the [Period] ago quarter ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| the [Period] ago period ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| the [Period] earlier quarter ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-[TimeSpan:Regular] ||| the [Period] earlier period ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+//[TimeSpan:Regular] ||| the [Period] ago quarter ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+//[TimeSpan:Regular] ||| the [Period] ago period ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+//[TimeSpan:Regular] ||| the [Period] earlier quarter ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+//[TimeSpan:Regular] ||| the [Period] earlier period ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
+// in TimeBank, "the quarter" usually means "the last quarter" 
+//[TimeSpan:Regular] ||| the quarter ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ||| 1.0
 
 // ===============================
 // expressions of later time spans
@@ -402,6 +409,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // e.g. "next Tuesday"
 [TimeSpan:AllowsThis] ||| next [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
 [TimeSpan:AllowsThis] ||| coming [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| following [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
 // e.g. "next year" 
 [TimeSpan:AllowsThis] ||| next [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:AllowsThis] ||| following [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
@@ -447,6 +455,9 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| [FieldValue:Partial] of [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
 // e.g. "this year's third quarter"
 [TimeSpan:Regular] ||| [TimeSpan:Regular] ' s [FieldValue:Partial] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+// e.g. "the year-ago third quarter"
+[TimeSpan:Regular] ||| [Period] ago [FieldValue:Partial] ||| FindEnclosed ( TimeSpan MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [Period] earlier [FieldValue:Partial] ||| FindEnclosed ( TimeSpan MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
 
 // ========================================
 // expressions that set time span modifiers
@@ -454,18 +465,25 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| end of [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0 
 [TimeSpan:Regular] ||| [Unit] end ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
 [TimeSpan:Regular] ||| start of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| beginning of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| early [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| earlier [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| earlier in [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| mid [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
 [TimeSpan:Regular] ||| middle of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
 [TimeSpan:Regular] ||| late [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
 [TimeSpan:Regular] ||| later [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| later in [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
 [TimeSpan:Regular] ||| end of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
 [TimeSpan:Regular] ||| almost [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
 [TimeSpan:Regular] ||| about [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
 [TimeSpan:Regular] ||| around [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
 [TimeSpan:Regular] ||| part of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
 [TimeSpan:Regular] ||| post [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] AFTER ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] or later ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] and beyond ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] or earlier ||| WithModifier [TimeSpan:Regular] ON_OR_BEFORE ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] and before ||| WithModifier [TimeSpan:Regular] ON_OR_BEFORE ||| 1.0
 
 // =================================================
 // expressions of fields used only by time span sets
