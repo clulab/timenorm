@@ -469,7 +469,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| start of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| beginning of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| early [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
-[TimeSpan:Regular] ||| earlier [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+// don't allow this to combine with other rules, since "earlier" can play many roles
+[TimeSpan:Solo] ||| earlier [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| earlier in [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
 [TimeSpan:Regular] ||| mid [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
 [TimeSpan:Regular] ||| middle of [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
