@@ -353,6 +353,7 @@ class TemporalParseTest extends FunSuite {
     assertTimeSpanSet(Simple(Map(DAY_OF_WEEK -> 2, NIGHT_OF_DAY -> 1)), "XXXX-WXX-2TNI")
     assertTimeSpanSet(Simple(Map(MINUTE_OF_HOUR -> 15)), "XXXX-XX-XXTXX:15")
     assertTimeSpanSet(Simple(Map(ISO_WEEK.OF_YEAR -> 12, MINUTE_OF_HOUR -> 15)), "XXXX-W12TXX:15")
+    assertTimeSpanSet(Simple(Map(QUARTER_OF_YEAR -> 3)), "XXXX-Q3")
   }
 
   private def assertTimeSpanSet(
