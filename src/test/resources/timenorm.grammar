@@ -11,7 +11,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| / ||| ||| 1.0
 [Nil] ||| ' s ||| ||| 1.0
 [Nil] ||| each of ||| ||| 1.0
-[Nil] ||| period ||| ||| 1.0
 [Nil] ||| more ||| ||| 1.0
 
 // ====================================
@@ -265,6 +264,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period] ||| [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
 // e.g. "the first nine months"
 [Period] ||| first [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+// e.g. "a three-year period"
+[Period] ||| [Int] [Unit] period ||| Simple [Int] [Unit] ||| 1.0
 
 // ==============================================
 // expressions of periods with fractional amounts
@@ -309,6 +310,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [PeriodSet] ||| daily ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
 [PeriodSet] ||| weekly ||| WithQuantifier ( Period Simple 1 WEEKS ) EVERY ||| 1.0
 [PeriodSet] ||| monthly ||| WithQuantifier ( Period Simple 1 MONTHS ) EVERY ||| 1.0
+[PeriodSet] ||| quarterly ||| WithQuantifier ( Period Simple 1 QUARTER_YEARS ) EVERY ||| 1.0
 [PeriodSet] ||| yearly ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
 [PeriodSet] ||| annually ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
 [PeriodSet] ||| every [Period] ||| WithQuantifier [Period] EVERY ||| 1.0
@@ -331,6 +333,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Solo] ||| recently ||| Simple PAST ||| 1.0
 [TimeSpan:Solo] ||| once ||| Simple PAST ||| 1.0
 [TimeSpan:Solo] ||| earlier ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| then current ||| Simple PAST ||| 1.0
 [TimeSpan:Solo] ||| current ||| Simple PRESENT ||| 1.0
 [TimeSpan:Solo] ||| currently ||| Simple PRESENT ||| 1.0
 [TimeSpan:Solo] ||| already ||| Simple PRESENT ||| 1.0
@@ -339,6 +342,8 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Solo] ||| yet ||| Simple PRESENT ||| 1.0
 [TimeSpan:Solo] ||| future ||| Simple FUTURE ||| 1.0
 [TimeSpan:Solo] ||| soon ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| later date ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| later time ||| Simple FUTURE ||| 1.0
 // e.g. "the long term"
 [TimeSpan:Solo] ||| the term ||| Simple FUTURE ||| 1.0
 
@@ -360,7 +365,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| now ||| Simple PRESENT ||| 1.0
 [TimeSpan:Regular] ||| today ||| FindEnclosing PRESENT DAYS ||| 1.0
 [TimeSpan:Regular] ||| tonight ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
-[TimeSpan:Regular] ||| same day ||| FindEnclosing PRESENT DAYS ||| 1.0
+[TimeSpan:AllowsThis] ||| same day ||| FindEnclosing PRESENT DAYS ||| 1.0
 [TimeSpan:Regular] ||| the [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
 [TimeSpan:Regular] ||| this [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
 [TimeSpan:Regular] ||| that [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
@@ -370,8 +375,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| this [FieldValue:Partial] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
 // e.g. "January this year" 
 [TimeSpan:Regular] ||| [FieldValue:Partial] this [Unit] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0 
-// in TimeBank/AQUAINT, "last week" usually means "this week"
-[TimeSpan:Regular] ||| last week ||| FindEnclosing PRESENT WEEKS ||| 1.0
 
 // =================================
 // expressions of earlier time spans
@@ -389,18 +392,17 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // e.g. "three years earlier"
 [TimeSpan:Regular] ||| [Period] earlier ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
 [TimeSpan:Regular] ||| [Period] ago ||| MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// alternate interpretation: exactly [Period] earlier
+[TimeSpan:AllowsThis] ||| last [Period] ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:Regular] ||| [Period] earlier ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:Regular] ||| [Period] ago ||| MoveEarlier PRESENT [Period] ||| 1.0
 // e.g. "the day before last Tuesday"
 [TimeSpan:Regular] ||| [Period] before [TimeSpan:Regular] ||| EndAtStartOf ( TimeSpan FindEnclosing [TimeSpan:Regular] [Period] ) [Period] ||| 1.0
 // e.g. "January last year"
 [TimeSpan:Regular] ||| [FieldValue:Partial] last [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
-
-// in TimeBank, "the [Period] ago/earlier quarter/period" usually means "one [Period] before last quarter"
-//[TimeSpan:Regular] ||| the [Period] ago quarter ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-//[TimeSpan:Regular] ||| the [Period] ago period ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-//[TimeSpan:Regular] ||| the [Period] earlier quarter ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-//[TimeSpan:Regular] ||| the [Period] earlier period ||| MoveEarlier ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ) [Period] ||| 1.0
-// in TimeBank, "the quarter" usually means "the last quarter" 
-//[TimeSpan:Regular] ||| the quarter ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT QUARTER_YEARS ) ( Period Simple 1 QUARTER_YEARS ) ||| 1.0
+// e.g. "the year-ago third quarter"
+[TimeSpan:Regular] ||| [Period] ago [FieldValue:Partial] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [Period] earlier [FieldValue:Partial] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
 
 // ===============================
 // expressions of later time spans
@@ -417,11 +419,12 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // e.g. "January next year"
 [TimeSpan:Regular] ||| [FieldValue:Partial] next [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
 
-// ======================================================================
-// allows rules tagged with :AllowsThis to be prefixed by "this" (or not)
-// ======================================================================
+// ====================================================================================
+// allows rules tagged with :AllowsThis to be prefixed by "this" or "that" (or nothing)
+// ====================================================================================
 [TimeSpan:Regular] ||| [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
 [TimeSpan:Regular] ||| this [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| that [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
 
 // ==========================================
 // expressions that could be earlier or later
@@ -446,7 +449,9 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // expressions changing time span granularity
 // ==========================================
 // e.g. "the week of March 6"
-[TimeSpan:Regular] ||| [Unit] of [TimeSpan:Regular] ||| FindEnclosing [TimeSpan:Regular] [Unit] ||| 1.0
+[TimeSpan:Regular] ||| [Unit:Singular] of [TimeSpan:Regular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
+// e.g. "the quarter a year ago", "the period last year"
+[TimeSpan:Regular] ||| [Unit:Singular] [TimeSpan:Regular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
 // e.g. "Thanksgiving day"
 [TimeSpan:Regular] ||| [TimeSpan:Regular] [Unit:Singular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
 // e.g. "mid-afternoon yesterday"
@@ -455,9 +460,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpan:Regular] ||| [FieldValue:Partial] of [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
 // e.g. "this year's third quarter"
 [TimeSpan:Regular] ||| [TimeSpan:Regular] ' s [FieldValue:Partial] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
-// e.g. "the year-ago third quarter"
-[TimeSpan:Regular] ||| [Period] ago [FieldValue:Partial] ||| FindEnclosed ( TimeSpan MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
-[TimeSpan:Regular] ||| [Period] earlier [FieldValue:Partial] ||| FindEnclosed ( TimeSpan MoveEarlier ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
 
 // ========================================
 // expressions that set time span modifiers
@@ -497,6 +499,10 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [FieldValue:Unspecified] ||| falls ||| FALL_OF_YEAR 1 ||| 1.0
 [FieldValue:Unspecified] ||| autumns ||| FALL_OF_YEAR 1 ||| 1.0
 [FieldValue:Unspecified] ||| winters ||| WINTER_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| first quarters ||| QUARTER_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| second quarters ||| QUARTER_OF_YEAR 2 ||| 1.0
+[FieldValue:Unspecified] ||| third quarters ||| QUARTER_OF_YEAR 3 ||| 1.0
+[FieldValue:Unspecified] ||| fourth quarters ||| QUARTER_OF_YEAR 4 ||| 1.0
 
 // =============================
 // expressions of time span sets
@@ -507,3 +513,5 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [TimeSpanSet] ||| [FieldValue:Partial] [FieldValue:Unspecified] ||| Simple ( FieldValue [FieldValue:Partial] [FieldValue:Unspecified] ) ||| 1.0
 // e.g. "the past three summers"
 [TimeSpanSet] ||| past [Int] [FieldValue:Unspecified] ||| Simple [FieldValue:Unspecified] ||| 1.0
+// e.g. "fourth quarters"
+[TimeSpanSet] ||| [FieldValue:Unspecified] ||| Simple [FieldValue:Unspecified] ||| 1.0

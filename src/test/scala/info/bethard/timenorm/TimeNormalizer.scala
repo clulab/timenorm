@@ -4,6 +4,7 @@ import java.net.URL
 import scala.io.Source
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.DateTimeException
+import org.threeten.bp.temporal.ISOFields.QUARTER_YEARS
 
 class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/timenorm.grammar")) {
   private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
@@ -60,7 +61,8 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     
     // assume that the grammar ambiguity for any expression is at most 2 
     if (parses.size > 2) {
-      throw new UnsupportedOperationException("Expected no more than 2 parses, found " + parses)
+      val message = "Expected no more than 2 parses for \"%s\", found:\n  %s\n"
+      System.err.printf(message, sourceText, parses.mkString("\n  "))
     }
     
     // find only the semantically possible parses
@@ -74,19 +76,27 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     val temporals = temporalTries.flatten
 
     // heuristically pick a temporal from the parses
+    val isQuarter = (timeSpan: TimeSpan) => timeSpan.period.unitAmounts.keySet == Set(QUARTER_YEARS)
+    val anchorIsQuarter = isQuarter(anchor)
     if (temporals.isEmpty) {
       None
     } else {
-      val bestTemporal = temporals.min(Ordering.fromLessThan[Temporal] {
+      val heuristic = Ordering.fromLessThan[Temporal] {
         // prefer time spans to periods
         case (period: Period, timeSpan: TimeSpan) => false
         case (timeSpan: TimeSpan, period: Period) => true
-        // prefer earlier time spans
-        case (timeSpan1: TimeSpan, timeSpan2: TimeSpan) => timeSpan1.start.isBefore(timeSpan2.start)
+        // if the anchor is in quarters, prefer a result in quarters
+        // otherwise, prefer earlier time spans
+        case (timeSpan1: TimeSpan, timeSpan2: TimeSpan) =>
+          (anchorIsQuarter, isQuarter(timeSpan1), isQuarter(timeSpan2)) match {
+            case (true, true, false) => true
+            case (true, false, true) => false
+            case _ => timeSpan1.start.isBefore(timeSpan2.start)
+          }
         // throw an exception for anything else
         case other => throw new UnsupportedOperationException("Don't know how to order " + other)
-      })
-      Some(bestTemporal)
+      }
+      Some(temporals.min(heuristic))
     }
   }
 }
