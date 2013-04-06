@@ -8,7 +8,7 @@ import scala.io.Source
 import org.threeten.bp.DateTimeException
 import org.threeten.bp.temporal.ISOFields.QUARTER_YEARS
 
-class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/timenorm.grammar")) {
+class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/info/bethard/timenorm/en.grammar")) {
   private val logger = Logger.getLogger(this.getClass.getName)
   private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
   private val grammar = SynchronousGrammar.fromString(grammarText)
