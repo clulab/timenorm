@@ -1,12 +1,15 @@
 package info.bethard.timenorm
 
 import java.net.URL
+import java.util.logging.Logger
+
 import scala.io.Source
-import org.threeten.bp.ZonedDateTime
+
 import org.threeten.bp.DateTimeException
 import org.threeten.bp.temporal.ISOFields.QUARTER_YEARS
 
 class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/timenorm.grammar")) {
+  private val logger = Logger.getLogger(this.getClass.getName)
   private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
   private val grammar = SynchronousGrammar.fromString(grammarText)
   private val sourceSymbols = grammar.sourceSymbols()
@@ -61,8 +64,8 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     
     // assume that the grammar ambiguity for any expression is at most 2 
     if (parses.size > 2) {
-      val message = "Expected no more than 2 parses for \"%s\", found:\n  %s\n"
-      System.err.printf(message, sourceText, parses.mkString("\n  "))
+      val message = "Expected no more than 2 parses for \"%s\", found:\n  %s"
+      this.logger.warning(message.format(sourceText, parses.mkString("\n  ")))
     }
     
     // find only the semantically possible parses
