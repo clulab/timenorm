@@ -58,6 +58,11 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
   def normalize(sourceText: String, anchor: TimeSpan): Option[Temporal] = {
     val parses = this.parseAll(sourceText)
     
+    // assume that the grammar ambiguity for any expression is at most 2 
+    if (parses.size > 2) {
+      throw new UnsupportedOperationException("Expected no more than 2 parses, found " + parses)
+    }
+    
     // find only the semantically possible parses
     val temporalTries = for (parse <- parses) yield {
       try {
@@ -67,35 +72,21 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
       }
     }
     val temporals = temporalTries.flatten
-    
-    // heuristically pick a temporal when there were multiple parses
-    temporals match {
-      case Seq() => None
-      case Seq(temporal) => Some(temporal)
-      case temporals if temporals.size == 2 => {
-        val timeSpans = temporals.collect{ case t : TimeSpan => t }
-        val periods = temporals.collect{ case p : Period => p }
-        // select the earlier of the two time spans
-        if (timeSpans.size == 2) {
-          Some(timeSpans.minBy(timeSpan => timeSpan.timeMLValueOption match {
-            case Some(timeMLValue) => timeMLValue
-            case None => throw new UnsupportedOperationException(
-              "Don't know how to get value of time span " + timeSpan)
-          }))
-        }
-        // prefer time spans over periods
-        else if (periods.size == 1 && timeSpans.size == 1) {
-          Some(timeSpans.head)
-        }
-        // otherwise, give up
-        else {
-          throw new UnsupportedOperationException(
-          "Don't know how to select minimum of:\n%s".format(temporals.mkString("\n")))
-        }
-      }
-      case _ => throw new UnsupportedOperationException(
-        "Expected exactly two choices, found:\n%s".format(temporals.mkString("\n")))
+
+    // heuristically pick a temporal from the parses
+    if (temporals.isEmpty) {
+      None
+    } else {
+      val bestTemporal = temporals.min(Ordering.fromLessThan[Temporal] {
+        // prefer time spans to periods
+        case (period: Period, timeSpan: TimeSpan) => false
+        case (timeSpan: TimeSpan, period: Period) => true
+        // prefer earlier time spans
+        case (timeSpan1: TimeSpan, timeSpan2: TimeSpan) => timeSpan1.start.isBefore(timeSpan2.start)
+        // throw an exception for anything else
+        case other => throw new UnsupportedOperationException("Don't know how to order " + other)
+      })
+      Some(bestTemporal)
     }
   }
-
 }
