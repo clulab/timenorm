@@ -215,12 +215,13 @@ object TimeMLProcessor {
 
   
   private final val knownFailures = Set(
+    ("APW19980808.0022.tml", "t4", "10:35 a.m.", "1998-08-07T10:35") /* document creation time is whole day, so FindAtOrEarlier finds the one today, not yesterday */,
     ("APW19980213.1320.tml", "t190", "Monday", "XXXX-WXX-1TNI") /* "Monday and Tuesday nights" */,
     ("APW19980219.0476.tml", "t137", "weeks or months", "PXW") /* requires handling of disjunctions */,
     ("APW19980301.0720.tml", "t1982", "last February", "1997-02") /* two Februaries before anchor */,
     ("CNN19980213.2130.0155.tml", "t126", "the day", "1998-02-13") /* "later in the day" */,
     ("PRI19980303.2000.2550.tml", "t163", "one day", "FUTURE_REF") /* ambiguous with P1D */,
-    ("VOA19980305.1800.2603.tml", "t66", "this coming Sunday, March eighth", "1998-03-08") /* need full number grammar and handling of "this coming" */,
+    ("VOA19980305.1800.2603.tml", "t66", "this coming Sunday, March eighth", "1998-03-08") /* need handling of ordinals */,
     ("VOA19980331.1700.1533.tml", "t3000", "two", "P2D") /* from "two to six days" */,
     ("wsj_0026.tml", "t1000", "that year", "1988") /* requires handling of anchors that are not full date-times */,
     ("wsj_0124.tml", "t31", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
@@ -233,6 +234,7 @@ object TimeMLProcessor {
     ("wsj_0161.tml", "t31", "A year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0167.tml", "t22", "year-earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0171.tml", "t29", "a year ago", "1988-Q3")  /* requires knowledge that granularity is quarters */,
+    ("wsj_0171.tml", "t32", "the quarter", "1989-Q3") /* interpreted as "the last quarter" */,
     ("wsj_0171.tml", "t33", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0189.tml", "t39", "a year earlier", "1988-Q4") /* requires knowledge that granularity is quarters */,
     ("wsj_0189.tml", "t43", "last year", "1988-Q4") /* requires knowledge that granularity is quarters */,
@@ -241,9 +243,11 @@ object TimeMLProcessor {
     ("wsj_0189.tml", "t48", "the year", "1989") /* ambiguous with P1Y */,
     ("wsj_0263.tml", "t2096", "A year earlier", "1988-11-01") /* ambiguous with 1988 */,
     ("wsj_0292.tml", "t78", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0292.tml", "t85", "the year-earlier period", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */,
     ("wsj_0292.tml", "t86", "the 1989 period", "1989-Q3") /* "quarter-to-quarter comparison" */,
     ("wsj_0292.tml", "t87", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0313.tml", "t65", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0325.tml", "t49", "the year-ago quarter", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */, 
     ("wsj_0325.tml", "t51", "year-ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0344.tml", "t46", "the corresponding period last year", "1988-Q3") /* requires handling of "corresponding" */,
     ("wsj_0344.tml", "t47", "This quarter", "1989-Q3") /* really means "last quarter" */,
@@ -256,15 +260,18 @@ object TimeMLProcessor {
     ("wsj_0527.tml", "t122", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0534.tml", "t22", "then", "1989-11-30") /* should be handled like PRESENT but not display PRESENT_REF */,
     ("wsj_0558.tml", "t69", "last year", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0568.tml", "t225", "the year-earlier quarter", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */,
     ("wsj_0570.tml", "t88", "from time to time", "FUTURE_REF") /* occurs only once (might be better interpreted as a set instead) */,
     ("wsj_0585.tml", "t338", "the day", "1989-10-12") /* ambiguous with P1D */,
     ("wsj_0585.tml", "t1111", "two to three weeks", "P2W") /* requires handling of disjunctions */,
     ("wsj_0585.tml", "t386", "the 1988 quarter", "1988-Q3") /* requires handling of corresponding quarters */,
     ("wsj_0610.tml", "t264", "the full year", "1989") /* ambiguous with P1Y */,
     ("wsj_0637.tml", "t46", "the next 12 to 18 months", "PXM") /* requires handling of disjunctions */,
+    ("wsj_0662.tml", "t36", "the quarter", "1989-Q2") /* really means "last quarter" */,
     ("wsj_0709.tml", "t30", "the comparable year-ago quarter", "1988-Q2") /* requires handling of corresponding quarters */,
     ("wsj_0709.tml", "t33", "that quarter", "1988-Q2") /* requires handling of anchors that are not full date-times */,
     ("wsj_0709.tml", "t31", "second quarter", "1988-Q2") /* requires handling of anchors that are not full date-times */,
+    ("wsj_0760.tml", "t53", "the year-earlier quarter", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */,
     ("wsj_0768.tml", "t2004", "recent weeks and months", "PAST_REF") /* requires handling of conjunctions of unspecified periods */,
     ("wsj_0786.tml", "t98", "The following month", "1989-04") /* requires handling of anchors that are not full date-times */,
     ("wsj_0805.tml", "t21", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
@@ -273,9 +280,13 @@ object TimeMLProcessor {
     ("wsj_0904.tml", "t72", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
     ("wsj_0904.tml", "t247", "the year-earlier nine months", "P9M") /* not sure how to capture this */,
     ("wsj_0904.tml", "t83", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0907.tml", "t60", "the year-earlier quarter", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */,
     ("wsj_0918.tml", "t128", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0918.tml", "t140", "the year-earlier period", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */,
     ("wsj_0918.tml", "t164", "a year earlier", "1988-Q3") /* requires knowledge that granularity is quarters */,
-    ("wsj_0918.tml", "t181", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */)
+    ("wsj_0918.tml", "t181", "a year ago", "1988-Q3") /* requires knowledge that granularity is quarters */,
+    ("wsj_0918.tml", "t200", "the quarter", "1989-Q3") /* really means "last quarter" */,
+    ("wsj_0918.tml", "t219", "a year earlier", "1988-Q3") /* grammar finds enclosing year, but should leave as quarter */)
 
 
   trait Options {
@@ -287,14 +298,18 @@ object TimeMLProcessor {
 
   def main(args: Array[String]): Unit = {
     val options = CliFactory.parseArguments(classOf[Options], args: _*)
-    def error(message: String, args: Any*) = {
-      println(message.format(args: _*))
+    def error(message: String, timex: TimeMLDocument#TimeExpression, file: File) = {
+      printf("%s for \"%s\" from %s\n", message, timex.text, file)
     }
-    def fatal(message: String, cause: Throwable, args: Any*) = {
+    def fatal(message: String, timex: TimeMLDocument#TimeExpression, file: File, cause: Throwable) = {
       if (options.getFailOnNoCorrectParse) {
-        throw new Exception(message.format(args: _*), cause)
+        val exceptionMessage = String.format(
+            "%s for \"%s\" from %s\ntimex: %s\nanchor: %s\n(\"%s\", \"%s\", \"%s\", \"%s\")",
+            message, timex.text, file, timex.elem, timex.anchor.map(_.elem),
+            file.getName, timex.id, timex.text, timex.value)
+        throw new Exception(exceptionMessage, cause)
       } else {
-        println(message.format(args: _*))
+        error(message, timex, file)
       }
     }
     
@@ -304,6 +319,7 @@ object TimeMLProcessor {
       val resultsIter: Iterator[Boolean] = for {
         file <- this.allFiles(corpusFile)
         doc = new TimeMLDocument(file)
+        docCreationTime = TimeSpan.fromTimeMLValue(doc.creationTime.value)
         timex <- doc.timeExpressions
       } yield {
         val key = (file.getName, timex.id, timex.text, timex.value)
@@ -312,10 +328,12 @@ object TimeMLProcessor {
         val isPossibleFailure = !isAnnotationError && !isKnownFailure
 
         // pick the single best parse and evaluate it
-        val anchor = timex.anchor.getOrElse(doc.creationTime)
+        val anchorOption = timex.anchor.flatMap(timex =>
+          if (timex.value.contains('X') || timex.value.startsWith("P")) None
+          else Some(TimeSpan.fromTimeMLValue(timex.value)))
+        val anchor = anchorOption.getOrElse(docCreationTime)
         try {
-          val parses = normalizer.parseAll(timex.text).toSeq
-          val temporal = normalizer.normalize(parses, anchor)
+          val temporal = normalizer.normalize(timex.text, anchor)
           val value = temporal.map(_.timeMLValue).getOrElse("")
           val isCorrect = value == timex.value
 
@@ -323,7 +341,7 @@ object TimeMLProcessor {
           if (!isCorrect) {
 
             // see if any of the alternative parses had the correct value
-            val possibleAnchors = timex.anchor ++ Seq(doc.creationTime)
+            val possibleAnchors = (anchorOption.toList ++ List(docCreationTime)).distinct
             val possibleParses = normalizer.parseAll(timex.text).toSeq
             val possibleValueOptions = for (anchor <- possibleAnchors; parse <- possibleParses) yield {
               try {
@@ -336,10 +354,19 @@ object TimeMLProcessor {
 
             // log the error
             if (isPossibleFailure) {
-              if (!possibleValues.toSet.contains(timex.value)) {
-                fatal("All incorrect values %s for %s from %s", null, possibleValues, timex, file)
+              if (possibleValues.isEmpty) {
+                try {
+                  for (anchor <- possibleAnchors; parse <- possibleParses) {
+                    normalizer.normalize(parse, anchor)
+                  }
+                } catch {
+                  case e @ (_: UnsupportedOperationException | _: DateTimeException) =>
+                    fatal("Error parsing", timex, file, e)
+                }
+              } else if (!possibleValues.toSet.contains(timex.value)) {
+                fatal("All incorrect values %s".format(possibleValues), timex, file, null)
               } else {
-                error("Incorrect value %s chosen from %s for %s from %s", value, possibleValues, timex, file)
+                error("Incorrect value %s chosen from %s".format(value, possibleValues), timex, file)
               }
             }
           }
@@ -351,7 +378,7 @@ object TimeMLProcessor {
           // on an exception
           case e: Exception => {
             if (isPossibleFailure) {
-              fatal("Error parsing %s from %s", e, timex, file)
+              fatal("Error parsing", timex, file, e)
             }
             false
           }

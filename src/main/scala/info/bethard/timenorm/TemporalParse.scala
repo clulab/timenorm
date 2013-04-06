@@ -250,7 +250,7 @@ object PeriodSetParse extends CanFail("[PeriodSet]") {
 }
 
 sealed abstract class TimeSpanParse extends TemporalParse {
-  def toTimeSpan(anchor: ZonedDateTime): TimeSpan
+  def toTimeSpan(anchor: TimeSpan): TimeSpan
 }
 
 object TimeSpanParse extends CanFail("[TimeSpan]") {
@@ -305,24 +305,24 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   }
   
   case object Past extends TimeSpanParse {
-    def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(TimeSpan.unspecifiedStart, anchor, Period.unspecified, Modifier.Approx) {
+    def toTimeSpan(anchor: TimeSpan) = {
+      new TimeSpan(TimeSpan.unspecifiedStart, anchor.start, Period.unspecified, Modifier.Approx) {
         override def timeMLValueOption = Some("PAST_REF")
       }
     }
   }
 
   case object Present extends TimeSpanParse {
-    def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(anchor, anchor, Period.empty, Modifier.Exact) {
+    def toTimeSpan(anchor: TimeSpan) = {
+      new TimeSpan(anchor.start, anchor.end, anchor.period, anchor.modifier) {
         override def timeMLValueOption = Some("PRESENT_REF")
       }
     }
   }
 
   case object Future extends TimeSpanParse {
-    def toTimeSpan(anchor: ZonedDateTime) = {
-      new TimeSpan(anchor, TimeSpan.unspecifiedEnd, Period.unspecified, Modifier.Approx) {
+    def toTimeSpan(anchor: TimeSpan) = {
+      new TimeSpan(anchor.end, TimeSpan.unspecifiedEnd, Period.unspecified, Modifier.Approx) {
         override def timeMLValueOption = Some("FUTURE_REF")
       }
     }
@@ -333,25 +333,28 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   }
 
   case class FindAbsolute(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
-    def toTimeSpan(anchor: ZonedDateTime) = {
-      val begin = fields.foldLeft(anchor) {
+    def toTimeSpan: TimeSpan = {
+      val zero = ZonedDateTime.of(LocalDateTime.of(1, 1, 1, 0, 0), ZoneId.of("Z"))
+      val begin = fields.foldLeft(zero) {
         case (time, (field, value)) => time.`with`(field, value)
       }
       val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
       TimeSpan.startingAt(TimeSpan.truncate(begin, this.minUnit), period, Modifier.Exact)
     }
+    def toTimeSpan(anchor: TimeSpan) = toTimeSpan
   }
 
   abstract class DirectedFieldSearchingTimeSpanParse(
     timeSpanParse: TimeSpanParse,
     fields: Map[TemporalField, Int],
+    getStart: TimeSpan => ZonedDateTime,
     step: (ZonedDateTime, TemporalUnit) => ZonedDateTime,
     isAcceptable: (TimeSpan, TimeSpan) => Boolean) extends FieldBasedTimeSpanParse(fields) {
 
     val searchField = this.fields.keySet.minBy(_.getBaseUnit.getDuration)
     val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
 
-    def toTimeSpan(anchor: ZonedDateTime) = {
+    def toTimeSpan(anchor: TimeSpan) = {
       val timeSpan = this.timeSpanParse.toTimeSpan(anchor)
 
       // search by base units for partial ranges (e.g. search by hours, not "mornings")
@@ -366,7 +369,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
       !this.searchField.getRangeUnit().isDurationEstimated()
 
       // one step at a time, search for a time that satisfies the field requirements
-      var start = timeSpan.start
+      var start = getStart(timeSpan)
       var result = this.tryToCreateTimeSpan(timeSpan, start)
       while (result.isEmpty) {
         start = step(start, searchUnit)
@@ -407,35 +410,36 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   
   case class FindEarlier(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(
-        timeSpanParse, fields, _.minus(1, _),
-        (oldSpan, newSpan) => !newSpan.end.isAfter(oldSpan.start))
+        timeSpanParse, fields, _.end, _.minus(1, _), (oldSpan, newSpan) =>
+          newSpan.start.isBefore(oldSpan.start) && newSpan.end.isBefore(oldSpan.end))
 
   case class FindAtOrEarlier(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(
-        timeSpanParse, fields, _.minus(1, _), (_, _) => true)
+        timeSpanParse, fields, _.end, _.minus(1, _), (oldSpan, newSpan) =>
+          !newSpan.start.isAfter(oldSpan.start) || !newSpan.end.isAfter(oldSpan.end))
 
   case class FindLater(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(
-        timeSpanParse, fields, _.plus(1, _),
-        (oldSpan, newSpan) => !newSpan.start.isBefore(oldSpan.end))
+        timeSpanParse, fields, _.start, _.plus(1, _), (oldSpan, newSpan) =>
+          newSpan.start.isAfter(oldSpan.start) && newSpan.end.isAfter(oldSpan.end))
 
   case class FindAtOrLater(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(
-        timeSpanParse, fields, _.plus(1, _), (_, _) => true)
+        timeSpanParse, fields, _.start, _.plus(1, _), (oldSpan, newSpan) =>
+          !newSpan.start.isBefore(oldSpan.start) || !newSpan.end.isBefore(oldSpan.end))
 
   case class FindEnclosed(timeSpanParse: TimeSpanParse, fields: Map[TemporalField, Int])
     extends DirectedFieldSearchingTimeSpanParse(
-        timeSpanParse, fields, _.plus(1, _),
-        (oldSpan, newSpan) => {
-          if (!newSpan.start.isBefore(oldSpan.end)) {
-            val message = "%s not found within %s".format(fields, timeSpanParse)
-            throw new UnsupportedOperationException(message)
-          }
-          !newSpan.start.isBefore(oldSpan.start)
-        })
+      timeSpanParse, fields, _.start, _.plus(1, _), (oldSpan, newSpan) => {
+        if (!newSpan.start.isBefore(oldSpan.end)) {
+          val message = "%s not found within %s".format(fields, timeSpanParse)
+          throw new UnsupportedOperationException(message)
+        }
+        !newSpan.start.isBefore(oldSpan.start)
+      })
 
   case class FindEnclosing(timeSpanParse: TimeSpanParse, unit: TemporalUnit) extends TimeSpanParse {
-    def toTimeSpan(anchor: ZonedDateTime) = {
+    def toTimeSpan(anchor: TimeSpan) = {
       val timeSpan = timeSpanParse.toTimeSpan(anchor)
       if (timeSpan.period > unit) {
         throw new UnsupportedOperationException("%s is larger than 1 %s".format(timeSpan, unit))
@@ -453,7 +457,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     extends TimeSpanParse {
     def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier): TimeSpan
     def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier): TimeSpan
-    def toTimeSpan(anchor: ZonedDateTime) = {
+    def toTimeSpan(anchor: TimeSpan) = {
       val timeSpan = timeSpanParse.toTimeSpan(anchor)
       val period = periodParse.toPeriod
       val modifier = timeSpan.modifier & period.modifier
@@ -489,7 +493,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   case class EndAtStartOf(timeSpanParse: TimeSpanParse, periodParse: PeriodParse)
   extends MoveSpanParse(timeSpanParse, periodParse) {
     def toUnspecifiedTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
-      TimeSpan(TimeSpan.unspecifiedStart, timeSpan.end, period, modifier)
+      TimeSpan(TimeSpan.unspecifiedStart, timeSpan.start, period, modifier)
     }
     def toTimeSpan(timeSpan: TimeSpan, period: Period, modifier: Modifier) = {
       TimeSpan.endingAt(timeSpan.start, period, modifier)
@@ -521,7 +525,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   }
 
   case class WithModifier(timeSpan: TimeSpanParse, modifier: Modifier) extends TimeSpanParse {
-    def toTimeSpan(anchor: ZonedDateTime) = {
+    def toTimeSpan(anchor: TimeSpan) = {
       timeSpan.toTimeSpan(anchor).copy(modifier = modifier)
     }
   }

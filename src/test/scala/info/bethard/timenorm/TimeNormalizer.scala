@@ -46,7 +46,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     parses.toSeq.map(TemporalParse)
   }
 
-  def normalize(parse: TemporalParse, anchor: ZonedDateTime): Temporal = {
+  def normalize(parse: TemporalParse, anchor: TimeSpan): Temporal = {
     parse match {
       case parse: PeriodParse => parse.toPeriod
       case parse: PeriodSetParse => parse.toPeriodSet
@@ -55,7 +55,9 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/tim
     }
   }
 
-  def normalize(parses: Seq[TemporalParse], anchor: ZonedDateTime): Option[Temporal] = {
+  def normalize(sourceText: String, anchor: TimeSpan): Option[Temporal] = {
+    val parses = this.parseAll(sourceText)
+    
     // find only the semantically possible parses
     val temporalTries = for (parse <- parses) yield {
       try {

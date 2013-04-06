@@ -60,20 +60,21 @@ class TemporalParseTest extends FunSuite {
     assert(period.unitAmounts === unitAmounts.toMap)
   }
 
-  val now = ZonedDateTime.of(LocalDateTime.of(2012, 12, 12, 12, 12, 12), ZoneId.of("-12:00"))
-  val nowString = now.getDateTime.toString
+  val now = TimeSpan.of(2012, 12, 12, 12, 12, 12)
+  val nowStart = now.start.getDateTime.toString
+  val nowEnd = now.end.getDateTime.toString
 
   test("resolves simple time spans") {
     import TimeSpanParse._
     assertTimeSpan(
       Past,
-      "-999999999-01-01T00:00", nowString, "PXX", "PAST_REF", "APPROX")
+      "-999999999-01-01T00:00", nowStart, "PXX", "PAST_REF", "APPROX")
     assertTimeSpan(
       Present,
-      nowString, nowString, "P", "PRESENT_REF")
+      nowStart, nowEnd, "PT1S", "PRESENT_REF")
     assertTimeSpan(
       Future,
-      nowString, "+999999999-12-31T23:59:59.999999999", "PXX", "FUTURE_REF", "APPROX")
+      nowEnd, "+999999999-12-31T23:59:59.999999999", "PXX", "FUTURE_REF", "APPROX")
     assertTimeSpan(
       FindAbsolute(Map(YEAR -> 1976, MONTH_OF_YEAR -> 9, DAY_OF_MONTH -> 21)),
       "1976-09-21T00:00", "1976-09-22T00:00", "P1D", "1976-09-21")
@@ -173,15 +174,44 @@ class TemporalParseTest extends FunSuite {
     
     // this previously caused an infinite loop because searching one night at a time
     // managed to skip past Sunday night; so the test here is just that it completes
-    val mar28 = ZonedDateTime.of(LocalDateTime.of(2000, 3, 28, 0, 0), ZoneId.of("Z"))
+    val mar28 = TimeSpan.of(2000, 3, 28, 0, 0, 0)
     val mar26ni = FindEarlier(Present, Map(DAY_OF_WEEK -> 7, NIGHT_OF_DAY -> 1)).toTimeSpan(mar28)
     assert(mar26ni.timeMLValueOption === Some("2000-03-26TNI"))
     
     // this previously failed, accepting as Wednesday night the night that starts on Tuesday
     // (the problem was not checking that fields still match after truncation)
-    val feb16 = ZonedDateTime.of(LocalDateTime.of(2000, 2, 16, 0, 0), ZoneId.of("Z"))
+    val feb16 = TimeSpan.of(2000, 2, 16, 0, 0, 0)
     val feb16ni = FindAtOrEarlier(Present, Map(DAY_OF_WEEK -> 3, NIGHT_OF_DAY -> 1)).toTimeSpan(feb16)
     assert(feb16ni.timeMLValueOption === Some("2000-02-09TNI"))
+    
+    // these previously failed during the transition to TimeSpan-based anchors, because the
+    // definition of "earlier" and "later" in FindEarlier, etc. was too restrictive
+    val jan20 = TimeSpan.of(1998, 01, 20)
+    val jan19ni = FindEarlier(Present, Map(NIGHT_OF_DAY -> 1)).toTimeSpan(jan20)
+    assert(jan19ni.timeMLValueOption === Some("1998-01-19TNI"))
+    
+    val dec03 = TimeSpan.of(1991, 12, 3)
+    val dec03again = FindAtOrEarlier(Present, Map(DAY_OF_WEEK -> 2)).toTimeSpan(dec03)
+    assert(dec03again.timeMLValueOption === Some("1991-12-03"))
+    val nov27 = FindAtOrEarlier(Present, Map(DAY_OF_WEEK -> 3)).toTimeSpan(dec03)
+    assert(nov27.timeMLValueOption === Some("1991-11-27"))
+    
+    val oct08 = TimeSpan.of(1999, 10, 8)
+    val oct08noon = FindAtOrEarlier(Present, Map(HOUR_OF_DAY -> 12, MINUTE_OF_HOUR -> 0)).toTimeSpan(oct08)
+    assert(oct08noon.timeMLValueOption === Some("1999-10-08T12:00"))
+
+    val earlierNight = FindEarlier(Present, Map(NIGHT_OF_DAY -> 1))
+    val atOrEarlierNight = FindAtOrEarlier(Present, Map(NIGHT_OF_DAY -> 1))
+    val atOrLaterNight = FindAtOrLater(Present, Map(NIGHT_OF_DAY -> 1))
+    val laterNight = FindLater(Present, Map(NIGHT_OF_DAY -> 1))
+    val feb15 = TimeSpan.of(2000, 2, 15)
+    assert(earlierNight.toTimeSpan(feb15).timeMLValueOption === Some("2000-02-14TNI"))
+    assert(atOrEarlierNight.toTimeSpan(feb15).timeMLValueOption === Some("2000-02-14TNI"))
+    assert(atOrLaterNight.toTimeSpan(feb15).timeMLValueOption === Some("2000-02-15TNI"))
+    assert(laterNight.toTimeSpan(feb15).timeMLValueOption === Some("2000-02-15TNI"))
+    
+    val laterTuesdayNight = FindLater(Present, Map(DAY_OF_WEEK -> 2, NIGHT_OF_DAY -> 1))
+    assert(laterTuesdayNight.toTimeSpan(feb15).timeMLValueOption === Some("2000-02-15TNI"))
   }
 
   test("resolves complex time spans") {
@@ -189,7 +219,7 @@ class TemporalParseTest extends FunSuite {
     import TimeSpanParse._
     assertTimeSpan(
       MoveLater(WithModifier(Present, Modifier.Approx), SimplePeriod(1, DAYS)),
-      "2012-12-13T12:12:12", "2012-12-13T12:12:12", "P", "2012-12-13T12:12:12", "APPROX")
+      "2012-12-13T12:12:12", "2012-12-13T12:12:13", "PT1S", "2012-12-13T12:12:12", "APPROX")
     assertTimeSpan(
       MoveEarlier(FindEnclosing(Present, DAYS), SimplePeriod(1, DAYS)),
       "2012-12-11T00:00", "2012-12-12T00:00", "P1D", "2012-12-11")
@@ -204,7 +234,7 @@ class TemporalParseTest extends FunSuite {
       "2012-12-17T00:00", "2012-12-24T00:00", "P1W", "2012-W51")
     assertTimeSpan(
       StartAtEndOf(Present, SimplePeriod(1, WEEKS)),
-      "2012-12-12T12:12:12", "2012-12-19T12:12:12", "P1W", null)
+      "2012-12-12T12:12:13", "2012-12-19T12:12:13", "P1W", null)
     assertTimeSpan(
       StartAtEndOf(FindEnclosing(Present, DAYS), SimplePeriod(1, WEEKS)),
       "2012-12-13T00:00", "2012-12-20T00:00", "P1W", null)
@@ -216,7 +246,7 @@ class TemporalParseTest extends FunSuite {
       "2012-12-05T00:00", "2012-12-06T00:00", "P1D", "2012-12-05")
     assertTimeSpan(
       MoveEarlier(WithModifier(Present, Modifier.Approx), SimplePeriod(1, WEEKS)),
-      "2012-12-05T12:12:12", "2012-12-05T12:12:12", "P", "2012-12-05T12:12:12", "APPROX")
+      "2012-12-05T12:12:12", "2012-12-05T12:12:13", "PT1S", "2012-12-05T12:12:12", "APPROX")
     assertTimeSpan(
       MoveLater(FindEnclosing(Present, MONTHS), SimplePeriod(1, MONTHS)),
       "2013-01-01T00:00", "2013-02-01T00:00", "P1M", "2013-01")
@@ -240,7 +270,7 @@ class TemporalParseTest extends FunSuite {
       "2012-12-10T00:00", "2012-12-11T00:00", "P1D", "2012-12-10")
     assertTimeSpan(
       MoveLater(Present, SimplePeriod(2, DAYS)),
-      "2012-12-14T12:12:12", "2012-12-14T12:12:12", "P", "2012-12-14T12:12:12")
+      "2012-12-14T12:12:12", "2012-12-14T12:12:13", "PT1S", "2012-12-14T12:12:12")
     assertTimeSpan(
       MoveLater(FindEnclosing(Present, DAYS), SimplePeriod(2, DAYS)),
       "2012-12-14T00:00", "2012-12-15T00:00", "P1D", "2012-12-14")
@@ -278,21 +308,26 @@ class TemporalParseTest extends FunSuite {
     // moving with underspecified periods
     assertTimeSpan(
       MoveEarlier(Present, UnspecifiedPeriod(DAYS)),
-      "-999999999-01-01T00:00", nowString, "PXD", null, "APPROX")
+      "-999999999-01-01T00:00", nowEnd, "PXD", null, "APPROX")
     assertTimeSpan(
       EndAtStartOf(Present, UnspecifiedPeriod(WEEKS)),
-      "-999999999-01-01T00:00", nowString, "PXW", null, "APPROX")
+      "-999999999-01-01T00:00", nowStart, "PXW", null, "APPROX")
     assertTimeSpan(
       MoveLater(Present, UnspecifiedPeriod(MONTHS)),
-      nowString, "+999999999-12-31T23:59:59.999999999", "PXM", null, "APPROX")
+      nowStart, "+999999999-12-31T23:59:59.999999999", "PXM", null, "APPROX")
     assertTimeSpan(
       StartAtEndOf(Present, UnspecifiedPeriod(YEARS)),
-      nowString, "+999999999-12-31T23:59:59.999999999", "PXY", null, "APPROX")
+      nowEnd, "+999999999-12-31T23:59:59.999999999", "PXY", null, "APPROX")
 
     // this previously failed because we were using aligned weeks instead of Monday-aligned weeks
-    val mar6 = ZonedDateTime.of(LocalDateTime.of(1998, 3, 6, 0, 0), ZoneId.of("Z"))
+    val mar6 = TimeSpan.of(1998, 3, 6)
     val nextWeek = StartAtEndOf(FindEnclosing(Present, WEEKS), SimplePeriod(1, WEEKS))
     assert(nextWeek.toTimeSpan(mar6).timeMLValueOption === Some("1998-W11"))
+    
+    // this previously failed during the transition to TimeSpan-based anchors
+    val nov2 = TimeSpan.of(1989, 11, 02)
+    val quarter3 = EndAtStartOf(FindEnclosing(Present, QUARTER_YEARS), SimplePeriod(1, QUARTER_YEARS))
+    assert(quarter3.toTimeSpan(nov2).timeMLValueOption === Some("1989-Q3"))
  }
   
   private def assertTimeSpan(

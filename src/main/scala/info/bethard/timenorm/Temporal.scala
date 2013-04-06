@@ -177,6 +177,84 @@ object TimeSpan {
   final val unspecifiedStart = ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("Z"))
   final val unspecifiedEnd = ZonedDateTime.of(LocalDateTime.MAX, ZoneId.of("Z"))
   
+  def of(year: Int, month: Int, day: Int) = {
+    val start = ZonedDateTime.of(LocalDateTime.of(year, month, day, 0, 0), ZoneId.of("Z"))
+    this.startingAt(start, Period(Map(DAYS -> 1)), Modifier.Exact)
+  }
+  
+  def of(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) = {
+    val localStart = LocalDateTime.of(year, month, day, hour, minute, second)
+    val start = ZonedDateTime.of(localStart, ZoneId.of("Z"))
+    this.startingAt(start, Period(Map(SECONDS -> 1)), Modifier.Exact)
+  }
+  
+  def fromTimeMLValue(value: String) = {
+    val fieldValues: Map[TemporalField, Int] = value.split("[-T:]") match {
+      case Array(centuryOrDecadeOrYear) => centuryOrDecadeOrYear.length match {
+        case 2 => Map(CENTURY -> centuryOrDecadeOrYear.toInt)
+        case 3 => Map(DECADE -> centuryOrDecadeOrYear.toInt)
+        case 4 => Map(YEAR -> centuryOrDecadeOrYear.toInt)
+      }
+      case Array(year, seasonOrQuarterOrMonthOrWeek) => Map(YEAR -> year.toInt) ++ {
+        seasonOrQuarterOrMonthOrWeek match {
+          case "SP" => Map(SPRING_OF_YEAR -> 1)
+          case "SU" => Map(SUMMER_OF_YEAR -> 1)
+          case "FA" => Map(FALL_OF_YEAR -> 1)
+          case "WI" => Map(WINTER_OF_YEAR -> 1)
+          case _ => seasonOrQuarterOrMonthOrWeek.head match {
+            case 'W' => Map(ISO_WEEK.OF_YEAR -> seasonOrQuarterOrMonthOrWeek.tail.toInt)
+            case 'Q' => Map(QUARTER_OF_YEAR -> seasonOrQuarterOrMonthOrWeek.tail.toInt)
+            case _ => Map(MONTH_OF_YEAR -> seasonOrQuarterOrMonthOrWeek.toInt)
+          }
+        }
+      }
+      case Array(year, monthOrWeek, dayOrWeekend) => Map(YEAR -> year.toInt) ++ {
+        monthOrWeek.head match {
+          case 'W' => dayOrWeekend match {
+            case "WE" => Map(ISO_WEEK.OF_YEAR -> monthOrWeek.tail.toInt, WEEKEND_OF_WEEK -> 1)
+          }
+          case _ => Map(MONTH_OF_YEAR -> monthOrWeek.toInt, DAY_OF_MONTH -> dayOrWeekend.toInt)
+        }
+      }
+      case Array(year, month, day, hourOrPartOfDay) =>
+        Map(YEAR -> year.toInt, MONTH_OF_YEAR -> month.toInt, DAY_OF_MONTH -> day.toInt) ++ {
+          hourOrPartOfDay match {
+            case "MO" => Map(MORNING_OF_DAY -> 1)
+            case "AF" => Map(AFTERNOON_OF_DAY -> 1)
+            case "EV" => Map(EVENING_OF_DAY -> 1)
+            case "NI" => Map(NIGHT_OF_DAY -> 1)
+            case hour => Map(HOUR_OF_DAY -> hour.toInt)
+          }
+        }
+      case Array(year, month, day, hour, minute) =>
+        Map(YEAR -> year.toInt, MONTH_OF_YEAR -> month.toInt, DAY_OF_MONTH -> day.toInt,
+            HOUR_OF_DAY -> hour.toInt, MINUTE_OF_HOUR -> minute.toInt)
+      case Array(year, month, day, hour, minute, second) =>
+        Map(YEAR -> year.toInt, MONTH_OF_YEAR -> month.toInt, DAY_OF_MONTH -> day.toInt,
+            HOUR_OF_DAY -> hour.toInt, MINUTE_OF_HOUR -> minute.toInt, SECOND_OF_MINUTE -> second.toInt)
+      case _ => throw new Exception("%s %s".format(value, value.split("[-T]").toList))
+    }
+
+    // set all the requested fields
+    val zero = ZonedDateTime.of(LocalDateTime.of(1, 1, 1, 0, 0), ZoneId.of("Z"))
+    val nonTruncatedStart = fieldValues.foldLeft(zero) {
+      case (dateTime, (field, value)) => dateTime.`with`(field, value)
+    }
+
+    // truncate the date-time based on the smallest field's base unit 
+    val minField = fieldValues.keySet.minBy(_.getBaseUnit().getDuration())
+    val minUnit = minField.getBaseUnit()
+    val start = this.truncate(nonTruncatedStart, minUnit)
+
+    // for things that overlap the boundary (e.g. NIGHT_OF_DAY) truncation will move them to
+    // the previous range (e.g. the previous day) so we'll need to move them back
+    val isNotTooEarly = fieldValues.forall { case (field, value) => start.get(field) == value }
+    val adjustedStart = if (isNotTooEarly) start else start.plus(1, minField.getRangeUnit())
+
+    // create a time span of exactly one unit in size
+    this.startingAt(adjustedStart, Period(Map(minUnit -> 1)), Modifier.Exact)
+  }
+  
   def startingAt(start: ZonedDateTime, period: Period, modifier: Modifier): TimeSpan = {
     TimeSpan(start, period.addTo(start), period, modifier)
   }

@@ -178,15 +178,15 @@ private[timenorm] object MORNINGS extends ConstantPartialRange("Mornings", HOUR_
 private[timenorm] object MORNING_OF_DAY extends PartialOfRangeUnit("MorningOfDay", MORNINGS)
 private[timenorm] object HOUR_OF_MORNING extends BaseUnitOfPartial("HourOfMorning", MORNINGS)
 
-private[timenorm] object AFTERNOONS extends ConstantPartialRange("AfternoonOfDay", HOUR_OF_DAY, 12L, 17L)
+private[timenorm] object AFTERNOONS extends ConstantPartialRange("Afternoons", HOUR_OF_DAY, 12L, 17L)
 private[timenorm] object AFTERNOON_OF_DAY extends PartialOfRangeUnit("AfternoonOfDay", AFTERNOONS)
 private[timenorm] object HOUR_OF_AFTERNOON extends BaseUnitOfPartial("HourOfAfternoon", AFTERNOONS)
 
-private[timenorm] object EVENINGS extends ConstantPartialRange("EveningOfDay", HOUR_OF_DAY, 17L, 23L)
+private[timenorm] object EVENINGS extends ConstantPartialRange("Evenings", HOUR_OF_DAY, 17L, 23L)
 private[timenorm] object EVENING_OF_DAY extends PartialOfRangeUnit("EveningOfDay", EVENINGS)
 private[timenorm] object HOUR_OF_EVENING extends BaseUnitOfPartial("HourOfEvening", EVENINGS)
 
-private[timenorm] object NIGHTS extends ConstantPartialRange("NightOfDay", HOUR_OF_DAY, 21L, 3L)
+private[timenorm] object NIGHTS extends ConstantPartialRange("Nights", HOUR_OF_DAY, 21L, 3L)
 private[timenorm] object NIGHT_OF_DAY extends PartialOfRangeUnit("NightOfDay", NIGHTS)
 private[timenorm] object HOUR_OF_NIGHT extends BaseUnitOfPartial("HourOfNight", NIGHTS)
 
