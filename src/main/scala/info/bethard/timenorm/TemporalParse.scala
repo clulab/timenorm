@@ -442,7 +442,7 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
     def toTimeSpan(anchor: TimeSpan) = {
       val timeSpan = timeSpanParse.toTimeSpan(anchor)
       if (timeSpan.period > unit) {
-        throw new UnsupportedOperationException("%s is larger than 1 %s".format(timeSpan, unit))
+        throw new UnsupportedOperationException("%s is larger than 1 %s".format(timeSpanParse, unit))
       }
       var start = TimeSpan.truncate(timeSpan.start, unit)
       if (start.isAfter(timeSpan.start)) {
