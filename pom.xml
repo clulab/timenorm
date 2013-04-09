@@ -59,6 +59,12 @@
     	<version>0.8.5</version>
     	<scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>org.timen</groupId>
+    	<artifactId>timen</artifactId>
+    	<version>1.0.6</version>
+    	<scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

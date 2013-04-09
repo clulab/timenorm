@@ -8,6 +8,7 @@ import scala.util.Success
 import scala.util.Try
 
 import org.threeten.bp.DateTimeException
+import org.timen.TIMEN
 
 import com.lexicalscope.jewel.cli.CliFactory
 import com.lexicalscope.jewel.cli.{ Option => CliOption }
@@ -280,6 +281,11 @@ object TimeMLProcessor {
     def getFailOnNoCorrectParse: Boolean
   }
 
+  class Stats {
+    var total = 0
+    var correct = 0
+  }
+
   def main(args: Array[String]): Unit = {
     val options = CliFactory.parseArguments(classOf[Options], args: _*)
     def error(message: String, timex: TimeMLDocument#TimeExpression, file: File) = {
@@ -297,82 +303,121 @@ object TimeMLProcessor {
       }
     }
 
-    val normalizer = new TimeNormalizer
+    val normalizers = Seq(new TimeNormalizer, new TIMEN)
+    val corpusFiles = options.getCorpusPaths.asScala
+    def createStatsSeq =
+      for (corpusFile <- corpusFiles; normalizer <- normalizers)
+        yield (corpusFile, normalizer) -> new Stats
+    val fileNormalizerStats = createStatsSeq.toMap
+    val fileNormalizerStatsForCorrectAnnotations = createStatsSeq.toMap
 
-    val corpusStats = for (corpusFile <- options.getCorpusPaths.asScala) yield {
-      val resultsIter = for {
-        file <- this.allFiles(corpusFile)
-        doc = new TimeMLDocument(file)
-        docCreationTime = TimeSpan.fromTimeMLValue(doc.creationTime.value)
-        timex <- doc.timeExpressions
-      } yield {
-        val key = (file.getName, timex.id, timex.text, timex.value)
-        val isAnnotationError = this.annotationErrors.contains(key)
-        val isKnownFailure = this.knownFailures.contains(key)
-        val isPossibleFailure = !isAnnotationError && !isKnownFailure
+    for {
+      corpusFile <- corpusFiles
+      file <- this.allFiles(corpusFile)
+      doc = new TimeMLDocument(file)
+      docCreationTime = TimeSpan.fromTimeMLValue(doc.creationTime.value)
+      timex <- doc.timeExpressions
+    } {
+      // determine if this time expression is a known annotation error or system failure
+      val key = (file.getName, timex.id, timex.text, timex.value)
+      val isAnnotationError = this.annotationErrors.contains(key)
+      val isKnownFailure = this.knownFailures.contains(key)
+      val isPossibleFailure = !isAnnotationError && !isKnownFailure
 
-        // pick the single best parse and evaluate it
-        val anchorOption = timex.anchor.flatMap(timex =>
-          if (timex.value.isEmpty ||
-            timex.value.startsWith("P") ||
-            timex.value.startsWith("T") ||
-            timex.value.contains('X')) None
-          else Some(TimeSpan.fromTimeMLValue(timex.value)))
-        val anchor = anchorOption.getOrElse(docCreationTime)
+      // update totals
+      for (normalizer <- normalizers) {
+        fileNormalizerStats(corpusFile, normalizer).total += 1
+        if (!isAnnotationError) {
+          fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer).total += 1
+        }
+      }
 
-        // normalize the time expression given the anchor, and determine if it is correct
-        val (value, isCorrect) =
+      // pick the single best parse and evaluate it
+      val anchorOption = timex.anchor.flatMap(timex =>
+        if (timex.value.isEmpty ||
+          timex.value.startsWith("P") ||
+          timex.value.startsWith("T") ||
+          timex.value.contains('X')) None
+        else Some(TimeSpan.fromTimeMLValue(timex.value)))
+      val anchor = anchorOption.getOrElse(docCreationTime)
+
+      // normalize the time expression given the anchor
+      val results = for (normalizer <- normalizers) yield {
+        val value =
           try {
-            val temporalOption = normalizer.normalize(timex.text, anchor)
-            val value = temporalOption.map(_.timeMLValue).getOrElse("")
-            (value, value == timex.value)
+            normalizer match {
+              case n: TimeNormalizer =>
+                n.normalize(timex.text, anchor).map(_.timeMLValue).getOrElse("")
+              case n: TIMEN =>
+                n.normalize(timex.text, doc.creationTime.value)
+            }
           } catch {
-            case e: Exception => ("", false)
+            case e: Throwable => ""
           }
+
+        // determine if the normalized value was correct
+        val isCorrect = value == timex.value
+        if (isCorrect) {
+          fileNormalizerStats(corpusFile, normalizer).correct += 1
+          if (!isAnnotationError) {
+            fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer).correct += 1
+          }
+        }
 
         // if a known error has been fixed, log it so that it can be removed from the list 
         if (isCorrect && isKnownFailure) {
-          System.err.println("Failure has been fixed: " + key)
+          normalizer match {
+            case n: TimeNormalizer => System.err.println("Failure has been fixed: " + key)
+            case _ =>
+          }
         }
 
         // if it's incorrect, log the error
         if (!isCorrect && isPossibleFailure) {
-          normalizer.normalizeAndExplain(timex.text, anchor) match {
-            case Failure(e) => fatal("Error parsing", timex, file, e)
-            case Success(temporals) => {
-              val values = temporals.map(_.timeMLValue)
-              if (!values.toSet.contains(timex.value)) {
-                fatal("All incorrect values %s for".format(values), timex, file, null)
-              } else {
-                error("Incorrect value chosen from %s for".format(values), timex, file)
+          normalizer match {
+            case n: TimeNormalizer => n.normalizeAndExplain(timex.text, anchor) match {
+              case Failure(e) => fatal("Error parsing", timex, file, e)
+              case Success(temporals) => {
+                val values = temporals.map(_.timeMLValue)
+                if (!values.toSet.contains(timex.value)) {
+                  fatal("All incorrect values %s for".format(values), timex, file, null)
+                } else {
+                  error("Incorrect value chosen from %s for".format(values), timex, file)
+                }
               }
             }
+            case _ =>
           }
         }
-
-        // yield whether the prediction was correct or not
-        (isAnnotationError, isCorrect)
+        
+        // yield the normalizer results to allow later comparison
+        (normalizer, value, isCorrect)
       }
-
-      // calculate the total time expressions and the number of values that were correct
-      val results = resultsIter.toSeq
-      val total = results.size
-      val correct = results.count(_._2)
-      val resultsWithoutAnnotationErrors = results.filterNot(_._1)
-      val totalWithoutAnnotationErrors = resultsWithoutAnnotationErrors.size
-      val correctWithoutAnnotationErrors = resultsWithoutAnnotationErrors.count(_._2)
-      (corpusFile, total, correct, totalWithoutAnnotationErrors, correctWithoutAnnotationErrors)
+      
+      // if the normalizers had different predictions, log the incorrect one
+      if (results.map(_._3).toSet == Set(true, false)) {
+        val Seq((normalizer, value, correct)) = results.filter(_._3 == false)
+        val message = "%s incorrect (%s) for".format(normalizer.getClass.getSimpleName, value)
+        error(message, timex, file)
+      }
     }
 
     // print out performance on each corpus
-    for ((corpusFile, total, correct, totalWithoutErrors, correctWithoutErrors) <- corpusStats) {
-      printf("============================================================\n")
+    for (corpusFile <- corpusFiles) {
+      printf("======================================================================\n")
       printf("Corpus: %s\n", corpusFile)
-      printf("Accuracy: %.3f\n", correct.toDouble / total.toDouble)
-      printf("Accuracy ignoring annotation errors: %.3f\n",
-        correctWithoutErrors.toDouble / totalWithoutErrors.toDouble)
+      for (normalizer <- normalizers) {
+        val stats = fileNormalizerStats(corpusFile, normalizer)
+        val statsForCorrectAnnotations = fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer)
+        printf("%-15s\tcorrect: %5d\ttotal: %5d\taccuracy: %.3f (%.3f ignoring annotation errors)\n",
+          normalizer.getClass.getSimpleName,
+          stats.correct,
+          stats.total,
+          stats.correct.toDouble / stats.total.toDouble,
+          statsForCorrectAnnotations.correct.toDouble / statsForCorrectAnnotations.total.toDouble)
+      }
     }
-    printf("============================================================\n")
+    printf("======================================================================\n")
   }
 
   def allFiles(fileOrDir: File): Iterator[File] = {
