@@ -57,6 +57,7 @@
     	<groupId>com.lexicalscope.jewelcli</groupId>
     	<artifactId>jewelcli</artifactId>
     	<version>0.8.5</version>
+    	<scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -78,6 +79,8 @@
             <configuration>
               <args>
                 <arg>-deprecation</arg>
+                <arg>-unchecked</arg>
+                <arg>-feature</arg>
               </args>
             </configuration>
           </execution>
