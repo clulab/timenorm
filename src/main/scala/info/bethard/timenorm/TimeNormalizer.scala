@@ -96,7 +96,7 @@ class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/inf
         // if there all TemporalParses had semantic errors, fail
         val temporals = temporalTries.collect { case Success(temporal) => temporal }
         if (temporals.isEmpty) {
-          temporalTries.collect { case Failure(e) => Failure(e) } head
+          temporalTries.collect { case Failure(e) => Failure(e) }.head
         }
         // otherwise, sort the Temporals by the heuristic
         else {

@@ -55,11 +55,14 @@ class DefaultTokenParser extends TokenParser {
     case "DECADE_OF_CENTURY" => DECADE_OF_CENTURY
     case "YEAR_OF_CENTURY" => YEAR_OF_CENTURY
     case "CENTURY" => CENTURY
-    case "DAY_OF_QUARTER" => ISOFields.DAY_OF_QUARTER
-    case "QUARTER_OF_YEAR" => ISOFields.QUARTER_OF_YEAR
-    case "WEEK_BASED_YEAR" => ISOFields.WEEK_BASED_YEAR
-    case "WEEK_OF_WEEK_BASED_YEAR" => ISOFields.WEEK_OF_WEEK_BASED_YEAR
-    case _ => ChronoField.valueOf(token)
+    // the pattern matcher of 2.10.0 can't handle such big case statements, so break it up a bit
+    case token => token match {
+      case "DAY_OF_QUARTER" => ISOFields.DAY_OF_QUARTER
+      case "QUARTER_OF_YEAR" => ISOFields.QUARTER_OF_YEAR
+      case "WEEK_BASED_YEAR" => ISOFields.WEEK_BASED_YEAR
+      case "WEEK_OF_WEEK_BASED_YEAR" => ISOFields.WEEK_OF_WEEK_BASED_YEAR
+      case _ => ChronoField.valueOf(token)
+    }
   }
 }
 object DefaultTokenParser extends DefaultTokenParser

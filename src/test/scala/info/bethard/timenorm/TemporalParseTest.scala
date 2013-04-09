@@ -186,7 +186,7 @@ class TemporalParseTest extends FunSuite {
     
     // these previously failed during the transition to TimeSpan-based anchors, because the
     // definition of "earlier" and "later" in FindEarlier, etc. was too restrictive
-    val jan20 = TimeSpan.of(1998, 01, 20)
+    val jan20 = TimeSpan.of(1998, 1, 20)
     val jan19ni = FindEarlier(Present, Map(NIGHT_OF_DAY -> 1)).toTimeSpan(jan20)
     assert(jan19ni.timeMLValueOption === Some("1998-01-19TNI"))
     
@@ -325,7 +325,7 @@ class TemporalParseTest extends FunSuite {
     assert(nextWeek.toTimeSpan(mar6).timeMLValueOption === Some("1998-W11"))
     
     // this previously failed during the transition to TimeSpan-based anchors
-    val nov2 = TimeSpan.of(1989, 11, 02)
+    val nov2 = TimeSpan.of(1989, 11, 2)
     val quarter3 = EndAtStartOf(FindEnclosing(Present, QUARTER_YEARS), SimplePeriod(1, QUARTER_YEARS))
     assert(quarter3.toTimeSpan(nov2).timeMLValueOption === Some("1989-Q3"))
  }
