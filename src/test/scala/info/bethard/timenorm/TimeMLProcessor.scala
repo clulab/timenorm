@@ -297,7 +297,7 @@ object TimeMLProcessor {
     val normalizer = new TimeNormalizer
 
     val corpusStats = for (corpusFile <- options.getCorpusPaths.asScala) yield {
-      val resultsIter: Iterator[Boolean] = for {
+      val resultsIter = for {
         file <- this.allFiles(corpusFile)
         doc = new TimeMLDocument(file)
         docCreationTime = TimeSpan.fromTimeMLValue(doc.creationTime.value)
@@ -367,21 +367,26 @@ object TimeMLProcessor {
         }
 
         // yield whether the prediction was correct or not
-        isCorrect
+        (isAnnotationError, isCorrect)
       }
 
       // calculate the total time expressions and the number of values that were correct
       val results = resultsIter.toSeq
       val total = results.size
-      val correct = results.count(_ == true)
-      (corpusFile, total, correct)
+      val correct = results.count(_._2)
+      val resultsWithoutAnnotationErrors = results.filterNot(_._1) 
+      val totalWithoutAnnotationErrors = resultsWithoutAnnotationErrors.size
+      val correctWithoutAnnotationErrors = resultsWithoutAnnotationErrors.count(_._2)
+      (corpusFile, total, correct, totalWithoutAnnotationErrors, correctWithoutAnnotationErrors)
     }
 
     // print out performance on each corpus
-    for ((corpusFile, total, correct) <- corpusStats) {
+    for ((corpusFile, total, correct, totalWithoutErrors, correctWithoutErrors) <- corpusStats) {
       printf("============================================================\n")
       printf("Corpus: %s\n", corpusFile)
       printf("Accuracy: %.3f\n", correct.toDouble / total.toDouble)
+      printf("Accuracy ignoring annotation errors: %.3f\n",
+          correctWithoutErrors.toDouble / totalWithoutErrors.toDouble)
     }
     printf("============================================================\n")
   }
