@@ -3,6 +3,9 @@ package info.bethard.timenorm
 import java.io.File
 
 import scala.collection.JavaConverters._
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 import org.threeten.bp.DateTimeException
 
@@ -320,49 +323,30 @@ object TimeMLProcessor {
         // normalize the time expression given the anchor, and determine if it is correct
         val (value, isCorrect) =
           try {
-            val temporal = normalizer.normalize(timex.text, anchor)
-            val value = temporal.map(_.timeMLValue).getOrElse("")
+            val temporalOption = normalizer.normalize(timex.text, anchor)
+            val value = temporalOption.map(_.timeMLValue).getOrElse("")
             (value, value == timex.value)
           } catch {
             case e: Exception => ("", false)
           }
-        
+
         // if a known error has been fixed, log it so that it can be removed from the list 
         if (isCorrect && isKnownFailure) {
           System.err.println("Failure has been fixed: " + key)
         }
 
-        // if it's incorrect, log the error as informatively as possible
+        // if it's incorrect, log the error
         if (!isCorrect && isPossibleFailure) {
-
-          // collect all the possible parses, logging an error if there's a parsing error
-          val possibleParses = 
-            try {
-              normalizer.parseAll(timex.text).toSeq 
-            } catch {
-              case e: UnsupportedOperationException =>
-                fatal("Error parsing", timex, file, e)
-                Seq.empty
+          normalizer.normalizeAndExplain(timex.text, anchor) match {
+            case Failure(e) => fatal("Error parsing", timex, file, e)
+            case Success(temporals) => {
+              val values = temporals.map(_.timeMLValue)
+              if (!values.toSet.contains(timex.value)) {
+                fatal("All incorrect values %s for".format(values), timex, file, null)
+              } else {
+                error("Incorrect value chosen from %s for".format(values), timex, file)
+              }
             }
-
-          // normalize each of the parses, collecting values and errors produced by the normalizer
-          val possibleValueEithers = for (parse <- possibleParses) yield {
-            try {
-              Left(normalizer.normalize(parse, anchor).timeMLValue)
-            } catch {
-              case e @ (_: UnsupportedOperationException | _: DateTimeException) => Right(e)
-            }
-          }
-
-          // log whether the normalizer produced all errors, all incorrect values, or just chose
-          // the incorrect value out of the possible options
-          val possibleValues = possibleValueEithers.collect{ case Left(value) => value }
-          if (possibleValues.isEmpty) {
-            for (Right(e) <- possibleValueEithers) fatal("Error parsing", timex, file, e)
-          } else if (!possibleValues.toSet.contains(timex.value)) {
-            fatal("All incorrect values %s for".format(possibleValues), timex, file, null)
-          } else {
-            error("Incorrect value %s chosen from %s for".format(value, possibleValues), timex, file)
           }
         }
 
@@ -374,7 +358,7 @@ object TimeMLProcessor {
       val results = resultsIter.toSeq
       val total = results.size
       val correct = results.count(_._2)
-      val resultsWithoutAnnotationErrors = results.filterNot(_._1) 
+      val resultsWithoutAnnotationErrors = results.filterNot(_._1)
       val totalWithoutAnnotationErrors = resultsWithoutAnnotationErrors.size
       val correctWithoutAnnotationErrors = resultsWithoutAnnotationErrors.count(_._2)
       (corpusFile, total, correct, totalWithoutAnnotationErrors, correctWithoutAnnotationErrors)
@@ -386,7 +370,7 @@ object TimeMLProcessor {
       printf("Corpus: %s\n", corpusFile)
       printf("Accuracy: %.3f\n", correct.toDouble / total.toDouble)
       printf("Accuracy ignoring annotation errors: %.3f\n",
-          correctWithoutErrors.toDouble / totalWithoutErrors.toDouble)
+        correctWithoutErrors.toDouble / totalWithoutErrors.toDouble)
     }
     printf("============================================================\n")
   }
