@@ -9,7 +9,7 @@ import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalUnit
 import info.bethard.timenorm.SynchronousParser.Tree
-import org.threeten.bp.temporal.ISOFields
+import org.threeten.bp.temporal.IsoFields
 
 trait TokenParser {
   def toInt(token: String): Int
@@ -29,8 +29,8 @@ class DefaultTokenParser extends TokenParser {
     case "SUMMERS" => SUMMERS
     case "FALLS" => FALLS
     case "WINTERS" => WINTERS
-    case "QUARTER_YEARS" => ISOFields.QUARTER_YEARS
-    case "WEEK_BASED_YEARS" => ISOFields.WEEK_BASED_YEARS
+    case "QUARTER_YEARS" => IsoFields.QUARTER_YEARS
+    case "WEEK_BASED_YEARS" => IsoFields.WEEK_BASED_YEARS
     case "UNSPECIFIED" => UNSPECIFIED
     case _ => ChronoUnit.valueOf(token)
   }
@@ -57,10 +57,10 @@ class DefaultTokenParser extends TokenParser {
     case "CENTURY" => CENTURY
     // the pattern matcher of 2.10.0 can't handle such big case statements, so break it up a bit
     case token => token match {
-      case "DAY_OF_QUARTER" => ISOFields.DAY_OF_QUARTER
-      case "QUARTER_OF_YEAR" => ISOFields.QUARTER_OF_YEAR
-      case "WEEK_BASED_YEAR" => ISOFields.WEEK_BASED_YEAR
-      case "WEEK_OF_WEEK_BASED_YEAR" => ISOFields.WEEK_OF_WEEK_BASED_YEAR
+      case "DAY_OF_QUARTER" => IsoFields.DAY_OF_QUARTER
+      case "QUARTER_OF_YEAR" => IsoFields.QUARTER_OF_YEAR
+      case "WEEK_BASED_YEAR" => IsoFields.WEEK_BASED_YEAR
+      case "WEEK_OF_WEEK_BASED_YEAR" => IsoFields.WEEK_OF_WEEK_BASED_YEAR
       case _ => ChronoField.valueOf(token)
     }
   }

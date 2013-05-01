@@ -10,7 +10,7 @@ import scala.util.Success
 import scala.util.Try
 
 import org.threeten.bp.DateTimeException
-import org.threeten.bp.temporal.ISOFields.QUARTER_YEARS
+import org.threeten.bp.temporal.IsoFields.QUARTER_YEARS
 
 class TimeNormalizer(grammarURL: URL = classOf[TimeNormalizer].getResource("/info/bethard/timenorm/en.grammar")) {
   private val logger = Logger.getLogger(this.getClass.getName)

@@ -5,7 +5,7 @@ import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
-import org.threeten.bp.temporal.ISOFields._
+import org.threeten.bp.temporal.IsoFields._
 import scala.collection.immutable.ListMap
 import org.threeten.bp.temporal.WeekFields
 import org.threeten.bp.LocalDateTime
@@ -68,7 +68,7 @@ case class Period(
       }
       (unit, amount + suffix)
     }
-    val (dateParts, timeParts) = parts.partition(_._1.getDuration.isGreaterThan(HOURS.getDuration))
+    val (dateParts, timeParts) = parts.partition(_._1.getDuration.compareTo(HOURS.getDuration) > 0)
     val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.map(_._2).mkString
     "P" + dateParts.map(_._2).mkString + timeString
   }
@@ -86,7 +86,7 @@ case class Period(
       false
     } else {
       val maxUnit = this.unitAmounts.keySet.maxBy(_.getDuration)
-      maxUnit.getDuration.isGreaterThan(unit.getDuration) ||
+      maxUnit.getDuration.compareTo(unit.getDuration) > 0 ||
         (maxUnit == unit && this.unitAmounts(maxUnit) > 1)
     }
   }
@@ -151,7 +151,7 @@ case class TimeSpan(
 
   def timeMLValueOption: Option[String] = {
     if (this.start == this.end) {
-      Some(this.start.getDateTime.toString)
+      Some(this.start.toLocalDateTime.toString)
     } else {
       this.period.unitAmounts.toList match {
         case List((unit, 1)) if TimeSpan.truncate(this.start, unit) == this.start =>
@@ -342,7 +342,7 @@ object TimeSpan {
 
 case class TimeSpanSet(fields: Map[TemporalField, Int]) extends Temporal {
   val timeMLValue: String = {
-    val (timeFields, dayFields) = fields.keySet.partition(_.getBaseUnit().getDuration().isLessThan(DAYS.getDuration()))
+    val (timeFields, dayFields) = fields.keySet.partition(_.getBaseUnit().getDuration().compareTo(DAYS.getDuration()) < 0)
     val minDayField =
       if (dayFields.isEmpty) DAY_OF_MONTH
       else dayFields.minBy(_.getBaseUnit().getDuration())

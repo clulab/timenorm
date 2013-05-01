@@ -7,7 +7,7 @@ import org.scalatest.FunSuite
 import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
-import org.threeten.bp.temporal.ISOFields._
+import org.threeten.bp.temporal.IsoFields._
 import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
@@ -61,8 +61,8 @@ class TemporalParseTest extends FunSuite {
   }
 
   val now = TimeSpan.of(2012, 12, 12, 12, 12, 12)
-  val nowStart = now.start.getDateTime.toString
-  val nowEnd = now.end.getDateTime.toString
+  val nowStart = now.start.toLocalDateTime.toString
+  val nowEnd = now.end.toLocalDateTime.toString
 
   test("resolves simple time spans") {
     import TimeSpanParse._
@@ -338,8 +338,8 @@ class TemporalParseTest extends FunSuite {
     timeMLValue: String,
     timeMLModifier: String = null) = {
     val result = timeSpanParse.toTimeSpan(now)
-    assert(result.start.getDateTime.toString === start)
-    assert(result.end.getDateTime.toString === end) 
+    assert(result.start.toLocalDateTime.toString === start)
+    assert(result.end.toLocalDateTime.toString === end) 
     assert(result.period.timeMLValue === periodTimeMLValue)
     assert(result.timeMLValueOption === Option(timeMLValue))
     assert(result.modifier.timeMLValueOption === Option(timeMLModifier))
