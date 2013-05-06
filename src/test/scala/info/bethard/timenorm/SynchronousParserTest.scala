@@ -8,7 +8,7 @@ import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
 
 @RunWith(classOf[JUnitRunner])
-class ParserTest extends FunSuite {
+class SynchronousParserTest extends FunSuite {
 
   val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
     [Nil] ||| a ||| ||| 1.0
