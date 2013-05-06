@@ -303,7 +303,7 @@ object TimeMLProcessor {
       }
     }
 
-    val normalizers = Seq(new TimeNormalizer, new TIMEN)
+    val normalizers = Seq(new TemporalExpressionParser, new TIMEN)
     val corpusFiles = options.getCorpusPaths.asScala
     def createStatsSeq =
       for (corpusFile <- corpusFiles; normalizer <- normalizers)
@@ -346,7 +346,7 @@ object TimeMLProcessor {
         val value =
           try {
             normalizer match {
-              case n: TimeNormalizer =>
+              case n: TemporalExpressionParser =>
                 n.normalize(timex.text, anchor).map(_.timeMLValue).getOrElse("")
               case n: TIMEN =>
                 n.normalize(timex.text, doc.creationTime.value)
@@ -367,7 +367,7 @@ object TimeMLProcessor {
         // if a known error has been fixed, log it so that it can be removed from the list 
         if (isCorrect && isKnownFailure) {
           normalizer match {
-            case n: TimeNormalizer => System.err.println("Failure has been fixed: " + key)
+            case n: TemporalExpressionParser => System.err.println("Failure has been fixed: " + key)
             case _ =>
           }
         }
@@ -375,7 +375,7 @@ object TimeMLProcessor {
         // if it's incorrect, log the error
         if (!isCorrect && isPossibleFailure) {
           normalizer match {
-            case n: TimeNormalizer => n.normalizeAndExplain(timex.text, anchor) match {
+            case n: TemporalExpressionParser => n.normalizeAndExplain(timex.text, anchor) match {
               case Failure(e) => fatal("Error parsing", timex, file, e)
               case Success(temporals) => {
                 val values = temporals.map(_.timeMLValue)
