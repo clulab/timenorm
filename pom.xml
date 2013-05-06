@@ -16,7 +16,7 @@
     </license>
   </licenses>
   <scm>
-    <url>https://github.com/bethard/timenorm/</url>
+    <url>git@github.com:bethard/timenorm.git</url>
     <connection>scm:git:git@github.com:bethard/timenorm.git</connection>
     <developerConnection>scm:git:git@github.com:bethard/timenorm.git</developerConnection>
   </scm>
