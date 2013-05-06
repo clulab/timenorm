@@ -52,11 +52,11 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
     filteredTokens.toIndexedSeq
   }
 
-  def normalize(sourceText: String, anchor: TimeSpan): Try[Temporal] = {
-    this.normalizeAndExplain(sourceText, anchor).map(_.head)
+  def parse(sourceText: String, anchor: TimeSpan): Try[Temporal] = {
+    this.parseAll(sourceText, anchor).map(_.head)
   }
 
-  def normalizeAndExplain(sourceText: String, anchor: TimeSpan): Try[Seq[Temporal]] = {
+  def parseAll(sourceText: String, anchor: TimeSpan): Try[Seq[Temporal]] = {
     // tokenize the string
     val tokens = this.tokenize(sourceText)
 

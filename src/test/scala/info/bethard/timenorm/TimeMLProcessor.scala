@@ -347,7 +347,7 @@ object TimeMLProcessor {
           try {
             normalizer match {
               case n: TemporalExpressionParser =>
-                n.normalize(timex.text, anchor).map(_.timeMLValue).getOrElse("")
+                n.parse(timex.text, anchor).map(_.timeMLValue).getOrElse("")
               case n: TIMEN =>
                 n.normalize(timex.text, doc.creationTime.value)
             }
@@ -375,7 +375,7 @@ object TimeMLProcessor {
         // if it's incorrect, log the error
         if (!isCorrect && isPossibleFailure) {
           normalizer match {
-            case n: TemporalExpressionParser => n.normalizeAndExplain(timex.text, anchor) match {
+            case n: TemporalExpressionParser => n.parseAll(timex.text, anchor) match {
               case Failure(e) => fatal("Error parsing", timex, file, e)
               case Success(temporals) => {
                 val values = temporals.map(_.timeMLValue)
