@@ -40,6 +40,12 @@
     <scala.version>2.10</scala.version>
   </properties>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
