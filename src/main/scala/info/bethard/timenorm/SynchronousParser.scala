@@ -48,7 +48,7 @@ class SynchronousParser(grammar: SynchronousGrammar) {
     for (start <- 0 until nTokens) {
       val token = sourceTokens(start)
       if (SynchronousGrammar.isNumber(token)) {
-        for (symbol <- grammar.symbolsForNumber(token.toInt)) {
+        for (symbol <- grammar.sourceSymbolsForNumber(token.toInt)) {
           val rule = SynchronousGrammar.Rule(symbol, IndexedSeq(token), IndexedSeq(token), Map.empty)
           chart(1)(start).completes += Parse(rule, IndexedSeq.empty)
         }

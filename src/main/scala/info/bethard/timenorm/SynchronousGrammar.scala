@@ -2,6 +2,13 @@ package info.bethard.timenorm
 
 import scala.collection.immutable.{ Seq, IndexedSeq }
 
+/**
+ * A set of root symbols and synchronous rules that define a synchronous grammar.
+ *
+ * @constructor Create a new grammar from a set of root symbols and a set of synchronous rules.
+ * @param rootSymbols The symbols that are allowed to be the root of a parse.
+ * @param rules The synchronous rules. 
+ */
 class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[SynchronousGrammar.Rule]) {
 
   private val rulePrefixMap = PrefixMultiMap.empty[String, SynchronousGrammar.Rule]
@@ -18,21 +25,46 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
       begin.toInt to end.toInt
     }).toSet
   
-  def symbolsForNumber(number: Int): Set[String] = {
+  /**
+   * Gets all non-terminal symbols whose range allows a particular number.
+   * 
+   * @param number The number whose possible non-terminal symbols are to be found.
+   * @return Each non-terminal symbol whose range allows the number. 
+   */
+  def sourceSymbolsForNumber(number: Int): Set[String] = {
     val symbolsWithRanges =
       for (range <- this.numberRanges; if range.contains(number))
         yield "[Int:%d-%d]".format(range.start, range.end)
     symbolsWithRanges + "[Int]" 
   }
 
-  def sourceSeqStartsWith(tokens: Seq[String]) = {
+  /**
+   * Gets all rules whose source side starts with a token sequence.
+   * 
+   * @param tokens The sequence of source tokens.
+   * @return All rules whose source side starts with the given tokens.
+   */
+  def sourceSeqStartsWith(tokens: Seq[String]): Set[SynchronousGrammar.Rule] = {
     this.rulePrefixMap.getAllWithPrefix(tokens)
   }
 
-  def sourceSeqStartsWith(token: String) = {
+  /**
+   * Gets all rules whose source side starts with a token.
+   * 
+   * @param token The source token.
+   * @return All rules whose source side starts with the given token.
+   */
+  def sourceSeqStartsWith(token: String): Set[SynchronousGrammar.Rule] = {
     this.rulePrefixMap.getAllWithPrefix(Seq(token))
   }
   
+  /**
+   * Gets all symbols used in the grammar.
+   * 
+   * This includes both terminal and non-terminal symbols
+   * 
+   * @return All symbols in the grammar.
+   */
   def sourceSymbols(): Set[String] = {
     this.rules.flatMap(_.sourceSeq).toSet
   }
@@ -40,12 +72,42 @@ class SynchronousGrammar(val rootSymbols: Set[String], val rules: Seq[Synchronou
 
 object SynchronousGrammar {
 
-  val isTerminal: (String => Boolean) = !_.matches("^\\[.*\\]$")
-  val isNumber: (String => Boolean) = _.matches("^\\d+$")
+  /**
+   * Determines whether a token is a terminal or non-terminal.
+   * 
+   * @param token A token from a grammar.
+   * @return True if the token is a terminal, false otherwise.
+   *         Currently, tokens must start with "[" and end with "]" to be a non-terminal.
+   */
+  def isTerminal(token: String): Boolean = !token.matches("^\\[.*\\]$")
 
+  /**
+   * Determines whether a token is a number or not.
+   * 
+   * @param token A token from a grammar.
+   * @return True if the token is a number, false otherwise.
+   *         Currently, only tokens that are all digits are considered to be numbers.
+   */
+  def isNumber(token: String): Boolean = token.matches("^\\d+$")
+
+  /**
+   * Parses a [[SynchronousGrammar]] from a string representation.
+   * 
+   * The first line defines the one or more root symbols and looks like:
+   * <pre>
+   * ROOTS [Period] [TimeSpan] ...
+   * </pre>
+   * The remaining lines follow the format of Joshua/Heiro
+   * (http://joshua-decoder.org/4.0/file-formats.html) and look like:
+   * <pre>
+   * [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
+   * ...
+   * </pre>
+   * 
+   * @param text The formatted grammar string.
+   * @return A new [[SynchronousGrammar]].
+   */
   def fromString(text: String): SynchronousGrammar = {
-    // example:
-    // [Period] ||| [Period,1] and [Period,2] ||| Sum [Period,1] [Period,2] ||| 1.0
     val stripLabel: (String => String) = _.replaceAll("\\[(.*),.*\\]", "[$1]")
     val lines = text.lines
     val firstLine = lines.next
@@ -75,6 +137,17 @@ object SynchronousGrammar {
     new SynchronousGrammar(rootSymbols, rules.flatten.toList)
   }
 
+  /**
+   * A synchronous grammar rule.
+   * 
+   * @constructor Creates a synchronous grammar rule.
+   * @param symbol A non-terminal symbol
+   * @param sourceSeq The sequence of source tokens
+   * @param targetSeq The sequence of target tokens
+   * @param nonTerminalAlignment A mapping from source non-terminal indexes to the corresponding
+   *        target non-terminal indexes. For example, <code>Map(1->2, 2->1)</code> would indicate
+   *        that the first source non-terminal is the second target non-terminal and vice versa. 
+   */
   case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int]) {
     val basicSymbol = symbol.replaceAll(":[^\\]]*", "")
     val isNilSymbol = this.basicSymbol == "[Nil]"
@@ -109,7 +182,7 @@ private[timenorm] class PrefixMultiMap[K, V] {
     this.values ++ this.suffixes.values.flatMap(_.getAll)
   }
 
-  def getAllWithPrefix(key: Seq[K]) = {
+  def getAllWithPrefix(key: Seq[K]): Set[V] = {
     this.getMap(key) match {
       case None => Set.empty
       case Some(map) => map.getAll
