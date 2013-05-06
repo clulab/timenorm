@@ -25,16 +25,16 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Int:1Digit] ||| seven ||| 7 ||| 1.0
 [Int:1Digit] ||| eight ||| 8 ||| 1.0
 [Int:1Digit] ||| nine ||| 9 ||| 1.0
-[Int:Teens] ||| ten ||| 10 ||| 1.0
-[Int:Teens] ||| eleven ||| 11 ||| 1.0
-[Int:Teens] ||| twelve ||| 12 ||| 1.0
-[Int:Teens] ||| thirteen ||| 13 ||| 1.0
-[Int:Teens] ||| fourteen ||| 14 ||| 1.0
-[Int:Teens] ||| fifteen ||| 15 ||| 1.0
-[Int:Teens] ||| sixteen ||| 16 ||| 1.0
-[Int:Teens] ||| seventeen ||| 17 ||| 1.0
-[Int:Teens] ||| eighteen ||| 18 ||| 1.0
-[Int:Teens] ||| nineteen ||| 19 ||| 1.0
+[Int:Teens] ||| ten ||| 1 0 ||| 1.0
+[Int:Teens] ||| eleven ||| 1 1 ||| 1.0
+[Int:Teens] ||| twelve ||| 1 2 ||| 1.0
+[Int:Teens] ||| thirteen ||| 1 3 ||| 1.0
+[Int:Teens] ||| fourteen ||| 1 4 ||| 1.0
+[Int:Teens] ||| fifteen ||| 1 5 ||| 1.0
+[Int:Teens] ||| sixteen ||| 1 6 ||| 1.0
+[Int:Teens] ||| seventeen ||| 1 7 ||| 1.0
+[Int:Teens] ||| eighteen ||| 1 8 ||| 1.0
+[Int:Teens] ||| nineteen ||| 1 9 ||| 1.0
 [Int:Tens] ||| twenty ||| 2 ||| 1.0
 [Int:Tens] ||| thirty ||| 3 ||| 1.0
 [Int:Tens] ||| forty ||| 4 ||| 1.0
@@ -46,12 +46,17 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Int:2Digit] ||| [Int:Teens] ||| [Int:Teens] ||| 1.0
 [Int:2Digit] ||| [Int:Tens] ||| [Int:Tens] 0 ||| 1.0
 [Int:2Digit] ||| [Int:Tens] [Int:1Digit] ||| [Int:Tens] [Int:1Digit] ||| 1.0
-[Int:3Digit] ||| hundred ||| 1 0 0 ||| 1.0
-[Int:3Digit] ||| [Int:1Digit] hundred ||| [Int:1Digit] 0 0 ||| 1.0
-[Int:3Digit] ||| [Int:1Digit] hundred [Int:2Digit] ||| [Int:1Digit] [Int:2Digit] ||| 1.0
-[Int:4Digit] ||| thousand ||| 1 0 0 0 ||| 1.0
-[Int:4Digit] ||| [Int:1Digit] thousand ||| [Int:1Digit] 0 0 0 ||| 1.0
-[Int:4Digit] ||| [Int:1Digit] thousand [Int:3Digit] ||| [Int:1Digit] [Int:3Digit] ||| 1.0
+[Int:Hundred2Digit] ||| hundred ||| 0 0 ||| 1.0
+[Int:Hundred2Digit] ||| hundred [Int:1Digit] ||| 0 [Int:1Digit] ||| 1.0
+[Int:Hundred2Digit] ||| hundred [Int:2Digit] ||| [Int:2Digit] ||| 1.0
+[Int:3Digit] ||| [Int:Hundred2Digit] ||| 1 [Int:Hundred2Digit] ||| 1.0
+[Int:3Digit] ||| [Int:1Digit] [Int:Hundred2Digit] ||| [Int:1Digit] [Int:Hundred2Digit] ||| 1.0
+[Int:Thousand3Digit] ||| thousand ||| 0 0 0 ||| 1.0
+[Int:Thousand3Digit] ||| thousand [Int:1Digit] ||| 0 0 [Int:1Digit] ||| 1.0
+[Int:Thousand3Digit] ||| thousand [Int:2Digit] ||| 0 [Int:2Digit] ||| 1.0
+[Int:Thousand3Digit] ||| thousand [Int:3Digit] ||| [Int:3Digit] ||| 1.0
+[Int:4Digit] ||| [Int:Thousand3Digit] ||| 1 [Int:Thousand3Digit] ||| 1.0
+[Int:4Digit] ||| [Int:1Digit] [Int:Thousand3Digit] ||| [Int:1Digit] [Int:Thousand3Digit] ||| 1.0
 [Int:4Digit] ||| [Int:2Digit,1] [Int:2Digit,2] ||| [Int:2Digit,1] [Int:2Digit,2] ||| 1.0
 [Int] ||| [Int:1Digit] ||| [Int:1Digit] ||| 1.0
 [Int] ||| [Int:2Digit] ||| [Int:2Digit] ||| 1.0
