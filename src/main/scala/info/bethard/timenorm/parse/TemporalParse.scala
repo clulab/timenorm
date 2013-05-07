@@ -11,10 +11,10 @@ import org.threeten.bp.temporal.TemporalUnit
 import org.threeten.bp.temporal.IsoFields
 import info.bethard.timenorm.SynchronousParser.Tree
 import info.bethard.timenorm.Modifier
-import info.bethard.timenorm.Frequency
 import info.bethard.timenorm.Period
 import info.bethard.timenorm.PeriodSet
-import info.bethard.timenorm.Quantifier
+import info.bethard.timenorm.PeriodSet.Frequency
+import info.bethard.timenorm.PeriodSet.Quantifier
 import info.bethard.timenorm.TimeSpan
 import info.bethard.timenorm.TimeSpanSet
 import info.bethard.timenorm.field._

@@ -159,17 +159,17 @@ class SynchronousParserTest extends FunSuite {
   test("parses period sets") {
     import PeriodSetParse._
     assert(this.parse("daily") ===
-      WithQuantifier(Simple(PeriodParse.Simple(1, DAYS)), Quantifier.Every))
+      WithQuantifier(Simple(PeriodParse.Simple(1, DAYS)), PeriodSet.Quantifier.Every))
     assert(this.parse("every", "week") ===
-      WithQuantifier(Simple(PeriodParse.Simple(1, WEEKS)), Quantifier.Every))
+      WithQuantifier(Simple(PeriodParse.Simple(1, WEEKS)), PeriodSet.Quantifier.Every))
     assert(this.parse("each", "month") ===
-      WithQuantifier(Simple(PeriodParse.Simple(1, MONTHS)), Quantifier.Each))
+      WithQuantifier(Simple(PeriodParse.Simple(1, MONTHS)), PeriodSet.Quantifier.Each))
     assert(this.parse("every", "two", "years") ===
-      WithQuantifier(Simple(PeriodParse.Simple(2, YEARS)), Quantifier.Every))
+      WithQuantifier(Simple(PeriodParse.Simple(2, YEARS)), PeriodSet.Quantifier.Every))
     assert(this.parse("twice", "a", "month") ===
-      WithFrequency(Simple(PeriodParse.Simple(1, MONTHS)), Frequency(2)))
+      WithFrequency(Simple(PeriodParse.Simple(1, MONTHS)), PeriodSet.Frequency(2)))
     assert(this.parse("two", "days", "a", "week") ===
-      WithFrequency(Simple(PeriodParse.Simple(1, WEEKS)), Frequency(2, Some(DAYS))))
+      WithFrequency(Simple(PeriodParse.Simple(1, WEEKS)), PeriodSet.Frequency(2, Some(DAYS))))
   }
 
   test("parses simple time spans") {
