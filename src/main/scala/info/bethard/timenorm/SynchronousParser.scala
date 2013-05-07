@@ -6,14 +6,32 @@ import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 import scala.collection.mutable.ListBuffer
 
+/**
+ * A parser for synchronous grammars.
+ *
+ * @constructor Create a new parser from a synchronous grammar.
+ * @param grammar A synchronous grammar.
+ */
 class SynchronousParser(grammar: SynchronousGrammar) {
 
   import SynchronousParser._
   
+  /**
+   * Parse the source tokens into a tree non-terminals and target tokens.
+   * 
+   * @param sourceTokens The source tokens to be parsed.
+   * @return The parsed tree of non-terminals and target tokens.
+   */
   def parseAll(sourceTokens: Array[String]): Array[Tree.NonTerminal] = {
     this.parseAll(sourceTokens.toIndexedSeq).toArray
   }
 
+  /**
+   * Parse the source tokens into a tree non-terminals and target tokens.
+   * 
+   * @param sourceTokens The source tokens to be parsed.
+   * @return The parsed tree of non-terminals and target tokens.
+   */
   def parseAll(sourceTokens: IndexedSeq[String]): IndexedSeq[Tree.NonTerminal] = {
     if (sourceTokens.isEmpty) {
       throw new UnsupportedOperationException("Cannot parse empty token sequence")
@@ -142,9 +160,38 @@ class SynchronousParser(grammar: SynchronousGrammar) {
 
 object SynchronousParser {
   
+  /**
+   * A tree of non-terminals and tokens.
+   * 
+   * Used primarily by [[SynchronousParser]] to represent the tree of target non-terminals
+   * and terminals that correspond to an input sequence of source terminals.
+   */
   sealed trait Tree
+
+  /**
+   * Contains the different types of [[Tree]]s.
+   */
   object Tree {
+
+    /**
+     * A tree representing a terminal token.
+     * 
+     * Used primarily by [[SynchronousParser]] to represent target terminals.
+     * 
+     * @constructor Creates a terminal tree from a token.
+     * @param token A token.
+     */
     case class Terminal(token: String) extends Tree
+    
+    /**
+     * A tree representing a non-terminal.
+     * 
+     * Used primarily by [[SynchronousParser]] to represent target non-terminals.
+     * 
+     * @constructor Creates a non-terminal tree from a rule and a list of children.
+     * @param rule A synchronous grammar rule.
+     * @param children The trees that are children of this non-terminal.
+     */
     case class NonTerminal(rule: SynchronousGrammar.Rule, children: List[Tree]) extends Tree
   }
 
