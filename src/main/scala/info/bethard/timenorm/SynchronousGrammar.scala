@@ -4,6 +4,20 @@ import scala.collection.immutable.{ Seq, IndexedSeq }
 
 /**
  * A set of root symbols and synchronous rules that define a synchronous grammar.
+ * 
+ * Non-terminal symbols should be alphanumeric characters enclosed in square brackets, for example,
+ * `[Period]`, `[TimeSpan]` or `[Int]`.
+ * 
+ * A single colon can be used to "subtype" a non-terminal, e.g. `[Int:4Digit]` or `[Unit:Singular]`.
+ * In such cases, the symbol without the subtype information is called the "basic symbol", e.g.
+ * `[Int]` and `[Unit]` are the basic symbols for the preceding two examples.
+ * 
+ * A symbol of the form `[Int:X-Y]`, where X and Y are integers, is treated as a numeric range
+ * specification (inclusive of both endpoints). [[SynchronousParser]] has special handling of
+ * such ranges.
+ * 
+ * A non-terminal whose basic symbol is `[Nil]` is called a "nil symbol". [[SynchronousParser]] has
+ * special handling of such nil symbols. 
  *
  * @constructor Create a new grammar from a set of root symbols and a set of synchronous rules.
  * @param rootSymbols The symbols that are allowed to be the root of a parse.
@@ -75,21 +89,43 @@ object SynchronousGrammar {
   /**
    * Determines whether a token is a terminal or non-terminal.
    * 
+   * Currently, tokens must start with "[" and end with "]" to be a non-terminal.
+   * 
    * @param token A token from a grammar.
    * @return True if the token is a terminal, false otherwise.
-   *         Currently, tokens must start with "[" and end with "]" to be a non-terminal.
    */
   def isTerminal(token: String): Boolean = !token.matches("^\\[.*\\]$")
 
   /**
+   * Strips any sub-type information from a non-terminal symbol.
+   * 
+   * For example, `[Int:4Digit]` would be converted to `[Int]`
+   * 
+   * @param token A non-terminal token from the grammar.
+   * @return A non-terminal token without the sub-type information.
+   */
+  def basicSymbol(token: String): String = token.replaceAll(":[^\\]]*", "")
+
+  /**
    * Determines whether a token is a number or not.
+   * 
+   * Currently, only tokens that are all digits are considered to be numbers.
    * 
    * @param token A token from a grammar.
    * @return True if the token is a number, false otherwise.
-   *         Currently, only tokens that are all digits are considered to be numbers.
    */
   def isNumber(token: String): Boolean = token.matches("^\\d+$")
-
+  
+  /**
+   * Determines whether a token is a nil non-terminal symbol or not.
+   * 
+   * Currently, only non-terminals whose basic symbol is "[Nil]" are considered to be nils.
+   * 
+   * @param token A token from a grammar.
+   * @return True if the token is a nil non-terminal, false otherwise.
+   */
+  def isNil(token: String): Boolean = this.basicSymbol(token) == "[Nil]"
+  
   /**
    * Parses a [[SynchronousGrammar]] from a string representation.
    * 
@@ -149,8 +185,20 @@ object SynchronousGrammar {
    *        that the first source non-terminal is the second target non-terminal and vice versa. 
    */
   case class Rule(symbol: String, sourceSeq: IndexedSeq[String], targetSeq: IndexedSeq[String], nonTerminalAlignment: Map[Int, Int]) {
-    val basicSymbol = symbol.replaceAll(":[^\\]]*", "")
-    val isNilSymbol = this.basicSymbol == "[Nil]"
+    
+    /**
+     * Strips any sub-type information from this rule's symbol.
+     * 
+     * See [[SynchronousGrammar.basicSymbol]].
+     */
+    val basicSymbol = SynchronousGrammar.basicSymbol(this.symbol)
+    
+    /**
+     * Determines whether this rule's symbol is a nil non-terminal symbol or not.
+     *
+     * See [[SynchronousGrammar.isNil]].
+     */
+    val isNil = SynchronousGrammar.isNil(this.symbol)
   }
 }
 

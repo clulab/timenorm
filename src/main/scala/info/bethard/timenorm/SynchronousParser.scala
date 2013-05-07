@@ -128,9 +128,9 @@ class SynchronousParser(grammar: SynchronousGrammar) {
         // expand complete parses if there are Nil parses beside them
         for (complete1 <- chart(size1)(start).completes) {
           for (complete2 <- chart(size2)(start2).completes) {
-            if (!complete1.rule.isNilSymbol && complete2.rule.isNilSymbol) {
+            if (!complete1.rule.isNil && complete2.rule.isNil) {
               entry.completes += complete1
-            } else if (complete1.rule.isNilSymbol && !complete2.rule.isNilSymbol) {
+            } else if (complete1.rule.isNil && !complete2.rule.isNil) {
               entry.completes += complete2            
             }
           }
