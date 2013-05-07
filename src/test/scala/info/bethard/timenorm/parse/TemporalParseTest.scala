@@ -1,4 +1,4 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.parse
 
 import scala.collection.immutable.Seq
 import org.junit.runner.RunWith
@@ -14,6 +14,9 @@ import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.ZoneId
 import org.threeten.bp.DayOfWeek
+import info.bethard.timenorm.field._
+import info.bethard.timenorm.Modifier
+import info.bethard.timenorm.TimeSpan
 
 @RunWith(classOf[JUnitRunner])
 class TemporalParseTest extends FunSuite {

@@ -1,4 +1,4 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.field
 
 import scala.collection.immutable.Seq
 import org.junit.runner.RunWith

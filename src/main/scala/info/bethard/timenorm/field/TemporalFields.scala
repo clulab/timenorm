@@ -1,4 +1,4 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.field
 
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalUnit
@@ -16,7 +16,7 @@ import org.threeten.bp.LocalTime
 import org.threeten.bp.temporal.WeekFields
 
 
-private[timenorm] abstract class PartialRange(name: String, val field: TemporalField)
+abstract class PartialRange(name: String, val field: TemporalField)
 extends TemporalUnit {
   def first(temporal: TemporalAccessor): Long
   def last(temporal: TemporalAccessor): Long
@@ -47,7 +47,7 @@ extends TemporalUnit {
   }
 }
 
-private[timenorm] abstract class ConstantPartialRange(
+abstract class ConstantPartialRange(
     name: String,
     field: TemporalField,
     first: Long,
@@ -65,7 +65,7 @@ private[timenorm] abstract class ConstantPartialRange(
   val isDurationEstimated: Boolean = this.field.getBaseUnit().isDurationEstimated()
 }
 
-private[timenorm] abstract class MonthDayPartialRange(
+abstract class MonthDayPartialRange(
     name: String,
     first: MonthDay,
     last: MonthDay) extends PartialRange(name, DAY_OF_YEAR) {
@@ -109,7 +109,7 @@ private[timenorm] abstract class MonthDayPartialRange(
   val isDurationEstimated: Boolean = true
 }
 
-private[timenorm] class BaseUnitOfPartial(name: String, partialRange: PartialRange)
+class BaseUnitOfPartial(name: String, partialRange: PartialRange)
 extends TemporalField {
   def getName: String = this.name
   override def toString: String = this.name
@@ -142,7 +142,7 @@ extends TemporalField {
   def resolve(temporal: TemporalAccessor, value: Long) = ???
 }
 
-private[timenorm] class PartialOfRangeUnit(name: String, partialRange: PartialRange)
+class PartialOfRangeUnit(name: String, partialRange: PartialRange)
 extends TemporalField {
   def getName: String = this.name
   override def toString: String = this.name
@@ -172,48 +172,48 @@ extends TemporalField {
   }
 }
 
-private[timenorm] object MORNINGS extends ConstantPartialRange("Mornings", HOUR_OF_DAY, 0L, 11L)
-private[timenorm] object MORNING_OF_DAY extends PartialOfRangeUnit("MorningOfDay", MORNINGS)
-private[timenorm] object HOUR_OF_MORNING extends BaseUnitOfPartial("HourOfMorning", MORNINGS)
+object MORNINGS extends ConstantPartialRange("Mornings", HOUR_OF_DAY, 0L, 11L)
+object MORNING_OF_DAY extends PartialOfRangeUnit("MorningOfDay", MORNINGS)
+object HOUR_OF_MORNING extends BaseUnitOfPartial("HourOfMorning", MORNINGS)
 
-private[timenorm] object AFTERNOONS extends ConstantPartialRange("Afternoons", HOUR_OF_DAY, 12L, 17L)
-private[timenorm] object AFTERNOON_OF_DAY extends PartialOfRangeUnit("AfternoonOfDay", AFTERNOONS)
-private[timenorm] object HOUR_OF_AFTERNOON extends BaseUnitOfPartial("HourOfAfternoon", AFTERNOONS)
+object AFTERNOONS extends ConstantPartialRange("Afternoons", HOUR_OF_DAY, 12L, 17L)
+object AFTERNOON_OF_DAY extends PartialOfRangeUnit("AfternoonOfDay", AFTERNOONS)
+object HOUR_OF_AFTERNOON extends BaseUnitOfPartial("HourOfAfternoon", AFTERNOONS)
 
-private[timenorm] object EVENINGS extends ConstantPartialRange("Evenings", HOUR_OF_DAY, 17L, 23L)
-private[timenorm] object EVENING_OF_DAY extends PartialOfRangeUnit("EveningOfDay", EVENINGS)
-private[timenorm] object HOUR_OF_EVENING extends BaseUnitOfPartial("HourOfEvening", EVENINGS)
+object EVENINGS extends ConstantPartialRange("Evenings", HOUR_OF_DAY, 17L, 23L)
+object EVENING_OF_DAY extends PartialOfRangeUnit("EveningOfDay", EVENINGS)
+object HOUR_OF_EVENING extends BaseUnitOfPartial("HourOfEvening", EVENINGS)
 
-private[timenorm] object NIGHTS extends ConstantPartialRange("Nights", HOUR_OF_DAY, 21L, 3L)
-private[timenorm] object NIGHT_OF_DAY extends PartialOfRangeUnit("NightOfDay", NIGHTS)
-private[timenorm] object HOUR_OF_NIGHT extends BaseUnitOfPartial("HourOfNight", NIGHTS)
+object NIGHTS extends ConstantPartialRange("Nights", HOUR_OF_DAY, 21L, 3L)
+object NIGHT_OF_DAY extends PartialOfRangeUnit("NightOfDay", NIGHTS)
+object HOUR_OF_NIGHT extends BaseUnitOfPartial("HourOfNight", NIGHTS)
 
-private[timenorm] object WEEKENDS extends ConstantPartialRange("Weekends", DAY_OF_WEEK, 6L, 7L)
-private[timenorm] object WEEKEND_OF_WEEK extends PartialOfRangeUnit("WeekendOfWeek", WEEKENDS)
-private[timenorm] object DAY_OF_WEEKEND extends BaseUnitOfPartial("DayOfWeekend", WEEKENDS)
+object WEEKENDS extends ConstantPartialRange("Weekends", DAY_OF_WEEK, 6L, 7L)
+object WEEKEND_OF_WEEK extends PartialOfRangeUnit("WeekendOfWeek", WEEKENDS)
+object DAY_OF_WEEKEND extends BaseUnitOfPartial("DayOfWeekend", WEEKENDS)
 
-private[timenorm] object SPRINGS extends MonthDayPartialRange(
+object SPRINGS extends MonthDayPartialRange(
     "Springs", MonthDay.of(3, 20), MonthDay.of(6, 20))
-private[timenorm] object SPRING_OF_YEAR extends PartialOfRangeUnit("SpringOfYear", SPRINGS)
-private[timenorm] object DAY_OF_SPRING extends BaseUnitOfPartial("DayOfSpring", SPRINGS)
+object SPRING_OF_YEAR extends PartialOfRangeUnit("SpringOfYear", SPRINGS)
+object DAY_OF_SPRING extends BaseUnitOfPartial("DayOfSpring", SPRINGS)
 
-private[timenorm] object SUMMERS extends MonthDayPartialRange(
+object SUMMERS extends MonthDayPartialRange(
     "Summers", MonthDay.of(6, 21), MonthDay.of(9, 21))
-private[timenorm] object SUMMER_OF_YEAR extends PartialOfRangeUnit("SummerOfYear", SUMMERS)
-private[timenorm] object DAY_OF_SUMMER extends BaseUnitOfPartial("DayOfSummer", SUMMERS)
+object SUMMER_OF_YEAR extends PartialOfRangeUnit("SummerOfYear", SUMMERS)
+object DAY_OF_SUMMER extends BaseUnitOfPartial("DayOfSummer", SUMMERS)
 
-private[timenorm] object FALLS extends MonthDayPartialRange(
+object FALLS extends MonthDayPartialRange(
     "Falls", MonthDay.of(9, 22), MonthDay.of(12, 20))
-private[timenorm] object FALL_OF_YEAR extends PartialOfRangeUnit("FallOfYear", FALLS)
-private[timenorm] object DAY_OF_FALL extends BaseUnitOfPartial("DayOfFall", FALLS)
+object FALL_OF_YEAR extends PartialOfRangeUnit("FallOfYear", FALLS)
+object DAY_OF_FALL extends BaseUnitOfPartial("DayOfFall", FALLS)
 
-private[timenorm] object WINTERS extends MonthDayPartialRange(
+object WINTERS extends MonthDayPartialRange(
     "Winters", MonthDay.of(12, 21), MonthDay.of(3, 19))
-private[timenorm] object WINTER_OF_YEAR extends PartialOfRangeUnit("WinterOfYear", WINTERS)
-private[timenorm] object DAY_OF_WINTER extends BaseUnitOfPartial("DayOfWinter", WINTERS)
+object WINTER_OF_YEAR extends PartialOfRangeUnit("WinterOfYear", WINTERS)
+object DAY_OF_WINTER extends BaseUnitOfPartial("DayOfWinter", WINTERS)
 
 
-private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
+object EASTER_DAY_OF_YEAR extends TemporalField {
   def getName: String = "EasterDayOfYear"
   def getBaseUnit: TemporalUnit = DAYS
   def getRangeUnit: TemporalUnit = YEARS
@@ -255,11 +255,11 @@ private[timenorm] object EASTER_DAY_OF_YEAR extends TemporalField {
   }
 }
 
-private[timenorm] object ISO_WEEK {
+object ISO_WEEK {
   val OF_YEAR = WeekFields.ISO.weekOfYear()
 }
 
-private[timenorm] object DECADE extends TemporalField {
+object DECADE extends TemporalField {
   def getName: String = "Decade"
   def getBaseUnit: TemporalUnit = DECADES
   def getRangeUnit: TemporalUnit = DECADES
@@ -273,7 +273,7 @@ private[timenorm] object DECADE extends TemporalField {
   def resolve(temporal: TemporalAccessor, value: Long) = ???
 }
 
-private[timenorm] object YEAR_OF_DECADE extends TemporalField {
+object YEAR_OF_DECADE extends TemporalField {
   def getName: String = "YearOfDecade"
   def getBaseUnit: TemporalUnit = YEARS
   def getRangeUnit: TemporalUnit = DECADES
@@ -290,7 +290,7 @@ private[timenorm] object YEAR_OF_DECADE extends TemporalField {
   def resolve(temporal: TemporalAccessor, value: Long) = ???
 }
 
-private[timenorm] object CENTURY extends TemporalField {
+object CENTURY extends TemporalField {
   def getName: String = "Century"
   def getBaseUnit: TemporalUnit = CENTURIES
   def getRangeUnit: TemporalUnit = CENTURIES
@@ -304,7 +304,7 @@ private[timenorm] object CENTURY extends TemporalField {
   def resolve(temporal: TemporalAccessor, value: Long) = ???
 }
 
-private[timenorm] object DECADE_OF_CENTURY extends TemporalField {
+object DECADE_OF_CENTURY extends TemporalField {
   def getName: String = "DecadeOfCentury"
   def getBaseUnit: TemporalUnit = DECADES
   def getRangeUnit: TemporalUnit = CENTURIES
@@ -321,7 +321,7 @@ private[timenorm] object DECADE_OF_CENTURY extends TemporalField {
   def resolve(temporal: TemporalAccessor, value: Long) = ???
 }
 
-private[timenorm] object YEAR_OF_CENTURY extends TemporalField {
+object YEAR_OF_CENTURY extends TemporalField {
   def getName: String = "YearOfCentury"
   def getBaseUnit: TemporalUnit = YEARS
   def getRangeUnit: TemporalUnit = CENTURIES
@@ -338,7 +338,7 @@ private[timenorm] object YEAR_OF_CENTURY extends TemporalField {
   def resolve(temporal: TemporalAccessor, value: Long) = ???
 }
 
-private[timenorm] object UNSPECIFIED extends TemporalUnit {
+object UNSPECIFIED extends TemporalUnit {
   def getName: String = "Unspecified"
   override def toString: String = getName
   def getDuration: Duration = FOREVER.getDuration()

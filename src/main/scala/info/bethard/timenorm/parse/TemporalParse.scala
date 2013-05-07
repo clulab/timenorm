@@ -1,4 +1,4 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.parse
 
 import scala.collection.immutable.Seq
 import org.threeten.bp.LocalDateTime
@@ -8,8 +8,17 @@ import org.threeten.bp.temporal.ChronoUnit
 import org.threeten.bp.temporal.ChronoField
 import org.threeten.bp.temporal.TemporalField
 import org.threeten.bp.temporal.TemporalUnit
-import info.bethard.timenorm.SynchronousParser.Tree
 import org.threeten.bp.temporal.IsoFields
+import info.bethard.timenorm.SynchronousParser.Tree
+import info.bethard.timenorm.Modifier
+import info.bethard.timenorm.Frequency
+import info.bethard.timenorm.Period
+import info.bethard.timenorm.PeriodSet
+import info.bethard.timenorm.Quantifier
+import info.bethard.timenorm.TimeSpan
+import info.bethard.timenorm.TimeSpanSet
+import info.bethard.timenorm.field._
+
 
 trait TokenParser {
   def toInt(token: String): Int

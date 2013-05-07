@@ -6,6 +6,8 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import org.threeten.bp.temporal.ChronoUnit._
 import org.threeten.bp.temporal.ChronoField._
+import info.bethard.timenorm.parse._
+import info.bethard.timenorm.field._
 
 @RunWith(classOf[JUnitRunner])
 class SynchronousParserTest extends FunSuite {

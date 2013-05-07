@@ -12,6 +12,13 @@ import scala.util.Try
 import org.threeten.bp.DateTimeException
 import org.threeten.bp.temporal.IsoFields.QUARTER_YEARS
 
+import info.bethard.timenorm.parse.TemporalParse
+import info.bethard.timenorm.parse.PeriodParse
+import info.bethard.timenorm.parse.PeriodSetParse
+import info.bethard.timenorm.parse.TimeSpanParse
+import info.bethard.timenorm.parse.TimeSpanSetParse
+
+
 class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/en.grammar")) {
   private val logger = Logger.getLogger(this.getClass.getName)
   private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString

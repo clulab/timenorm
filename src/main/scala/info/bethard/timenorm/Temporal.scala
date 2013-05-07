@@ -10,6 +10,7 @@ import scala.collection.immutable.ListMap
 import org.threeten.bp.temporal.WeekFields
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
+import info.bethard.timenorm.field._
 
 sealed trait Temporal {
   val timeMLValue: String
