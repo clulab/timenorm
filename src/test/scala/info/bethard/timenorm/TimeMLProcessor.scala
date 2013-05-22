@@ -1,17 +1,26 @@
 package info.bethard.timenorm
 
 import java.io.File
+import java.nio.file.Files
 
 import scala.collection.JavaConverters._
 import scala.util.Failure
 import scala.util.Success
-import scala.util.Try
 
-import org.threeten.bp.DateTimeException
 import org.timen.TIMEN
+import org.uimafit.factory.AnalysisEngineFactory
+import org.uimafit.factory.JCasFactory
+import org.uimafit.util.JCasUtil
 
 import com.lexicalscope.jewel.cli.CliFactory
-import com.lexicalscope.jewel.cli.{ Option => CliOption }
+import com.lexicalscope.jewel.cli.{Option => CliOption}
+
+import de.unihd.dbs.heideltime.standalone.DocumentType
+import de.unihd.dbs.uima.annotator.heideltime.HeidelTime
+import de.unihd.dbs.uima.annotator.heideltime.resources.Language
+import de.unihd.dbs.uima.annotator.treetagger.TreeTaggerWrapper
+import de.unihd.dbs.uima.types.heideltime.Dct
+import de.unihd.dbs.uima.types.heideltime.Timex3
 
 /**
  * This is not actually a test, but it can be run over TimeML files to see what can and cannot
@@ -303,18 +312,23 @@ object TimeMLProcessor {
       }
     }
 
-    val normalizers = Seq(new TemporalExpressionParser, new TIMEN)
+    val normalizerClasses = Seq(
+        classOf[TemporalExpressionParser],
+        classOf[TIMEN],
+        classOf[HeidelTimeNormalizer])
     val corpusFiles = options.getCorpusPaths.asScala
     def createStatsSeq =
-      for (corpusFile <- corpusFiles; normalizer <- normalizers)
-        yield (corpusFile, normalizer) -> new Stats
-    val fileNormalizerStats = createStatsSeq.toMap
-    val fileNormalizerStatsForCorrectAnnotations = createStatsSeq.toMap
+      for (corpusFile <- corpusFiles; normalizerClass <- normalizerClasses)
+        yield (corpusFile, normalizerClass) -> new Stats
+    val fileNormalizerStats = createStatsSeq.toMap[(File, Class[_]), Stats]
+    val fileNormalizerStatsForCorrectAnnotations = createStatsSeq.toMap[(File, Class[_]), Stats]
 
+    val baseNormalizers = Seq(new TemporalExpressionParser, new TIMEN)
     for {
       corpusFile <- corpusFiles
       file <- this.allFiles(corpusFile)
       doc = new TimeMLDocument(file)
+      normalizers: Seq[AnyRef] = baseNormalizers :+ new HeidelTimeNormalizer(doc) 
       docCreationTime = TimeSpan.fromTimeMLValue(doc.creationTime.value)
       timex <- doc.timeExpressions
     } {
@@ -326,9 +340,9 @@ object TimeMLProcessor {
 
       // update totals
       for (normalizer <- normalizers) {
-        fileNormalizerStats(corpusFile, normalizer).total += 1
+        fileNormalizerStats(corpusFile, normalizer.getClass).total += 1
         if (!isAnnotationError) {
-          fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer).total += 1
+          fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer.getClass).total += 1
         }
       }
 
@@ -350,6 +364,8 @@ object TimeMLProcessor {
                 n.parse(timex.text, anchor).map(_.timeMLValue).getOrElse("")
               case n: TIMEN =>
                 n.normalize(timex.text, doc.creationTime.value)
+              case n: HeidelTimeNormalizer =>
+                n.normalize(timex).getOrElse("")
             }
           } catch {
             case e: Throwable => ""
@@ -358,9 +374,9 @@ object TimeMLProcessor {
         // determine if the normalized value was correct
         val isCorrect = value == timex.value
         if (isCorrect) {
-          fileNormalizerStats(corpusFile, normalizer).correct += 1
+          fileNormalizerStats(corpusFile, normalizer.getClass).correct += 1
           if (!isAnnotationError) {
-            fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer).correct += 1
+            fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer.getClass).correct += 1
           }
         }
 
@@ -394,30 +410,31 @@ object TimeMLProcessor {
         (normalizer, value, isCorrect)
       }
       
-      // if the normalizers had different predictions, log the incorrect one
+      // if the normalizers had different predictions, log the incorrect ones
       if (results.map(_._3).toSet == Set(true, false)) {
-        val Seq((normalizer, value, correct)) = results.filter(_._3 == false)
-        val message = "%s incorrect (%s) for".format(normalizer.getClass.getSimpleName, value)
-        error(message, timex, file)
+        for ((normalizer, value, correct) <- results.filter(_._3 == false)) {
+          val message = "%s incorrect (%s) for".format(normalizer.getClass.getSimpleName, value)
+          error(message, timex, file)
+        }
       }
     }
 
     // print out performance on each corpus
     for (corpusFile <- corpusFiles) {
-      printf("======================================================================\n")
+      println("=" * 100)
       printf("Corpus: %s\n", corpusFile)
-      for (normalizer <- normalizers) {
-        val stats = fileNormalizerStats(corpusFile, normalizer)
-        val statsForCorrectAnnotations = fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizer)
-        printf("%-15s\tcorrect: %5d\ttotal: %5d\taccuracy: %.3f (%.3f ignoring annotation errors)\n",
-          normalizer.getClass.getSimpleName,
+      for (normalizerClass <- normalizerClasses) {
+        val stats = fileNormalizerStats(corpusFile, normalizerClass)
+        val statsForCorrectAnnotations = fileNormalizerStatsForCorrectAnnotations(corpusFile, normalizerClass)
+        printf("%-25s  correct: %4d / %4d  accuracy: %.3f (%.3f ignoring annotation errors)\n",
+          normalizerClass.getSimpleName,
           stats.correct,
           stats.total,
           stats.correct.toDouble / stats.total.toDouble,
           statsForCorrectAnnotations.correct.toDouble / statsForCorrectAnnotations.total.toDouble)
       }
     }
-    printf("======================================================================\n")
+    println("=" * 100)
   }
 
   def allFiles(fileOrDir: File): Iterator[File] = {
@@ -427,4 +444,57 @@ object TimeMLProcessor {
       Iterator(fileOrDir)
     }
   }
+}
+
+object HeidelTimeNormalizer {
+  val heidelTime = AnalysisEngineFactory.createPrimitive(
+      classOf[HeidelTime],
+      "Language", Language.ENGLISH.getName,
+      "Type", DocumentType.NEWS.toString,
+      "Date", true.asInstanceOf[AnyRef],
+      "Time", true.asInstanceOf[AnyRef],
+      "Duration", true.asInstanceOf[AnyRef],
+      "Set", true.asInstanceOf[AnyRef])
+  
+  val partOfSpeechTagger = AnalysisEngineFactory.createPrimitive(
+      classOf[TreeTaggerWrapper],
+      TreeTaggerWrapper.PARAM_LANGUAGE, Language.ENGLISH.getName,
+      TreeTaggerWrapper.PARAM_ANNOTATE_TOKENS, true.asInstanceOf[AnyRef],
+      TreeTaggerWrapper.PARAM_ANNOTATE_SENTENCES, true.asInstanceOf[AnyRef],
+      TreeTaggerWrapper.PARAM_ANNOTATE_PARTOFSPEECH, true.asInstanceOf[AnyRef],
+      TreeTaggerWrapper.PARAM_IMPROVE_GERMAN_SENTENCES, true.asInstanceOf[AnyRef])
+}
+
+class HeidelTimeNormalizer(doc: TimeMLDocument) {
+  // run HeidelTime
+  private val jCas = JCasFactory.createJCas("type.HeidelTime_TypeSystem")
+  private val bytes = Files.readAllBytes(doc.file.toPath)
+  jCas.setDocumentText(doc.text)
+  private val dct = new Dct(jCas);
+  dct.setValue(doc.creationTime.value);
+  dct.addToIndexes();
+  HeidelTimeNormalizer.partOfSpeechTagger.process(jCas);
+  HeidelTimeNormalizer.heidelTime.process(jCas)
+
+  // get the predicted time expressions and their values
+  private val predictions = JCasUtil.select(jCas, classOf[Timex3]).asScala.map {
+    time => ((time.getBegin, time.getEnd), time.getTimexValue)
+  }.toMap
+
+  // map each time expression to a predicted expression (if possible)
+  private val expressionValues = for (timex <- doc.timeExpressions) yield {
+    val (begin, end) = doc.offsets(timex.elem)
+    val prediction = predictions.get((begin, end)) match {
+      case Some(value) => Some(((begin, end), value))
+
+      // if there's no exact match, pick the first one that overlaps
+      case None => predictions.find {
+        case ((pBegin, pEnd), value) => pBegin <= end && pEnd >= begin
+      }
+    }
+    timex -> prediction.map(_._2)
+  }
+
+  // return the mapping from time expressions to values
+  val normalize: Map[TimeMLDocument#TimeExpression, Option[String]] = expressionValues.toMap
 }

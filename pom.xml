@@ -90,6 +90,18 @@
       <version>1.0.8</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>de.unihd.dbs</groupId>
+    	<artifactId>heideltime</artifactId>
+    	<version>1.4-SNAPSHOT</version>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.uimafit</groupId>
+    	<artifactId>uimafit</artifactId>
+    	<version>1.4.0</version>
+    	<scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
