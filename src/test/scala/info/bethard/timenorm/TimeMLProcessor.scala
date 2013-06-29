@@ -21,6 +21,9 @@ import de.unihd.dbs.uima.annotator.heideltime.resources.Language
 import de.unihd.dbs.uima.annotator.treetagger.TreeTaggerWrapper
 import de.unihd.dbs.uima.types.heideltime.Dct
 import de.unihd.dbs.uima.types.heideltime.Timex3
+import edu.stanford.nlp.io.IOUtils
+import time.TreeTime
+
 
 /**
  * This is not actually a test, but it can be run over TimeML files to see what can and cannot
@@ -313,9 +316,10 @@ object TimeMLProcessor {
     }
 
     val normalizerClasses = Seq(
-        classOf[TemporalExpressionParser],
-        classOf[TIMEN],
-        classOf[HeidelTimeNormalizer])
+      classOf[TemporalExpressionParser],
+      classOf[TIMEN],
+      classOf[HeidelTimeNormalizer],
+      classOf[TreeTime])
     val corpusFiles = options.getCorpusPaths.asScala
     def createStatsSeq =
       for (corpusFile <- corpusFiles; normalizerClass <- normalizerClasses)
@@ -323,12 +327,15 @@ object TimeMLProcessor {
     val fileNormalizerStats = createStatsSeq.toMap[(File, Class[_]), Stats]
     val fileNormalizerStatsForCorrectAnnotations = createStatsSeq.toMap[(File, Class[_]), Stats]
 
-    val baseNormalizers = Seq(new TemporalExpressionParser, new TIMEN)
+    val baseNormalizers = Seq(
+      new TemporalExpressionParser,
+      new TIMEN,
+      IOUtils.readObjectFromFile[TreeTime]("interpretModel.ser.gz"))
     for {
       corpusFile <- corpusFiles
       file <- this.allFiles(corpusFile)
       doc = new TimeMLDocument(file)
-      normalizers: Seq[AnyRef] = baseNormalizers :+ new HeidelTimeNormalizer(doc) 
+      normalizers: Seq[AnyRef] = baseNormalizers :+ new HeidelTimeNormalizer(doc)
       docCreationTime = TimeSpan.fromTimeMLValue(doc.creationTime.value)
       timex <- doc.timeExpressions
     } {
@@ -357,13 +364,15 @@ object TimeMLProcessor {
 
       // normalize the time expression given the anchor
       val results = for (normalizer <- normalizers) yield {
-        val value =
+        val value: String =
           try {
             normalizer match {
               case n: TemporalExpressionParser =>
                 n.parse(timex.text, anchor).map(_.timeMLValue).getOrElse("")
               case n: TIMEN =>
                 n.normalize(timex.text, doc.creationTime.value)
+              case n: TreeTime =>
+                n.parseTimex(timex.text, docCreationTime.start.toEpochSecond() * 1000)
               case n: HeidelTimeNormalizer =>
                 n.normalize(timex).getOrElse("")
             }
@@ -405,11 +414,11 @@ object TimeMLProcessor {
             case _ =>
           }
         }
-        
+
         // yield the normalizer results to allow later comparison
         (normalizer, value, isCorrect)
       }
-      
+
       // if the normalizers had different predictions, log the incorrect ones
       if (results.map(_._3).toSet == Set(true, false)) {
         for ((normalizer, value, correct) <- results.filter(_._3 == false)) {
@@ -448,21 +457,21 @@ object TimeMLProcessor {
 
 object HeidelTimeNormalizer {
   val heidelTime = AnalysisEngineFactory.createPrimitive(
-      classOf[HeidelTime],
-      "Language", Language.ENGLISH.getName,
-      "Type", DocumentType.NEWS.toString,
-      "Date", true.asInstanceOf[AnyRef],
-      "Time", true.asInstanceOf[AnyRef],
-      "Duration", true.asInstanceOf[AnyRef],
-      "Set", true.asInstanceOf[AnyRef])
-  
+    classOf[HeidelTime],
+    "Language", Language.ENGLISH.getName,
+    "Type", DocumentType.NEWS.toString,
+    "Date", true.asInstanceOf[AnyRef],
+    "Time", true.asInstanceOf[AnyRef],
+    "Duration", true.asInstanceOf[AnyRef],
+    "Set", true.asInstanceOf[AnyRef])
+
   val partOfSpeechTagger = AnalysisEngineFactory.createPrimitive(
-      classOf[TreeTaggerWrapper],
-      TreeTaggerWrapper.PARAM_LANGUAGE, Language.ENGLISH.getName,
-      TreeTaggerWrapper.PARAM_ANNOTATE_TOKENS, true.asInstanceOf[AnyRef],
-      TreeTaggerWrapper.PARAM_ANNOTATE_SENTENCES, true.asInstanceOf[AnyRef],
-      TreeTaggerWrapper.PARAM_ANNOTATE_PARTOFSPEECH, true.asInstanceOf[AnyRef],
-      TreeTaggerWrapper.PARAM_IMPROVE_GERMAN_SENTENCES, true.asInstanceOf[AnyRef])
+    classOf[TreeTaggerWrapper],
+    TreeTaggerWrapper.PARAM_LANGUAGE, Language.ENGLISH.getName,
+    TreeTaggerWrapper.PARAM_ANNOTATE_TOKENS, true.asInstanceOf[AnyRef],
+    TreeTaggerWrapper.PARAM_ANNOTATE_SENTENCES, true.asInstanceOf[AnyRef],
+    TreeTaggerWrapper.PARAM_ANNOTATE_PARTOFSPEECH, true.asInstanceOf[AnyRef],
+    TreeTaggerWrapper.PARAM_IMPROVE_GERMAN_SENTENCES, true.asInstanceOf[AnyRef])
 }
 
 class HeidelTimeNormalizer(doc: TimeMLDocument) {
