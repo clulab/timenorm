@@ -1,5 +1,6 @@
 package info.bethard.timenorm
 
+import java.io.File
 import java.net.URL
 import java.util.logging.Logger
 
@@ -10,6 +11,7 @@ import scala.util.Success
 import scala.util.Try
 
 import org.threeten.bp.DateTimeException
+import org.threeten.bp.LocalDate
 import org.threeten.bp.temporal.IsoFields.QUARTER_YEARS
 
 import info.bethard.timenorm.parse.TemporalParse
@@ -17,6 +19,48 @@ import info.bethard.timenorm.parse.PeriodParse
 import info.bethard.timenorm.parse.PeriodSetParse
 import info.bethard.timenorm.parse.TimeSpanParse
 import info.bethard.timenorm.parse.TimeSpanSetParse
+
+object TemporalExpressionParser {
+
+  /**
+   * Runs a demo of TemporalExpressionParser that reads time expressions from standard input and
+   * writes their normalized forms to standard output.
+   * 
+   * Note: This is only provided for demonstrative purposes.
+   */
+  def main(args: Array[String]): Unit = {
+    
+    // create the parser, using a grammar file if specified
+    val parser = args match {
+      case Array() =>
+        new TemporalExpressionParser
+      case Array(grammarPath) =>
+        new TemporalExpressionParser(new File(grammarPath).toURI.toURL)
+      case _ =>
+        System.err.printf("usage: %s [grammar-file]", this.getClass.getSimpleName)
+        System.exit(1)
+        throw new IllegalArgumentException
+    }
+    
+    // use the current date as an anchor
+    val now = LocalDate.now()
+    val anchor = TimeSpan.of(now.getYear, now.getMonthValue, now.getDayOfMonth)
+    System.out.printf("Assuming anchor: %s\n", anchor.timeMLValue)
+    System.out.println("Type in a time expression (or :quit to exit)")
+    
+    // repeatedly prompt for a time expression and then try to parse it
+    System.out.print(">>> ")
+    for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
+      parser.parse(line, anchor) match {
+        case Failure(exception) =>
+          System.out.printf("Error: %s\n", exception.getMessage)
+        case Success(temporal) =>
+          System.out.println(temporal.timeMLValue)
+      }
+      System.out.print(">>> ")
+    }
+  }
+}
 
 /**
  * A parser for natural language expressions of time, based on a synchronous context free grammar.
