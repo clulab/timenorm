@@ -28,6 +28,10 @@
       <email>steven.bethard@gmail.com</email>
     </developer>
   </developers>
+  <ciManagement>
+    <system>drone.io</system>
+    <url>https://drone.io/github.com/bethard/timenorm</url>
+  </ciManagement>
 
   <prerequisites>
     <maven>3.0.4</maven>
