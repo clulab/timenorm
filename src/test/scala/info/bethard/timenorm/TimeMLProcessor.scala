@@ -364,6 +364,14 @@ object TimeMLProcessor {
           }
         }
 
+        // if an annotation error has been fixed, log it 
+        if (isCorrect && isAnnotationError) {
+          normalizer match {
+            case n: TemporalExpressionParser => System.err.println("Annotation error has been fixed: " + key)
+            case _ =>
+          }
+        }
+
         // if a known error has been fixed, log it so that it can be removed from the list 
         if (isCorrect && isKnownFailure) {
           normalizer match {
