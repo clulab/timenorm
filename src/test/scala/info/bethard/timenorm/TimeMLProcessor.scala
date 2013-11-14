@@ -29,12 +29,10 @@ object TimeMLProcessor {
     ("APW19981205.0374.tml", "t3", "early this week") -> "1998-12-XX",
     ("APW19990122.0193.tml", "t0", "1999-01-22 13:06:18") -> "1999-01-22T13:06",
     ("APW19990122.0193.tml", "t3", "last year") -> "1998-10",
-    ("APW19990122.0193.tml", "t5", "last three years") -> "P1Y",
     ("APW19990122.0193.tml", "t7", "Last week") -> "1999-01",
     ("APW19990122.0193.tml", "t8", "weeks") -> "1998-10",
     ("APW19990206.0090.tml", "t0", "1999-02-06 06:22:26") -> "1999-02-06T06:22",
     ("APW19990206.0090.tml", "t3", "this week") -> "1999-02",
-    ("APW19990206.0090.tml", "t6", "that same day.") -> "1998-10-XX" /* no anchor given */,
     ("APW19990216.0198.tml", "t0", "1999-02-16 12:55:33") -> "1999-02-16T12:55",
     ("APW19990216.0198.tml", "t4", "50 years ago") -> "1949-XX",
     ("APW19990312.0251.tml", "t0", "1999-03-12 10:34:13") -> "1999-03-12T10:34",
@@ -239,6 +237,8 @@ object TimeMLProcessor {
     ("wsj_1033.tml", "t167", "the year-ago period") -> "1988-Q3" /* wrong anchor: should be another quarter, but is doctime */)
 
   private final val knownFailures = Map[(String, String, String), String](
+    ("APW19990122.0193.tml", "t5", "last three years") -> "P1Y" /* "each of the last three years" is not representable in TimeML */,
+    ("APW19990206.0090.tml", "t6", "that same day.") -> "1998-10-XX" /* no anchor time given (because anchor is an event) */,
     ("NYT20000414.0296.tml", "t5", "the last week") -> "2000-W15" /* interpreted as "this week" */,
     ("APW19980322.0749.tml", "t134", "last week") -> "1998-W12" /* interpreted as "this week" */,
     ("APW19980808.0022.tml", "t4", "10:35 a.m.") -> "1998-08-07T10:35" /* document creation time is whole day, so FindAtOrEarlier finds the one today, not yesterday */,
@@ -381,7 +381,7 @@ object TimeMLProcessor {
         }
 
         // if it's incorrect, log the error
-        if (!isCorrect && isPossibleFailure) {
+        if (!isCorrect) {
           normalizer match {
             case n: TemporalExpressionParser => n.parseAll(timex.text, anchor) match {
               case Failure(e) => fatal("Error parsing", timex, file, e)
