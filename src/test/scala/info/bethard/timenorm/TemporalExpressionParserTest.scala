@@ -23,6 +23,14 @@ class TemporalExpressionParserTest extends FunSuite {
     assert(value === "2012-W51")
   }
 
+  test("produces a single parse when non-identical trees result in identical Temporals") {
+    val parser = new TemporalExpressionParser
+    val anchor = TimeSpan.of(2013, 1, 3)
+    // could be [around [5 years or so]] or [[around 5 years] or so], which are different trees,
+    // but which both result in the same Temporal
+    assert(parser.parse("around 5 years or so", anchor) === Success(Period(Map(YEARS -> 5), Modifier.Approx)))
+  }
+
   test("parses numbers") {
     val parser = new TemporalExpressionParser
     val anchor = TimeSpan.of(2013, 1, 3)

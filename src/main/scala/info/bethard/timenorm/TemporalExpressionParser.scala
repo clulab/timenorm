@@ -25,11 +25,11 @@ object TemporalExpressionParser {
   /**
    * Runs a demo of TemporalExpressionParser that reads time expressions from standard input and
    * writes their normalized forms to standard output.
-   * 
+   *
    * Note: This is only provided for demonstrative purposes.
    */
   def main(args: Array[String]): Unit = {
-    
+
     // create the parser, using a grammar file if specified
     val parser = args match {
       case Array() =>
@@ -41,13 +41,13 @@ object TemporalExpressionParser {
         System.exit(1)
         throw new IllegalArgumentException
     }
-    
+
     // use the current date as an anchor
     val now = LocalDate.now()
     val anchor = TimeSpan.of(now.getYear, now.getMonthValue, now.getDayOfMonth)
     System.out.printf("Assuming anchor: %s\n", anchor.timeMLValue)
     System.out.println("Type in a time expression (or :quit to exit)")
-    
+
     // repeatedly prompt for a time expression and then try to parse it
     System.out.print(">>> ")
     for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
@@ -66,16 +66,16 @@ object TemporalExpressionParser {
  * A parser for natural language expressions of time, based on a synchronous context free grammar.
  * Typical usage:
  * {{{
-    // create a new parser (using the default English grammar)
-    val parser = new TemporalExpressionParser
-    // establish an anchor time
-    val anchor = TimeSpan.of(2013, 1, 4)
-    // parse an expression given an anchor time (assuming here that it succeeeds)
-    val Success(temporal) = parser.parse("two weeks ago", anchor)
-    // get the TimeML value ("2012-W51") from the Temporal
-    val value = temporal.timeMLValue
+ * // create a new parser (using the default English grammar)
+ * val parser = new TemporalExpressionParser
+ * // establish an anchor time
+ * val anchor = TimeSpan.of(2013, 1, 4)
+ * // parse an expression given an anchor time (assuming here that it succeeeds)
+ * val Success(temporal) = parser.parse("two weeks ago", anchor)
+ * // get the TimeML value ("2012-W51") from the Temporal
+ * val value = temporal.timeMLValue
  * }}}
- * 
+ *
  * @constructor Creates a parser from a URL to a grammar file.
  * @param grammarURL The URL of a grammar file, in [[SynchronousGrammar.fromString]] format. If not
  *        specified, the default English grammar on the classpath is used. Note that if another
@@ -93,10 +93,10 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
 
   /**
    * Splits a string into tokens to be used as input for the synchronous parser.
-   * 
+   *
    * This method may be overridden by subclasses if a grammar requires different tokenization than
    * the default English grammar on the classpath.
-   * 
+   *
    * @param sourceText The input text.
    * @return The tokens that result from splitting the input text.
    */
@@ -131,8 +131,8 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
   }
 
   /**
-   * Tries to parse a source string into a single [[Temporal]] object. 
-   * 
+   * Tries to parse a source string into a single [[Temporal]] object.
+   *
    * @param sourceText The input string in the source language.
    * @param anchor The anchor time (required for resolving relative times like "today").
    * @return The most likely [[Temporal]] parse according to the parser's heuristic.
@@ -143,7 +143,7 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
 
   /**
    * Try to parse a source string into possible [[Temporal]] objects.
-   * 
+   *
    * @param sourceText The input string in the source language.
    * @param anchor The anchor time (required for resolving relative times like "today").
    * @return A sequence of [[Temporal]] objects representing the possible parses. The sequence is
@@ -156,7 +156,9 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
     // parse the tokens into TemporalParses, failing if there is a syntactic error
     val parsesTry =
       try {
-        Success(this.parser.parseAll(tokens).map(TemporalParse))
+        val trees = this.parser.parseAll(tokens)
+        // two unique trees can generate the same TemporalParse, so remove duplicates 
+        Success(trees.map(TemporalParse).toSet)
       } catch {
         case e: UnsupportedOperationException => Failure(e)
       }
@@ -193,7 +195,7 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
         }
         // otherwise, sort the Temporals by the heuristic
         else {
-          Success(temporals.sorted(this.heuristicFor(anchor)))
+          Success(temporals.toSeq.sorted(this.heuristicFor(anchor)))
         }
     }
   }
