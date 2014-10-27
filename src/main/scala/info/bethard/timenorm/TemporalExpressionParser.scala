@@ -301,13 +301,14 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
 
   /**
    * Tries to parse a source string into a single [[Temporal]] object.
+   * Paramita: add java.text.Normalizer to decompose accentuated strings and remove the accents 
    *
    * @param sourceText The input string in the source language.
    * @param anchor The anchor time (required for resolving relative times like "today").
    * @return The most likely [[Temporal]] parse according to the parser's heuristic.
    */
   def parse(sourceText: String, anchor: TimeSpan): Try[Temporal] = {
-    this.parseAll(sourceText, anchor).map(_.head)
+    this.parseAll(java.text.Normalizer.normalize(sourceText, java.text.Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", ""), anchor).map(_.head)
   }
 
   /**
