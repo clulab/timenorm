@@ -23,7 +23,7 @@ import info.bethard.timenorm.parse.TimeSpanSetParse
 import java.lang.StringBuilder;
 
 object TemporalExpressionParser {
-
+  
   /**
    * Runs a demo of TemporalExpressionParser that reads time expressions from standard input and
    * writes their normalized forms to standard output.
@@ -224,10 +224,10 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
       }
       /** Paramita: for Italian language */
       // special case for numbers in Italian
-      else if (word.matches("^[Dd]ue[cm]\\w+$") || word.matches("^[Tt]re[cm]\\w+$") || 
-        word.matches("^[Qq]uattro[cm]\\w+$") || word.matches("^[Cc]inque[cm]\\w+$") || 
-        word.matches("^[Ss]ei[cm]\\w+$") || word.matches("^[Ss]ette[cm]\\w+$") || 
-        word.matches("^[Oo]tto[cm]\\w+$") || word.matches("^[Nn]ove[cm]\\w+$") || 
+      else if (word.matches("^[Dd]ue(cen|mil)\\w+$") || word.matches("^[Tt]re(cen|mil)\\w+$") || 
+        word.matches("^[Qq]uattro(cen|mil)\\w+$") || word.matches("^[Cc]inque(cen|mil)\\w+$") || 
+        word.matches("^[Ss]ei(cen|mil)\\w+$") || word.matches("^[Ss]ette(cen|mil)\\w+$") || 
+        word.matches("^[Oo]tto(cen|mil)\\w+$") || word.matches("^[Nn]ove(cen|mil)\\w+$") || 
         word.matches("^[Cc]ento\\w+$") || word.matches("^[Mm]ille\\w+$") ||
         word.matches("^[Vv]ent\\w+$") || word.matches("^[Tt]rent\\w+$") || 
         word.matches("^[Qq]uarant\\w+$") || word.matches("^[Cc]inquant\\w+$") || 
@@ -241,50 +241,53 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
         word.matches("^[Oo]ttant\\w+$") || word.matches("^[Nn]ovant\\w+$")) {
         this.tokenizeItalianNumber(word)
       }
-      else if (word.matches("^deg?l?i?$") || word.matches("^dell[oae]$")) {
+      else if (word.matches("^[Dd]eg?l?i?$") || word.matches("^[Dd]ell[oae]$")) {
         Seq("dell")
       }
-      else if (word.matches("^ag?l?i?$") || word.matches("^all[oae]$")) {
+      else if (word.matches("^[Aa]g?l?i?$") || word.matches("^[Aa]ll[oae]$")) {
         Seq("all")
       }
-      else if (word.matches("^(i|gli|le)$")) {	//definite plural
+      else if (word.matches("^([Ii]|[Gg]li|[Ll]e)$")) {	//definite plural
         Seq("le")
       }
-      else if (word.matches("^quest[oaei]$")) {
+      else if (word.matches("^[Qq]uest[oaei]$")) {
         Seq("quest")
       }
-      else if (word.matches("^queg?l?i?$") || word.matches("^quell[oaei]$")) {
+      else if (word.matches("^[Qq]ueg?l?i?$") || word.matches("^[Qq]uell[oaei]$")) {
         Seq("quell")
       }
-      else if (word.matches("^scors[oaie]$")) {
+      else if (word.matches("^[Ss]cors[oaie]$")) {
         Seq("scorsx")
       }
-      else if (word.matches("^passat[oaie]$")) {
+      else if (word.matches("^[Pp]assat[oaie]$")) {
         Seq("passatx")
       }
-      else if (word.matches("^ultim[oaie]$")) {
+      else if (word.matches("^[Uu]ltim[oaie]$")) {
         Seq("ultimx")
       }
-      else if (word.matches("^precedent[ei]$")) {
+      else if (word.matches("^[Pp]recedent[ei]$")) {
         Seq("precedentx")
       }
-      else if (word.matches("^prossim[oaie]$")) {
+      else if (word.matches("^[Pp]rossim[oaie]$")) {
         Seq("prossimx")
       }
-      else if (word.matches("^successiv[oaie]$")) {
+      else if (word.matches("^[Ss]uccessiv[oaie]$")) {
         Seq("successivx")
       }
-      else if (word.matches("^seguent[ei]$")) {
+      else if (word.matches("^[Ss]eguent[ei]$")) {
         Seq("seguentx")
       }
-      else if (word.matches("^entrant[ei]$")) {
+      else if (word.matches("^[Ee]ntrant[ei]$")) {
         Seq("entrantx")
       }
-      else if (word.matches("^ventur[oaie]$")) {
+      else if (word.matches("^[Vv]entur[oaie]$")) {
         Seq("venturx")
       }
-      else if (word.matches("^futur[oaie]$")) {
+      else if (word.matches("^[Ff]utur[oaie]$")) {
         Seq("futurx")
+      }
+      else if (word.matches("^[Tt]utt[ie]$")) {
+        Seq("tutti")
       }
       /***********************************/
       // otherwise, split at all letter/non-letter boundaries
