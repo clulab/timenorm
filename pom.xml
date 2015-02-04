@@ -1,12 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>info.bethard</groupId>
-  <artifactId>timenorm</artifactId>
-  <version>0.9.1-SNAPSHOT</version>
+  <artifactId>timenorm-it</artifactId>
+  <version>0.9.2</version>
   <packaging>jar</packaging>
-  <name>Time Normalization</name>
-  <description>Converts natural language expressions of dates and times to their normalized form</description>
-  <url>https://github.com/bethard/timenorm/</url>
+  <name>Time Normalization (Italian)</name>
+  <url>https://github.com/paramitamirza/timenorm/</url>
   <inceptionYear>2013</inceptionYear>
   <licenses>
     <license>
@@ -16,9 +15,9 @@
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:bethard/timenorm.git</url>
-    <connection>scm:git:git@github.com:bethard/timenorm.git</connection>
-    <developerConnection>scm:git:git@github.com:bethard/timenorm.git</developerConnection>
+    <url>git@github.com:paramitamirza/timenorm.git</url>
+    <connection>scm:git:git@github.com:paramitamirza/timenorm.git</connection>
+    <developerConnection>scm:git:git@github.com:paramitamirza/timenorm.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
   <developers>
@@ -243,4 +242,5 @@
       </plugin>
     </plugins>
   </reporting>
+  <description>Converts natural language expressions of dates and times in Italian to their normalized form</description>
 </project>
