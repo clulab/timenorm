@@ -227,18 +227,18 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
       else if (word.matches("^[Dd]ue(cen|mil)\\w+$") || word.matches("^[Tt]re(cen|mil)\\w+$") || 
         word.matches("^[Qq]uattro(cen|mil)\\w+$") || word.matches("^[Cc]inque(cen|mil)\\w+$") || 
         word.matches("^[Ss]ei(cen|mil)\\w+$") || word.matches("^[Ss]ette(cen|mil)\\w+$") || 
-        word.matches("^[Oo]tto(cen|mil)\\w+$") || word.matches("^[Nn]ove(cen|mil)\\w+$") || 
+        word.matches("^[Oo]tto(cen|mil)\\w+$") || word.matches("^[Nn]ove(cen|mil)\\w+$") ||
+        word.matches("^[Dd]ieci(mil)\\w+$") ||
         word.matches("^[Cc]ento\\w+$") || word.matches("^[Mm]ille\\w+$") ||
         word.matches("^[Vv]ent\\w+$") || word.matches("^[Tt]rent\\w+$") || 
         word.matches("^[Qq]uarant\\w+$") || word.matches("^[Cc]inquant\\w+$") || 
         word.matches("^[Ss]essant\\w+$") || word.matches("^[Ss]ettant\\w+$") || 
-        word.matches("^[Oo]tto[cm]\\w+$") || word.matches("^[Nn]ove[cm]\\w+$") || 
+        word.matches("^[Oo]ttant\\w+$") || word.matches("^[Nn]ovant\\w+$") || 
         word.matches("^[Dd]eci\\w+$") || word.matches("^[Uu]ndici\\w+$") || 
         word.matches("^[Dd]odici\\w+$") || word.matches("^[Tt]redici\\w+$") || 
         word.matches("^[Qq]uattordici\\w+$") || word.matches("^[Qq]uindici\\w+$") || 
         word.matches("^[Ss]edici\\w+$") || word.matches("^[Dd]iciassette\\w+$") || 
-        word.matches("^[Dd]iciotto\\w+$") || word.matches("^[Dd]iciannove\\w+$") ||
-        word.matches("^[Oo]ttant\\w+$") || word.matches("^[Nn]ovant\\w+$")) {
+        word.matches("^[Dd]iciotto\\w+$") || word.matches("^[Dd]iciannove\\w+$")) {
         this.tokenizeItalianNumber(word)
       }
       else if (word.matches("^[Dd]eg?l?i?$") || word.matches("^[Dd]ell[oae]$")) {
