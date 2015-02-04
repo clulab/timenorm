@@ -27,5 +27,5 @@ The library is available on Maven central:
 
 You can also just dowload the .jar directly:
 
-https://github.com/paramitamirza/timenorm/releases/download/timenorm-0.9.2-IT/timenorm-0.9.2-IT.jar
+https://github.com/paramitamirza/timenorm/releases/download/timenorm-it-0.9.2/timenorm-it-0.9.2.jar
  
