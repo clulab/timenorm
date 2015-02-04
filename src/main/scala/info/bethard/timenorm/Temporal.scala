@@ -82,7 +82,12 @@ case class Period(
         case None => throw new UnsupportedOperationException("Don't know how to format " + unit)
         case Some(string) => string
       }
-      (unit, amount + suffix)
+      /** Paramita: add this for dealing with PT0S --> we don't want this */
+      if (amount != "0") { 
+        (unit, amount + suffix)
+      } else {
+        (unit, "")
+      }
     }
     val (dateParts, timeParts) = parts.partition(_._1.getDuration.compareTo(HOURS.getDuration) > 0)
     val timeString = if (timeParts.isEmpty) "" else "T" + timeParts.map(_._2).mkString
@@ -182,6 +187,7 @@ object Period {
 
   private final val smallerUnit = Map[TemporalUnit, (Int, TemporalUnit)](
     YEARS -> (12, MONTHS),
+    MONTHS -> (30, DAYS), //Paramita: in EVENTI (IT-TimeML) half a month is assumed to be 15 days
     WEEKS -> (7, DAYS),
     DAYS -> (24, HOURS),
     HOURS -> (60, MINUTES),

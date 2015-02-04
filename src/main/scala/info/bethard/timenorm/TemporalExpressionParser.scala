@@ -20,8 +20,10 @@ import info.bethard.timenorm.parse.PeriodSetParse
 import info.bethard.timenorm.parse.TimeSpanParse
 import info.bethard.timenorm.parse.TimeSpanSetParse
 
-object TemporalExpressionParser {
+import java.lang.StringBuilder;
 
+object TemporalExpressionParser {
+  
   /**
    * Runs a demo of TemporalExpressionParser that reads time expressions from standard input and
    * writes their normalized forms to standard output.
@@ -81,16 +83,118 @@ object TemporalExpressionParser {
  *        specified, the default English grammar on the classpath is used. Note that if another
  *        grammar is specified, it may be necessary to override the [[tokenize]] method.
  */
-class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/en.grammar")) {
+class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/it.grammar")) {
   private val logger = Logger.getLogger(this.getClass.getName)
-  private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
+  //private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
+  private val grammarText = Source.fromURL(grammarURL, "UTF-8").mkString //Paramita: Italian needs UTF-8
   private val grammar = SynchronousGrammar.fromString(grammarText)
   private val sourceSymbols = grammar.sourceSymbols()
   private val parser = new SynchronousParser(grammar)
 
   private final val wordBoundary = "\\b".r
   private final val letterNonLetterBoundary = "(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
-
+  
+  // Paramita: special function for splitting numbers in Italian
+  protected def tokenizeItalianNumber(word: String): Seq[String] = {
+    if (word.isEmpty) {
+      Seq.empty[String]
+    } else if (word.matches("^[Dd]ue(cen|mil)\\w+$")) {
+      Seq("due") ++ this.tokenizeItalianNumber(word.substring(3).toLowerCase)
+    } else if (word.matches("^[Tt]re(cen|mil)\\w+$")) {
+      Seq("tre") ++ this.tokenizeItalianNumber(word.substring(3).toLowerCase)
+    } else if (word.matches("^[Qq]uattro(cen|mil)\\w+$")) {
+      Seq("quattro") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+    } else if (word.matches("^[Cc]inque(cen|mil)\\w+$")) {
+      Seq("cinque") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+    } else if (word.matches("^[Ss]ei(cen|mil)\\w+$")) {
+      Seq("sei") ++ this.tokenizeItalianNumber(word.substring(3).toLowerCase)
+    } else if (word.matches("^[Ss]ette(cen|mil)\\w+$")) {
+      Seq("sette") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+    } else if (word.matches("^[Oo]tto(cen|mil)\\w+$")) {
+      Seq("otto") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+    } else if (word.matches("^[Nn]ove(cen|mil)\\w+$")) {
+      Seq("nove") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+    } else if (word.matches("^[Cc]ento\\w+$")) {
+      Seq("cento") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+    } else if (word.matches("^[Mm]ille\\w+$")) {
+      Seq("mille") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+    } else if (word.matches("^[Mm]ila\\w+$")) {
+      Seq("mila") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+    } else if (word.matches("^[Vv]ent\\w+$")) {
+      if (word.matches("^[Vv]enti\\w*$")) {
+        Seq("venti") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+      } else if (word.matches("^[Vv]entennale$")) {
+        Seq("ventennale")
+      } else {
+        Seq("vent") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+      }
+    } else if (word.matches("^[Tt]rent\\w+$")) {
+      if (word.matches("^[Tt]renta\\w*$")) {
+        Seq("trenta") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+      } else {
+        Seq("trent") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+      }
+    } else if (word.matches("^[Qq]uarant\\w+$")) {
+      if (word.matches("^[Qq]uaranta\\w*$")) {
+        Seq("quaranta") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      } else {
+        Seq("quarant") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      }
+    } else if (word.matches("^[Cc]inquant\\w+$")) {
+      if (word.matches("^[Cc]inquanta\\w*$")) {
+        Seq("cinquanta") ++ this.tokenizeItalianNumber(word.substring(9).toLowerCase)
+      } else {
+        Seq("cinquant") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      }
+    } else if (word.matches("^[Ss]essant\\w+$")) {
+      if (word.matches("^[Ss]essanta\\w*$")) {
+        Seq("sessanta") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      } else {
+        Seq("sessant") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      }
+    } else if (word.matches("^[Ss]ettant\\w+$")) {
+      if (word.matches("^[Ss]ettanta\\w*$")) {
+        Seq("settanta") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      } else {
+        Seq("settant") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      }
+    } else if (word.matches("^[Oo]ttant\\w+$")) {
+      if (word.matches("^[Oo]ttanta\\w*$")) {
+        Seq("ottanta") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      } else {
+        Seq("ottant") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+      }
+    } else if (word.matches("^[Nn]ovant\\w+$")) {
+      if (word.matches("^[Nn]ovanta\\w*$")) {
+        Seq("novanta") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      } else {
+        Seq("novant") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+      }
+    } else if (word.matches("^[Dd]ecina$")) {
+      Seq("dieci", "na")
+    } else if (word.matches("^[Uu]ndicina$")) {
+      Seq("undici", "na")
+    } else if (word.matches("^[Dd]odicina$")) {
+      Seq("dodici", "na")
+    } else if (word.matches("^[Tt]redicina$")) {
+      Seq("tredici", "na")
+    } else if (word.matches("^[Qq]uattordicina$")) {
+      Seq("quattordici", "na")
+    } else if (word.matches("^[Qq]uindicina$")) {
+      Seq("quindici", "na")
+    } else if (word.matches("^[Ss]edicina$")) {
+      Seq("sedici", "na")
+    } else if (word.matches("^[Dd]icissettena$")) {
+      Seq("diciassette", "na")
+    } else if (word.matches("^[Dd]iciottona$")) {
+      Seq("diciotto", "na")
+    } else if (word.matches("^[Dd]iciannovena$")) {
+      Seq("diciannove", "na")
+    } else {
+      Seq(word)
+    }
+  }       
+  
   /**
    * Splits a string into tokens to be used as input for the synchronous parser.
    *
@@ -118,6 +222,74 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
       else if (word.matches("^\\d{4}[A-Z]{3,4}$")) {
         Seq(word.substring(0, 2), ":", word.substring(2, 4), word.substring(4).toLowerCase)
       }
+      /** Paramita: for Italian language */
+      // special case for numbers in Italian
+      else if (word.matches("^[Dd]ue(cen|mil)\\w+$") || word.matches("^[Tt]re(cen|mil)\\w+$") || 
+        word.matches("^[Qq]uattro(cen|mil)\\w+$") || word.matches("^[Cc]inque(cen|mil)\\w+$") || 
+        word.matches("^[Ss]ei(cen|mil)\\w+$") || word.matches("^[Ss]ette(cen|mil)\\w+$") || 
+        word.matches("^[Oo]tto(cen|mil)\\w+$") || word.matches("^[Nn]ove(cen|mil)\\w+$") ||
+        word.matches("^[Dd]ieci(mil)\\w+$") ||
+        word.matches("^[Cc]ento\\w+$") || word.matches("^[Mm]ille\\w+$") ||
+        word.matches("^[Vv]ent\\w+$") || word.matches("^[Tt]rent\\w+$") || 
+        word.matches("^[Qq]uarant\\w+$") || word.matches("^[Cc]inquant\\w+$") || 
+        word.matches("^[Ss]essant\\w+$") || word.matches("^[Ss]ettant\\w+$") || 
+        word.matches("^[Oo]ttant\\w+$") || word.matches("^[Nn]ovant\\w+$") || 
+        word.matches("^[Dd]eci\\w+$") || word.matches("^[Uu]ndici\\w+$") || 
+        word.matches("^[Dd]odici\\w+$") || word.matches("^[Tt]redici\\w+$") || 
+        word.matches("^[Qq]uattordici\\w+$") || word.matches("^[Qq]uindici\\w+$") || 
+        word.matches("^[Ss]edici\\w+$") || word.matches("^[Dd]iciassette\\w+$") || 
+        word.matches("^[Dd]iciotto\\w+$") || word.matches("^[Dd]iciannove\\w+$")) {
+        this.tokenizeItalianNumber(word)
+      }
+      else if (word.matches("^[Dd]eg?l?i?$") || word.matches("^[Dd]ell[oae]$")) {
+        Seq("dell")
+      }
+      else if (word.matches("^[Aa]g?l?i?$") || word.matches("^[Aa]ll[oae]$")) {
+        Seq("all")
+      }
+      else if (word.matches("^([Ii]|[Gg]li|[Ll]e)$")) {	//definite plural
+        Seq("le")
+      }
+      else if (word.matches("^[Qq]uest[oaei]$")) {
+        Seq("quest")
+      }
+      else if (word.matches("^[Qq]ueg?l?i?$") || word.matches("^[Qq]uell[oaei]$")) {
+        Seq("quell")
+      }
+      else if (word.matches("^[Ss]cors[oaie]$")) {
+        Seq("scorsx")
+      }
+      else if (word.matches("^[Pp]assat[oaie]$")) {
+        Seq("passatx")
+      }
+      else if (word.matches("^[Uu]ltim[oaie]$")) {
+        Seq("ultimx")
+      }
+      else if (word.matches("^[Pp]recedent[ei]$")) {
+        Seq("precedentx")
+      }
+      else if (word.matches("^[Pp]rossim[oaie]$")) {
+        Seq("prossimx")
+      }
+      else if (word.matches("^[Ss]uccessiv[oaie]$")) {
+        Seq("successivx")
+      }
+      else if (word.matches("^[Ss]eguent[ei]$")) {
+        Seq("seguentx")
+      }
+      else if (word.matches("^[Ee]ntrant[ei]$")) {
+        Seq("entrantx")
+      }
+      else if (word.matches("^[Vv]entur[oaie]$")) {
+        Seq("venturx")
+      }
+      else if (word.matches("^[Ff]utur[oaie]$")) {
+        Seq("futurx")
+      }
+      else if (word.matches("^[Tt]utt[ie]$")) {
+        Seq("tutti")
+      }
+      /***********************************/
       // otherwise, split at all letter/non-letter boundaries
       else {
         this.letterNonLetterBoundary.split(word).toSeq.map(_.trim.toLowerCase).filterNot(_.isEmpty)
@@ -132,13 +304,14 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
 
   /**
    * Tries to parse a source string into a single [[Temporal]] object.
+   * Paramita: add java.text.Normalizer to decompose accentuated strings and remove the accents 
    *
    * @param sourceText The input string in the source language.
    * @param anchor The anchor time (required for resolving relative times like "today").
    * @return The most likely [[Temporal]] parse according to the parser's heuristic.
    */
   def parse(sourceText: String, anchor: TimeSpan): Try[Temporal] = {
-    this.parseAll(sourceText, anchor).map(_.head)
+    this.parseAll(java.text.Normalizer.normalize(sourceText, java.text.Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", ""), anchor).map(_.head)
   }
 
   /**

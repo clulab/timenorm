@@ -187,6 +187,10 @@ object PeriodParse extends CanFail("[Period]") {
       case Tree.Terminal("Fractional") :: whole :: numerator :: denominator :: unit :: Nil =>
         val denominatorValue = IntParse(denominator).value
         Fractional(IntParse(whole).value * denominatorValue + IntParse(numerator).value, denominatorValue, UnitParse(unit).value)
+      case Tree.Terminal("Multiply") :: amount1 :: amount2 :: unit :: Nil =>
+        val amount1Value = IntParse(amount1).value
+        val amount2Value = IntParse(amount2).value
+        Simple(amount1Value * amount2Value, UnitParse(unit).value)
       case Tree.Terminal("Sum") :: children =>
         Sum(children.map(PeriodParse.apply))
       case Tree.Terminal("WithModifier") :: period :: Tree.Terminal(modifier) :: Nil =>

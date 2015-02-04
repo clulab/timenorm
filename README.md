@@ -1,5 +1,5 @@
-A library for converting natural language expressions of dates and times to
-their normalized form, based on synchronous context free grammars.
+The adaptation of TimeNorm, a library for converting natural language expressions of dates and times to
+their normalized form based on synchronous context free grammars, for Italian language.
 
 The primary entry point for most users is `TemporalExpressionParser`, which
 parses a `Temporal` from a string:
@@ -27,5 +27,5 @@ The library is available on Maven central:
 
 You can also just dowload the .jar directly:
 
-http://search.maven.org/remotecontent?filepath=info/bethard/timenorm/0.9.0/timenorm-0.9.0.jar
+https://github.com/paramitamirza/timenorm/releases/download/timenorm-it-0.9.2/timenorm-it-0.9.2.jar
  
