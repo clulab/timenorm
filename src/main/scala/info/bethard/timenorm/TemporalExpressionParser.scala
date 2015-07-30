@@ -80,55 +80,17 @@ object TemporalExpressionParser {
  * @param grammarURL The URL of a grammar file, in [[SynchronousGrammar.fromString]] format. If not
  *        specified, the default English grammar on the classpath is used. Note that if another
  *        grammar is specified, it may be necessary to override the [[tokenize]] method.
+ * @param tokenize A function that splits a string into tokens. The default tokenizer is appropriate
+ *        for the default English grammar. Other languages may require alternate tokenizers.
  */
-class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/en.grammar")) {
+class TemporalExpressionParser(
+    grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/en.grammar"),
+    tokenize: String => IndexedSeq[String] = DefaultTokenizer) {
   private val logger = Logger.getLogger(this.getClass.getName)
   private val grammarText = Source.fromURL(grammarURL, "UTF-8").mkString
   private val grammar = SynchronousGrammar.fromString(grammarText)
   private val sourceSymbols = grammar.sourceSymbols()
   private val parser = new SynchronousParser(grammar)
-
-  private final val wordBoundary = "\\b".r
-  private final val letterNonLetterBoundary = "(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
-
-  /**
-   * Splits a string into tokens to be used as input for the synchronous parser.
-   *
-   * This method may be overridden by subclasses if a grammar requires different tokenization than
-   * the default English grammar on the classpath.
-   *
-   * @param sourceText The input text.
-   * @return The tokens that result from splitting the input text.
-   */
-  protected def tokenize(sourceText: String): IndexedSeq[String] = {
-    val tokens = for (untrimmedWord <- this.wordBoundary.split(sourceText)) yield {
-      val word = untrimmedWord.trim
-      if (word.isEmpty) {
-        Seq.empty[String]
-      }
-      // special case for concatenated YYYYMMDD
-      else if (word.matches("^\\d{8}$")) {
-        Seq(word.substring(0, 4), "-", word.substring(4, 6), "-", word.substring(6, 8))
-      }
-      // special case for concatenated YYMMDD
-      else if (word.matches("^\\d{6}$")) {
-        Seq(word.substring(0, 2), "-", word.substring(2, 4), "-", word.substring(4, 6))
-      }
-      // special case for concatenated HHMMTZ
-      else if (word.matches("^\\d{4}[A-Z]{3,4}$")) {
-        Seq(word.substring(0, 2), ":", word.substring(2, 4), word.substring(4).toLowerCase)
-      }
-      // otherwise, split at all letter/non-letter boundaries
-      else {
-        this.letterNonLetterBoundary.split(word).toSeq.map(_.trim.toLowerCase).filterNot(_.isEmpty)
-      }
-    }
-    // filter out any tokens not in the grammar
-    val filteredTokens = tokens.flatten.filter { token =>
-      this.sourceSymbols.contains(token) || SynchronousGrammar.isNumber(token)
-    }
-    filteredTokens.toIndexedSeq
-  }
 
   /**
    * Tries to parse a source string into a single [[Temporal]] object.
@@ -150,8 +112,10 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
    *         sorted by a heuristic that tries to put the most promising parses first.
    */
   def parseAll(sourceText: String, anchor: TimeSpan): Try[Seq[Temporal]] = {
-    // tokenize the string
-    val tokens = this.tokenize(sourceText)
+    // tokenize the string, filtering out any tokens not in the grammar
+    val tokens = this.tokenize(sourceText).filter { token =>
+      this.sourceSymbols.contains(token) || SynchronousGrammar.isNumber(token)
+    }
 
     // parse the tokens into TemporalParses, failing if there is a syntactic error
     val parsesTry =
@@ -219,5 +183,41 @@ class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParse
       // throw an exception for anything else
       case other => throw new UnsupportedOperationException("Don't know how to order " + other)
     }
+  }
+}
+
+/**
+ * Splits a string into tokens to be used as input for the synchronous parser.
+ *
+ * This tokenizer is appropriate for the default English grammar.
+ */
+object DefaultTokenizer extends (String => IndexedSeq[String]) {
+  private final val wordBoundary = "\\b".r
+  private final val letterNonLetterBoundary = "(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
+
+  def apply(sourceText: String): IndexedSeq[String] = {
+    val tokens = for (untrimmedWord <- this.wordBoundary.split(sourceText).toIndexedSeq) yield {
+      val word = untrimmedWord.trim
+      if (word.isEmpty) {
+        IndexedSeq.empty[String]
+      }
+      // special case for concatenated YYYYMMDD
+      else if (word.matches("^\\d{8}$")) {
+        IndexedSeq(word.substring(0, 4), "-", word.substring(4, 6), "-", word.substring(6, 8))
+      }
+      // special case for concatenated YYMMDD
+      else if (word.matches("^\\d{6}$")) {
+        IndexedSeq(word.substring(0, 2), "-", word.substring(2, 4), "-", word.substring(4, 6))
+      }
+      // special case for concatenated HHMMTZ
+      else if (word.matches("^\\d{4}[A-Z]{3,4}$")) {
+        IndexedSeq(word.substring(0, 2), ":", word.substring(2, 4), word.substring(4).toLowerCase)
+      }
+      // otherwise, split at all letter/non-letter boundaries
+      else {
+        this.letterNonLetterBoundary.split(word).toIndexedSeq.map(_.trim.toLowerCase).filterNot(_.isEmpty)
+      }
+    }
+    tokens.flatten
   }
 }
