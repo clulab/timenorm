@@ -1,9 +1,7 @@
 package info.bethard.timenorm
 
-import scala.collection.immutable.{ Seq, IndexedSeq }
+import scala.collection.immutable.IndexedSeq
 import scala.collection.mutable
-import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.ChronoField
 import scala.collection.mutable.ListBuffer
 
 /**

@@ -4,7 +4,7 @@ import scala.util.Success
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import org.threeten.bp.temporal.ChronoUnit._
+import java.time.temporal.ChronoUnit._
 
 @RunWith(classOf[JUnitRunner])
 class TemporalExpressionParserTest extends FunSuite {

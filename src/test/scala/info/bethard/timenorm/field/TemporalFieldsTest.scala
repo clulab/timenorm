@@ -1,18 +1,12 @@
 package info.bethard.timenorm.field
 
-import scala.collection.immutable.Seq
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.ChronoUnit._
-import org.threeten.bp.temporal.ChronoField._
-import org.threeten.bp.LocalDate
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.ZoneId
-import org.threeten.bp.DayOfWeek
-import org.threeten.bp.temporal.TemporalField
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
+import java.time.ZoneId
 
 @RunWith(classOf[JUnitRunner])
 class TemporalFieldsTest extends FunSuite {

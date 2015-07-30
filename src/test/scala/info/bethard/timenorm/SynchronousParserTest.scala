@@ -4,8 +4,8 @@ import scala.collection.immutable.Seq
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import org.threeten.bp.temporal.ChronoUnit._
-import org.threeten.bp.temporal.ChronoField._
+import java.time.temporal.ChronoUnit._
+import java.time.temporal.ChronoField._
 import info.bethard.timenorm.parse._
 import info.bethard.timenorm.field._
 

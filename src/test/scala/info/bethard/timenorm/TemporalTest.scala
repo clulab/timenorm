@@ -1,7 +1,6 @@
 package info.bethard.timenorm
 
-import org.threeten.bp.temporal.ChronoUnit._
-import scala.collection.immutable.Seq
+import java.time.temporal.ChronoUnit._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite

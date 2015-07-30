@@ -11,9 +11,9 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import org.threeten.bp.DateTimeException
-import org.threeten.bp.LocalDate
-import org.threeten.bp.temporal.IsoFields.QUARTER_YEARS
+import java.time.DateTimeException
+import java.time.LocalDate
+import java.time.temporal.IsoFields.QUARTER_YEARS
 
 import info.bethard.timenorm.parse.TemporalParse
 import info.bethard.timenorm.parse.PeriodParse
@@ -142,7 +142,7 @@ class TemporalExpressionParser(
         case e: UnsupportedOperationException => Failure(e)
       }
 
-    // if there was no syntactic error, convert the TemporalParses to Temporals 
+    // if there was no syntactic error, convert the TemporalParses to Temporals
     parsesTry match {
       case Failure(e) => Failure(e)
 

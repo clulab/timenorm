@@ -1,14 +1,14 @@
 package info.bethard.timenorm.parse
 
 import scala.collection.immutable.Seq
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.temporal.ChronoUnit
-import org.threeten.bp.temporal.ChronoField
-import org.threeten.bp.temporal.TemporalField
-import org.threeten.bp.temporal.TemporalUnit
-import org.threeten.bp.temporal.IsoFields
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalField
+import java.time.temporal.TemporalUnit
+import java.time.temporal.IsoFields
 import info.bethard.timenorm.SynchronousParser.Tree
 import info.bethard.timenorm.Modifier
 import info.bethard.timenorm.Period

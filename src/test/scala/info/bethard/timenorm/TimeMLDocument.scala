@@ -4,11 +4,11 @@ import java.io.File
 import scala.io.Source
 import com.codecommit.antixml.XML
 import com.codecommit.antixml.{text => nodeText }
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.LocalDate
-import org.threeten.bp.ZoneId
-import org.threeten.bp.format.DateTimeParseException
+import java.time.ZonedDateTime
+import java.time.LocalDateTime
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeParseException
 import com.codecommit.antixml.Elem
 
 object TimeMLDocument {

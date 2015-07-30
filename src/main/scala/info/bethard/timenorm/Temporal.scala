@@ -1,15 +1,14 @@
 package info.bethard.timenorm
 
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.temporal.TemporalUnit
-import org.threeten.bp.temporal.TemporalField
-import org.threeten.bp.temporal.ChronoUnit._
-import org.threeten.bp.temporal.ChronoField._
-import org.threeten.bp.temporal.IsoFields._
+import java.time.ZonedDateTime
+import java.time.temporal.TemporalUnit
+import java.time.temporal.TemporalField
+import java.time.temporal.ChronoUnit._
+import java.time.temporal.ChronoField._
+import java.time.temporal.IsoFields._
 import scala.collection.immutable.ListMap
-import org.threeten.bp.temporal.WeekFields
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
+import java.time.LocalDateTime
+import java.time.ZoneId
 import info.bethard.timenorm.field._
 
 /**
