@@ -164,7 +164,7 @@ object Period {
    * @param modifier The modifier for the period.
    * @return A period representing the fractional amount
    */
-  def fromFractional(numerator: Int, denominator: Int, unit: TemporalUnit, modifier: Modifier): Period = {
+  def fromFractional(numerator: Int, denominator: Int, unit: TemporalUnit, modifier: Modifier = Modifier.Exact): Period = {
     var map = Map(unit -> (numerator / denominator))
     var currRemainder = numerator % denominator
     var currUnit = unit
@@ -183,6 +183,7 @@ object Period {
 
   private final val smallerUnit = Map[TemporalUnit, (Int, TemporalUnit)](
     YEARS -> (12, MONTHS),
+    MONTHS -> (30, DAYS),
     WEEKS -> (7, DAYS),
     DAYS -> (24, HOURS),
     HOURS -> (60, MINUTES),

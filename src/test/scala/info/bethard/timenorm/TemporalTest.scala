@@ -71,6 +71,12 @@ class TemporalTest extends FunSuite {
     val period = Period(Map(DAYS -> 0, HOURS -> 1, MINUTES -> 0, SECONDS -> 15))
     assert(period.timeMLValue === "PT1H15S")
   }
+
+  test("fractional Period") {
+    assert(Period.fromFractional(1, 3, YEARS).timeMLValue === "P4M")
+    // as per IT-TimeML in EVENTI data (https://sites.google.com/site/eventievalita2014/)
+    assert(Period.fromFractional(1, 2, MONTHS).timeMLValue === "P15D")
+  }
   
   def assertTimeSpanFromValue(value: String, start: String, end: String) = {
     val timeSpan = TimeSpan.fromTimeMLValue(value)
