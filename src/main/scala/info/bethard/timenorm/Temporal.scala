@@ -73,7 +73,8 @@ case class Period(
         }
       }
     }
-    val parts = for (unit <- simpleUnitAmounts.keySet.toSeq.sortBy(_.getDuration).reverse) yield {
+    val units = simpleUnitAmounts.keySet.toSeq.sortBy(_.getDuration).reverse
+    val parts = for (unit <- units; if simpleUnitAmounts(unit) != 0) yield {
       val amount = simpleUnitAmounts(unit) match {
         case Int.MaxValue => "X"
         case i => i.toString

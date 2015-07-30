@@ -1,5 +1,6 @@
 package info.bethard.timenorm
 
+import org.threeten.bp.temporal.ChronoUnit._
 import scala.collection.immutable.Seq
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -64,6 +65,11 @@ class TemporalTest extends FunSuite {
   
   test("TimeSpan year-week-weekend") {
     assertTimeSpanFromValue("2012-W34-WE", "2012-08-25T00:00Z", "2012-08-27T00:00Z")
+  }
+
+  test("Period with zeroes") {
+    val period = Period(Map(DAYS -> 0, HOURS -> 1, MINUTES -> 0, SECONDS -> 15))
+    assert(period.timeMLValue === "PT1H15S")
   }
   
   def assertTimeSpanFromValue(value: String, start: String, end: String) = {
