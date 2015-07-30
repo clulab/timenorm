@@ -83,7 +83,7 @@ object TemporalExpressionParser {
  */
 class TemporalExpressionParser(grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/en.grammar")) {
   private val logger = Logger.getLogger(this.getClass.getName)
-  private val grammarText = Source.fromURL(grammarURL, "US-ASCII").mkString
+  private val grammarText = Source.fromURL(grammarURL, "UTF-8").mkString
   private val grammar = SynchronousGrammar.fromString(grammarText)
   private val sourceSymbols = grammar.sourceSymbols()
   private val parser = new SynchronousParser(grammar)
