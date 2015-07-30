@@ -2,6 +2,7 @@ package info.bethard.timenorm
 
 import java.io.File
 import java.net.URL
+import java.text.Normalizer
 import java.util.logging.Logger
 
 import scala.collection.immutable.IndexedSeq
@@ -21,6 +22,20 @@ import info.bethard.timenorm.parse.TimeSpanParse
 import info.bethard.timenorm.parse.TimeSpanSetParse
 
 object TemporalExpressionParser {
+
+  /**
+   * The built-in English time parser.
+   */
+  def en(): TemporalExpressionParser = new TemporalExpressionParser(
+    grammarURL=this.getClass.getResource("/info/bethard/timenorm/en.grammar"),
+    tokenize=DefaultTokenizer)
+
+  /**
+   * The built-in Italian time parser.
+   */
+  def it(): TemporalExpressionParser = new TemporalExpressionParser(
+    grammarURL=this.getClass.getResource("/info/bethard/timenorm/it.grammar"),
+    tokenize=ItalianTokenizer)
 
   /**
    * Runs a demo of TemporalExpressionParser that reads time expressions from standard input and
@@ -192,8 +207,8 @@ class TemporalExpressionParser(
  * This tokenizer is appropriate for the default English grammar.
  */
 object DefaultTokenizer extends (String => IndexedSeq[String]) {
-  private final val wordBoundary = "\\b".r
-  private final val letterNonLetterBoundary = "(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
+  final val wordBoundary = "\\b".r
+  final val letterNonLetterBoundary = "(?<=[^\\p{L}])(?=[\\p{L}])|(?<=[\\p{L}])(?=[^\\p{L}])".r
 
   def apply(sourceText: String): IndexedSeq[String] = {
     val tokens = for (untrimmedWord <- this.wordBoundary.split(sourceText).toIndexedSeq) yield {
@@ -219,5 +234,201 @@ object DefaultTokenizer extends (String => IndexedSeq[String]) {
       }
     }
     tokens.flatten
+  }
+}
+
+object ItalianTokenizer extends (String => IndexedSeq[String]) {
+
+  def apply(sourceText: String): IndexedSeq[String] = {
+    val cleanedText = Normalizer.normalize(sourceText, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+    val tokens = for (untrimmedWord <- DefaultTokenizer.wordBoundary.split(cleanedText).toIndexedSeq) yield {
+      val word = untrimmedWord.trim
+      if (word.isEmpty) {
+        IndexedSeq.empty[String]
+      }
+      // special case for concatenated YYYYMMDD
+      else if (word.matches("^\\d{8}$")) {
+        IndexedSeq(word.substring(0, 4), "-", word.substring(4, 6), "-", word.substring(6, 8))
+      }
+      // special case for concatenated YYMMDD
+      else if (word.matches("^\\d{6}$")) {
+        IndexedSeq(word.substring(0, 2), "-", word.substring(2, 4), "-", word.substring(4, 6))
+      }
+      // special case for concatenated HHMMTZ
+      else if (word.matches("^\\d{4}[A-Z]{3,4}$")) {
+        IndexedSeq(word.substring(0, 2), ":", word.substring(2, 4), word.substring(4).toLowerCase)
+      }
+      // special case for numbers in Italian
+      else if (word.matches("^[Dd]ue(cen|mil)\\w+$") || word.matches("^[Tt]re(cen|mil)\\w+$") ||
+        word.matches("^[Qq]uattro(cen|mil)\\w+$") || word.matches("^[Cc]inque(cen|mil)\\w+$") ||
+        word.matches("^[Ss]ei(cen|mil)\\w+$") || word.matches("^[Ss]ette(cen|mil)\\w+$") ||
+        word.matches("^[Oo]tto(cen|mil)\\w+$") || word.matches("^[Nn]ove(cen|mil)\\w+$") ||
+        word.matches("^[Dd]ieci(mil)\\w+$") ||
+        word.matches("^[Cc]ento\\w+$") || word.matches("^[Mm]ille\\w+$") ||
+        word.matches("^[Vv]ent\\w+$") || word.matches("^[Tt]rent\\w+$") ||
+        word.matches("^[Qq]uarant\\w+$") || word.matches("^[Cc]inquant\\w+$") ||
+        word.matches("^[Ss]essant\\w+$") || word.matches("^[Ss]ettant\\w+$") ||
+        word.matches("^[Oo]ttant\\w+$") || word.matches("^[Nn]ovant\\w+$") ||
+        word.matches("^[Dd]eci\\w+$") || word.matches("^[Uu]ndici\\w+$") ||
+        word.matches("^[Dd]odici\\w+$") || word.matches("^[Tt]redici\\w+$") ||
+        word.matches("^[Qq]uattordici\\w+$") || word.matches("^[Qq]uindici\\w+$") ||
+        word.matches("^[Ss]edici\\w+$") || word.matches("^[Dd]iciassette\\w+$") ||
+        word.matches("^[Dd]iciotto\\w+$") || word.matches("^[Dd]iciannove\\w+$")) {
+        this.tokenizeItalianNumber(word)
+      }
+      else if (word.matches("^[Dd]eg?l?i?$") || word.matches("^[Dd]ell[oae]$")) {
+        IndexedSeq("dell")
+      }
+      else if (word.matches("^[Aa]g?l?i?$") || word.matches("^[Aa]ll[oae]$")) {
+        IndexedSeq("all")
+      }
+      else if (word.matches("^([Ii]|[Gg]li|[Ll]e)$")) {	//definite plural
+        IndexedSeq("le")
+      }
+      else if (word.matches("^[Qq]uest[oaei]$")) {
+        IndexedSeq("quest")
+      }
+      else if (word.matches("^[Qq]ueg?l?i?$") || word.matches("^[Qq]uell[oaei]$")) {
+        IndexedSeq("quell")
+      }
+      else if (word.matches("^[Ss]cors[oaie]$")) {
+        IndexedSeq("scorsx")
+      }
+      else if (word.matches("^[Pp]assat[oaie]$")) {
+        IndexedSeq("passatx")
+      }
+      else if (word.matches("^[Uu]ltim[oaie]$")) {
+        IndexedSeq("ultimx")
+      }
+      else if (word.matches("^[Pp]recedent[ei]$")) {
+        IndexedSeq("precedentx")
+      }
+      else if (word.matches("^[Pp]rossim[oaie]$")) {
+        IndexedSeq("prossimx")
+      }
+      else if (word.matches("^[Ss]uccessiv[oaie]$")) {
+        IndexedSeq("successivx")
+      }
+      else if (word.matches("^[Ss]eguent[ei]$")) {
+        IndexedSeq("seguentx")
+      }
+      else if (word.matches("^[Ee]ntrant[ei]$")) {
+        IndexedSeq("entrantx")
+      }
+      else if (word.matches("^[Vv]entur[oaie]$")) {
+        IndexedSeq("venturx")
+      }
+      else if (word.matches("^[Ff]utur[oaie]$")) {
+        IndexedSeq("futurx")
+      }
+      else if (word.matches("^[Tt]utt[ie]$")) {
+        IndexedSeq("tutti")
+      }
+      // otherwise, split at all letter/non-letter boundaries
+      else {
+        DefaultTokenizer.letterNonLetterBoundary.split(word).toIndexedSeq.map(_.trim.toLowerCase).filterNot(_.isEmpty)
+      }
+    }
+    tokens.flatten
+  }
+
+  protected def tokenizeItalianNumber(word: String): Seq[String] = {
+    if (word.isEmpty) {
+      IndexedSeq.empty[String]
+    } else if (word.matches("^[Dd]ue(cen|mil)\\w+$")) {
+      IndexedSeq("due") ++ this.tokenizeItalianNumber(word.substring(3).toLowerCase)
+    } else if (word.matches("^[Tt]re(cen|mil)\\w+$")) {
+      IndexedSeq("tre") ++ this.tokenizeItalianNumber(word.substring(3).toLowerCase)
+    } else if (word.matches("^[Qq]uattro(cen|mil)\\w+$")) {
+      IndexedSeq("quattro") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+    } else if (word.matches("^[Cc]inque(cen|mil)\\w+$")) {
+      IndexedSeq("cinque") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+    } else if (word.matches("^[Ss]ei(cen|mil)\\w+$")) {
+      IndexedSeq("sei") ++ this.tokenizeItalianNumber(word.substring(3).toLowerCase)
+    } else if (word.matches("^[Ss]ette(cen|mil)\\w+$")) {
+      IndexedSeq("sette") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+    } else if (word.matches("^[Oo]tto(cen|mil)\\w+$")) {
+      IndexedSeq("otto") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+    } else if (word.matches("^[Nn]ove(cen|mil)\\w+$")) {
+      IndexedSeq("nove") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+    } else if (word.matches("^[Cc]ento\\w+$")) {
+      IndexedSeq("cento") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+    } else if (word.matches("^[Mm]ille\\w+$")) {
+      IndexedSeq("mille") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+    } else if (word.matches("^[Mm]ila\\w+$")) {
+      IndexedSeq("mila") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+    } else if (word.matches("^[Vv]ent\\w+$")) {
+      if (word.matches("^[Vv]enti\\w*$")) {
+        IndexedSeq("venti") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+      } else if (word.matches("^[Vv]entennale$")) {
+        IndexedSeq("ventennale")
+      } else {
+        IndexedSeq("vent") ++ this.tokenizeItalianNumber(word.substring(4).toLowerCase)
+      }
+    } else if (word.matches("^[Tt]rent\\w+$")) {
+      if (word.matches("^[Tt]renta\\w*$")) {
+        IndexedSeq("trenta") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+      } else {
+        IndexedSeq("trent") ++ this.tokenizeItalianNumber(word.substring(5).toLowerCase)
+      }
+    } else if (word.matches("^[Qq]uarant\\w+$")) {
+      if (word.matches("^[Qq]uaranta\\w*$")) {
+        IndexedSeq("quaranta") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      } else {
+        IndexedSeq("quarant") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      }
+    } else if (word.matches("^[Cc]inquant\\w+$")) {
+      if (word.matches("^[Cc]inquanta\\w*$")) {
+        IndexedSeq("cinquanta") ++ this.tokenizeItalianNumber(word.substring(9).toLowerCase)
+      } else {
+        IndexedSeq("cinquant") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      }
+    } else if (word.matches("^[Ss]essant\\w+$")) {
+      if (word.matches("^[Ss]essanta\\w*$")) {
+        IndexedSeq("sessanta") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      } else {
+        IndexedSeq("sessant") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      }
+    } else if (word.matches("^[Ss]ettant\\w+$")) {
+      if (word.matches("^[Ss]ettanta\\w*$")) {
+        IndexedSeq("settanta") ++ this.tokenizeItalianNumber(word.substring(8).toLowerCase)
+      } else {
+        IndexedSeq("settant") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      }
+    } else if (word.matches("^[Oo]ttant\\w+$")) {
+      if (word.matches("^[Oo]ttanta\\w*$")) {
+        IndexedSeq("ottanta") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      } else {
+        IndexedSeq("ottant") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+      }
+    } else if (word.matches("^[Nn]ovant\\w+$")) {
+      if (word.matches("^[Nn]ovanta\\w*$")) {
+        IndexedSeq("novanta") ++ this.tokenizeItalianNumber(word.substring(7).toLowerCase)
+      } else {
+        IndexedSeq("novant") ++ this.tokenizeItalianNumber(word.substring(6).toLowerCase)
+      }
+    } else if (word.matches("^[Dd]ecina$")) {
+      IndexedSeq("dieci", "na")
+    } else if (word.matches("^[Uu]ndicina$")) {
+      IndexedSeq("undici", "na")
+    } else if (word.matches("^[Dd]odicina$")) {
+      IndexedSeq("dodici", "na")
+    } else if (word.matches("^[Tt]redicina$")) {
+      IndexedSeq("tredici", "na")
+    } else if (word.matches("^[Qq]uattordicina$")) {
+      IndexedSeq("quattordici", "na")
+    } else if (word.matches("^[Qq]uindicina$")) {
+      IndexedSeq("quindici", "na")
+    } else if (word.matches("^[Ss]edicina$")) {
+      IndexedSeq("sedici", "na")
+    } else if (word.matches("^[Dd]icissettena$")) {
+      IndexedSeq("diciassette", "na")
+    } else if (word.matches("^[Dd]iciottona$")) {
+      IndexedSeq("diciotto", "na")
+    } else if (word.matches("^[Dd]iciannovena$")) {
+      IndexedSeq("diciannove", "na")
+    } else {
+      IndexedSeq(word)
+    }
   }
 }

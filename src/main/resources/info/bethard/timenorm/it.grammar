@@ -1,0 +1,1016 @@
+ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
+
+// ====================================================================================
+// expressions that appear in other places in the grammar but can sometimes be ignored
+// (if an expression occurs nowhere in the grammar, it does not need to be listed here)
+// ====================================================================================
+[Nil] ||| un ||| ||| 1.0
+[Nil] ||| una ||| ||| 1.0
+[Nil] ||| il ||| ||| 1.0
+[Nil] ||| la ||| ||| 1.0
+[Nil] ||| lo ||| ||| 1.0
+[Nil] ||| l ' ||| ||| 1.0
+[Nil] ||| le ||| ||| 1.0
+[Nil] ||| gli ||| ||| 1.0
+[Nil] ||| . ||| ||| 1.0
+[Nil] ||| , ||| ||| 1.0
+[Nil] ||| - ||| ||| 1.0
+[Nil] ||| / ||| ||| 1.0
+[Nil] ||| ' a ||| ||| 1.0
+[Nil] ||| e ||| ||| 1.0
+[Nil] ||| ' ||| ||| 1.0
+[Nil] ||| ` ||| ||| 1.0
+
+// ====================================
+// expressions that identify an integer
+// ====================================
+[Int:1Digit] ||| uno ||| 1 ||| 1.0
+[Int:1Digit] ||| una ||| 1 ||| 1.0
+[Int:1Digit] ||| un ' ||| 1 ||| 1.0
+[Int:1Digit] ||| due ||| 2 ||| 1.0
+[Int:1Digit] ||| tre ||| 3 ||| 1.0
+[Int:1Digit] ||| quattro ||| 4 ||| 1.0
+[Int:1Digit] ||| quattr ' ||| 4 ||| 1.0
+[Int:1Digit] ||| cinque ||| 5 ||| 1.0
+[Int:1Digit] ||| sei ||| 6 ||| 1.0
+[Int:1Digit] ||| sette ||| 7 ||| 1.0
+[Int:1Digit] ||| otto ||| 8 ||| 1.0
+[Int:1Digit] ||| nove ||| 9 ||| 1.0
+[Int:Teens] ||| dieci ||| 1 0 ||| 1.0
+[Int:Teens] ||| undici ||| 1 1 ||| 1.0
+[Int:Teens] ||| dodici ||| 1 2 ||| 1.0
+[Int:Teens] ||| tredici ||| 1 3 ||| 1.0
+[Int:Teens] ||| quattordici ||| 1 4 ||| 1.0
+[Int:Teens] ||| quindici ||| 1 5 ||| 1.0
+[Int:Teens] ||| sedici ||| 1 6 ||| 1.0
+[Int:Teens] ||| diciassette ||| 1 7 ||| 1.0
+[Int:Teens] ||| diciotto ||| 1 8 ||| 1.0
+[Int:Teens] ||| diciannove ||| 1 9 ||| 1.0
+[Int:Tens] ||| venti ||| 2 ||| 1.0
+[Int:Tens] ||| vent ||| 2 ||| 1.0
+[Int:Tens] ||| trenta ||| 3 ||| 1.0
+[Int:Tens] ||| trent ||| 3 ||| 1.0
+[Int:Tens] ||| quaranta ||| 4 ||| 1.0
+[Int:Tens] ||| quarant ||| 4 ||| 1.0
+[Int:Tens] ||| cinquanta ||| 5 ||| 1.0
+[Int:Tens] ||| cinquant ||| 5 ||| 1.0
+[Int:Tens] ||| sessanta ||| 6 ||| 1.0
+[Int:Tens] ||| sessant ||| 6 ||| 1.0
+[Int:Tens] ||| settanta ||| 7 ||| 1.0
+[Int:Tens] ||| settant ||| 7 ||| 1.0
+[Int:Tens] ||| ottanta ||| 8 ||| 1.0
+[Int:Tens] ||| ottant ||| 8 ||| 1.0
+[Int:Tens] ||| novanta ||| 9 ||| 1.0
+[Int:Tens] ||| novant ||| 9 ||| 1.0
+[Int:2Digit] ||| [Int:Teens] ||| [Int:Teens] ||| 1.0
+[Int:2Digit] ||| [Int:Tens] ||| [Int:Tens] 0 ||| 1.0
+[Int:2Digit] ||| [Int:Tens] [Int:1Digit] ||| [Int:Tens] [Int:1Digit] ||| 1.0
+[Int:Hundred2Digit] ||| cento ||| 0 0 ||| 1.0
+[Int:Hundred2Digit] ||| cento [Int:1Digit] ||| 0 [Int:1Digit] ||| 1.0
+[Int:Hundred2Digit] ||| cento [Int:2Digit] ||| [Int:2Digit] ||| 1.0
+[Int:3Digit] ||| [Int:Hundred2Digit] ||| 1 [Int:Hundred2Digit] ||| 1.0
+[Int:3Digit] ||| [Int:1Digit] [Int:Hundred2Digit] ||| [Int:1Digit] [Int:Hundred2Digit] ||| 1.0
+[Int:Thousand3Digit] ||| mille ||| 0 0 0 ||| 1.0
+[Int:Thousand3Digit] ||| mila ||| 0 0 0 ||| 1.0
+[Int:Thousand3Digit] ||| mille [Int:1Digit] ||| 0 0 [Int:1Digit] ||| 1.0
+[Int:Thousand3Digit] ||| mila [Int:1Digit] ||| 0 0 [Int:1Digit] ||| 1.0
+[Int:Thousand3Digit] ||| mille [Int:2Digit] ||| 0 [Int:2Digit] ||| 1.0
+[Int:Thousand3Digit] ||| mila [Int:2Digit] ||| 0 [Int:2Digit] ||| 1.0
+[Int:Thousand3Digit] ||| mille [Int:3Digit] ||| [Int:3Digit] ||| 1.0
+[Int:Thousand3Digit] ||| mila [Int:3Digit] ||| [Int:3Digit] ||| 1.0
+[Int:4Digit] ||| [Int:Thousand3Digit] ||| 1 [Int:Thousand3Digit] ||| 1.0
+[Int:4Digit] ||| [Int:1Digit] [Int:Thousand3Digit] ||| [Int:1Digit] [Int:Thousand3Digit] ||| 1.0
+[Int:4Digit] ||| [Int:2Digit,1] [Int:2Digit,2] ||| [Int:2Digit,1] [Int:2Digit,2] ||| 1.0
+[Int] ||| [Int:1Digit] ||| [Int:1Digit] ||| 1.0
+[Int] ||| [Int:2Digit] ||| [Int:2Digit] ||| 1.0
+[Int] ||| [Int:3Digit] ||| [Int:3Digit] ||| 1.0
+[Int] ||| [Int:4Digit] ||| [Int:4Digit] ||| 1.0
+
+// =================================================
+// other common expressions that identify an integer
+// =================================================
+[Int] ||| paio ||| 2 ||| 1.0
+[Int] ||| paio di ||| 2 ||| 1.0
+[Int] ||| paio d ' ||| 2 ||| 1.0
+[Int] ||| coppia ||| 2 ||| 1.0
+[Int] ||| coppia di ||| 2 ||| 1.0
+[Int] ||| coppia d ' ||| 2 ||| 1.0
+[Int] ||| dozzina ||| 12 ||| 1.0
+
+// =========================================
+// expressions that identify a temporal unit
+// =========================================
+[Unit:Singular] ||| secondo ||| SECONDS ||| 1.0
+[Unit:Singular] ||| minuto ||| MINUTES ||| 1.0
+[Unit:Singular] ||| ora ||| HOURS ||| 1.0
+[Unit:Singular] ||| giorno ||| DAYS ||| 1.0
+[Unit:Singular] ||| giornata ||| DAYS ||| 1.0
+[Unit:Singular] ||| settimana ||| WEEKS ||| 1.0
+[Unit:Singular] ||| mese ||| MONTHS ||| 1.0
+[Unit:Singular] ||| periodo ||| QUARTER_YEARS ||| 1.0
+[Unit:Singular] ||| trimestre ||| QUARTER_YEARS ||| 1.0
+[Unit:Singular] ||| anno ||| YEARS ||| 1.0
+[Unit:Singular] ||| decade ||| DECADES ||| 1.0
+[Unit:Singular] ||| decennio ||| DECADES ||| 1.0
+[Unit:Singular] ||| secolo ||| CENTURIES ||| 1.0
+[Unit:Singular] ||| centennio ||| CENTURIES ||| 1.0
+[Unit] ||| [Unit:Singular] ||| [Unit:Singular] ||| 1.0
+[Unit:Plural] ||| secondi ||| SECONDS ||| 1.0
+[Unit:Plural] ||| minuti ||| MINUTES ||| 1.0
+[Unit:Plural] ||| ore ||| HOURS ||| 1.0
+[Unit:Plural] ||| ore e ore ||| HOURS ||| 1.0
+[Unit:Plural] ||| giorni ||| DAYS ||| 1.0
+[Unit:Plural] ||| giornate ||| DAYS ||| 1.0
+[Unit:Plural] ||| settimane ||| WEEKS ||| 1.0
+[Unit:Plural] ||| mesi ||| MONTHS ||| 1.0
+[Unit:Plural] ||| trimestri ||| QUARTER_YEARS ||| 1.0
+[Unit:Plural] ||| anni ||| YEARS ||| 1.0
+[Unit:Plural] ||| decadi ||| DECADES ||| 1.0
+[Unit:Plural] ||| decenni ||| DECADES ||| 1.0
+[Unit:Plural] ||| secoli ||| CENTURIES ||| 1.0
+[Unit:Plural] ||| centenni ||| CENTURIES ||| 1.0
+[Unit] ||| [Unit:Plural] ||| [Unit:Plural] ||| 1.0
+//[Unit] ||| [Unit:Plural,1] e [Unit:Plural] ||| [Unit:Plural,1] ||| 1.0
+
+// =========================================
+// expressions that identify a part of a day
+// =========================================
+[FieldValue:HourOfDay] ||| [Int:0-23] ||| HOUR_OF_DAY [Int:0-23] ||| 1.0
+[FieldValue:HourOfAMPM] ||| [Int:1-12] ||| HOUR_OF_AMPM [Int:1-12] ||| 1.0
+[FieldValue:HourOfAMPM] ||| [Int:1Digit] ||| HOUR_OF_AMPM [Int:1Digit] ||| 1.0
+[FieldValue:HourOfAMPM] ||| [Int:Teens] ||| HOUR_OF_AMPM [Int:Teens] ||| 1.0
+[FieldValue:MinuteOfHour] ||| [Int:0-59] ||| MINUTE_OF_HOUR [Int:0-59] ||| 1.0
+[FieldValue:SecondOfMinute] ||| [Int:0-59] ||| SECOND_OF_MINUTE [Int:0-59] ||| 1.0
+[FieldValue:AMPMOfDay] ||| a . m ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| am ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| mattina ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| mattino ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| dell mattina ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| dell mattino ||| AMPM_OF_DAY 0 ||| 1.0
+[FieldValue:AMPMOfDay] ||| p . m ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| pm ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| pomeriggio ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| dell pomeriggio ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| sera ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:AMPMOfDay] ||| dell sera ||| AMPM_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| mattina ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| mattino ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| mattinata ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| mattutino ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| pomeriggio ||| AFTERNOON_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| pomeridiano ||| AFTERNOON_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| ora di pranzo ||| AFTERNOON_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| sera ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| serata ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| serale ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| vigilia ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| notte ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| notturni ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| nottata ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| nuttata ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:PartOfDay] ||| nottetempo ||| NIGHT_OF_DAY 1 ||| 1.0
+// part of today
+//[FieldValue:PartOfDay] ||| stamattina ||| MORNING_OF_DAY 1 ||| 1.0
+//[FieldValue:PartOfDay] ||| stasera ||| EVENING_OF_DAY 1 ||| 1.0
+//[FieldValue:PartOfDay] ||| stanotte ||| NIGHT_OF_DAY 1 ||| 1.0
+
+// ===========================================
+// expressions that identify a day of the week
+// ===========================================
+[FieldValue:DayOfWeek] ||| lunedi ||| DAY_OF_WEEK 1 ||| 1.0
+[FieldValue:DayOfWeek] ||| martedi ||| DAY_OF_WEEK 2 ||| 1.0
+[FieldValue:DayOfWeek] ||| mercoledi ||| DAY_OF_WEEK 3 ||| 1.0
+[FieldValue:DayOfWeek] ||| giovedi ||| DAY_OF_WEEK 4 ||| 1.0
+[FieldValue:DayOfWeek] ||| venerdi ||| DAY_OF_WEEK 5 ||| 1.0
+[FieldValue:DayOfWeek] ||| sabato ||| DAY_OF_WEEK 6 ||| 1.0
+[FieldValue:DayOfWeek] ||| domenica ||| DAY_OF_WEEK 7 ||| 1.0
+[FieldValue:DayOfWeek] ||| lun ||| DAY_OF_WEEK 1 ||| 1.0
+[FieldValue:DayOfWeek] ||| mar ||| DAY_OF_WEEK 2 ||| 1.0
+[FieldValue:DayOfWeek] ||| mart ||| DAY_OF_WEEK 2 ||| 1.0
+[FieldValue:DayOfWeek] ||| mer ||| DAY_OF_WEEK 3 ||| 1.0
+[FieldValue:DayOfWeek] ||| merc ||| DAY_OF_WEEK 3 ||| 1.0
+[FieldValue:DayOfWeek] ||| gio ||| DAY_OF_WEEK 4 ||| 1.0
+[FieldValue:DayOfWeek] ||| giov ||| DAY_OF_WEEK 4 ||| 1.0
+[FieldValue:DayOfWeek] ||| ven ||| DAY_OF_WEEK 5 ||| 1.0
+[FieldValue:DayOfWeek] ||| sab ||| DAY_OF_WEEK 6 ||| 1.0
+[FieldValue:DayOfWeek] ||| dom ||| DAY_OF_WEEK 7 ||| 1.0
+[FieldValue:DayOfWeek] ||| domen ||| DAY_OF_WEEK 7 ||| 1.0
+
+// =============================================
+// expressions that identify a weekend of a week
+// =============================================
+[FieldValue:WeekendOfWeek] ||| weekend ||| WEEKEND_OF_WEEK 1 ||| 1.0
+[FieldValue:WeekendOfWeek] ||| week end ||| WEEKEND_OF_WEEK 1 ||| 1.0
+[FieldValue:WeekendOfWeek] ||| finesettimana ||| WEEKEND_OF_WEEK 1 ||| 1.0
+[FieldValue:WeekendOfWeek] ||| fine settimana ||| WEEKEND_OF_WEEK 1 ||| 1.0
+
+// ==========================================
+// expressions that identify a day of a month
+// ==========================================
+[FieldValue:NumericDayOfMonth] ||| [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
+[FieldValue:NumericDayOfMonth] ||| il [Int:1-31] ||| DAY_OF_MONTH [Int:1-31] ||| 1.0
+
+// =============================================
+// expressions that identify a month of the year
+// =============================================
+[FieldValue:MonthOfYear] ||| gennaio ||| MONTH_OF_YEAR 1 ||| 1.0
+[FieldValue:MonthOfYear] ||| febbraio ||| MONTH_OF_YEAR 2 ||| 1.0
+[FieldValue:MonthOfYear] ||| marzo ||| MONTH_OF_YEAR 3 ||| 1.0
+[FieldValue:MonthOfYear] ||| aprile ||| MONTH_OF_YEAR 4 ||| 1.0
+[FieldValue:MonthOfYear] ||| maggio ||| MONTH_OF_YEAR 5 ||| 1.0
+[FieldValue:MonthOfYear] ||| giugno ||| MONTH_OF_YEAR 6 ||| 1.0
+[FieldValue:MonthOfYear] ||| luglio ||| MONTH_OF_YEAR 7 ||| 1.0
+[FieldValue:MonthOfYear] ||| agosto ||| MONTH_OF_YEAR 8 ||| 1.0
+[FieldValue:MonthOfYear] ||| settembre ||| MONTH_OF_YEAR 9 ||| 1.0
+[FieldValue:MonthOfYear] ||| ottobre ||| MONTH_OF_YEAR 10 ||| 1.0
+[FieldValue:MonthOfYear] ||| novembre ||| MONTH_OF_YEAR 11 ||| 1.0
+[FieldValue:MonthOfYear] ||| dicembre ||| MONTH_OF_YEAR 12 ||| 1.0
+[FieldValue:MonthOfYear] ||| gen ||| MONTH_OF_YEAR 1 ||| 1.0
+[FieldValue:MonthOfYear] ||| genn ||| MONTH_OF_YEAR 1 ||| 1.0
+[FieldValue:MonthOfYear] ||| feb ||| MONTH_OF_YEAR 2 ||| 1.0
+[FieldValue:MonthOfYear] ||| febb ||| MONTH_OF_YEAR 2 ||| 1.0
+[FieldValue:MonthOfYear] ||| mar ||| MONTH_OF_YEAR 3 ||| 1.0
+[FieldValue:MonthOfYear] ||| apr ||| MONTH_OF_YEAR 4 ||| 1.0
+[FieldValue:MonthOfYear] ||| mag ||| MONTH_OF_YEAR 5 ||| 1.0
+[FieldValue:MonthOfYear] ||| magg ||| MONTH_OF_YEAR 5 ||| 1.0
+[FieldValue:MonthOfYear] ||| giu ||| MONTH_OF_YEAR 6 ||| 1.0
+[FieldValue:MonthOfYear] ||| giug ||| MONTH_OF_YEAR 6 ||| 1.0
+[FieldValue:MonthOfYear] ||| lug ||| MONTH_OF_YEAR 7 ||| 1.0
+[FieldValue:MonthOfYear] ||| ag ||| MONTH_OF_YEAR 8 ||| 1.0
+[FieldValue:MonthOfYear] ||| ago ||| MONTH_OF_YEAR 8 ||| 1.0
+[FieldValue:MonthOfYear] ||| set ||| MONTH_OF_YEAR 9 ||| 1.0
+[FieldValue:MonthOfYear] ||| sett ||| MONTH_OF_YEAR 9 ||| 1.0
+[FieldValue:MonthOfYear] ||| ot ||| MONTH_OF_YEAR 10 ||| 1.0
+[FieldValue:MonthOfYear] ||| ott ||| MONTH_OF_YEAR 10 ||| 1.0
+[FieldValue:MonthOfYear] ||| nov ||| MONTH_OF_YEAR 11 ||| 1.0
+[FieldValue:MonthOfYear] ||| dic ||| MONTH_OF_YEAR 12 ||| 1.0
+[FieldValue:NumericMonthOfYear] ||| [Int:1-12] ||| MONTH_OF_YEAR [Int:1-12] ||| 1.0
+
+// ======================================================
+// expressions that identify a fiscal quarter of the year
+// ======================================================
+[FieldValue:QuarterOfYear] ||| primo periodo ||| QUARTER_OF_YEAR 1 ||| 1.0
+[FieldValue:QuarterOfYear] ||| secondo periodo ||| QUARTER_OF_YEAR 2 ||| 1.0
+[FieldValue:QuarterOfYear] ||| terzo periodo ||| QUARTER_OF_YEAR 3 ||| 1.0
+[FieldValue:QuarterOfYear] ||| quarto periodo ||| QUARTER_OF_YEAR 4 ||| 1.0
+[FieldValue:QuarterOfYear] ||| ultimx periodo ||| QUARTER_OF_YEAR 4 ||| 1.0
+[FieldValue:QuarterOfYear] ||| primo trimestre ||| QUARTER_OF_YEAR 1 ||| 1.0
+[FieldValue:QuarterOfYear] ||| secondo trimestre ||| QUARTER_OF_YEAR 2 ||| 1.0
+[FieldValue:QuarterOfYear] ||| terzo trimestre ||| QUARTER_OF_YEAR 3 ||| 1.0
+[FieldValue:QuarterOfYear] ||| quarto trimestre ||| QUARTER_OF_YEAR 4 ||| 1.0
+[FieldValue:QuarterOfYear] ||| ultimx trimestre ||| QUARTER_OF_YEAR 4 ||| 1.0
+
+// ==============================================
+// expressions that identify a season of the year
+// ==============================================
+[FieldValue:SeasonOfYear] ||| primavera ||| SPRING_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| estate ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| estivo ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| estiva ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| autunno ||| FALL_OF_YEAR 1 ||| 1.0
+[FieldValue:SeasonOfYear] ||| inverno ||| WINTER_OF_YEAR 1 ||| 1.0
+
+// =======================================
+// expressions that identify a time of day
+// =======================================
+[FieldValue:Time] ||| mezzogiorno ||| ( FieldValue:HourOfDay HOUR_OF_DAY 12 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| mezzanotte ||| ( FieldValue:HourOfDay HOUR_OF_DAY 0 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| cuore dell notte ||| ( FieldValue:HourOfDay HOUR_OF_DAY 0 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfDay] . [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfDay] , [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] : [FieldValue:SecondOfMinute] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] [FieldValue:SecondOfMinute] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfAMPM] : [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] [FieldValue:MinuteOfHour] [FieldValue:AMPMOfDay] ||| 1.0
+[FieldValue:Time] ||| [FieldValue:HourOfAMPM] [FieldValue:AMPMOfDay] ||| [FieldValue:HourOfAMPM] ( FieldValue MINUTE_OF_HOUR 0 ) [FieldValue:AMPMOfDay] ||| 1.0
+//e.g. "ore 9", "ore 9.30", "ore 09,30"
+[FieldValue:Time] ||| [FieldValue:HourOfDay] di ||| [FieldValue:HourOfDay] ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| [Int:1Digit] di ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:1Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| [Int:2Digit] di ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:2Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| [Int:24-24] di ||| ( FieldValue:HourOfDay HOUR_OF_DAY 0 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| ore [FieldValue:HourOfDay] ||| [FieldValue:HourOfDay] ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| ore [Int:1Digit] ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:1Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| ore [Int:2Digit] ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:2Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| ore [Int:24-24] ||| ( FieldValue:HourOfDay HOUR_OF_DAY 0 )  ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| all [FieldValue:HourOfDay] ||| [FieldValue:HourOfDay] ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| all [Int:1Digit] ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:1Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| all [Int:2Digit] ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:2Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| all [Int:24-24] ||| ( FieldValue:HourOfDay HOUR_OF_DAY 0 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| verso [FieldValue:HourOfDay] ||| [FieldValue:HourOfDay] ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| verso [Int:1Digit] ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:1Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| verso [Int:2Digit] ||| ( FieldValue:HourOfDay HOUR_OF_DAY [Int:2Digit] ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| verso [Int:24-24] ||| ( FieldValue:HourOfDay HOUR_OF_DAY 0 ) ( FieldValue:MinuteOfHour MINUTE_OF_HOUR 0 ) ||| 1.0
+[FieldValue:Time] ||| ore [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| ore [FieldValue:HourOfDay] . [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| ore [FieldValue:HourOfDay] , [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| all [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| all [FieldValue:HourOfDay] . [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| all [FieldValue:HourOfDay] , [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| verso [FieldValue:HourOfDay] : [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| verso [FieldValue:HourOfDay] . [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+[FieldValue:Time] ||| verso [FieldValue:HourOfDay] , [FieldValue:MinuteOfHour] ||| [FieldValue:HourOfDay] [FieldValue:MinuteOfHour] ||| 1.0
+
+// ==============================================
+// expressions that identify specially named days
+// ==============================================
+[FieldValue:NamedDay] ||| ferragosto ||| ( FieldValue MONTH_OF_YEAR 8 ) ( FieldValue DAY_OF_MONTH 15 ) ||| 1.0
+[FieldValue:NamedDay] ||| natale ||| ( FieldValue MONTH_OF_YEAR 12 ) ( FieldValue DAY_OF_MONTH 25 ) ||| 1.0
+[FieldValue:NamedDay] ||| pasqua ||| EASTER_DAY_OF_YEAR 1 ||| 1.0
+//[FieldValue:NamedDay] ||| election ||| ( FieldValue DAY_OF_WEEK 2 ) ( FieldValue MONTH_OF_YEAR 11 ) ( FieldValue ALIGNED_WEEK_OF_MONTH 1 ) ||| 1.0
+
+// ================================================
+// expressions that identify both a month and a day
+// ================================================
+[FieldValue:MonthDay] ||| [FieldValue:NamedDay] ||| [FieldValue:NamedDay] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:NumericDayOfMonth] [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:NumericDayOfMonth] di [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:NumericDayOfMonth] d ' [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:NumericDayOfMonth] [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [Int:1Digit] [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ( FieldValue DAY_OF_MONTH [Int:1Digit] ) ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [Int:2Digit] [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ( FieldValue DAY_OF_MONTH [Int:2Digit] ) ||| 1.0
+//[FieldValue:MonthDay] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:NumericDayOfMonth] [FieldValue:NumericMonthOfYear] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
+
+// ===========================================================
+// combinations of time fields that don't fully specify a time
+// ===========================================================
+[FieldValue:PartialYear] ||| [Int:0-99] ||| YEAR_OF_CENTURY [Int:0-99] ||| 1.0
+[FieldValue:PartialYear] ||| ' [Int:0-99] ||| YEAR_OF_CENTURY [Int:0-99] ||| 1.0
+[FieldValue:PartialTime] ||| [FieldValue:Time] ||| [FieldValue:Time] ||| 1.0
+[FieldValue:PartialTime] ||| [FieldValue:PartOfDay] ||| [FieldValue:PartOfDay] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:DayOfWeek] ||| [FieldValue:DayOfWeek] ||| 1.0
+// e.g. sabato 9
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:NumericDayOfMonth] ||| [FieldValue:DayOfWeek] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:MonthDay] ||| [FieldValue:MonthDay] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:MonthDay] [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:PartialYearMonthDay] ||| [FieldValue:MonthDay] dell [FieldValue:PartialYear] ||| [FieldValue:PartialYear] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialTime] ||| [FieldValue:PartialTime] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialYearMonthDay] ||| [FieldValue:PartialYearMonthDay] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialYearMonthDay] [FieldValue:PartialTime] ||| [FieldValue:PartialYearMonthDay] [FieldValue:PartialTime] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:PartialTime] [FieldValue:PartialYearMonthDay] ||| [FieldValue:PartialYearMonthDay] [FieldValue:PartialTime] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:WeekendOfWeek] ||| [FieldValue:WeekendOfWeek] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:Month] ||| [FieldValue:Month] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:Partial] ||| mese di [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:Partial] ||| mese d ' [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:Partial] ||| mensile di [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:Partial] ||| mensile d ' [FieldValue:MonthOfYear] ||| [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:SeasonOfYear] ||| [FieldValue:SeasonOfYear] ||| 1.0
+[FieldValue:Partial] ||| [FieldValue:QuarterOfYear] ||| [FieldValue:QuarterOfYear] ||| 1.0
+
+// ===============================================================
+// combinations of time fields that fully specify an absolute time
+// ===============================================================
+[FieldValue:Year] ||| [Int:1000-9999] ||| YEAR [Int:1000-9999] ||| 1.0
+[FieldValue:Year] ||| [Int:4Digit] ||| YEAR [Int:4Digit] ||| 1.0
+// e.g. "the year 2000"
+[FieldValue:Year] ||| anno [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
+[FieldValue:Year] ||| anni [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
+[FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:YearMonth] ||| [FieldValue:MonthOfYear] dell [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:YearMonth] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| [FieldValue:Year] [FieldValue:MonthOfYear] ||| 1.0
+[FieldValue:YearMonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:YearMonthDay] ||| [FieldValue:MonthDay] [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:YearMonthDay] ||| [FieldValue:MonthDay] dell [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:MonthDay] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:Year] ||| [FieldValue:Year] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:QuarterOfYear] dell [FieldValue:Year] ||| [FieldValue:Year] [FieldValue:QuarterOfYear] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:YearMonth] ||| [FieldValue:YearMonth] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:YearMonthDay] ||| [FieldValue:YearMonthDay] ||| 1.0
+[FieldValue:Absolute] ||| [FieldValue:YearMonthDay] [FieldValue:Time] ||| [FieldValue:YearMonthDay] [FieldValue:Time] ||| 1.0
+
+// =============================
+// expressions of simple periods
+// =============================
+[Period:Singular] ||| [Unit:Singular] ||| Simple [Unit:Singular] ||| 1.0
+[Period:Amount] ||| [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+[Period:Amount] ||| [Int] na di [Unit] ||| Simple [Int] [Unit] ||| 1.0
+[Period:Amount] ||| [Int] na d ' [Unit] ||| Simple [Int] [Unit] ||| 1.0
+[Period:Amount] ||| le suoi [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+// e.g. "tre notti"
+[Period:Amount] ||| [Int] mattine ||| Simple [Int] MORNINGS ||| 1.0
+[Period:Amount] ||| [Int] mattini ||| Simple [Int] MORNINGS ||| 1.0
+[Period:Amount] ||| [Int] mattinate ||| Simple [Int] MORNINGS ||| 1.0
+[Period:Amount] ||| [Int] pomeriggi ||| Simple [Int] AFTERNOONS ||| 1.0
+[Period:Amount] ||| [Int] pomeridiana ||| Simple [Int] AFTERNOONS ||| 1.0
+[Period:Amount] ||| [Int] sere ||| Simple [Int] EVENINGS ||| 1.0
+[Period:Amount] ||| [Int] serate ||| Simple [Int] EVENINGS ||| 1.0
+[Period:Amount] ||| [Int] vigilie ||| Simple [Int] EVENINGS ||| 1.0
+[Period:Amount] ||| [Int] notti ||| Simple [Int] NIGHTS ||| 1.0
+[Period:Amount] ||| [Int] nottate ||| Simple [Int] NIGHTS ||| 1.0
+[Period:Amount] ||| [Int] primavere ||| Simple [Int] SPRINGS ||| 1.0
+[Period:Amount] ||| [Int] estati ||| Simple [Int] SUMMERS ||| 1.0
+[Period:Amount] ||| [Int] estivi ||| Simple [Int] SUMMERS ||| 1.0
+[Period:Amount] ||| [Int] estive ||| Simple [Int] SUMMERS ||| 1.0
+[Period:Amount] ||| [Int] autunni ||| Simple [Int] FALLS ||| 1.0
+[Period:Amount] ||| [Int] inverni ||| Simple [Int] WINTERS ||| 1.0
+// e.g. "vent' anni"
+[Period:Amount] ||| [Int] ' [Unit] ||| Simple [Int] [Unit] ||| 1.0
+// e.g. "the first nine months"
+[Period:Amount] ||| primo [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+[Period:Amount] ||| primi [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+[Period:Amount] ||| quest primi [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+[Period:Amount] ||| quest [Int] [Unit] ||| Simple [Int] [Unit] ||| 1.0
+// e.g. "a three-year period"
+[Period:Amount] ||| [Int] [Unit] periodo ||| Simple [Int] [Unit] ||| 1.0
+[Period] ||| [Period:Singular] ||| [Period:Singular] ||| 1.0
+[Period] ||| [Period:Amount] ||| [Period:Amount] ||| 1.0
+// e.g. "3 anni e 8 mesi" --> messing up with "ore e ore", need to distinguish [Period:Amount] and [Period:Plural]
+[Period] ||| [Period:Amount,1] e [Period:Amount,2] ||| Sum [Period:Amount,1] [Period:Amount,2] ||| 1.0
+
+[Period:Hour] ||| [Int:0-23] h ||| Simple [Int:0-23] HOURS ||| 1.0
+[Period:Minute] ||| [Int:0-59] ' ||| Simple [Int:0-59] MINUTES ||| 1.0
+[Period:Second] ||| [Int:0-59] " ||| Simple [Int:0-59] SECONDS ||| 1.0
+[Period:Second] ||| [Int:0-59] " [Int] ||| Simple [Int:0-59] SECONDS ||| 1.0
+[Period] ||| [Period:Hour] ||| [Period:Hour] ||| 1.0
+[Period] ||| [Period:Minute] ||| [Period:Minute] ||| 1.0
+[Period] ||| [Period:Second] ||| [Period:Second] ||| 1.0
+[Period] ||| [Period:Hour] [Period:Minute] ||| Sum [Period:Hour] [Period:Minute] ||| 1.0
+[Period] ||| [Period:Minute] [Period:Second] ||| Sum [Period:Minute] [Period:Second] ||| 1.0
+[Period] ||| [Period:Hour] [Period:Minute] [Period:Second] ||| Sum [Period:Hour] [Period:Minute] [Period:Second] ||| 1.0
+// e.g. 21,4 minuti
+[Period] ||| [Int,1] , [Int,2] minuti ||| Sum ( Period Simple [Int,1] MINUTES ) ( Period Simple [Int,2] SECONDS ) ||| 1.0
+
+// e.g. "tre lustri"
+[Period:Lustri] ||| lustri ||| Simple 5 YEARS ||| 1.0
+[Period] ||| [Int] lustri ||| Multiply [Int] 5 YEARS ||| 1.0
+
+// ==============================================
+// expressions of periods with fractional amounts
+// ==============================================
+[Period] ||| [Int,1] [Int,2] / [Int,3] [Unit] ||| Fractional [Int,1] [Int,2] [Int,3] [Unit] ||| 1.0
+[Period] ||| [Unit:Singular] mezza ||| Fractional ( Int 1 ) ( Int 1 ) ( Int 2 ) [Unit:Singular] ||| 1.0
+[Period] ||| [Unit:Singular] mezzo ||| Fractional ( Int 1 ) ( Int 1 ) ( Int 2 ) [Unit:Singular] ||| 1.0
+[Period] ||| [Int] mezza [Unit] ||| Fractional [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+[Period] ||| [Int] mezzo [Unit] ||| Fractional [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+[Period] ||| [Int] [Unit] mezza ||| Fractional [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+[Period] ||| [Int] [Unit] mezzo ||| Fractional [Int] ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+[Period] ||| mezzora ||| Fractional ( Int 1 ) ( Int 2 ) HOURS ||| 1.0
+[Period] ||| mezz ' [Unit] ||| Fractional ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+[Period] ||| mezzo [Unit] ||| Fractional ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+[Period] ||| mezza [Unit] ||| Fractional ( Int 1 ) ( Int 2 ) [Unit] ||| 1.0
+
+// ==================================
+// expressions of unspecified periods
+// ==================================
+[Period] ||| un po ||| Unspecified UNSPECIFIED ||| 1.0
+//[Period] ||| some time ||| Unspecified UNSPECIFIED ||| 1.0
+[Period] ||| lungo periodo ||| Unspecified UNSPECIFIED ||| 1.0
+[Period] ||| alcuni [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| certi [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| poco [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| molto [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| qualche [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| diverso [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| parecchio [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| vario [Unit] ||| Unspecified [Unit] ||| 1.0
+[Period] ||| ultimx [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+[Period] ||| quest ultimx [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+[Period] ||| primi [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+[Period] ||| prime [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+[Period] ||| prossimx [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+// e.g. "weeks"
+[Period] ||| [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+
+// ==========================================
+// expressions that set time period modifiers
+// ==========================================
+[Period] ||| quasi [Period] ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| circa [Period] ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| [Period] circa ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| pressappoco [Period] ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| pressapoco [Period] ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| intorno all [Period] ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| piu o meno [Period] ||| WithModifier [Period] APPROX ||| 1.0
+[Period] ||| meno di [Period] ||| WithModifier [Period] LESS_THAN ||| 1.0
+[Period] ||| meno d ' [Period] ||| WithModifier [Period] LESS_THAN ||| 1.0
+[Period] ||| piu di [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+[Period] ||| piu d ' [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+[Period] ||| poco piu di [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+[Period] ||| poco piu d ' [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+[Period] ||| over [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+[Period] ||| oltre [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+[Period] ||| sopra le [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| non meno di [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| non meno d ' [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| almeno [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| minimo [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| dai [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| superiore a [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
+[Period] ||| inferiore a [Period] ||| WithModifier [Period] EQUAL_OR_LESS ||| 1.0
+[Period] ||| non piu di [Period] ||| WithModifier [Period] EQUAL_OR_LESS ||| 1.0
+[Period] ||| non piu d ' [Period] ||| WithModifier [Period] EQUAL_OR_LESS ||| 1.0
+[Period] ||| massimo [Period] ||| WithModifier [Period] EQUAL_OR_LESS ||| 1.0
+[Period] ||| fino all [Period] ||| WithModifier [Period] EQUAL_OR_LESS ||| 1.0
+[Period] ||| sotto le [Period] ||| WithModifier [Period] EQUAL_OR_LESS ||| 1.0
+
+// ==========================
+// expressions of period sets
+// ==========================
+[PeriodSet] ||| ogni ora ||| WithQuantifier ( Period Simple 1 HOURS ) EVERY ||| 1.0
+[PeriodSet] ||| quotidiano ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| quotidiane ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| giornaliero ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| giornaliera ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| quotidianamente ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| giorno in giorno ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| giornalmente ||| WithQuantifier ( Period Simple 1 DAYS ) EVERY ||| 1.0
+[PeriodSet] ||| settimanale ||| WithQuantifier ( Period Simple 1 WEEKS ) EVERY ||| 1.0
+[PeriodSet] ||| settimanalmente ||| WithQuantifier ( Period Simple 1 WEEKS ) EVERY ||| 1.0
+[PeriodSet] ||| mensili ||| WithQuantifier ( Period Simple 1 MONTHS ) EVERY ||| 1.0
+[PeriodSet] ||| mensile ||| WithQuantifier ( Period Simple 1 MONTHS ) EVERY ||| 1.0
+[PeriodSet] ||| mensilmente ||| WithQuantifier ( Period Simple 1 MONTHS ) EVERY ||| 1.0
+[PeriodSet] ||| quarto mese ||| WithQuantifier ( Period Simple 4 MONTHS ) EVERY ||| 1.0
+[PeriodSet] ||| trimestrale ||| WithQuantifier ( Period Simple 1 QUARTER_YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| trimestralmente ||| WithQuantifier ( Period Simple 1 QUARTER_YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annuale ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annuo ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annualmente ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annuali ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annualizzato ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annualizzata ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annui ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| annua ||| WithQuantifier ( Period Simple 1 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| biennali ||| WithQuantifier ( Period Simple 2 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| biennale ||| WithQuantifier ( Period Simple 2 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| biennio ||| WithQuantifier ( Period Simple 2 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| triennale ||| WithQuantifier ( Period Simple 3 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| triennio ||| WithQuantifier ( Period Simple 3 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| quadriennale ||| WithQuantifier ( Period Simple 4 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| decennale ||| WithQuantifier ( Period Simple 10 YEARS ) EVERY ||| 1.0
+[PeriodSet] ||| ventennale ||| WithQuantifier ( Period Simple 20 YEARS ) EVERY ||| 1.0
+
+// e.g. "invernale"
+[PeriodSet] ||| invernale ||| WithQuantifier ( Period Simple 1 WINTERS ) EVERY ||| 1.0
+
+[PeriodSet] ||| tutti le mattine ||| WithQuantifier ( Period Simple 1 MORNINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le mattini ||| WithQuantifier ( Period Simple 1 MORNINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le mattinate ||| WithQuantifier ( Period Simple 1 MORNINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le pomeriggi ||| WithQuantifier ( Period Simple 1 AFTERNOONS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le pomeridiana ||| WithQuantifier ( Period Simple 1 AFTERNOONS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le sere ||| WithQuantifier ( Period Simple 1 EVENINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le serate ||| WithQuantifier ( Period Simple 1 EVENINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le vigilie ||| WithQuantifier ( Period Simple 1 EVENINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le notti ||| WithQuantifier ( Period Simple 1 NIGHTS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le nottate ||| WithQuantifier ( Period Simple 1 NIGHTS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le primavere ||| WithQuantifier ( Period Simple 1 SPRINGS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le estati ||| WithQuantifier ( Period Simple 1 SUMMERS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le estivi ||| WithQuantifier ( Period Simple 1 SUMMERS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le estive ||| WithQuantifier ( Period Simple 1 SUMMERS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le autunni ||| WithQuantifier ( Period Simple 1 FALLS ) EVERY ||| 1.0
+[PeriodSet] ||| tutti le inverni ||| WithQuantifier ( Period Simple 1 WINTERS ) EVERY ||| 1.0
+
+[PeriodSet] ||| tutti le [Period] ||| WithQuantifier [Period] EVERY ||| 1.0
+[PeriodSet] ||| ogni [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| ciascun [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+
+//TODO: confirm this
+//[PeriodSet] ||| ennesima [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| volta all [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| volta all ' [Period] ||| WithQuantifier [Period] EACH ||| 1.01.0
+[PeriodSet] ||| [Int] volta all [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Int] volta all ' [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Int] volte all [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Int] volte all ' [Period] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Period] all [Unit] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Period] all '  [Unit] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Period] dell [Unit] ||| WithQuantifier [Period] EACH ||| 1.0
+[PeriodSet] ||| [Period] dell ' [Unit] ||| WithQuantifier [Period] EACH ||| 1.0
+
+// e.g. "quattro ore tutti le mattine"
+[PeriodSet] ||| [Period] [PeriodSet] ||| [PeriodSet] ||| 1.0
+
+// =======================================
+// time spans are either :Solo or :Regular
+// =======================================
+[TimeSpan] ||| [TimeSpan:Solo] ||| [TimeSpan:Solo] ||| 1.0
+[TimeSpan] ||| [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+
+// ==============================================================
+// expressions of time spans that can't be combined with anything
+// ==============================================================
+[TimeSpan:Solo] ||| passatx ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| in passatx ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| quell momento ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| suo tempo ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| recente ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| recentissima ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| recenti ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| recentemente ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| ultimamente ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| di recente ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| negli ultimx tempi ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| da poco ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| scorsx ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| prima ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| qualche tempo fa ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| ex ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| poco fa ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| recente passato ||| Simple PAST ||| 1.0
+[TimeSpan:Solo] ||| presente ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| ora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| adesso ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| attualmente ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| tuttora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| finora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| sinora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| fin d ' ora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| tutti quest anni ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| attuale ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| attuali ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| corrente ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| correntemente ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| all momento ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| quest momento ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| allora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| all quest punto ||| Simple PRESENT ||| 1.0
+[TimeSpan:Solo] ||| in futurx ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| futurx ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| presto ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| appena ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| subito ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| prossimamente ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| fra poco ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| fra breve ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| prossimx ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| all piu presto ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| dopo ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| all dopo ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| piu tardi ||| Simple FUTURE ||| 1.0
+[TimeSpan:Solo] ||| ora in avanti ||| Simple FUTURE ||| 1.0
+// e.g. "the long term"
+//[TimeSpan:Solo] ||| the term ||| Simple FUTURE ||| 1.0
+
+// ==================================
+// expressions of absolute time spans
+// ==================================
+[TimeSpan:Regular] ||| [FieldValue:Absolute] ||| FindAbsolute [FieldValue:Absolute] ||| 1.0
+// e.g. "1980s"
+[TimeSpan:Regular] ||| [FieldValue:Year] s ||| FindEnclosing ( TimeSpan FindAbsolute [FieldValue:Year] ) DECADES ||| 1.0
+// e.g. "19th century" - requires special handing because, e.g. "19th century" = "18"
+[TimeSpan:Regular] ||| [Int] ° secolo ||| EndAtStartOf ( TimeSpan FindAbsolute ( FieldValue CENTURY [Int] ) ) ( Period Simple 1 CENTURIES ) ||| 1.0
+// e.g. "ottocento", "novecento"
+[TimeSpan:Regular] ||| due cento ||| FindAbsolute ( FieldValue CENTURY 12 ) ||| 1.0
+[TimeSpan:Regular] ||| tre cento ||| FindAbsolute ( FieldValue CENTURY 13 ) ||| 1.0
+[TimeSpan:Regular] ||| quattro cento ||| FindAbsolute ( FieldValue CENTURY 14 ) ||| 1.0
+[TimeSpan:Regular] ||| cinque cento ||| FindAbsolute ( FieldValue CENTURY 15 ) ||| 1.0
+[TimeSpan:Regular] ||| sei cento ||| FindAbsolute ( FieldValue CENTURY 16 ) ||| 1.0
+[TimeSpan:Regular] ||| sette cento ||| FindAbsolute ( FieldValue CENTURY 17 ) ||| 1.0
+[TimeSpan:Regular] ||| otto cento ||| FindAbsolute ( FieldValue CENTURY 18 ) ||| 1.0
+[TimeSpan:Regular] ||| nove cento ||| FindAbsolute ( FieldValue CENTURY 19 ) ||| 1.0
+
+// =================================
+// expressions of current time spans
+// =================================
+//[TimeSpan:Regular] ||| ora ||| Simple PRESENT ||| 1.0
+[TimeSpan:Regular] ||| momento ||| Simple PRESENT ||| 1.0
+[TimeSpan:Regular] ||| quest [Unit:Plural] ||| Simple PRESENT ||| 1.0
+[TimeSpan:Regular] ||| oggi ||| FindEnclosing PRESENT DAYS ||| 1.0
+[TimeSpan:Regular] ||| quell data ||| FindEnclosing PRESENT DAYS ||| 1.0
+[TimeSpan:Regular] ||| stamattina ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| stamani ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| stamane ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue MORNING_OF_DAY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| stasera ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue EVENING_OF_DAY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| stanotte ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT DAYS ) ( FieldValue NIGHT_OF_DAY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| quest [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+[TimeSpan:Regular] ||| quest ' [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+[TimeSpan:Regular] ||| quell [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+[TimeSpan:Regular] ||| quell ' [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+[TimeSpan:Regular] ||| stesso [Unit:Singular] ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+[TimeSpan:AllowsThis] ||| stesso giorno ||| FindEnclosing PRESENT DAYS ||| 1.0
+// e.g. "the current week"
+[TimeSpan:Regular] ||| [Unit:Singular] in corso ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+[TimeSpan:Regular] ||| [Unit:Singular] corrente ||| FindEnclosing PRESENT [Unit:Singular] ||| 1.0
+// e.g. "this evening"
+[TimeSpan:Regular] ||| quest [FieldValue:Partial] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| quest ' [FieldValue:Partial] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [FieldValue:Partial] ) [FieldValue:Partial] ||| 1.0
+// e.g. "January this year"
+[TimeSpan:Regular] ||| [FieldValue:Partial] quest [Unit] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] quest ' [Unit] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] di quest [Unit] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] di quest ' [Unit] ||| FindEnclosed ( TimeSpan FindEnclosing PRESENT [Unit] ) [FieldValue:Partial] ||| 1.0
+
+// =================================
+// expressions of earlier time spans
+// =================================
+[TimeSpan:Regular] ||| ieri ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
+[TimeSpan:Regular] ||| giornata di ieri ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
+[TimeSpan:Regular] ||| altroieri ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 2 DAYS ) ||| 1.0
+[TimeSpan:Regular] ||| altro ieri ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 2 DAYS ) ||| 1.0
+// e.g. "last October"
+[TimeSpan:AllowsThis] ||| scorsx [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] scorsx ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] passatx ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] passatx ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| ultimx [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] ultimx ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| precedentx [FieldValue:Partial] ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] precedentx ||| FindEarlier PRESENT [FieldValue:Partial] ||| 1.0
+// e.g. "the last three weeks", "almost four years ago"
+[TimeSpan:AllowsThis] ||| precedentx [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] precedentx ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| scorsx [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] scorsx ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| passatx [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] passatx ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| ultimx [Period] ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] ultimx ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// e.g. "three years earlier"
+[TimeSpan:Regular] ||| [Period] prima ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:Regular] ||| [Period] fa ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:Regular] ||| [Period] addietro ||| EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// alternate interpretation: exactly [Period] earlier
+[TimeSpan:Regular] ||| [Period] prima ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:Regular] ||| [Period] fa ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:Regular] ||| [Period] addietro ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| precedentx [Period] ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] precedentx ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| scorsx [Period] ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] scorsx ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| passatx [Period] ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] passatx ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| ultimx [Period] ||| MoveEarlier PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] ultimx ||| MoveEarlier PRESENT [Period] ||| 1.0
+// e.g. "the day before last Tuesday"
+[TimeSpan:Regular] ||| [Period] prima [TimeSpan:Regular] ||| EndAtStartOf ( TimeSpan FindEnclosing [TimeSpan:Regular] [Period] ) [Period] ||| 1.0
+// e.g. "January last year"
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell scorsx [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] scorsx ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] scorsx ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] scorsx [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' ultimx [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] ultimx ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] ultimx ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] ultimx [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell precedentx [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] precedentx ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] precedentx ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] precedentx [Unit] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+// e.g. "the year-ago third quarter"
+[TimeSpan:Regular] ||| [Period] fa [FieldValue:Partial] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [Period] prima [FieldValue:Partial] ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ) [FieldValue:Partial] ||| 1.0
+
+// ===============================
+// expressions of later time spans
+// ===============================
+[TimeSpan:Regular] ||| domani ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
+[TimeSpan:Regular] ||| indomani ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ||| 1.0
+[TimeSpan:Regular] ||| dopodomani ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 2 DAYS ) ||| 1.0
+[TimeSpan:Regular] ||| dopo domani ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 2 DAYS ) ||| 1.0
+// e.g. "next Tuesday"
+[TimeSpan:AllowsThis] ||| prossimx [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] prossimx ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| venturx [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] venturx ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| successivx [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] successivx ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| seguentx [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] seguentx ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| entrantx [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:AllowsThis] ||| [FieldValue:Partial] entrantx ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+// e.g. "next year"
+[TimeSpan:AllowsThis] ||| prossimx [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] prossimx ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| venturx [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] venturx ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| futurx [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] futurx ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| successivx [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] successivx ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| seguentx [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] seguentx ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| entrantx [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] entrantx ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| tra [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| fra [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| tra circa [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// e.g. "two days later"
+[TimeSpan:Regular] ||| [Period] dopo ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// alternate interpretation: exactly [Period] earlier
+[TimeSpan:Regular] ||| [Period] dopo ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| prossimx [Period] ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] prossimx ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| venturx [Period] ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] venturx ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| futurx [Period] ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] futurx ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| successivx [Period] ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] successivx ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| seguentx [Period] ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] seguentx ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| entrantx [Period] ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| [Period] entrantx ||| MoveLater PRESENT [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| tra [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| fra [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+[TimeSpan:AllowsThis] ||| tra circa [Period] ||| StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Period] ) [Period] ||| 1.0
+// e.g. "January next year"
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell prossimx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] prossimx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] prossimx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] prossimx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell venturx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] venturx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] venturx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] venturx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell futurx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] futurx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] futurx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] futurx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell successivx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] successivx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] successivx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] successivx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell seguentx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] seguentx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] seguentx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] seguentx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' entrantx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [Unit] entrantx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [Unit] entrantx ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] entrantx [Unit] ||| FindEnclosed ( TimeSpan StartAtEndOf ( TimeSpan FindEnclosing PRESENT [Unit] ) ( Period Simple 1 [Unit] ) ) [FieldValue:Partial] ||| 1.0
+
+// ====================================================================================
+// allows rules tagged with :AllowsThis to be prefixed by "this" or "that" (or nothing)
+// ====================================================================================
+[TimeSpan:Regular] ||| [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| quest [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| quest ' [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| quell [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| quell ' [TimeSpan:AllowsThis] ||| [TimeSpan:AllowsThis] ||| 1.0
+[TimeSpan:Regular] ||| stesso [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+[TimeSpan:Regular] ||| quest [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+[TimeSpan:Regular] ||| quest ' [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+[TimeSpan:Regular] ||| quell [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+[TimeSpan:Regular] ||| quell ' [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+[TimeSpan:Regular] ||| stesso [TimeSpan:Regular] ||| [TimeSpan:Regular] ||| 1.0
+
+// ==========================================
+// expressions that could be earlier or later
+// ==========================================
+// e.g. "Friday", "the weekend", "October 11"
+[TimeSpan:Regular] ||| [FieldValue:Partial] ||| FindAtOrEarlier PRESENT [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] ||| FindLater PRESENT [FieldValue:Partial] ||| 1.0
+
+// ========================================================================
+// expressions that could be earlier or later (but we assume to be earlier)
+// ========================================================================
+// e.g. "anni '80"
+[TimeSpan:Regular] ||| anni [Int:Tens] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY [Int:Tens] ) ||| 1.0
+
+[TimeSpan:Regular] ||| anni [Int:10-10] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:20-20] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 2 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:30-30] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 3 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:40-40] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 4 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:50-50] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 5 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:60-60] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 6 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:70-70] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 7 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:80-80] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 8 ) ||| 1.0
+[TimeSpan:Regular] ||| anni [Int:90-90] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 9 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:10-10] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 1 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:20-20] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 2 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:30-30] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 3 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:40-40] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 4 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:50-50] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 5 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:60-60] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 6 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:70-70] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 7 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:80-80] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 8 ) ||| 1.0
+[TimeSpan:Regular] ||| anni ' [Int:90-90] ||| FindAtOrEarlier PRESENT ( FieldValue DECADE_OF_CENTURY 9 ) ||| 1.0
+
+[TimeSpan:Regular] ||| anno ' [Int:0-99] ||| FindAtOrEarlier PRESENT ( FieldValue YEAR_OF_CENTURY [Int:0-99] ) ||| 1.0
+[TimeSpan:Regular] ||| ' [Int:0-99] ||| FindAtOrEarlier PRESENT ( FieldValue YEAR_OF_CENTURY [Int:0-99] ) ||| 1.0
+[TimeSpan:Regular] ||| [Int:60-99] ||| FindAtOrEarlier PRESENT ( FieldValue YEAR_OF_CENTURY [Int:60-99] ) ||| 1.0
+[TimeSpan:Regular] ||| [Int:2Digit] ||| FindAtOrEarlier PRESENT ( FieldValue YEAR_OF_CENTURY [Int:2Digit] ) ||| 1.0
+
+// ==========================================
+// expressions changing time span granularity
+// ==========================================
+// e.g. "the week of March 6"
+[TimeSpan:Regular] ||| [Unit:Singular] dell [TimeSpan:Regular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
+[TimeSpan:Regular] ||| [Unit:Singular] dell ' [TimeSpan:Regular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
+// e.g. "the quarter a year ago", "the period last year"
+[TimeSpan:Regular] ||| [Unit:Singular] [TimeSpan:Regular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
+// e.g. "Thanksgiving day"
+[TimeSpan:Regular] ||| [TimeSpan:Regular] [Unit:Singular] ||| FindEnclosing [TimeSpan:Regular] [Unit:Singular] ||| 1.0
+// e.g. "mid-afternoon yesterday", "domani sera"
+[TimeSpan:Regular] ||| [FieldValue:PartOfDay] [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:PartOfDay] ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] [FieldValue:PartOfDay] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:PartOfDay] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:PartOfDay] prima ||| FindEnclosed ( TimeSpan EndAtStartOf ( TimeSpan FindEnclosing PRESENT DAYS ) ( Period Simple 1 DAYS ) ) [FieldValue:PartOfDay] ||| 1.0
+// e.g. "winter of 1994", "ultimo trimestre dell'anno precedente"
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] dell ' [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] [FieldValue:Partial] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+// e.g. "this year's third quarter"
+[TimeSpan:Regular] ||| [FieldValue:Partial] di [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:Partial] d ' [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Partial] ||| 1.0
+// e.g. "23 di lunedì"
+[TimeSpan:Regular] ||| [FieldValue:Time] di [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:Time] ||| 1.0
+[TimeSpan:Regular] ||| [FieldValue:HourOfDay] ora italiana di [TimeSpan:Regular] ||| FindEnclosed [TimeSpan:Regular] [FieldValue:HourOfDay] ||| 1.0
+
+// ========================================
+// expressions that set time span modifiers
+// ========================================
+[TimeSpan:Regular] ||| fine dell [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
+[TimeSpan:Regular] ||| fine dell ' [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
+[TimeSpan:Regular] ||| fine [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
+[TimeSpan:Regular] ||| fine di [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
+[TimeSpan:Regular] ||| fine d ' [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
+[TimeSpan:Regular] ||| fin d ' [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) END ||| 1.0
+[TimeSpan:Regular] ||| fine dell [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| fine dell ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| fine [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| fine di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| fine d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| fin d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+
+[TimeSpan:Regular] ||| inizio dell [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+[TimeSpan:Regular] ||| inizio dell ' [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+[TimeSpan:Regular] ||| inizio [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+[TimeSpan:Regular] ||| inizio di [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+[TimeSpan:Regular] ||| inizio d ' [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+//[TimeSpan:Regular] ||| primo [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+//[TimeSpan:Regular] ||| prima [Unit] ||| WithModifier ( TimeSpan FindEnclosing PRESENT [Unit] ) START ||| 1.0
+[TimeSpan:Regular] ||| inizio dell [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| inizio dell ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| inizio [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| inizio di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| inizio d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| primi di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| primi d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| primi [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| primo di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| primo d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+[TimeSpan:Regular] ||| primo [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+// don't allow this to combine with other rules, since "earlier" can play many roles
+[TimeSpan:Regular] ||| in precedenza in [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] START ||| 1.0
+
+[TimeSpan:Regular] ||| meta [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
+[TimeSpan:Regular] ||| meta di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
+[TimeSpan:Regular] ||| meta d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
+[TimeSpan:Regular] ||| meta dell [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
+[TimeSpan:Regular] ||| meta dell ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] MID ||| 1.0
+
+[TimeSpan:Regular] ||| tardo [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| tardi [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| piu tardi in [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| termine dell [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] END ||| 1.0
+[TimeSpan:Regular] ||| quasi [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
+[TimeSpan:Regular] ||| circa [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
+[TimeSpan:Regular] ||| intorno [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
+//[TimeSpan:Regular] ||| verso [FieldValue:Time] ||| WithModifier ( TimeSpan FindAbsolute [FieldValue:Time] ) APPROX ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] circa ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
+[TimeSpan:Regular] ||| [TimeSpan:Regular] dintorni ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
+[TimeSpan:Regular] ||| piu o meno [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] APPROX ||| 1.0
+[TimeSpan:Regular] ||| post [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] AFTER ||| 1.0
+[TimeSpan:Regular] ||| piu di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] AFTER ||| 1.0
+[TimeSpan:Regular] ||| piu d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] AFTER ||| 1.0
+[TimeSpan:Regular] ||| poco piu di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] AFTER ||| 1.0
+[TimeSpan:Regular] ||| poco piu d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] AFTER ||| 1.0
+[TimeSpan:Regular] ||| oltre [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] BEFORE ||| 1.0
+[TimeSpan:Regular] ||| non meno di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
+[TimeSpan:Regular] ||| non meno d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
+[TimeSpan:Regular] ||| meno di [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_BEFORE ||| 1.0
+[TimeSpan:Regular] ||| meno d ' [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_BEFORE ||| 1.0
+[TimeSpan:Regular] ||| almeno [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_BEFORE ||| 1.0
+
+// =================================================
+// expressions of fields used only by time span sets
+// =================================================
+[FieldValue:Unspecified] ||| mattine ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| mattini ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| mattinate ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| alba ||| MORNING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| pomeriggi ||| AFTERNOON_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| pomeridiana ||| AFTERNOON_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| sere ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| serate ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| vigilie ||| EVENING_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| notti ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| nottate ||| NIGHT_OF_DAY 1 ||| 1.0
+[FieldValue:Unspecified] ||| primavere ||| SPRING_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| estati ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| estivi ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| estive ||| SUMMER_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| autunni ||| FALL_OF_YEAR 1 ||| 1.0
+[FieldValue:Unspecified] ||| inverni ||| WINTER_OF_YEAR 1 ||| 1.0
+
+// =============================
+// expressions of time span sets
+// =============================
+// e.g. "each Thursday"
+[TimeSpanSet] ||| ogni [FieldValue:Partial] ||| Simple [FieldValue:Partial] ||| 1.0
+[TimeSpanSet] ||| tutti le [FieldValue:Partial] ||| Simple [FieldValue:Partial] ||| 1.0
+[TimeSpanSet] ||| giorno di [FieldValue:DayOfWeek] ||| Simple [FieldValue:DayOfWeek] ||| 1.0
+// e.g. "una domenica al mese"
+[TimeSpanSet] ||| [FieldValue:Partial] all [Unit] ||| Simple [FieldValue:Partial] ||| 1.0
+[TimeSpanSet] ||| [FieldValue:Partial] all '  [Unit] ||| Simple [FieldValue:Partial] ||| 1.0
+// e.g. "Tuesday nights"
+[TimeSpanSet] ||| [FieldValue:Partial] [FieldValue:Unspecified] ||| Simple ( FieldValue [FieldValue:Partial] [FieldValue:Unspecified] ) ||| 1.0
+// e.g. "the past three summers"
+[TimeSpanSet] ||| ultimx [Int] [FieldValue:Unspecified] ||| Simple [FieldValue:Unspecified] ||| 1.0
+// e.g. "fourth quarters"
+[TimeSpanSet] ||| [FieldValue:Unspecified] ||| Simple [FieldValue:Unspecified] ||| 1.0
+// e.g. "mesi estivi"
+[TimeSpanSet] ||| mesi [FieldValue:Unspecified] ||| Simple [FieldValue:Unspecified] ||| 1.0

@@ -1,12 +1,10 @@
 package info.bethard.timenorm
 
-import scala.collection.immutable.Seq
 import scala.util.Success
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import org.threeten.bp.temporal.ChronoUnit._
-import org.threeten.bp.temporal.ChronoField._
 
 @RunWith(classOf[JUnitRunner])
 class TemporalExpressionParserTest extends FunSuite {
@@ -58,5 +56,32 @@ class TemporalExpressionParserTest extends FunSuite {
     assert(parser.parse("two thousand two hundred", anchor) === Success(TimeSpan.fromTimeMLValue("2200")))
     assert(parser.parse("two thousand two hundred two", anchor) === Success(TimeSpan.fromTimeMLValue("2202")))
     assert(parser.parse("twenty twenty-three", anchor) === Success(TimeSpan.fromTimeMLValue("2023")))
+  }
+
+  test("parses Italian numbers") {
+    val parser = TemporalExpressionParser.it()
+    val anchor1 = TimeSpan.of(2013, 1, 4)
+    assert(parser.parse("ieri", anchor1).map(_.timeMLValue) === Success("2013-01-03"))
+    assert(parser.parse("circa 5 anni", anchor1) === Success(Period(Map(YEARS -> 5), Modifier.Approx)))
+    // examples below were taken from the IT-TimeML guidelines
+    // https://sites.google.com/site/ittimeml/
+    assert(parser.parse("venerdì due dicembre 2008", anchor1).map(_.timeMLValue) === Success("2008-12-02"))
+    assert(parser.parse("07/08/1995", anchor1).map(_.timeMLValue) === Success("1995-08-07"))
+    val anchor2 = TimeSpan.of(2008, 11, 28)
+    assert(parser.parse("il 3 aprile prossimo", anchor2).map(_.timeMLValue) === Success("2009-04-03"))
+    assert(parser.parse("lo scorso 15 maggio", anchor2).map(_.timeMLValue) === Success("2008-05-15"))
+    assert(parser.parse("ieri", anchor2).map(_.timeMLValue) === Success("2008-11-27"))
+    // guidelines are wrong: "referring to the week from 24-30 November 2008" is 2008-W48, not 2008-W49
+    assert(parser.parse("questa settimana", anchor2).map(_.timeMLValue) === Success("2008-W48"))
+    assert(parser.parse("al momento", anchor2).map(_.timeMLValue) === Success("PRESENT_REF"))
+    assert(parser.parse("passato", anchor2).map(_.timeMLValue) === Success("PAST_REF"))
+    assert(parser.parse("futuro", anchor2).map(_.timeMLValue) === Success("FUTURE_REF"))
+    assert(parser.parse("ieri alle 16.00", anchor2).map(_.timeMLValue) === Success("2008-11-27T16:00"))
+    assert(parser.parse("4 mesi", anchor2).map(_.timeMLValue) === Success("P4M"))
+    // guidelines are wrong: should be PT45M, not P45TM
+    assert(parser.parse("45 minuti", anchor2).map(_.timeMLValue) === Success("PT45M"))
+    // guidelines are wrong: should be P3NI, not PT3NI
+    assert(parser.parse("3 notti", anchor2).map(_.timeMLValue) === Success("P3NI"))
+    assert(parser.parse("alcuni anni", anchor2).map(_.timeMLValue) === Success("PXY"))
   }
 }
