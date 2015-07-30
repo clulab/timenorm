@@ -1,4 +1,4 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.scfg
 
 import scala.collection.immutable.IndexedSeq
 import scala.collection.mutable

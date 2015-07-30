@@ -9,7 +9,7 @@ import java.time.temporal.ChronoField
 import java.time.temporal.TemporalField
 import java.time.temporal.TemporalUnit
 import java.time.temporal.IsoFields
-import info.bethard.timenorm.SynchronousParser.Tree
+import info.bethard.timenorm.scfg.SynchronousParser.Tree
 import info.bethard.timenorm.Modifier
 import info.bethard.timenorm.Period
 import info.bethard.timenorm.PeriodSet

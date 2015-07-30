@@ -5,6 +5,8 @@ import java.net.URL
 import java.text.Normalizer
 import java.util.logging.Logger
 
+import info.bethard.timenorm.scfg.{SynchronousParser, SynchronousGrammar}
+
 import scala.collection.immutable.IndexedSeq
 import scala.io.Source
 import scala.util.Failure

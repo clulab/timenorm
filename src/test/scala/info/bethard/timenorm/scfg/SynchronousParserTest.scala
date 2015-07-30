@@ -1,13 +1,16 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.scfg
+
+import java.time.temporal.ChronoField._
+import java.time.temporal.ChronoUnit._
+
+import info.bethard.timenorm.field._
+import info.bethard.timenorm.parse._
+import info.bethard.timenorm.{Modifier, PeriodSet}
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import scala.collection.immutable.Seq
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
-import java.time.temporal.ChronoUnit._
-import java.time.temporal.ChronoField._
-import info.bethard.timenorm.parse._
-import info.bethard.timenorm.field._
 
 @RunWith(classOf[JUnitRunner])
 class SynchronousParserTest extends FunSuite {
@@ -201,8 +204,8 @@ class SynchronousParserTest extends FunSuite {
   }
 
   test("parses complex time spans") {
+    import PeriodParse.{Simple => SimplePeriod}
     import TimeSpanParse._
-    import PeriodParse.{ Simple => SimplePeriod }
     
     assert(this.parse("this", "week") === FindEnclosing(Present, WEEKS))
     assert(this.parse("this", "month") === FindEnclosing(Present, MONTHS))

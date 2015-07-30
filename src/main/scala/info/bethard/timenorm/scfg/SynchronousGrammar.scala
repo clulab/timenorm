@@ -1,6 +1,6 @@
-package info.bethard.timenorm
+package info.bethard.timenorm.scfg
 
-import scala.collection.immutable.{ Seq, IndexedSeq }
+import scala.collection.immutable.{IndexedSeq, Seq}
 
 /**
  * A set of root symbols and synchronous rules that define a synchronous grammar.
