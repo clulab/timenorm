@@ -73,8 +73,8 @@
     </dependency>
     <dependency>
       <groupId>no.arktekk</groupId>
-      <artifactId>anti-xml_2.10</artifactId>
-      <version>0.5.1</version>
+      <artifactId>anti-xml_${scala.version.short}</artifactId>
+      <version>0.5.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>

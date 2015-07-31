@@ -29,6 +29,13 @@ class TemporalExpressionParserTest extends FunSuite {
     assert(parser.parse("around 5 years or so", anchor) === Success(Period(Map(YEARS -> 5), Modifier.Approx)))
   }
 
+  test("handles day-of-month with ordinals") {
+    val parser = new TemporalExpressionParser
+    val anchor = TimeSpan.of(2013, 1, 3)
+    assert(parser.parse("November 2nd", anchor) === Success(TimeSpan.of(2012, 11, 2)))
+    assert(parser.parse("July 15th", anchor) === Success(TimeSpan.of(2012, 7, 15)))
+  }
+
   test("parses numbers") {
     val parser = new TemporalExpressionParser
     val anchor = TimeSpan.of(2013, 1, 3)

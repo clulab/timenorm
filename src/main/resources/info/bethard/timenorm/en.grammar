@@ -63,6 +63,14 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Int] ||| [Int:3Digit] ||| [Int:3Digit] ||| 1.0
 [Int] ||| [Int:4Digit] ||| [Int:4Digit] ||| 1.0
 
+// ====================================
+// ordinal numbers that map to integers
+// ====================================
+[FieldValue:OrdinalDayOfMonth] ||| [Int] st ||| DAY_OF_MONTH [Int] ||| 1.0
+[FieldValue:OrdinalDayOfMonth] ||| [Int] nd ||| DAY_OF_MONTH [Int] ||| 1.0
+[FieldValue:OrdinalDayOfMonth] ||| [Int] rd ||| DAY_OF_MONTH [Int] ||| 1.0
+[FieldValue:OrdinalDayOfMonth] ||| [Int] th ||| DAY_OF_MONTH [Int] ||| 1.0
+
 // =================================================
 // other common expressions that identify an integer
 // =================================================
@@ -221,6 +229,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // ================================================
 [FieldValue:MonthDay] ||| [FieldValue:NamedDay] ||| [FieldValue:NamedDay] ||| 1.0
 [FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:DayOfMonth] ||| 1.0
+[FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:OrdinalDayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:OrdinalDayOfMonth] ||| 1.0
 [FieldValue:MonthDay] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| [FieldValue:MonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
 [FieldValue:MonthDay] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| [FieldValue:NumericMonthOfYear] [FieldValue:NumericDayOfMonth] ||| 1.0
 [FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthDay] ||| [FieldValue:DayOfWeek] [FieldValue:MonthDay] ||| 1.0
