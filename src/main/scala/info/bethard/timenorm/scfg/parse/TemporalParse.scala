@@ -1,23 +1,14 @@
-package info.bethard.timenorm.parse
+package info.bethard.timenorm.scfg.parse
+
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.temporal.{ChronoField, ChronoUnit, IsoFields, TemporalField, TemporalUnit}
+
+import info.bethard.timenorm.PeriodSet.{Frequency, Quantifier}
+import info.bethard.timenorm.{Modifier, Period, PeriodSet, TimeSpan, TimeSpanSet}
+import info.bethard.timenorm.field._
+import info.bethard.timenorm.scfg.SynchronousParser.Tree
 
 import scala.collection.immutable.Seq
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
-import java.time.temporal.ChronoField
-import java.time.temporal.TemporalField
-import java.time.temporal.TemporalUnit
-import java.time.temporal.IsoFields
-import info.bethard.timenorm.scfg.SynchronousParser.Tree
-import info.bethard.timenorm.Modifier
-import info.bethard.timenorm.Period
-import info.bethard.timenorm.PeriodSet
-import info.bethard.timenorm.PeriodSet.Frequency
-import info.bethard.timenorm.PeriodSet.Quantifier
-import info.bethard.timenorm.TimeSpan
-import info.bethard.timenorm.TimeSpanSet
-import info.bethard.timenorm.field._
 
 
 trait TokenParser {

@@ -1,17 +1,18 @@
-package info.bethard.timenorm.parse
+package info.bethard.timenorm.scfg.parse
 
-import scala.collection.immutable.Seq
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
-import java.time.temporal.ChronoUnit._
+import java.time.DayOfWeek
 import java.time.temporal.ChronoField._
+import java.time.temporal.ChronoUnit._
 import java.time.temporal.IsoFields._
 import java.time.temporal.TemporalUnit
-import java.time.DayOfWeek
+
+import info.bethard.timenorm.{Modifier, TimeSpan}
 import info.bethard.timenorm.field._
-import info.bethard.timenorm.Modifier
-import info.bethard.timenorm.TimeSpan
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
+
+import scala.collection.immutable.Seq
 
 @RunWith(classOf[JUnitRunner])
 class TemporalParseTest extends FunSuite {
@@ -213,7 +214,7 @@ class TemporalParseTest extends FunSuite {
   }
 
   test("resolves complex time spans") {
-    import PeriodParse.{ Simple => SimplePeriod, Unspecified => UnspecifiedPeriod }
+    import PeriodParse.{Simple => SimplePeriod, Unspecified => UnspecifiedPeriod}
     import TimeSpanParse._
     assertTimeSpan(
       MoveLater(WithModifier(Present, Modifier.Approx), SimplePeriod(1, DAYS)),

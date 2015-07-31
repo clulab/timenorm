@@ -5,7 +5,13 @@ import java.net.URL
 import java.text.Normalizer
 import java.util.logging.Logger
 
-import info.bethard.timenorm.scfg.{SynchronousParser, SynchronousGrammar}
+import info.bethard.timenorm.scfg.SynchronousParser
+import info.bethard.timenorm.scfg.SynchronousGrammar
+import info.bethard.timenorm.scfg.parse.TemporalParse
+import info.bethard.timenorm.scfg.parse.PeriodParse
+import info.bethard.timenorm.scfg.parse.PeriodSetParse
+import info.bethard.timenorm.scfg.parse.TimeSpanParse
+import info.bethard.timenorm.scfg.parse.TimeSpanSetParse
 
 import scala.collection.immutable.IndexedSeq
 import scala.io.Source
@@ -17,11 +23,6 @@ import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.temporal.IsoFields.QUARTER_YEARS
 
-import info.bethard.timenorm.parse.TemporalParse
-import info.bethard.timenorm.parse.PeriodParse
-import info.bethard.timenorm.parse.PeriodSetParse
-import info.bethard.timenorm.parse.TimeSpanParse
-import info.bethard.timenorm.parse.TimeSpanSetParse
 
 object TemporalExpressionParser {
 

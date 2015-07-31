@@ -4,7 +4,7 @@ import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 import info.bethard.timenorm.field._
-import info.bethard.timenorm.parse._
+import info.bethard.timenorm.scfg.parse._
 import info.bethard.timenorm.{Modifier, PeriodSet}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
