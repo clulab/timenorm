@@ -2,9 +2,11 @@ package info.bethard.anafora
 
 import com.codecommit.antixml.Elem
 import com.codecommit.antixml.text
+import com.codecommit.antixml.XML
 
 
 object Data {
+  def fromPath(path: String) = apply(XML.fromSource(io.Source.fromFile(path)))
   def apply(xml: Elem) = new Data(xml)
 }
 class Data(xml: Elem) {
@@ -45,8 +47,16 @@ object Properties {
   def apply(xml: Elem) = new Properties(xml)
 }
 class Properties(xml: Elem) {
-  def apply(name: String): String = xml \ name \ text match {
+  private def textFor(name: String): IndexedSeq[String] = xml \ name \ text
+  def has(name: String): Boolean = !this.textFor(name).isEmpty
+  def get(name: String): Option[String] = this.textFor(name) match {
+    case Seq() => None
+    case Seq(value) => Some(value)
+    case _ => throw new RuntimeException(s"expected 0 or 1 $name value, found $xml")
+  }
+  def apply(name: String): String = this.textFor(name) match {
     case Seq(value) => value
+    case _ => throw new RuntimeException(s"expected single $name value, found $xml")
   }
   def entity(name: String)(implicit data: Data): Entity = data.idToEntity(this.apply(name))
   def relation(name: String)(implicit data: Data): Relation = data.idToRelation(this.apply(name))
