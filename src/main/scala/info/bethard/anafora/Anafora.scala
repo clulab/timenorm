@@ -17,7 +17,7 @@ class Data(xml: Elem) {
 }
 
 
-abstract class Annotation(xml: Elem) {
+abstract class Annotation(val xml: Elem) {
   lazy val Seq(id: String) = xml \ "id" \ text
   lazy val `type`: String = {
     val Seq(tpe) = xml \ "type" \ text
@@ -59,5 +59,6 @@ class Properties(xml: Elem) {
     case _ => throw new RuntimeException(s"expected single $name value, found $xml")
   }
   def entity(name: String)(implicit data: Data): Entity = data.idToEntity(this.apply(name))
+  def getEntity(name: String)(implicit data: Data): Option[Entity] = this.get(name).map(data.idToEntity)
   def relation(name: String)(implicit data: Data): Relation = data.idToRelation(this.apply(name))
 }
