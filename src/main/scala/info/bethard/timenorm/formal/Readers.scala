@@ -9,35 +9,50 @@ object AnaforaReader {
   def number(entity: Entity): Number = Number(entity.properties("Value").toInt)
 
   def period(entity: Entity)(implicit data: Data): Period = entity.`type` match {
-    case "Period" => simplePeriod(entity)
+    case "Period" => entity.properties("Type") match {
+      case "Unknown" => {
+        assert(!entity.properties.has("Number"), s"expected empty Number, found ${entity.xml}")
+        assert(!entity.properties.has("Modifier"), s"expected empty Modifier, found ${entity.xml}")
+        UnknownPeriod
+      }
+      case _ => SimplePeriod(
+        ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
+        number(entity.properties.entity("Number")),
+        entity.properties.get("Modifier") match {
+          case None => Modifier.Exact
+          case Some(string) => ???
+        })
+    }
   }
-
-  def simplePeriod(entity: Entity)(implicit data: Data): SimplePeriod = SimplePeriod(
-    ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
-    number(entity.properties.entity("Number")),
-    entity.properties.get("Modifier") match {
-      case None => Modifier.Exact
-      case Some(string) => ???
-    })
 
   def interval(properties: Properties)(implicit data: Data): Interval = properties("Interval-Type") match {
     case "DocTime" => DocumentCreationTime
   }
 
-  def lastPeriod(entity: Entity)(implicit data: Data): LastPeriod = {
-    LastPeriod(interval(entity.properties), period(entity.properties.entity("Period")))
+  def interval(entity: Entity)(implicit data: Data): Interval = entity.`type` match {
+    case "Last" => entity.properties.getEntity("Period") match {
+      case Some(periodEntity) => {
+        assert(!entity.properties.has("Repeating-Interval"), s"expected empty Repeating-Interval, found ${entity.xml}")
+        LastPeriod(interval(entity.properties), period(periodEntity))
+      }
+      case None => ???
+    }
+    // TODO: reduce duplication with code above
+    case "Before" => entity.properties.getEntity("Period") match {
+      case Some(periodEntity) => {
+        assert(!entity.properties.has("Repeating-Interval"), s"expected empty Repeating-Interval, found ${entity.xml}")
+        BeforePeriod(interval(entity.properties), period(periodEntity))
+      }
+      case None => ???
+    }
   }
 
   def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
     case "Number" => number(entity)
-    case "Period" => simplePeriod(entity)
-    case "Last" =>
-      (entity.properties("Semantics"),
-        entity.properties.has("Period"),
-        entity.properties.has("Repeating-Interval"),
-        entity.properties.has("Repeating-Interval-Number")) match {
-        case ("Standard", true, false, false) => lastPeriod(entity)
-        case _ => ???
-      }
+    case "Period" => period(entity)
+    case "Last" | "Before" => entity.properties.has("Repeating-Interval-Number") match {
+      case false => interval(entity)
+      case true => ???
+    }
   }
 }

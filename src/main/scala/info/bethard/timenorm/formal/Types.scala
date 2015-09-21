@@ -13,6 +13,7 @@ object Modifier {
 
 trait Period extends Temporal
 case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) extends Period
+case object UnknownPeriod extends Period
 case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period
 
 trait Interval extends Temporal
@@ -20,6 +21,7 @@ case object DocumentCreationTime extends Interval
 case class Year(n: Int) extends Interval
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
 case class LastPeriod(interval: Interval, period: Period) extends Interval
+case class BeforePeriod(interval: Interval, period: Period) extends Interval
 
 trait RepeatingInterval
 case class CalendarInterval(unit: TemporalUnit) extends RepeatingInterval
