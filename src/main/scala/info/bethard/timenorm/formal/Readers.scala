@@ -30,18 +30,15 @@ object AnaforaReader {
   }
 
   def interval(entity: Entity)(implicit data: Data): Interval = entity.`type` match {
-    case "Last" => entity.properties.getEntity("Period") match {
+    case "Last" => interval(entity, LastPeriod)
+    case "Before" => interval(entity, BeforePeriod)
+  }
+
+  private def interval(entity: Entity, periodFunc: (Interval, Period) => Interval)(implicit data: Data): Interval = {
+    entity.properties.getEntity("Period") match {
       case Some(periodEntity) => {
         assert(!entity.properties.has("Repeating-Interval"), s"expected empty Repeating-Interval, found ${entity.xml}")
-        LastPeriod(interval(entity.properties), period(periodEntity))
-      }
-      case None => ???
-    }
-    // TODO: reduce duplication with code above
-    case "Before" => entity.properties.getEntity("Period") match {
-      case Some(periodEntity) => {
-        assert(!entity.properties.has("Repeating-Interval"), s"expected empty Repeating-Interval, found ${entity.xml}")
-        BeforePeriod(interval(entity.properties), period(periodEntity))
+        periodFunc(interval(entity.properties), period(periodEntity))
       }
       case None => ???
     }
