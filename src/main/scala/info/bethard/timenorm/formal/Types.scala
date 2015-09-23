@@ -23,8 +23,8 @@ case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
 case class LastPeriod(interval: Interval, period: Period) extends Interval
 case class BeforePeriod(interval: Interval, period: Period) extends Interval
 
-trait RepeatingInterval
-case class CalendarInterval(unit: TemporalUnit) extends RepeatingInterval
-case class TemporalFieldRepeatingInterval(field: TemporalField, value: Long) extends RepeatingInterval
+trait RepeatingInterval extends Temporal
+case class UnitRepeatingInterval(unit: TemporalUnit) extends RepeatingInterval
+case class FieldRepeatingInterval(field: TemporalField, value: Long) extends RepeatingInterval
 case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
 case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
