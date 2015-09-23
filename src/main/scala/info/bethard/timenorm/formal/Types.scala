@@ -4,7 +4,9 @@ import java.time.temporal.{TemporalField, TemporalUnit}
 
 trait Temporal
 
-case class Number(n: Int) extends Temporal
+trait Number extends Temporal
+case class IntNumber(n: Int) extends Number
+case class VagueNumber(description: String) extends Number
 
 trait Modifier extends Temporal
 object Modifier {
@@ -21,7 +23,9 @@ case object DocumentCreationTime extends Interval
 case class Year(n: Int) extends Interval
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
 case class LastPeriod(interval: Interval, period: Period) extends Interval
+case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class BeforePeriod(interval: Interval, period: Period) extends Interval
+case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 
 trait RepeatingInterval extends Temporal
 case class UnitRepeatingInterval(unit: TemporalUnit) extends RepeatingInterval

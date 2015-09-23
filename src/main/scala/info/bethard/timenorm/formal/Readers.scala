@@ -7,7 +7,14 @@ import info.bethard.anafora.{Properties, Data, Entity}
 
 object AnaforaReader {
 
-  def number(entity: Entity): Number = Number(entity.properties("Value").toInt)
+  def number(entity: Entity): Number = {
+    val value = entity.properties("Value")
+    if (value.forall(_.isDigit)) {
+      IntNumber(value.toInt)
+    } else {
+      VagueNumber(value)
+    }
+  }
 
   def period(entity: Entity)(implicit data: Data): Period = entity.`type` match {
     case "Period" => entity.properties("Type") match {
@@ -31,17 +38,27 @@ object AnaforaReader {
   }
 
   def interval(entity: Entity)(implicit data: Data): Interval = entity.`type` match {
-    case "Last" => interval(entity, LastPeriod)
-    case "Before" => interval(entity, BeforePeriod)
+    case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
+    case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
   }
 
-  private def interval(entity: Entity, periodFunc: (Interval, Period) => Interval)(implicit data: Data): Interval = {
+  private def interval(entity: Entity,
+                       periodFunc: (Interval, Period) => Interval,
+                       repeatingIntervalFunc: (Interval, RepeatingInterval) => Interval)(implicit data: Data): Interval = {
     entity.properties.getEntity("Period") match {
       case Some(periodEntity) => {
-        assert(!entity.properties.has("Repeating-Interval"), s"expected empty Repeating-Interval, found ${entity.xml}")
+        assert(!entity.properties.has("Repeating-Interval"),
+          s"expected empty Repeating-Interval, found ${entity.xml}")
         periodFunc(interval(entity.properties), period(periodEntity))
       }
-      case None => ???
+      case None => {
+        assert(entity.properties.has("Repeating-Interval"),
+          s"expected Repeating-Interval, found ${entity.xml}")
+        assert(!entity.properties.has("Repeating-Interval-Number"),
+          s"expected empty Repeating-Interval-Number, found ${entity.xml}")
+        val repeatingIntervalEntity = entity.properties.entity("Repeating-Interval")
+        repeatingIntervalFunc(interval(entity.properties), repeatingInterval(repeatingIntervalEntity))
+      }
     }
   }
 
