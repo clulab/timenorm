@@ -63,6 +63,9 @@ object AnaforaReader {
   }
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = entity.`type` match {
+    case "Calendar-Interval" => {
+      UnitRepeatingInterval(ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"))
+    }
     case name => {
       val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
       val value = field match {
