@@ -1,7 +1,7 @@
 package info.bethard.timenorm.formal
 
 import java.time.Month
-import java.time.temporal.{ChronoField, ChronoUnit}
+import java.time.temporal.{WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
 
@@ -65,6 +65,8 @@ object AnaforaReader {
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = entity.`type` match {
     case "Calendar-Interval" =>
       UnitRepeatingInterval(ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"))
+    case "Week-Of-Year" =>
+      FieldRepeatingInterval(WeekFields.ISO.weekOfYear(), entity.properties("Value").toLong)
     case name =>
       val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
       val value = field match {
