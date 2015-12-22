@@ -33,29 +33,32 @@ object AnaforaReader {
   }
 
   def interval(properties: Properties)(implicit data: Data): Interval = properties("Interval-Type") match {
+    case "Link" => interval(properties.entity("Interval"))
     case "DocTime" => DocumentCreationTime
+    case "Unknown" => UnknownInterval
   }
 
   def interval(entity: Entity)(implicit data: Data): Interval = entity.`type` match {
+    case "Year" => Year(entity.properties("Value").toInt)
+    case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
     case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
     case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
+    case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
+    case "Event" => Event
   }
 
   private def interval(entity: Entity,
                        periodFunc: (Interval, Period) => Interval,
                        repeatingIntervalFunc: (Interval, RepeatingInterval) => Interval)(implicit data: Data): Interval = {
-    entity.properties.getEntity("Period") match {
-      case Some(periodEntity) =>
-        assert(!entity.properties.has("Repeating-Interval"),
-          s"expected empty Repeating-Interval, found ${entity.xml}")
-        periodFunc(interval(entity.properties), period(periodEntity))
-      case None =>
-        assert(entity.properties.has("Repeating-Interval"),
-          s"expected Repeating-Interval, found ${entity.xml}")
-        assert(!entity.properties.has("Repeating-Interval-Number"),
-          s"expected empty Repeating-Interval-Number, found ${entity.xml}")
-        val repeatingIntervalEntity = entity.properties.entity("Repeating-Interval")
+    entity.properties.getEntity("Repeating-Interval") match {
+      case Some(repeatingIntervalEntity) =>
+        assert(!entity.properties.has("Period"),
+          s"expected empty Period, found ${entity.xml}")
         repeatingIntervalFunc(interval(entity.properties), repeatingInterval(repeatingIntervalEntity))
+      case None => entity.properties.getEntity("Period") match {
+        case Some(periodEntity) => periodFunc(interval(entity.properties), period(periodEntity))
+        case None => periodFunc(interval(entity.properties), UnknownPeriod)
+      }
     }
   }
 
@@ -66,6 +69,7 @@ object AnaforaReader {
       val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
       val value = field match {
         case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
+        case ChronoField.DAY_OF_MONTH => entity.properties("Value").toLong
       }
       FieldRepeatingInterval(field, value)
   }
@@ -73,10 +77,7 @@ object AnaforaReader {
   def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
     case "Number" => number(entity)
     case "Period" => period(entity)
-    case "Last" | "Before" => entity.properties.has("Repeating-Interval-Number") match {
-      case false => interval(entity)
-      case true => ???
-    }
+    case "Year" | "This" | "Last" | "Before" | "After" | "Event" => interval(entity)
     case _ => repeatingInterval(entity)
   }
 }

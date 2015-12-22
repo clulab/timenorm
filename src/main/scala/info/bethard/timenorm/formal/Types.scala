@@ -20,12 +20,18 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period
 
 trait Interval extends Temporal
 case object DocumentCreationTime extends Interval
+case object UnknownInterval extends Interval
+case object Event extends Interval
 case class Year(n: Int) extends Interval
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
+case class ThisPeriod(interval: Interval, period: Period) extends Interval
+case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class LastPeriod(interval: Interval, period: Period) extends Interval
 case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class BeforePeriod(interval: Interval, period: Period) extends Interval
 case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
+case class AfterPeriod(interval: Interval, period: Period) extends Interval
+case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 
 trait RepeatingInterval extends Temporal
 case class UnitRepeatingInterval(unit: TemporalUnit) extends RepeatingInterval

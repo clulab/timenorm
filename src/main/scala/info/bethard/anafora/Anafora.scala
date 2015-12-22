@@ -46,7 +46,7 @@ class Relation(xml: Elem) extends Annotation(xml)
 object Properties {
   def apply(xml: Elem) = new Properties(xml)
 }
-class Properties(xml: Elem) {
+class Properties(xml: Elem) extends Annotation(xml) {
   private def textFor(name: String): IndexedSeq[String] = xml \ name \ text
   def has(name: String): Boolean = !this.textFor(name).isEmpty
   def get(name: String): Option[String] = this.textFor(name) match {
