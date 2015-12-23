@@ -7,12 +7,24 @@ import info.bethard.anafora.{Properties, Data, Entity}
 
 object AnaforaReader {
 
-  def number(entity: Entity)(implicit data: Data): Number = {
-    val value = entity.properties("Value")
-    value match {
-      case "?" => VagueNumber(entity.text)
-      case _ => IntNumber(value.toInt)
-    }
+  def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
+    case "?" => VagueNumber(entity.text)
+    case value => IntNumber(value.toInt)
+  }
+
+  def modifier(entity: Entity)(implicit data: Data): Modifier = entity.properties("Type") match {
+    case "Approx" => Modifier.Approx
+    case "Less-Than" => Modifier.LessThan
+    case "More-Than" => Modifier.MoreThan
+    case "Start" => Modifier.Start
+    case "Mid" => Modifier.Mid
+    case "End" => Modifier.End
+    case "Fiscal" => Modifier.Fiscal
+  }
+
+  def modifier(properties: Properties)(implicit data: Data): Modifier = properties.getEntity("Modifier") match {
+    case None => Modifier.Exact
+    case Some(modifierEntity) => modifier(modifierEntity)
   }
 
   def period(entity: Entity)(implicit data: Data): Period = entity.`type` match {
@@ -27,10 +39,7 @@ object AnaforaReader {
           case Some(numberEntity) => number(numberEntity)
           case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber("2+")
         },
-        entity.properties.get("Modifier") match {
-          case None => Modifier.Exact
-          case Some(string) => ???
-        })
+        modifier(entity.properties))
     }
   }
 
@@ -66,21 +75,25 @@ object AnaforaReader {
   }
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = entity.`type` match {
-    case "Calendar-Interval" =>
-      UnitRepeatingInterval(ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"))
-    case "Week-Of-Year" =>
-      FieldRepeatingInterval(WeekFields.ISO.weekOfYear(), entity.properties("Value").toLong)
+    case "Calendar-Interval" => UnitRepeatingInterval(
+      ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"),
+      modifier(entity.properties))
+    case "Week-Of-Year" => FieldRepeatingInterval(
+      WeekFields.ISO.weekOfYear(),
+      entity.properties("Value").toLong,
+      modifier(entity.properties))
     case name =>
       val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
       val value = field match {
         case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
         case ChronoField.DAY_OF_MONTH => entity.properties("Value").toLong
       }
-      FieldRepeatingInterval(field, value)
+      FieldRepeatingInterval(field, value, modifier(entity.properties))
   }
 
   def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
     case "Number" => number(entity)
+    case "Modifier" => modifier(entity)
     case "Period" => period(entity)
     case "Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
     case _ => repeatingInterval(entity)

@@ -11,6 +11,13 @@ case class VagueNumber(description: String) extends Number
 trait Modifier extends Temporal
 object Modifier {
   case object Exact extends Modifier
+  case object Approx extends Modifier
+  case object LessThan extends Modifier
+  case object MoreThan extends Modifier
+  case object Start extends Modifier
+  case object Mid extends Modifier
+  case object End extends Modifier
+  case object Fiscal extends Modifier
 }
 
 trait Period extends Temporal
@@ -36,7 +43,7 @@ case class AfterPeriod(interval: Interval, period: Period) extends Interval
 case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 
 trait RepeatingInterval extends Temporal
-case class UnitRepeatingInterval(unit: TemporalUnit) extends RepeatingInterval
-case class FieldRepeatingInterval(field: TemporalField, value: Long) extends RepeatingInterval
+case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval
+case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval
 case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
 case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
