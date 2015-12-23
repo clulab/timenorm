@@ -44,6 +44,7 @@ object AnaforaReader {
     case "Year" => Year(entity.properties("Value").toInt)
     case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
     case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
+    case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
     case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
     case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
     case "Event" => Event
@@ -81,7 +82,7 @@ object AnaforaReader {
   def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
     case "Number" => number(entity)
     case "Period" => period(entity)
-    case "Year" | "This" | "Last" | "Before" | "After" | "Event" => interval(entity)
+    case "Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
     case _ => repeatingInterval(entity)
   }
 }

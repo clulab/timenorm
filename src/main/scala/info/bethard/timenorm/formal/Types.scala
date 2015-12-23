@@ -28,6 +28,8 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class LastPeriod(interval: Interval, period: Period) extends Interval
 case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
+case class NextPeriod(interval: Interval, period: Period) extends Interval
+case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class BeforePeriod(interval: Interval, period: Period) extends Interval
 case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class AfterPeriod(interval: Interval, period: Period) extends Interval
