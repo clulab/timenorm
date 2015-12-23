@@ -13,7 +13,7 @@ object ParseAnaforaXMLs {
       println(textPath)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
       for (entity <- data.entities) {
-        println(AnaforaReader.temporal(entity))
+        printf("\"%s\" %s\n", entity.text, AnaforaReader.temporal(entity))
       }
     }
   }

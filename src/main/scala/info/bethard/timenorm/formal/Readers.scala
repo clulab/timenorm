@@ -7,12 +7,11 @@ import info.bethard.anafora.{Properties, Data, Entity}
 
 object AnaforaReader {
 
-  def number(entity: Entity): Number = {
+  def number(entity: Entity)(implicit data: Data): Number = {
     val value = entity.properties("Value")
-    if (value.forall(_.isDigit)) {
-      IntNumber(value.toInt)
-    } else {
-      VagueNumber(value)
+    value match {
+      case "?" => VagueNumber(entity.text)
+      case _ => IntNumber(value.toInt)
     }
   }
 
@@ -24,7 +23,10 @@ object AnaforaReader {
         UnknownPeriod
       case _ => SimplePeriod(
         ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
-        number(entity.properties.entity("Number")),
+        entity.properties.getEntity("Number") match {
+          case Some(numberEntity) => number(numberEntity)
+          case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber("2+")
+        },
         entity.properties.get("Modifier") match {
           case None => Modifier.Exact
           case Some(string) => ???
