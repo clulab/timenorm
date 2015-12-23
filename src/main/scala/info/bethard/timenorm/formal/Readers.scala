@@ -10,7 +10,15 @@ object AnaforaReader {
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text)
-    case value => IntNumber(value.toInt)
+    case value => if (!value.contains(".")) {
+      IntNumber(value.toInt)
+    } else {
+      val doubleValue = value.toDouble
+      // only handle /2 case
+      val value2 = doubleValue * 2
+      if (value2 != Math.rint(value2)) ???
+      else FractionalNumber(value2.toInt, 2)
+    }
   }
 
   def modifier(entity: Entity)(implicit data: Data): Modifier = entity.properties("Type") match {
@@ -28,19 +36,23 @@ object AnaforaReader {
     case Some(modifierEntity) => modifier(modifierEntity)
   }
 
-  def period(entity: Entity)(implicit data: Data): Period = entity.`type` match {
-    case "Period" => entity.properties("Type") match {
-      case "Unknown" =>
-        assert(!entity.properties.has("Number"), s"expected empty Number, found ${entity.xml}")
-        assert(!entity.properties.has("Modifier"), s"expected empty Modifier, found ${entity.xml}")
-        UnknownPeriod
-      case _ => SimplePeriod(
-        ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
-        entity.properties.getEntity("Number") match {
-          case Some(numberEntity) => number(numberEntity)
-          case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber("2+")
-        },
-        modifier(entity.properties))
+  def period(entity: Entity)(implicit data: Data): Period = {
+    val mod = modifier(entity.properties)
+    entity.`type` match {
+      case "Period" => entity.properties("Type") match {
+        case "Unknown" =>
+          assert(!entity.properties.has("Number"), s"expected empty Number, found ${entity.xml}")
+          assert(!entity.properties.has("Modifier"), s"expected empty Modifier, found ${entity.xml}")
+          UnknownPeriod
+        case _ => SimplePeriod(
+          ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
+          entity.properties.getEntity("Number") match {
+            case Some(numberEntity) => number(numberEntity)
+            case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber("2+")
+          },
+          mod)
+      }
+      case "Sum" => PeriodSum(entity.properties.getEntities("Periods").map(period).toSet, mod)
     }
   }
 
@@ -106,7 +118,7 @@ object AnaforaReader {
   def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
-    case "Period" => period(entity)
+    case "Period" | "Sum" => period(entity)
     case "Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
     case _ => repeatingInterval(entity)
   }

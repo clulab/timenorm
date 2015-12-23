@@ -65,5 +65,6 @@ class Properties(xml: Elem) extends Annotation(xml) {
   }
   def entity(name: String)(implicit data: Data): Entity = data.idToEntity(this.apply(name))
   def getEntity(name: String)(implicit data: Data): Option[Entity] = this.get(name).map(data.idToEntity)
+  def getEntities(name: String)(implicit data: Data): IndexedSeq[Entity] = this.textFor(name).map(data.idToEntity)
   def relation(name: String)(implicit data: Data): Relation = data.idToRelation(this.apply(name))
 }

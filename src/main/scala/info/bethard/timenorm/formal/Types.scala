@@ -6,6 +6,7 @@ trait Temporal
 
 trait Number extends Temporal
 case class IntNumber(n: Int) extends Number
+case class FractionalNumber(n: Int, d: Int) extends Number
 case class VagueNumber(description: String) extends Number
 
 trait Modifier extends Temporal
