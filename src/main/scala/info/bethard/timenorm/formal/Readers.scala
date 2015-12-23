@@ -4,6 +4,7 @@ import java.time.Month
 import java.time.temporal.{WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
+import info.bethard.timenorm.field.{NIGHT_OF_DAY, EVENING_OF_DAY, AFTERNOON_OF_DAY, MORNING_OF_DAY}
 
 object AnaforaReader {
 
@@ -74,21 +75,32 @@ object AnaforaReader {
     }
   }
 
-  def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = entity.`type` match {
-    case "Calendar-Interval" => UnitRepeatingInterval(
-      ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"),
-      modifier(entity.properties))
-    case "Week-Of-Year" => FieldRepeatingInterval(
-      WeekFields.ISO.weekOfYear(),
-      entity.properties("Value").toLong,
-      modifier(entity.properties))
-    case name =>
-      val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
-      val value = field match {
-        case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
-        case ChronoField.DAY_OF_MONTH => entity.properties("Value").toLong
+  def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
+    val mod = modifier(entity.properties)
+    entity.`type` match {
+      case "Calendar-Interval" => UnitRepeatingInterval(
+        ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"),
+        mod)
+      case "Week-Of-Year" => FieldRepeatingInterval(
+        WeekFields.ISO.weekOfYear(),
+        entity.properties("Value").toLong,
+        mod)
+      case "Part-Of-Day" => entity.properties("Type") match {
+        case "Morning" => FieldRepeatingInterval(MORNING_OF_DAY, 1, mod)
+        case "Noon" => ???
+        case "Afternoon" => FieldRepeatingInterval(AFTERNOON_OF_DAY, 1, mod)
+        case "Evening" => FieldRepeatingInterval(EVENING_OF_DAY, 1, mod)
+        case "Night" => FieldRepeatingInterval(NIGHT_OF_DAY, 1, mod)
+        case "Midnight" => ???
       }
-      FieldRepeatingInterval(field, value, modifier(entity.properties))
+      case name =>
+        val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
+        val value = field match {
+          case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
+          case ChronoField.DAY_OF_MONTH => entity.properties("Value").toLong
+        }
+        FieldRepeatingInterval(field, value, modifier(entity.properties))
+    }
   }
 
   def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
