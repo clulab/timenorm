@@ -6,10 +6,12 @@ import com.codecommit.antixml.XML
 
 
 object Data {
-  def fromPath(path: String) = apply(XML.fromSource(io.Source.fromFile(path)))
-  def apply(xml: Elem) = new Data(xml)
+  def fromPaths(xmlPath: String, textPath: String) = apply(
+    XML.fromSource(io.Source.fromFile(xmlPath)),
+    io.Source.fromFile(textPath).mkString)
+  def apply(xml: Elem, text: String) = new Data(xml, text)
 }
-class Data(xml: Elem) {
+class Data(xml: Elem, text: String) {
   lazy val entities: IndexedSeq[Entity] = xml \ "annotations" \ "entity" map Entity.apply
   lazy val relations: IndexedSeq[Relation] = xml \ "annotations" \ "relation" map Relation.apply
   private[anafora] lazy val idToEntity: Map[String, Entity] = this.entities.map(e => e.id -> e)(scala.collection.breakOut)

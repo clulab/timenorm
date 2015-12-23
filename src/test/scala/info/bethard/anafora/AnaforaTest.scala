@@ -55,7 +55,7 @@ class AnaforaTest extends FunSuite {
       </annotations>
     </data>.convert
 
-    implicit val data = Data(xml)
+    implicit val data = Data(xml, "")
     assert(data.entities.size === 2)
     assert(data.relations.size === 2)
     val Seq(time, event) = data.entities
