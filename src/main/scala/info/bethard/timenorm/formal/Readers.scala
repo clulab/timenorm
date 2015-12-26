@@ -14,10 +14,10 @@ object AnaforaReader {
       IntNumber(value.toInt)
     } else {
       val doubleValue = value.toDouble
+      val number = doubleValue.toInt
       // only handle /2 case
-      val value2 = doubleValue * 2
-      if (value2 != Math.rint(value2)) ???
-      else FractionalNumber(value2.toInt, 2)
+      if (doubleValue - number != 0.5) ???
+      else FractionalNumber(number, 1, 2)
     }
   }
 
