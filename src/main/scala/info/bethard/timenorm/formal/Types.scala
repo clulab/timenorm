@@ -31,6 +31,8 @@ case object DocumentCreationTime extends Interval
 case object UnknownInterval extends Interval
 case class Event(description: String) extends Interval
 case class Year(n: Int) extends Interval
+case class Decade(n: Int) extends Interval
+case class Century(n: Int) extends Interval
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
 case class ThisPeriod(interval: Interval, period: Period) extends Interval
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
