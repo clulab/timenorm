@@ -129,7 +129,8 @@ object AnaforaReader {
         val value = field match {
           case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
           case ChronoField.DAY_OF_WEEK => DayOfWeek.valueOf(entity.properties("Type").toUpperCase()).getValue
-          case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR => entity.properties("Value").toLong
+          case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE =>
+            entity.properties("Value").toLong
         }
         FieldRepeatingInterval(field, value, mod)
     }
