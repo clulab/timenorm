@@ -108,10 +108,10 @@ object AnaforaReader {
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
         RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Intersection" =>
-        val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
-        val intervalEntities = entity.properties.getEntities("Intervals")
-        if (!intervalEntities.isEmpty) ???
-        RepeatingIntervalIntersection(repeatingIntervalEntities.map(repeatingInterval).toSet)
+        val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
+        val intervals = entity.properties.getEntities("Intervals").map(interval)
+        val allRepeatingIntervals = repeatingIntervals ++ intervals.map(IntervalAsRepeatingInterval)
+        RepeatingIntervalIntersection(allRepeatingIntervals.toSet)
       case "Calendar-Interval" => UnitRepeatingInterval(entity.properties("Type") match {
         case "Century" => ChronoUnit.CENTURIES
         case other => ChronoUnit.valueOf(other.toUpperCase + "S")

@@ -52,5 +52,6 @@ case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends
 case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval
 case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
 case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
+case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval
 
 case class TimeZone(name: String) extends Temporal
