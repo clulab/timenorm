@@ -106,11 +106,11 @@ object AnaforaReader {
         mod)
       case "Part-Of-Day" => entity.properties("Type") match {
         case "Morning" => FieldRepeatingInterval(MORNING_OF_DAY, 1, mod)
-        case "Noon" => ???
+        case "Noon" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 43200L, mod)
         case "Afternoon" => FieldRepeatingInterval(AFTERNOON_OF_DAY, 1, mod)
         case "Evening" => FieldRepeatingInterval(EVENING_OF_DAY, 1, mod)
         case "Night" => FieldRepeatingInterval(NIGHT_OF_DAY, 1, mod)
-        case "Midnight" => ???
+        case "Midnight" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 0L, mod)
       }
       case "Hour-Of-Day" => {
         // TODO: handle time zone
