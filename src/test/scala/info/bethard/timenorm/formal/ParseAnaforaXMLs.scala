@@ -5,6 +5,10 @@ import java.io.File
 import info.bethard.anafora.Data
 
 object ParseAnaforaXMLs {
+
+  // annotations that don't represent normalizable time expressions
+  val skip = Set("NotNormalizable", "Frequency")
+
   def main(args: Array[String]): Unit = {
     val Array(dir) = args
     for (xmlFile <- allTimeNormFiles(new File(dir))) {
@@ -12,7 +16,7 @@ object ParseAnaforaXMLs {
       println(xmlFile)
       println(textPath)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
-      for (entity <- data.entities.sortBy(_.fullSpan); if entity.`type` != "NotNormalizable") {
+      for (entity <- data.entities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
         printf("\"%s\" %s\n", entity.text, AnaforaReader.temporal(entity))
       }
     }
