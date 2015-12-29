@@ -108,6 +108,7 @@ object AnaforaReader {
         case "Midnight" => ???
       }
       case "Hour-Of-Day" => {
+        // TODO: handle time zone
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
           case Some(ampmEntity) =>
@@ -136,6 +137,7 @@ object AnaforaReader {
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
     case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
+    case "Time-Zone" => TimeZone(entity.text)
     case _ => repeatingInterval(entity)
   }
 }
