@@ -12,7 +12,7 @@ object ParseAnaforaXMLs {
       println(xmlFile)
       println(textPath)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
-      for (entity <- data.entities; if entity.`type` != "NotNormalizable") {
+      for (entity <- data.entities.sortBy(_.fullSpan); if entity.`type` != "NotNormalizable") {
         printf("\"%s\" %s\n", entity.text, AnaforaReader.temporal(entity))
       }
     }

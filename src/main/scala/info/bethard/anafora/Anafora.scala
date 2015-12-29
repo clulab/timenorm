@@ -38,6 +38,7 @@ class Entity(xml: Elem) extends Annotation(xml) {
     (xml \ "span" \ ElemText).flatMap(_.split(";")).map(_.split(",").map(_.toInt) match {
       case Array(start, end) => (start, end)
     }).toSet
+  lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
   def text(implicit data: Data): String = spans.toList.sorted.map{
     case (start, end) => data.text.substring(start, end)
   }.mkString("...")
