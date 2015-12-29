@@ -4,7 +4,7 @@ import java.time.{DayOfWeek, Month}
 import java.time.temporal.{WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
-import info.bethard.timenorm.field.{NIGHT_OF_DAY, EVENING_OF_DAY, AFTERNOON_OF_DAY, MORNING_OF_DAY}
+import info.bethard.timenorm.field._
 
 object AnaforaReader {
 
@@ -120,6 +120,12 @@ object AnaforaReader {
         WeekFields.ISO.weekOfYear(),
         entity.properties("Value").toLong,
         mod)
+      case "Season-Of-Year" => FieldRepeatingInterval(entity.properties("Type") match {
+        case "Spring" => SPRING_OF_YEAR
+        case "Summer" => SUMMER_OF_YEAR
+        case "Fall" => FALL_OF_YEAR
+        case "Winter" => WINTER_OF_YEAR
+      }, 1L, mod)
       case "Part-Of-Day" => entity.properties("Type") match {
         case "Morning" => FieldRepeatingInterval(MORNING_OF_DAY, 1, mod)
         case "Noon" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 43200L, mod)
