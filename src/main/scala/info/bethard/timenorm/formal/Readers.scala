@@ -94,6 +94,9 @@ object AnaforaReader {
     // TODO: handle Sub-Interval
     val mod = modifier(entity.properties)
     entity.`type` match {
+      case "Union" =>
+        val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
+        RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Calendar-Interval" => UnitRepeatingInterval(
         ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"),
         mod)
