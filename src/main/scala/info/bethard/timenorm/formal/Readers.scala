@@ -72,6 +72,10 @@ object AnaforaReader {
     case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
     case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
     case "Between" => Between(interval(entity.properties, "Start-"), interval(entity.properties, "End-"))
+    case "Nth" => Nth(
+      entity.properties("Value").toInt,
+      interval(entity.properties),
+      repeatingInterval(entity.properties.entity("Repeating-Interval")))
     case "Event" => Event
   }
 
@@ -142,7 +146,7 @@ object AnaforaReader {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
-    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "Event" =>
+    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "Nth" | "Event" =>
       interval(entity)
     case "Time-Zone" => TimeZone(entity.text)
     case _ => repeatingInterval(entity)
