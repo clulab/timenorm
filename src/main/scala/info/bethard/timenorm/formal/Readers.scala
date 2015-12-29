@@ -56,11 +56,12 @@ object AnaforaReader {
     }
   }
 
-  def interval(properties: Properties)(implicit data: Data): Interval = properties("Interval-Type") match {
-    case "Link" => interval(properties.entity("Interval"))
-    case "DocTime" => DocumentCreationTime
-    case "Unknown" => UnknownInterval
-  }
+  def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
+    properties(prefix + "Interval-Type") match {
+      case "Link" => interval(properties.entity(prefix + "Interval"))
+      case "DocTime" => DocumentCreationTime
+      case "Unknown" => UnknownInterval
+    }
 
   def interval(entity: Entity)(implicit data: Data): Interval = entity.`type` match {
     case "Year" => Year(entity.properties("Value").toInt) // TODO: handle sub-interval for Year and Two-Digit-Year
@@ -70,6 +71,7 @@ object AnaforaReader {
     case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
     case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
     case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
+    case "Between" => Between(interval(entity.properties, "Start-"), interval(entity.properties, "End-"))
     case "Event" => Event
   }
 
@@ -137,7 +139,8 @@ object AnaforaReader {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
-    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
+    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "Event" =>
+      interval(entity)
     case "Time-Zone" => TimeZone(entity.text)
     case _ => repeatingInterval(entity)
   }
