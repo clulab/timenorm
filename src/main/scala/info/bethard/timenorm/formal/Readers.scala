@@ -101,9 +101,10 @@ object AnaforaReader {
       case "Union" =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
         RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
-      case "Calendar-Interval" => UnitRepeatingInterval(
-        ChronoUnit.valueOf(entity.properties("Type").toUpperCase + "S"),
-        mod)
+      case "Calendar-Interval" => UnitRepeatingInterval(entity.properties("Type") match {
+        case "Century" => ChronoUnit.CENTURIES
+        case other => ChronoUnit.valueOf(other.toUpperCase + "S")
+      }, mod)
       case "Week-Of-Year" => FieldRepeatingInterval(
         WeekFields.ISO.weekOfYear(),
         entity.properties("Value").toLong,
