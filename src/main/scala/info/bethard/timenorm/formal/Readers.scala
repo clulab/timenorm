@@ -116,14 +116,9 @@ object AnaforaReader {
         // TODO: handle time zone
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
-          case Some(ampmEntity) =>
-            val ampm = ampmEntity.properties("Type") match {
-              case "AM" => 0L
-              case "PM" => 1L
-            }
-            RepeatingIntervalIntersection(Set(
-              FieldRepeatingInterval(ChronoField.HOUR_OF_AMPM, value, mod),
-              FieldRepeatingInterval(ChronoField.AMPM_OF_DAY, ampm, modifier(ampmEntity.properties))))
+          case Some(ampmEntity) => RepeatingIntervalIntersection(Set(
+            FieldRepeatingInterval(ChronoField.HOUR_OF_AMPM, value, mod),
+            repeatingInterval(ampmEntity)))
           case None => FieldRepeatingInterval(ChronoField.HOUR_OF_DAY, value, mod)
         }
       }
@@ -132,6 +127,10 @@ object AnaforaReader {
         val value = field match {
           case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
           case ChronoField.DAY_OF_WEEK => DayOfWeek.valueOf(entity.properties("Type").toUpperCase()).getValue
+          case ChronoField.AMPM_OF_DAY => entity.properties("Type") match {
+            case "AM" => 0L
+            case "PM" => 1L
+          }
           case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE =>
             entity.properties("Value").toLong
         }
