@@ -29,7 +29,7 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period
 trait Interval extends Temporal
 case object DocumentCreationTime extends Interval
 case object UnknownInterval extends Interval
-case object Event extends Interval
+case class Event(description: String) extends Interval
 case class Year(n: Int) extends Interval
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
 case class ThisPeriod(interval: Interval, period: Period) extends Interval

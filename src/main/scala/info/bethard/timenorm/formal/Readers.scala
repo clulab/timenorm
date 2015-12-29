@@ -76,7 +76,7 @@ object AnaforaReader {
       entity.properties("Value").toInt,
       interval(entity.properties),
       repeatingInterval(entity.properties.entity("Repeating-Interval")))
-    case "Event" => Event
+    case "Event" => Event(entity.text)
   }
 
   private def interval(entity: Entity,
