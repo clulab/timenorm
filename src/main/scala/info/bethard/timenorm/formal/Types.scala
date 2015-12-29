@@ -43,7 +43,7 @@ case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: Repeat
 case class AfterPeriod(interval: Interval, period: Period) extends Interval
 case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class Between(startInterval: Interval, endInterval: Interval) extends Interval
-case class Nth(value: Int, interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
+case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval
 
 trait RepeatingInterval extends Temporal
 case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval

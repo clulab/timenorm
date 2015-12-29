@@ -73,8 +73,8 @@ object AnaforaReader {
     case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
     case "Between" => Between(interval(entity.properties, "Start-"), interval(entity.properties, "End-"))
     case "Nth" => Nth(
-      entity.properties("Value").toInt,
       interval(entity.properties),
+      entity.properties("Value").toInt,
       repeatingInterval(entity.properties.entity("Repeating-Interval")))
     case "Event" => Event(entity.text)
   }
