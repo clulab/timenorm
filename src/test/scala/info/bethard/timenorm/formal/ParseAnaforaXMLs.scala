@@ -17,7 +17,8 @@ object ParseAnaforaXMLs {
       println(textPath)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
       for (entity <- data.entities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
-        printf("\"%s\" %s\n", entity.text, AnaforaReader.temporal(entity))
+        printf("\"%s\"[%s] ", entity.text, entity.spans.map(t => "%s,%s".format(t._1, t._2)).toSeq.sorted.mkString(";"))
+        println(AnaforaReader.temporal(entity))
       }
     }
   }
