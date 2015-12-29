@@ -89,6 +89,7 @@ object AnaforaReader {
   }
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
+    // TODO: handle Sub-Interval
     val mod = modifier(entity.properties)
     entity.`type` match {
       case "Calendar-Interval" => UnitRepeatingInterval(
@@ -106,13 +107,27 @@ object AnaforaReader {
         case "Night" => FieldRepeatingInterval(NIGHT_OF_DAY, 1, mod)
         case "Midnight" => ???
       }
+      case "Hour-Of-Day" => {
+        val value = entity.properties("Value").toLong
+        entity.properties.getEntity("AMPM-Of-Day") match {
+          case Some(ampmEntity) =>
+            val ampm = ampmEntity.properties("Type") match {
+              case "AM" => 0L
+              case "PM" => 1L
+            }
+            RepeatingIntervalIntersection(Set(
+              FieldRepeatingInterval(ChronoField.HOUR_OF_AMPM, value, mod),
+              FieldRepeatingInterval(ChronoField.AMPM_OF_DAY, ampm, modifier(ampmEntity.properties))))
+          case None => FieldRepeatingInterval(ChronoField.HOUR_OF_DAY, value, mod)
+        }
+      }
       case name =>
         val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
         val value = field match {
           case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
-          case ChronoField.DAY_OF_MONTH => entity.properties("Value").toLong
+          case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR => entity.properties("Value").toLong
         }
-        FieldRepeatingInterval(field, value, modifier(entity.properties))
+        FieldRepeatingInterval(field, value, mod)
     }
   }
 
