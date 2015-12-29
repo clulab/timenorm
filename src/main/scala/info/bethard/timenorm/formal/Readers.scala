@@ -1,7 +1,7 @@
 package info.bethard.timenorm.formal
 
 import java.time.{DayOfWeek, Month}
-import java.time.temporal.{WeekFields, ChronoField, ChronoUnit}
+import java.time.temporal.{IsoFields, WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
 import info.bethard.timenorm.field._
@@ -115,6 +115,7 @@ object AnaforaReader {
         RepeatingIntervalIntersection(allRepeatingIntervals.toSet)
       case "Calendar-Interval" => UnitRepeatingInterval(entity.properties("Type") match {
         case "Century" => ChronoUnit.CENTURIES
+        case "Quarter-Year" => IsoFields.QUARTER_YEARS
         case other => ChronoUnit.valueOf(other.toUpperCase + "S")
       }, mod)
       case "Week-Of-Year" => FieldRepeatingInterval(
