@@ -63,7 +63,8 @@ object AnaforaReader {
   }
 
   def interval(entity: Entity)(implicit data: Data): Interval = entity.`type` match {
-    case "Year" => Year(entity.properties("Value").toInt)
+    case "Year" => Year(entity.properties("Value").toInt) // TODO: handle sub-interval for Year and Two-Digit-Year
+    case "Two-Digit-Year" => TwoDigitYear(interval(entity.properties), entity.properties("Value").toInt)
     case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
     case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
     case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
@@ -119,7 +120,7 @@ object AnaforaReader {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
-    case "Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
+    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Event" => interval(entity)
     case _ => repeatingInterval(entity)
   }
 }
