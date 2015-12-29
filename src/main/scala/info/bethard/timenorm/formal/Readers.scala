@@ -101,6 +101,7 @@ object AnaforaReader {
   }
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
+    // TODO: handle Number
     // TODO: handle Sub-Interval
     val mod = modifier(entity.properties)
     entity.`type` match {
