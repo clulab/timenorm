@@ -1,6 +1,6 @@
 package info.bethard.timenorm.formal
 
-import java.time.Month
+import java.time.{DayOfWeek, Month}
 import java.time.temporal.{WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
@@ -126,6 +126,7 @@ object AnaforaReader {
         val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
         val value = field match {
           case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
+          case ChronoField.DAY_OF_WEEK => DayOfWeek.valueOf(entity.properties("Type").toUpperCase()).getValue
           case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR => entity.properties("Value").toLong
         }
         FieldRepeatingInterval(field, value, mod)
