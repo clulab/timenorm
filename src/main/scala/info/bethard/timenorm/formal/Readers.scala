@@ -106,9 +106,8 @@ object AnaforaReader {
   }
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
-    // TODO: handle Number
     val mod = modifier(entity.properties)
-    val result = entity.`type` match {
+    var result = entity.`type` match {
       case "Union" =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
         RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
@@ -163,9 +162,13 @@ object AnaforaReader {
         }
         FieldRepeatingInterval(field, value, mod)
     }
-    entity.properties.getEntity("Sub-Interval") match {
+    result = entity.properties.getEntity("Sub-Interval") match {
       case None => result
       case Some(subEntity) => RepeatingIntervalIntersection(Set(result, repeatingInterval(subEntity)))
+    }
+    entity.properties.getEntity("Number") match {
+      case None => result
+      case Some(numberEntity) => NumberedRepeatingInterval(result, number(numberEntity))
     }
   }
 

@@ -51,6 +51,7 @@ case class IntervalSubIntervalIntersection(interval: Interval, subInterval: Repe
 trait RepeatingInterval extends Temporal
 case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval
 case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval
+case class NumberedRepeatingInterval(repeatingInterval: RepeatingInterval, number: Number) extends RepeatingInterval
 case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
 case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
 case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval
