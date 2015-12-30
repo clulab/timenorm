@@ -14,7 +14,7 @@ class AnaforaTest extends FunSuite {
         <entity>
           <id>1@e@wsj_1073@gold</id>
           <type>TIMEX3</type>
-          <span>12,20</span>
+          <span>25,30;12,20</span>
           <properties>
             <functionInDocument>CREATION_TIME</functionInDocument>
             <type>DATE</type>
@@ -55,7 +55,7 @@ class AnaforaTest extends FunSuite {
       </annotations>
     </data>.convert
 
-    implicit val data = Data(xml, "")
+    implicit val data = Data(xml, "abcdefghijklmnopqrstuvwxyz0123456789")
     assert(data.entities.size === 2)
     assert(data.relations.size === 2)
     val Seq(time, event) = data.entities
@@ -63,7 +63,9 @@ class AnaforaTest extends FunSuite {
 
     assert(time.id === "1@e@wsj_1073@gold")
     assert(time.`type` === "TIMEX3")
-    assert(time.spans === Set((12, 20)))
+    assert(time.spans === IndexedSeq((12, 20), (25, 30)))
+    assert(time.fullSpan === (12, 30))
+    assert(time.text === "mnopqrst...z0123")
     assert(time.properties("functionInDocument") === "CREATION_TIME")
     assert(time.properties("type") === "DATE")
     assert(time.properties("temporalFunction") === "false")
@@ -71,7 +73,7 @@ class AnaforaTest extends FunSuite {
 
     assert(event.id === "4@e@wsj_1073@gold")
     assert(event.`type` === "EVENT")
-    assert(event.spans === Set((332, 336)))
+    assert(event.spans === IndexedSeq((332, 336)))
     assert(event.properties("stem") === "pay")
     assert(event.properties("class") === "OCCURRENCE")
 

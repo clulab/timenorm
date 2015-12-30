@@ -34,12 +34,12 @@ object Entity {
   def apply(xml: Elem) = new Entity(xml)
 }
 class Entity(xml: Elem) extends Annotation(xml) {
-  lazy val spans: Set[(Int, Int)] =
+  lazy val spans: IndexedSeq[(Int, Int)] =
     (xml \ "span" \ ElemText).flatMap(_.split(";")).map(_.split(",").map(_.toInt) match {
       case Array(start, end) => (start, end)
-    }).toSet
+    }).sorted
   lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
-  def text(implicit data: Data): String = spans.toList.sorted.map{
+  def text(implicit data: Data): String = spans.map{
     case (start, end) => data.text.substring(start, end)
   }.mkString("...")
 }
