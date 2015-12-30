@@ -14,7 +14,6 @@ object ParseAnaforaXMLs {
     for (xmlFile <- allTimeNormFiles(new File(dir))) {
       val textPath = xmlFile.getPath.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       println(xmlFile)
-      println(textPath)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
       for (entity <- data.entities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
         printf("\"%s\"[%s] ", entity.text, entity.spans.map(t => "%s,%s".format(t._1, t._2)).toSeq.sorted.mkString(";"))
