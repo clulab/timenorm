@@ -140,7 +140,7 @@ object AnaforaReader {
         case "Night" => FieldRepeatingInterval(NIGHT_OF_DAY, 1, mod)
         case "Midnight" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 0L, mod)
       }
-      case "Hour-Of-Day" => {
+      case "Hour-Of-Day" =>
         // TODO: handle time zone
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
@@ -149,7 +149,6 @@ object AnaforaReader {
             repeatingInterval(ampmEntity)))
           case None => FieldRepeatingInterval(ChronoField.HOUR_OF_DAY, value, mod)
         }
-      }
       case name =>
         val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
         val value = field match {
