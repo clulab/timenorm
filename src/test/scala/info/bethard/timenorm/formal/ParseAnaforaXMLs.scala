@@ -24,7 +24,7 @@ object ParseAnaforaXMLs {
 
   def allTimeNormFiles(dir: File): Array[File] = {
     val files = dir.listFiles()
-    val xmlFiles = files.filter(_.getName.matches(".*[.]TimeNorm[.](?!preannotation)[^.]*[.][^.]*.xml"))
+    val xmlFiles = files.filter(_.getName.matches(".*[.]TimeNorm[^.]*[.](?!preannotation)[^.]*[.][^.]*.xml"))
     val subFiles = files.filter(_.isDirectory).flatMap(allTimeNormFiles)
     xmlFiles ++ subFiles
   }
