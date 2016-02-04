@@ -1,6 +1,7 @@
 package info.bethard.timenorm.formal
 
 import java.time.temporal.{TemporalField, TemporalUnit}
+import java.time.LocalDateTime
 
 trait Temporal
 
@@ -30,10 +31,49 @@ trait Interval extends Temporal
 case object DocumentCreationTime extends Interval
 case object UnknownInterval extends Interval
 case class Event(description: String) extends Interval
-case class Year(n: Int) extends Interval
-case class Decade(n: Int) extends Interval
-case class Century(n: Int) extends Interval
-case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval
+
+/**
+ * A Year represents the interval from the first second of the year (inclusive) to the first second of the
+ * next year (exclusive).
+ */
+case class Year(n: Int) extends Interval {
+  val min = LocalDateTime.of( n, 1, 1, 0, 0, 0, 0 )
+  val max = min.plusYears( 1 )
+}
+
+/**
+ * A Decade represents the interval from the first second of the decade (inclusive) to the first second of the
+ * next decade (exclusive).
+ */
+case class Decade(n: Int) extends Interval {
+  val min = LocalDateTime.of( n - (n%10), 1, 1, 0, 0, 0, 0 )
+  val max = min.plusYears( 10 )
+}
+
+/**
+ * A Century represents an interval from the first second of the century (inclusive) to the first second
+ * of the next century (exclusive).
+ */
+case class Century(n: Int) extends Interval {
+  val min = LocalDateTime.of( n - (n%100), 1, 1, 0, 0, 0, 0 )
+  val max = min.plusYears( 100 )
+}
+
+/**
+ * TwoDigitYear creates a one year interval from two digits and the century of another interval.
+ * Formally: TwoDigitYear([ABCD-EF-GH,...) : Interval, YZ : Integer) = [ABYZ-01-01, (ABYZ+1)-01-01)
+ */
+case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
+  val min = LocalDateTime.of( getCentury( interval ) + twoDigits, 1, 1, 0, 0, 0, 0 )
+  val max = min.plusYears( 1 )
+  
+  def getCentury( x : Interval ) : Integer = x match {
+    case x:Year => x.min.getYear() - ( x.min.getYear() % 100 )
+    case x:Decade => x.min.getYear() - ( x.min.getYear() % 100 )
+    case x:Century => x.min.getYear()
+  }
+}
+
 case class ThisPeriod(interval: Interval, period: Period) extends Interval
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
 case class LastPeriod(interval: Interval, period: Period) extends Interval
