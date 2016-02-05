@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>info.bethard</groupId>
   <artifactId>timenorm</artifactId>
-  <version>0.9.1-SNAPSHOT</version>
+  <version>0.9.5</version>
   <packaging>jar</packaging>
   <name>Time Normalization</name>
   <description>Converts natural language expressions of dates and times to their normalized form</description>
@@ -19,7 +19,7 @@
     <url>git@github.com:bethard/timenorm.git</url>
     <connection>scm:git:git@github.com:bethard/timenorm.git</connection>
     <developerConnection>scm:git:git@github.com:bethard/timenorm.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>timenorm-0.9.5</tag>
   </scm>
   <developers>
     <developer>
