@@ -27,18 +27,33 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) exten
 case object UnknownPeriod extends Period
 case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period
 
-trait Interval extends Temporal
-case object DocumentCreationTime extends Interval
-case object UnknownInterval extends Interval
-case class Event(description: String) extends Interval
+trait Interval extends Temporal {
+  val start : LocalDateTime
+  val end : LocalDateTime
+}
+
+case object DocumentCreationTime extends Interval {
+  val start = ???
+  val end = ???
+}
+
+case object UnknownInterval extends Interval {
+  val start = ???
+  val end = ???
+}
+
+case class Event(description: String) extends Interval {
+  val start = ???
+  val end = ???
+}
 
 /**
  * A Year represents the interval from the first second of the year (inclusive) to the first second of the
  * next year (exclusive).
  */
 case class Year(n: Int) extends Interval {
-  val min = LocalDateTime.of( n, 1, 1, 0, 0, 0, 0 )
-  val max = min.plusYears( 1 )
+  val start = LocalDateTime.of( n, 1, 1, 0, 0, 0, 0 )
+  val end = start.plusYears( 1 )
 }
 
 /**
@@ -46,8 +61,8 @@ case class Year(n: Int) extends Interval {
  * next decade (exclusive).
  */
 case class Decade(n: Int) extends Interval {
-  val min = LocalDateTime.of( n - (n%10), 1, 1, 0, 0, 0, 0 )
-  val max = min.plusYears( 10 )
+  val start = LocalDateTime.of( n * 10, 1, 1, 0, 0, 0, 0 )
+  val end = start.plusYears( 10 )
 }
 
 /**
@@ -55,8 +70,8 @@ case class Decade(n: Int) extends Interval {
  * of the next century (exclusive).
  */
 case class Century(n: Int) extends Interval {
-  val min = LocalDateTime.of( n - (n%100), 1, 1, 0, 0, 0, 0 )
-  val max = min.plusYears( 100 )
+  val start = LocalDateTime.of( n * 100, 1, 1, 0, 0, 0, 0 )
+  val end = start.plusYears( 100 )
 }
 
 /**
@@ -64,29 +79,63 @@ case class Century(n: Int) extends Interval {
  * Formally: TwoDigitYear([ABCD-EF-GH,...) : Interval, YZ : Integer) = [ABYZ-01-01, (ABYZ+1)-01-01)
  */
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
-  val min = LocalDateTime.of( getCentury( interval ) + twoDigits, 1, 1, 0, 0, 0, 0 )
-  val max = min.plusYears( 1 )
-  
-  def getCentury( x : Interval ) : Integer = x match {
-    case x:Year => x.min.getYear() - ( x.min.getYear() % 100 )
-    case x:Decade => x.min.getYear() - ( x.min.getYear() % 100 )
-    case x:Century => x.min.getYear()
-  }
+  val start = LocalDateTime.of( ( interval.start.getYear() / 100 * 100 ) + twoDigits, 
+      1, 1, 0, 0, 0, 0 )
+  val end = start.plusYears( 1 )
 }
 
-case class ThisPeriod(interval: Interval, period: Period) extends Interval
-case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
-case class LastPeriod(interval: Interval, period: Period) extends Interval
-case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
-case class NextPeriod(interval: Interval, period: Period) extends Interval
-case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
-case class BeforePeriod(interval: Interval, period: Period) extends Interval
-case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
-case class AfterPeriod(interval: Interval, period: Period) extends Interval
-case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval
-case class Between(startInterval: Interval, endInterval: Interval) extends Interval
-case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval
-case class IntervalSubIntervalIntersection(interval: Interval, subInterval: RepeatingInterval) extends Interval
+case class ThisPeriod(interval: Interval, period: Period) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class LastPeriod(interval: Interval, period: Period) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class NextPeriod(interval: Interval, period: Period) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class BeforePeriod(interval: Interval, period: Period) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class AfterPeriod(interval: Interval, period: Period) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class Between(startInterval: Interval, endInterval: Interval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
+case class IntervalSubIntervalIntersection(interval: Interval, subInterval: RepeatingInterval) extends Interval {
+  val start = ???
+  val end = ???
+}
 
 trait RepeatingInterval extends Temporal
 case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval

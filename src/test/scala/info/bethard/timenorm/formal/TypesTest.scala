@@ -3,57 +3,44 @@ package info.bethard.timenorm.formal
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
+import java.time.LocalDateTime
 
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
   
   test( "Year Type" ) {
-    val y = 1985
-    val year = Year( y )
+    val year = Year( 1985 )
     
-    assert( year.min.getYear() == y )
-    assert( year.min.getMonthValue() == 1 )
-    assert( year.min.getDayOfYear() == 1 )
-    assert( year.min.getHour() == 0 )
-    assert( year.min.getMinute() == 0 )
-    assert( year.min.getSecond() == 0 )
-    assert( year.min.getNano() == 0 )
-    
-    assert( year.max.getYear() == y + 1 )
-    assert( year.max.getMonthValue() == 1 )
-    assert( year.max.getDayOfYear() == 1 )
-    assert( year.max.getHour() == 0 )
-    assert( year.max.getMinute() == 0 )
-    assert( year.max.getSecond() == 0 )
-    assert( year.max.getNano() == 0 )
+    assert( year.start === LocalDateTime.of( 1985, 1, 1, 0, 0, 0, 0 ))
+    assert( year.end === LocalDateTime.of( 1986, 1, 1, 0, 0, 0, 0 ) )
   }
   
   test( "Decade Type" ) {
-    val decade = Decade( 1982 )
+    val decade = Decade( 198 )
     
-    assert( decade.min.getYear() == 1980 )
-    assert( decade.max.getYear() == 1990 )
+    assert( decade.start === LocalDateTime.of( 1980, 1, 1, 0, 0, 0, 0 ))
+    assert( decade.end === LocalDateTime.of( 1990, 1, 1, 0, 0, 0, 0 )) 
   }
   
   test( "Century Type" ) {
-    val century = Century( 1776 )
+    val century = Century( 17 )
     
-    assert( century.min.getYear() == 1700 )
-    assert( century.max.getYear() == 1800 )
+    assert( century.start === LocalDateTime.of( 1700, 1, 1, 0, 0, 0, 0 ))
+    assert( century.end === LocalDateTime.of( 1800, 1, 1, 0, 0, 0, 0 )) 
   }
   
   test( "TwoDigitYear Type" ) {
     val fromYear = TwoDigitYear( Year( 1903 ), 37 )
-    assert( fromYear.min.getYear() == 1937 )
-    assert( fromYear.max.getYear() == 1938 )
+    assert( fromYear.start === LocalDateTime.of( 1937, 1, 1, 0, 0, 0, 0 ))
+    assert( fromYear.end === LocalDateTime.of( 1938, 1, 1, 0, 0, 0, 0 )) 
     
-    val fromDecade = TwoDigitYear( Decade( 1324 ), 85 )
-    assert( fromDecade.min.getYear() == 1385 )
-    assert( fromDecade.max.getYear() == 1386 )
+    val fromDecade = TwoDigitYear( Decade( 132 ), 85 )
+    assert( fromDecade.start === LocalDateTime.of( 1385, 1, 1, 0, 0, 0, 0 ))
+    assert( fromDecade.end === LocalDateTime.of( 1386, 1, 1, 0, 0, 0, 0 )) 
     
-    val fromCentury = TwoDigitYear( Century( 2345 ), 22 )
-    assert( fromCentury.min.getYear() == 2322 )
-    assert( fromCentury.max.getYear() == 2323 )
+    val fromCentury = TwoDigitYear( Century( 23 ), 22 )
+    assert( fromCentury.start === LocalDateTime.of( 2322, 1, 1, 0, 0, 0, 0 ))
+    assert( fromCentury.end === LocalDateTime.of( 2323, 1, 1, 0, 0, 0, 0 )) 
     
   }
   
