@@ -45,3 +45,4 @@ class TypesTest extends FunSuite {
   }
   
 }
+

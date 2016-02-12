@@ -104,34 +104,42 @@ case class NextPeriod(interval: Interval, period: Period) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class BeforePeriod(interval: Interval, period: Period) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class AfterPeriod(interval: Interval, period: Period) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class Between(startInterval: Interval, endInterval: Interval) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
 }
+
 case class IntervalSubIntervalIntersection(interval: Interval, subInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
