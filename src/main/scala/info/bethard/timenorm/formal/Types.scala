@@ -27,6 +27,11 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) exten
 case object UnknownPeriod extends Period
 case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period
 
+/**
+  * An interval on the timeline, defined by a starting point using the start val (inclusive) and an ending
+  * point expressed by the end val (exclusive). For example, the expression \textit{1990} corresponds to the
+  * interval [1990-01-01, 1991-01-01).
+  */
 trait Interval extends Temporal {
   val start : LocalDateTime
   val end : LocalDateTime
