@@ -172,7 +172,7 @@ object AnaforaReader {
     }
   }
 
-  def temporal(entity: Entity)(implicit data: Data): Temporal = entity.`type` match {
+  def temporal(entity: Entity)(implicit data: Data): TimeExpression = entity.`type` match {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
