@@ -1,4 +1,8 @@
 target/
 .cache
 .idea
+.settings/
+.classpath
+.project
+.metadata/
 *.iml
