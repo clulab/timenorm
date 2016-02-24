@@ -1,9 +1,12 @@
 package info.bethard.timenorm.formal
 
+import java.time.temporal.{UnsupportedTemporalTypeException, TemporalUnit, ChronoUnit}
+
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import java.time.LocalDateTime
+import scala.collection.JavaConverters._
 
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
@@ -42,6 +45,31 @@ class TypesTest extends FunSuite {
     assert( fromCentury.start === LocalDateTime.of( 2322, 1, 1, 0, 0, 0, 0 ))
     assert( fromCentury.end === LocalDateTime.of( 2323, 1, 1, 0, 0, 0, 0 )) 
     
+  }
+
+  test( "SimplePeriod" ) {
+    val ldt = LocalDateTime.of( 2000, 1, 1, 0, 0, 0, 0 )
+    val number = IntNumber( 5 )
+    val unit = ChronoUnit.YEARS
+    val mod = Modifier.Exact
+    val list: List[TemporalUnit] = List( unit )
+
+    val simple = SimplePeriod( unit, number, mod )
+    assert( simple.addTo( ldt ) === LocalDateTime.of( 2005, 1, 1, 0, 0, 0, 0 ))
+    assert( simple.subtractFrom( ldt ) === LocalDateTime.of( 1995, 1, 1, 0, 0, 0, 0))
+    assert( simple.get( unit ) === 5 )
+    assert( simple.getUnits() === list.asJava )
+
+    //Expected failures to follow
+    intercept [UnsupportedTemporalTypeException] {
+      assert( simple.get( ChronoUnit.MONTHS ) === 60 )
+    }
+
+    val vagueNumber = VagueNumber("A few")
+
+    intercept [scala.NotImplementedError] {
+      val simpleVague = SimplePeriod(unit, vagueNumber, mod)
+    }
   }
   
 }

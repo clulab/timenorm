@@ -1,13 +1,19 @@
 package info.bethard.timenorm.formal
 
-import java.time.temporal.{Temporal, TemporalAmount, TemporalField, TemporalUnit}
+import java.time.temporal._
 import java.time.LocalDateTime
 import java.util
+
+import scala.collection.JavaConverters._
 
 trait TimeExpression
 
 trait Number extends TimeExpression
-case class IntNumber(n: Int) extends Number
+case class IntNumber(n: Int) extends Number {
+
+  def getValue( ): Int = {  return n }
+}
+
 case class FractionalNumber(number: Int, numerator: Int, denominator: Int) extends Number
 case class VagueNumber(description: String) extends Number
 
@@ -31,14 +37,31 @@ object Modifier {
   */
 trait Period extends TimeExpression with TemporalAmount
 
-case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) extends Period {
-  override def addTo(temporal: Temporal): Temporal = ???
+case class SimplePeriod( unit: TemporalUnit, n: Number, modifier: Modifier) extends Period {
 
-  override def get(unit: TemporalUnit): Long = ???
+  val number = n match {
+    case n:IntNumber => n.getValue()
+    case n:Number => ???
+  }
 
-  override def subtractFrom(temporal: Temporal): Temporal = ???
+  override def addTo(temporal: Temporal): Temporal = {
+    return temporal.plus( number , unit )
+  }
 
-  override def getUnits: util.List[TemporalUnit] = ???
+  override def get(unit: TemporalUnit): Long = {
+    if ( unit == this.unit )
+      return number
+    else
+      throw new UnsupportedTemporalTypeException("")
+  }
+
+  override def subtractFrom(temporal: Temporal): Temporal = {
+    return temporal.minus( number, unit )
+  }
+
+  override def getUnits: java.util.List[TemporalUnit] = {
+    return ( List( unit ) ).asJava
+  }
 }
 
 case object UnknownPeriod extends Period {
