@@ -3,17 +3,12 @@ package info.bethard.timenorm.formal
 import java.time.temporal._
 import java.time.LocalDateTime
 import java.util
-
-import scala.collection.JavaConverters._
+import java.util.Collections.singletonList
 
 trait TimeExpression
 
 trait Number extends TimeExpression
-case class IntNumber(n: Int) extends Number {
-
-  def getValue( ): Int = {  return n }
-}
-
+case class IntNumber(n: Int) extends Number
 case class FractionalNumber(number: Int, numerator: Int, denominator: Int) extends Number
 case class VagueNumber(description: String) extends Number
 
@@ -37,10 +32,10 @@ object Modifier {
   */
 trait Period extends TimeExpression with TemporalAmount
 
-case class SimplePeriod( unit: TemporalUnit, n: Number, modifier: Modifier) extends Period {
+case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) extends Period {
 
   val number = n match {
-    case n:IntNumber => n.getValue()
+    case IntNumber(x) => x
     case n:Number => ???
   }
 
@@ -60,7 +55,7 @@ case class SimplePeriod( unit: TemporalUnit, n: Number, modifier: Modifier) exte
   }
 
   override def getUnits: java.util.List[TemporalUnit] = {
-    return ( List( unit ) ).asJava
+    return singletonList(unit)
   }
 }
 
