@@ -1,8 +1,9 @@
 package info.bethard.timenorm.formal
 
-import java.time.temporal.{Temporal, TemporalAmount, TemporalField, TemporalUnit}
+import java.time.temporal._
 import java.time.LocalDateTime
 import java.util
+import java.util.Collections.singletonList
 
 trait TimeExpression
 
@@ -32,13 +33,30 @@ object Modifier {
 trait Period extends TimeExpression with TemporalAmount
 
 case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) extends Period {
-  override def addTo(temporal: Temporal): Temporal = ???
 
-  override def get(unit: TemporalUnit): Long = ???
+  val number = n match {
+    case IntNumber(x) => x
+    case n:Number => ???
+  }
 
-  override def subtractFrom(temporal: Temporal): Temporal = ???
+  override def addTo(temporal: Temporal): Temporal = {
+    return temporal.plus( number , unit )
+  }
 
-  override def getUnits: util.List[TemporalUnit] = ???
+  override def get(unit: TemporalUnit): Long = {
+    if ( unit == this.unit )
+      return number
+    else
+      throw new UnsupportedTemporalTypeException("")
+  }
+
+  override def subtractFrom(temporal: Temporal): Temporal = {
+    return temporal.minus( number, unit )
+  }
+
+  override def getUnits: java.util.List[TemporalUnit] = {
+    return singletonList(unit)
+  }
 }
 
 case object UnknownPeriod extends Period {
