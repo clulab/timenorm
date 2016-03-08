@@ -5,6 +5,8 @@ import java.time.LocalDateTime
 import java.util
 import java.util.Collections.singletonList
 
+import scala.collection.JavaConverters._
+
 trait TimeExpression
 
 trait Number extends TimeExpression
@@ -47,7 +49,7 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) exten
     if ( unit == this.unit )
       return number
     else
-      throw new UnsupportedTemporalTypeException("")
+      throw new UnsupportedTemporalTypeException(null)
   }
 
   override def subtractFrom(temporal: Temporal): Temporal = {
@@ -70,13 +72,40 @@ case object UnknownPeriod extends Period {
 }
 
 case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period {
-  override def addTo(temporal: Temporal): Temporal = ???
 
-  override def get(unit: TemporalUnit): Long = ???
+  var map = scala.collection.mutable.Map.empty[TemporalUnit,Long]
 
-  override def subtractFrom(temporal: Temporal): Temporal = ???
+  for ( period <- periods; unit <- period.getUnits.asScala )
+      map.get(unit) match {
+      case Some(value) => map(unit) += period.get(unit)
+      case None => map(unit) = period.get(unit)
+    }
 
-  override def getUnits: util.List[TemporalUnit] = ???
+  val list = map.keys.toList.sortBy(_.getDuration()).reverse.asJava
+
+  override def addTo(temporal: Temporal): Temporal = {
+    var current = temporal
+
+    for ((u,n) <- map)
+      current = current.plus(n, u)
+
+    current
+  }
+
+  override def get(unit: TemporalUnit): Long =
+    map.getOrElse( unit, throw new UnsupportedTemporalTypeException(null))
+
+
+  override def subtractFrom(temporal: Temporal): Temporal = {
+    var current = temporal
+
+    for ((u,n) <- map)
+      current = current.minus(n, u)
+
+    current
+  }
+
+  override def getUnits: util.List[TemporalUnit] = list
 }
 
 /**

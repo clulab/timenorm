@@ -1,12 +1,12 @@
 package info.bethard.timenorm.formal
 
-import java.time.temporal.{UnsupportedTemporalTypeException, TemporalUnit, ChronoUnit}
+import java.time.temporal.{TemporalUnit, UnsupportedTemporalTypeException, ChronoUnit}
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import java.time.LocalDateTime
-import scala.collection.JavaConverters._
+import java.util.Collections.singletonList
 
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
@@ -52,13 +52,12 @@ class TypesTest extends FunSuite {
     val number = IntNumber( 5 )
     val unit = ChronoUnit.YEARS
     val mod = Modifier.Exact
-    val list: List[TemporalUnit] = List( unit )
 
     val simple = SimplePeriod( unit, number, mod )
     assert( simple.addTo( ldt ) === LocalDateTime.of( 2005, 1, 1, 0, 0, 0, 0 ))
     assert( simple.subtractFrom( ldt ) === LocalDateTime.of( 1995, 1, 1, 0, 0, 0, 0))
     assert( simple.get( unit ) === 5 )
-    assert( simple.getUnits() === list.asJava )
+    assert( simple.getUnits() === singletonList(unit) )
 
     //Expected failures to follow
     intercept [UnsupportedTemporalTypeException] {
@@ -69,6 +68,37 @@ class TypesTest extends FunSuite {
 
     intercept [scala.NotImplementedError] {
       val simpleVague = SimplePeriod(unit, vagueNumber, mod)
+    }
+  }
+
+  test( "PeriodSum" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val period4 = SimplePeriod(ChronoUnit.DAYS, IntNumber(2), Modifier.Mid )
+    val periodSum = PeriodSum( Set(period1, period2, period3), Modifier.Exact)
+    val ldt = LocalDateTime.of(2000, 6, 10, 0, 0, 0, 0)
+
+    val list = new java.util.ArrayList[TemporalUnit]
+    list.add(ChronoUnit.YEARS)
+    list.add(ChronoUnit.MONTHS)
+
+    assert( periodSum.addTo(ldt) === LocalDateTime.of(2003, 9, 10, 0, 0, 0, 0))
+    assert( periodSum.subtractFrom(ldt) === LocalDateTime.of(1997, 3, 10, 0, 0, 0, 0))
+    assert( periodSum.get(ChronoUnit.YEARS) == 3)
+    assert( periodSum.getUnits() === list )
+
+    //Tests for periodSums that contain periodSums
+    val periodSum2 = PeriodSum( Set( period4, periodSum), Modifier.Fiscal )
+    list.add(ChronoUnit.DAYS)
+
+    assert( periodSum2.addTo( ldt ) === LocalDateTime.of( 2003, 9, 12, 0, 0, 0, 0))
+    assert( periodSum2.subtractFrom(ldt) === LocalDateTime.of( 1997, 3, 8, 0, 0, 0, 0))
+    assert( periodSum2.get(ChronoUnit.DAYS) == 2)
+    assert( periodSum2.getUnits() === list)
+
+    intercept [UnsupportedTemporalTypeException] {
+      periodSum2.get(ChronoUnit.HOURS)
     }
   }
   
