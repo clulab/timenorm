@@ -178,17 +178,31 @@ case class ThisRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   val start = ???
   val end = ???
 }
+
+/**
+  * LastPeriod creates an interval of the given length that ends just before the given interval.
+  * Formally: Last([t1,t2): Interval, Δ: Period = [t1 - Δ, t1)
+  * @param interval interval to shift from
+  * @param period period to shift the interval by
+  */
 case class LastPeriod(interval: Interval, period: Period) extends Interval {
-  val start = ???
-  val end = ???
+  val start = interval.start.minus(period)
+  val end = interval.start
 }
 case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
 }
+
+/**
+  * NextPeriod creates an interval of a given length that starts just after the input interval.
+  * Formally: Next([t1,t2): Interval, Δ: Period = [t2, t2 + Δ)
+  * @param interval interval to shift from
+  * @param period period to shift the interval by
+  */
 case class NextPeriod(interval: Interval, period: Period) extends Interval {
-  val start = ???
-  val end = ???
+  val start = interval.end
+  val end = interval.start.plus(period)
 }
 
 case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
@@ -196,9 +210,15 @@ case class NextRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   val end = ???
 }
 
+/**
+  * BeforePeriod shifts the input interval earlier by a given period length. Formally:
+  * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ, t2 - Δ)
+  * @param interval interval to shift from
+  * @param period period to shift the interval by
+  */
 case class BeforePeriod(interval: Interval, period: Period) extends Interval {
-  val start = ???
-  val end = ???
+  val start = interval.start.minus(period)
+  val end = interval.end.minus(period)
 }
 
 case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
@@ -206,9 +226,15 @@ case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: Repeat
   val end = ???
 }
 
+/**
+  * AfterPeriod shifts the input interval later by a given period length.
+  * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ, t2 +  Δ)
+  * @param interval interval to shift from
+  * @param period period to shift the interval by
+  */
 case class AfterPeriod(interval: Interval, period: Period) extends Interval {
-  val start = ???
-  val end = ???
+  val start = interval.start.plus(period)
+  val end = interval.end.plus(period)
 }
 
 case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
