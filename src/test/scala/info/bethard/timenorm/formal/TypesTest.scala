@@ -101,6 +101,80 @@ class TypesTest extends FunSuite {
       periodSum2.get(ChronoUnit.HOURS)
     }
   }
+
+  test( "LastPeriod" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val periodSum = PeriodSum( Set(period1, period2, period3), Modifier.Exact)
+
+    val year = Year( 2000 )
+    val lastPeriod = LastPeriod( year, period1 )
+
+    assert( lastPeriod.end === year.start )
+    assert( lastPeriod.start === LocalDateTime.of( 1999, 1, 1, 0, 0, 0, 0 ))
+
+    val lastPeriod1 = LastPeriod( year, periodSum )
+
+    assert( lastPeriod1.end === year.start )
+    assert( lastPeriod1.start === LocalDateTime.of( 1996, 10, 1, 0, 0, 0, 0 ))
+  }
+
+  test( "NextPeriod" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val periodSum = PeriodSum( Set(period1, period2, period3), Modifier.Exact)
+
+    val year = Year( 2000 )
+    val nextPeriod = NextPeriod( year, period1 )
+
+    assert( nextPeriod.start === year.end )
+    assert( nextPeriod.end === LocalDateTime.of( 2001, 1, 1, 0, 0, 0, 0 ))
+
+    val nextPeriod1 = NextPeriod( year, periodSum )
+
+    assert( nextPeriod1.start === year.end )
+    assert( nextPeriod1.end === LocalDateTime.of( 2003, 4, 1, 0, 0, 0, 0 ))
+  }
+
+  test( "BeforePeriod" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val periodSum = PeriodSum( Set(period1, period2, period3), Modifier.Exact)
+
+    val year = Year( 2000 )
+    val beforePeriod = BeforePeriod( year, period1 )
+
+    assert( beforePeriod.start === LocalDateTime.of( 1999, 1, 1, 0, 0, 0, 0 ))
+    assert( beforePeriod.end === LocalDateTime.of( 2000, 1, 1, 0, 0, 0, 0 ))
+
+    val beforePeriod1 = BeforePeriod( year, periodSum )
+
+    assert( beforePeriod1.start === LocalDateTime.of( 1996, 10, 1, 0, 0, 0, 0 ))
+    assert( beforePeriod1.end === LocalDateTime.of( 1997, 10, 1, 0, 0, 0, 0 ))
+  }
+
+  test( "AfterPeriod" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val periodSum = PeriodSum( Set(period1, period2, period3), Modifier.Exact)
+
+    val year = Year( 2000 )
+    val afterPeriod = AfterPeriod( year, period1 )
+
+    assert( afterPeriod.start === LocalDateTime.of( 2001, 1, 1, 0, 0, 0, 0 ))
+    assert( afterPeriod.end === LocalDateTime.of( 2002, 1, 1, 0, 0, 0, 0 ))
+
+    val afterPeriod1 = AfterPeriod( year, periodSum )
+
+    assert( afterPeriod1.start === LocalDateTime.of( 2003, 4, 1, 0, 0, 0, 0 ))
+    assert( afterPeriod1.end === LocalDateTime.of( 2004, 4, 1, 0, 0, 0, 0 ))
+  }
+
+
   
 }
 
