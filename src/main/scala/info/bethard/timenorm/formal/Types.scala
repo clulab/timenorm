@@ -1,7 +1,7 @@
 package info.bethard.timenorm.formal
 
 import java.time.temporal._
-import java.time.LocalDateTime
+import java.time.{Duration, LocalDateTime}
 import java.util
 import java.util.Collections.singletonList
 
@@ -170,10 +170,19 @@ case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
   val end = start.plusYears( 1 )
 }
 
+/**
+  * Creates an interval of a given Period length centered on a given interval. Formally:
+  * This([t1,t2): Interval, Δ: Period) = [ (t1 + t2)/2 - Δ/2, (t1 + t2)/2 + Δ/2 )
+  * @param interval interval to center the period upon
+  * @param period period of interest
+  */
 case class ThisPeriod(interval: Interval, period: Period) extends Interval {
-  val start = ???
-  val end = ???
+  val mid = interval.start.plus(Duration.between(interval.start,interval.end).dividedBy(2))
+  val halfPeriod = Duration.between(interval.start.minus(period),interval.start).dividedBy(2)
+  val start = mid.minus(halfPeriod)
+  val end = start.plus(period)
 }
+
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
@@ -182,6 +191,7 @@ case class ThisRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
 /**
   * LastPeriod creates an interval of the given length that ends just before the given interval.
   * Formally: Last([t1,t2): Interval, Δ: Period = [t1 - Δ, t1)
+  *
   * @param interval interval to shift from
   * @param period period to shift the interval by
   */
@@ -197,6 +207,7 @@ case class LastRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
 /**
   * NextPeriod creates an interval of a given length that starts just after the input interval.
   * Formally: Next([t1,t2): Interval, Δ: Period = [t2, t2 + Δ)
+  *
   * @param interval interval to shift from
   * @param period period to shift the interval by
   */
@@ -213,6 +224,7 @@ case class NextRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
 /**
   * BeforePeriod shifts the input interval earlier by a given period length. Formally:
   * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ, t2 - Δ)
+  *
   * @param interval interval to shift from
   * @param period period to shift the interval by
   */
@@ -229,6 +241,7 @@ case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: Repeat
 /**
   * AfterPeriod shifts the input interval later by a given period length.
   * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ, t2 +  Δ)
+  *
   * @param interval interval to shift from
   * @param period period to shift the interval by
   */
@@ -245,6 +258,24 @@ case class AfterRepeatingInterval(interval: Interval, repeatingInterval: Repeati
 case class Between(startInterval: Interval, endInterval: Interval) extends Interval {
   val start = ???
   val end = ???
+}
+
+/**
+  * This variant of the Nth interval creates an interval that is the nth repetition of the period following the
+  * start of the interval.
+  * Formally: Nth([t1,t2): Interval, Δ: Period, n: N): Interval = [t1+Δ*(n-1), t1+Δ*n)
+  * @param interval
+  * @param n
+  * @param period
+  */
+case class NthInterval(interval: Interval, n: Number, period: Period) extends Interval {
+  val factor = n match {
+    case IntNumber(x) => x.toInt
+    case n:Number => ???
+  }
+
+  val start = Iterator.fill(factor-1)(period).foldLeft(interval.start)(_ plus _)
+  val end = start.plus(period)
 }
 
 case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval {

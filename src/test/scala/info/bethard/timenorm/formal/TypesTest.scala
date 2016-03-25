@@ -174,7 +174,42 @@ class TypesTest extends FunSuite {
     assert( afterPeriod1.end === LocalDateTime.of( 2004, 4, 1, 0, 0, 0, 0 ))
   }
 
+  test( "ThisPeriod" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
 
+    val year = Year( 2002 )
+    val thisPeriod = ThisPeriod( year, period1 )
+
+    assert( thisPeriod.start === LocalDateTime.of(2002, 1, 1, 0, 0, 0 ,0))
+    assert( thisPeriod.end === LocalDateTime.of( 2003, 1, 1, 0, 0, 0, 0))
+
+    val interval = new Interval {
+      val start = LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0)
+      val end = LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0)
+    }
+    val period = SimplePeriod(ChronoUnit.DAYS, IntNumber(5), Modifier.Exact)
+    val thisPeriod2 = ThisPeriod(interval, period)
+
+    assert( thisPeriod2.start === LocalDateTime.of(2000, 12, 29, 12, 0, 0, 0))
+    assert( thisPeriod2.end === LocalDateTime.of( 2001, 1, 3, 12, 0, 0, 0))
+  }
+
+  test( "Nth" ) {
+    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+
+    val year = Year( 2001 )
+    val nth = NthInterval( year, IntNumber(2), period1 )
+
+    assert( nth.start === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
+    assert( nth.end === LocalDateTime.of(2003, 1, 1, 0, 0, 0, 0))
+
+    val period2 = SimplePeriod(ChronoUnit.MINUTES, IntNumber(20), Modifier.Exact)
+    val periodSum = PeriodSum( Set(period1,period2), Modifier.Exact)
+    val nth2 = NthInterval( year, IntNumber(4), periodSum)
+
+    assert( nth2.start === LocalDateTime.of(2004, 1, 1, 1, 0, 0, 0))
+    assert( nth2.end === LocalDateTime.of(2005, 1, 1, 1, 20, 0, 0))
+  }
   
 }
 
