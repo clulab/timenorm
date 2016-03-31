@@ -255,18 +255,24 @@ case class AfterRepeatingInterval(interval: Interval, repeatingInterval: Repeati
   val end = ???
 }
 
+/**
+  * This interval finds the interval between two input intervals. Formally:
+  * Between([t1,t2): startInterval,[t3,t4): endInterval): Interval = [t2,t3)
+  * @param startInterval first interval
+  * @param endInterval second interval
+  */
 case class Between(startInterval: Interval, endInterval: Interval) extends Interval {
-  val start = ???
-  val end = ???
+  val start = startInterval.end
+  val end = endInterval.start
 }
 
 /**
   * This variant of the Nth interval creates an interval that is the nth repetition of the period following the
   * start of the interval.
   * Formally: Nth([t1,t2): Interval, Δ: Period, n: N): Interval = [t1+Δ*(n-1), t1+Δ*n)
-  * @param interval
-  * @param n
-  * @param period
+  * @param interval the interval to begin from
+  * @param n the number of repetitions of the period to add
+  * @param period the period to scale by
   */
 case class NthInterval(interval: Interval, n: Number, period: Period) extends Interval {
   val factor = n match {
