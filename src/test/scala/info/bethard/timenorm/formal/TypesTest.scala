@@ -1,11 +1,11 @@
 package info.bethard.timenorm.formal
 
-import java.time.temporal.{TemporalUnit, UnsupportedTemporalTypeException, ChronoUnit}
+import java.time.temporal.{ChronoField, ChronoUnit, TemporalUnit, UnsupportedTemporalTypeException}
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import java.time.LocalDateTime
+import java.time.{DateTimeException, LocalDateTime}
 import java.util.Collections.singletonList
 
 @RunWith(classOf[JUnitRunner])
@@ -194,6 +194,15 @@ class TypesTest extends FunSuite {
     assert( thisPeriod2.end === LocalDateTime.of( 2001, 1, 3, 12, 0, 0, 0))
   }
 
+  test( "Between" ) {
+    val interval1 = Year(1999)
+    val interval2 = Year(2002)
+    val between = Between(interval1,interval2)
+
+    assert( between.start === LocalDateTime.of(2000,1,1,0,0,0,0))
+    assert( between.end === LocalDateTime.of(2002,1,1,0,0,0,0))
+  }
+
   test( "Nth" ) {
     val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
 
@@ -209,6 +218,125 @@ class TypesTest extends FunSuite {
 
     assert( nth2.start === LocalDateTime.of(2004, 1, 1, 1, 0, 0, 0))
     assert( nth2.end === LocalDateTime.of(2005, 1, 1, 1, 20, 0, 0))
+  }
+
+  test( "UnitRepeatingInterval" ) {
+    val rInterval = UnitRepeatingInterval( ChronoUnit.MONTHS, Modifier.Exact )
+    val ldt1 = LocalDateTime.of(2002,3,22,11,30,30,0)
+    val ldt2 = LocalDateTime.of(2003,5,10,22,10,20,0)
+    val interval = SimpleInterval(ldt1,ldt2)
+
+    val pre = rInterval.preceding(interval)
+    var next = pre.next()
+    assert( next.start === LocalDateTime.of( 2002, 2, 1, 0, 0, 0, 0))
+    assert( next.end === LocalDateTime.of( 2002, 3, 1, 0, 0, 0, 0))
+
+    next = pre.next()
+    assert( next.start === LocalDateTime.of( 2002, 1, 1, 0, 0, 0, 0))
+    assert( next.end === LocalDateTime.of( 2002, 2, 1, 0, 0, 0, 0))
+
+    val follow = rInterval.following(interval)
+    next = follow.next()
+    assert (next.start === LocalDateTime.of( 2003, 6, 1, 0, 0, 0, 0))
+    assert( next.end === LocalDateTime.of( 2003, 7, 1, 0, 0, 0, 0))
+
+    next = follow.next()
+    assert (next.start === LocalDateTime.of( 2003, 7, 1, 0, 0, 0, 0))
+    assert( next.end === LocalDateTime.of( 2003, 8, 1, 0, 0, 0, 0))
+
+    //Truncate method tests
+    val mod = Modifier.End
+    val centuryRI = UnitRepeatingInterval(ChronoUnit.CENTURIES, mod)
+    val decadeRI = UnitRepeatingInterval(ChronoUnit.DECADES, mod)
+    val weeksRI = UnitRepeatingInterval(ChronoUnit.WEEKS, mod)
+
+    var centuries = centuryRI.preceding(interval)
+    next = centuries.next
+    assert (next.start === LocalDateTime.of(1900,1,1,0,0))
+    assert (next.end === LocalDateTime.of(2000,1,1,0,0))
+
+    centuries = centuryRI.following(interval)
+    next = centuries.next
+    assert (next.start === LocalDateTime.of(2100,1,1,0,0))
+    assert (next.end === LocalDateTime.of(2200,1,1,0,0))
+
+    var decades = decadeRI.preceding(interval)
+    next = decades.next
+    assert (next.start === LocalDateTime.of(1990,1,1,0,0))
+    assert (next.end === LocalDateTime.of(2000,1,1,0,0))
+
+    decades = decadeRI.following(interval)
+    next = decades.next
+    assert (next.start === LocalDateTime.of(2010,1,1,0,0))
+    assert (next.end === LocalDateTime.of(2020,1,1,0,0))
+
+    var weeks = weeksRI.preceding(interval)
+    next = weeks.next
+    assert (next.start === LocalDateTime.of(2002,3,10,0,0))
+    assert (next.end === LocalDateTime.of(2002,3,17,0,0))
+
+    weeks = weeksRI.following(interval)
+    next = weeks.next
+    assert (next.start === LocalDateTime.of(2003,5,11,0,0))
+    assert (next.end === LocalDateTime.of(2003,5,18,0,0))
+  }
+
+  test( "FieldRepeatingInterval" ) {
+    val rInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val rInterval2 = FieldRepeatingInterval( ChronoField.DAY_OF_MONTH, 29, Modifier.Exact )
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+
+    ////Tests for MONTH_OF_YEAR////
+
+    //  Preceding
+    val pre = rInterval.preceding(interval)
+    var next = pre.next()
+    assert( next.start === LocalDateTime.of(2001,5,1,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2001,6,1,0,0,0,0))
+
+    next = pre.next()
+    assert( next.start === LocalDateTime.of(2000,5,1,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2000,6,1,0,0,0,0))
+
+    //  Following
+    val post = rInterval.following(interval)
+    next = post.next()
+    assert( next.start === LocalDateTime.of(2004,5,1,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2004,6,1,0,0,0,0))
+
+    next = post.next()
+    assert( next.start === LocalDateTime.of(2005,5,1,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2005,6,1,0,0,0,0))
+
+    ////Tests for DAY_OF_MONTH////
+
+    //  Preceding
+    val pre2 = rInterval2.preceding(interval)
+    next = pre2.next()
+    assert( next.start === LocalDateTime.of(2002,1,29,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2002,1,30,0,0,0,0))
+
+    next = pre2.next()
+    assert( next.start === LocalDateTime.of(2001,12,29,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2001,12,30,0,0,0,0))
+
+    //  Following
+    val post2 = rInterval2.following(interval)
+    next = post2.next()
+    assert( next.start === LocalDateTime.of(2003,5,29,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2003,5,30,0,0,0,0))
+
+    next = post2.next()
+    assert( next.start === LocalDateTime.of(2003,6,29,0,0,0,0))
+    assert( next.end === LocalDateTime.of(2003,6,30,0,0,0,0))
+
+    //No Exception at FieldRepeatingInterval instantiation
+    val rInterval3 = FieldRepeatingInterval( ChronoField.DAY_OF_MONTH, 300, Modifier.Approx)
+    intercept [DateTimeException] {
+      //Exception thrown here
+      val testException = rInterval3.preceding(interval)
+    }
   }
   
 }
