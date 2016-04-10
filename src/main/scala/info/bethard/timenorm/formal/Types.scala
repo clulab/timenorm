@@ -1,7 +1,7 @@
 package info.bethard.timenorm.formal
 
 import java.time.temporal._
-import java.time.{Duration, LocalDateTime}
+import java.time.{DateTimeException, Duration, LocalDateTime}
 import java.util
 import java.util.Collections.singletonList
 
@@ -133,6 +133,8 @@ case class Event(description: String) extends Interval {
   val end = ???
 }
 
+case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Interval
+
 /**
  * A Year represents the interval from the first second of the year (inclusive) to the first second of the
  * next year (exclusive).
@@ -173,6 +175,7 @@ case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
 /**
   * Creates an interval of a given Period length centered on a given interval. Formally:
   * This([t1,t2): Interval, Δ: Period) = [ (t1 + t2)/2 - Δ/2, (t1 + t2)/2 + Δ/2 )
+  *
   * @param interval interval to center the period upon
   * @param period period of interest
   */
@@ -183,6 +186,14 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   val end = start.plus(period)
 }
 
+/**
+  * Finds the repeated interval(s) containing the given interval. Formally:
+  * This([t1,t2): Interval, R: RepeatingInterval): RepeatingInterval
+  *
+  * = { [t3,t4) ∈ R: t3 ≤ t1 ∧ t2 ≤ t4 }
+  * @param interval
+  * @param repeatingInterval
+  */
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
   val start = ???
   val end = ???
@@ -258,6 +269,7 @@ case class AfterRepeatingInterval(interval: Interval, repeatingInterval: Repeati
 /**
   * This interval finds the interval between two input intervals. Formally:
   * Between([t1,t2): startInterval,[t3,t4): endInterval): Interval = [t2,t3)
+  *
   * @param startInterval first interval
   * @param endInterval second interval
   */
@@ -270,6 +282,7 @@ case class Between(startInterval: Interval, endInterval: Interval) extends Inter
   * This variant of the Nth interval creates an interval that is the nth repetition of the period following the
   * start of the interval.
   * Formally: Nth([t1,t2): Interval, Δ: Period, n: N): Interval = [t1+Δ*(n-1), t1+Δ*n)
+  *
   * @param interval the interval to begin from
   * @param n the number of repetitions of the period to add
   * @param period the period to scale by
@@ -294,12 +307,119 @@ case class IntervalSubIntervalIntersection(interval: Interval, subInterval: Repe
   val end = ???
 }
 
-trait RepeatingInterval extends TimeExpression
-case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval
-case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval
-case class NumberedRepeatingInterval(repeatingInterval: RepeatingInterval, number: Number) extends RepeatingInterval
-case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
-case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval
-case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval
+trait RepeatingInterval extends TimeExpression {
+  def preceding(interval: Interval): Iterator[Interval]
+  def following(interval: Interval): Iterator[Interval]
+
+  private[formal] def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = {
+    tUnit match {
+      case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear/100*100,1,1,0,0)
+      case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear/10*10,1,1,0,0)
+      case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
+      case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+      case ChronoUnit.WEEKS =>
+        ldt.withDayOfYear(ldt.getDayOfYear-ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
+      case _ => ldt.truncatedTo(tUnit)
+    }
+  }
+}
+
+case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval {
+  override def preceding(interval: Interval): Iterator[Interval] = {
+    var end = truncate( interval.start, unit ).plus(1,unit)
+    var start = end.minus(1, unit)
+
+    Iterator.continually {
+      start = start.minus(1, unit)
+      end = end.minus(1, unit)
+      SimpleInterval(start, end)
+    }
+  }
+
+  override def following(interval: Interval): Iterator[Interval] = {
+    var start = truncate(interval.end, unit)
+    var end = start.plus(1,unit)
+
+    Iterator.continually {
+      start = start.plus(1, unit)
+      end = end.plus(1, unit)
+      SimpleInterval(start, end)
+    }
+  }
+}
+
+case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval {
+  override def preceding(interval: Interval): Iterator[Interval] = {
+    var start = truncate(interval.start.`with`(field,value), field.getBaseUnit)
+
+    if (start.isBefore(interval.start))
+      start = start.plus(1,field.getRangeUnit)
+
+    Iterator.continually {
+      start = start.minus(1,field.getRangeUnit)
+
+      while (start.get(field) != value) {
+        start = start.minus(1, field.getRangeUnit)
+
+        try
+          start = start.`with`(field, value)
+        catch {
+          case dte: DateTimeException =>
+        }
+      }
+
+      SimpleInterval(start, start.plus(1,field.getBaseUnit))
+    }
+  }
+
+  override def following(interval: Interval): Iterator[Interval] = {
+    var start = truncate(interval.end.`with`(field,value), field.getBaseUnit)
+
+    if (start.isAfter(interval.end))
+      start = start.minus(1,field.getRangeUnit)
+
+    Iterator.continually {
+      start = start.plus(1, field.getRangeUnit)
+
+      while (start.get(field) != value) {
+        start = start.plus(1,field.getRangeUnit)
+
+        try
+          start = start.`with`(field,value)
+        catch {
+          case dte: DateTimeException =>
+        }
+      }
+
+      SimpleInterval(start, start.plus(1,field.getBaseUnit))
+    }
+  }
+}
+
+case class NumberedRepeatingInterval(repeatingInterval: RepeatingInterval, number: Number) extends RepeatingInterval {
+  override def preceding(interval: Interval): Iterator[Interval]  = ???
+
+  override def following(interval: Interval): Iterator[Interval]  = ???
+}
+
+case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+  override def preceding(interval: Interval): Iterator[Interval]  = ???
+
+  override def following(interval: Interval): Iterator[Interval]  = ???
+}
+
+case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+  override def preceding(interval: Interval): Iterator[Interval]  = ???
+
+  override def following(interval: Interval): Iterator[Interval]  = ???
+}
+
+case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval {
+  override def preceding(interval: Interval): Iterator[Interval]  = ???
+
+  override def following(interval: Interval): Iterator[Interval]  = ???
+}
+
 
 case class TimeZone(name: String) extends TimeExpression
+
