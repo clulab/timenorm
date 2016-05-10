@@ -199,8 +199,44 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   * @param repeatingInterval
   */
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val start = ???
-  val end = ???
+  val Interval(start, end) = repeatingInterval match {
+    case ri: FieldRepeatingInterval => {
+      val base = ri.field.getBaseUnit
+      val range = ri.field.getRangeUnit
+
+      if ( Duration.between(interval.start,interval.end).compareTo(range.getDuration) > 0 )
+        throw new DateTimeException("Interval duration is greater than field range duration")
+
+      val rangeStart = RepeatingInterval.truncate(interval.start,range)
+      val rangeInterval = SimpleInterval( rangeStart, rangeStart.plus(1,range))
+
+      //Note: plus(1,base) is called to ensure proper interpretation of Week units by Java's with() method.
+      val startMod = RepeatingInterval.truncate(interval.start,range).plus(1,base).`with`(ri.field,ri.value)
+      val startInterval = SimpleInterval( startMod, startMod.plus(1,base))
+
+      val endMod = RepeatingInterval.truncate(interval.end,range).plus(1,base).`with`(ri.field,ri.value)
+      val endInterval = SimpleInterval( endMod, endMod.plus(1,base))
+
+      //Is the interval contained within the TemporalField's range?
+      if ( rangeInterval.start.isBefore(interval.start) && rangeInterval.end.isAfter(interval.end))
+        startInterval
+      //Does the start of the interval fall within the new interval?
+      else if ( startInterval.start.isBefore(interval.start) && startInterval.end.isAfter(interval.start))
+        startInterval
+      //Does the end of the interval fall within the next new interval?
+      else if ( endInterval.start.isBefore(interval.end) && endInterval.end.isAfter(interval.end))
+        endInterval
+      else
+        ri.following(interval.start).next
+    }
+    case ri: UnitRepeatingInterval => {
+      if ( Duration.between(interval.start,interval.end).compareTo(ri.unit.getDuration) > 0 )
+        throw new DateTimeException("Interval duration is greater than unit duration")
+
+      ri.following(interval.end.minus(1,ri.unit)).next
+    }
+    case _ => ???
+  }
 }
 
 /**
@@ -219,6 +255,7 @@ case class LastPeriod(interval: Interval, period: Period) extends Interval {
   * LastRepeatingInterval finds the n latest repeated intervals that appear before the given interval. Formally:
   * LastRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
   * n latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
+  *
   * @param interval interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
@@ -242,6 +279,7 @@ case class NextPeriod(interval: Interval, period: Period) extends Interval {
   * NextRepeatingInterval finds the n earliest repeated intervals that appear after the given interval. Formally:
   * NextRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
   * n earliest of {[t.start,t.end) ∈ R: t2 ≤ t.start}
+  *
   * @param interval interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
@@ -265,6 +303,7 @@ case class BeforePeriod(interval: Interval, period: Period) extends Interval {
   * BeforeRepeatingInterval finds the Nth latest repeated interval before the input interval. Formally:
   * BeforeRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number): Interval =
   * Nth latest interval {[t.start, t.end) ∈ R: t.end ≤ t1}
+  *
   * @param interval interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
@@ -288,6 +327,7 @@ case class AfterPeriod(interval: Interval, period: Period) extends Interval {
   * AfterRepeatingInterval finds the Nth earliest repeated interval after the input interval. Formally:
   * AfterRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number): Interval =
   * Nth earliest interval {[t.start, t.end) ∈ R: t2 ≤ t.start}
+  *
   * @param interval
   * @param repeatingInterval
   */
@@ -330,6 +370,7 @@ case class NthInterval(interval: Interval, n: Number, period: Period) extends In
   * NthRepeatingInterval selects the Nth subinterval of a RepeatingInterval, counting from the start
   * of another Interval. Formally: NthRepeatingInterval([t1,t2): Interval, n: Number,
   * R: RepeatingInterval): Interval = Nth of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
+  *
   * @param interval
   * @param value
   * @param repeatingInterval
@@ -350,8 +391,10 @@ trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
   def following(ldt: LocalDateTime): Iterator[Interval]
 
-  private[formal] def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = {
-    tUnit match {
+}
+
+private[formal] object RepeatingInterval {
+  def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = tUnit match {
       case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear/100*100,1,1,0,0)
       case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear/10*10,1,1,0,0)
       case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
@@ -360,12 +403,11 @@ trait RepeatingInterval extends TimeExpression {
         ldt.withDayOfYear(ldt.getDayOfYear-ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
       case _ => ldt.truncatedTo(tUnit)
     }
-  }
 }
 
 case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval {
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var end = truncate( ldt, unit ).plus(1,unit)
+    var end = RepeatingInterval.truncate( ldt, unit ).plus(1,unit)
     var start = end.minus(1, unit)
 
     Iterator.continually {
@@ -376,7 +418,7 @@ case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = truncate(ldt, unit)
+    var start = RepeatingInterval.truncate(ldt, unit)
     var end = start.plus(1,unit)
 
     Iterator.continually {
@@ -389,7 +431,7 @@ case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends
 
 case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval {
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = truncate(ldt.`with`(field,value), field.getBaseUnit)
+    var start = RepeatingInterval.truncate(ldt.`with`(field,value), field.getBaseUnit)
 
     if (start.isBefore(ldt))
       start = start.plus(1,field.getRangeUnit)
@@ -412,7 +454,7 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = truncate(ldt`with`(field,value), field.getBaseUnit)
+    var start = RepeatingInterval.truncate(ldt`with`(field,value), field.getBaseUnit)
 
     if (start.isAfter(ldt))
       start = start.minus(1,field.getRangeUnit)

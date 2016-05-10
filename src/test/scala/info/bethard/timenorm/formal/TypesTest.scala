@@ -417,5 +417,92 @@ class TypesTest extends FunSuite {
       val nthFailure = Nth(interval, 5, frInterval)
     }
   }
+
+  test ( "ThisRepeatingInterval" ) {
+    //~One day, Tuesday (1st of February 2005)
+    val interval = SimpleInterval(
+      LocalDateTime.of(2005,2,1,3,22), LocalDateTime.of(2005,2,2,0,0))
+
+    //One week, Thursday the 10th through Thursday the 17th of April 2003
+    val interval1 = SimpleInterval(
+      LocalDateTime.of(2003, 4, 10, 0, 0), LocalDateTime.of(2003, 4, 17, 0, 0))
+
+    //~11 months, 22nd of March 2002 through 10th of February 2003
+    val interval2 = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,2,10,22,10,20,0))
+
+    //Friday
+    val frInterval1 = FieldRepeatingInterval( ChronoField.DAY_OF_WEEK, 5, Modifier.Exact )
+    //March
+    val frInterval2 = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 3, Modifier.Exact )
+
+    //Interval: Tuesday (1st of February), FieldRI: Friday
+    //Expected result: Friday (4th of February)
+    var thisRI = ThisRepeatingInterval(interval, frInterval1)
+    assert( thisRI.start === LocalDateTime.of(2005,2,4,0,0))
+    assert( thisRI.end === LocalDateTime.of(2005,2,5,0,0))
+
+    //Interval: Saturday (8th of March) through Friday (14th of March) 2003
+    //FieldRI: Friday
+    //Expected result: Friday (14th of March) 2003
+    val interval3 = SimpleInterval(LocalDateTime.of(2003, 3, 8, 0, 0), LocalDateTime.of(2003, 3, 14, 0, 0))
+    thisRI = ThisRepeatingInterval(interval3, frInterval1)
+    assert( thisRI.start === LocalDateTime.of(2003,3,14,0,0))
+    assert( thisRI.end === LocalDateTime.of(2003,3,15,0,0))
+
+    //Interval: Thursday the 10th through Thursday the 17th of April 2003, FieldRI: Friday,
+    //Expected Result: Friday (11th of April)
+    thisRI = ThisRepeatingInterval(interval1, frInterval1)
+    assert( thisRI.start === LocalDateTime.of(2003, 4, 11, 0, 0))
+    assert( thisRI.end === LocalDateTime.of( 2003, 4, 12, 0, 0))
+
+    //Interval: 22nd of March 2002 through 10th of February 2003
+    //FieldRI: March
+    //Expected Result: March 2002
+    thisRI = ThisRepeatingInterval(interval2, frInterval2)
+    assert( thisRI.start === LocalDateTime.of(2002, 3, 1, 0, 0))
+    assert( thisRI.end === LocalDateTime.of(2002, 4, 1, 0, 0))
+
+    //Interval: Thursday the 10th through Thursday the 17th of April 2003, FieldRI: March
+    //Expected Result: March 2003
+    thisRI = ThisRepeatingInterval(interval1, frInterval2)
+    assert( thisRI.start === LocalDateTime.of(2003, 3, 1, 0, 0))
+    assert( thisRI.end === LocalDateTime.of(2003, 4, 1, 0, 0))
+
+    intercept [DateTimeException] {
+      thisRI = ThisRepeatingInterval(interval2, frInterval1)
+    }
+
+    //Interval: Tuesday (1st of February 2005), UnitRI: Week
+    //Expected result: Sunday, January 30th through Saturday, February 5th 2005
+    var urInterval = UnitRepeatingInterval( ChronoUnit.WEEKS, Modifier.Exact)
+    thisRI = ThisRepeatingInterval(interval, urInterval)
+    assert( thisRI.start === LocalDateTime.of(2005, 1, 30, 0, 0))
+    assert( thisRI.end === LocalDateTime.of(2005, 2, 6, 0, 0))
+
+    //Interval: Thursday the 10th through Thursday the 17th of April 2003
+    //UnitRI: Month
+    //Expected Result: April 2003
+    urInterval = UnitRepeatingInterval(ChronoUnit.MONTHS, Modifier.Exact)
+    thisRI = ThisRepeatingInterval(interval1, urInterval)
+    assert( thisRI.start === LocalDateTime.of(2003, 4, 1, 0, 0))
+    assert( thisRI.end === LocalDateTime.of(2003, 5, 1, 0, 0))
+
+    //Interval: 22nd of March 2002 through 10th of February 2003
+    //UnitRI: Year
+    //Expected Result: Year of 2003
+    urInterval = UnitRepeatingInterval(ChronoUnit.YEARS, Modifier.Exact)
+    thisRI = ThisRepeatingInterval(interval2, urInterval)
+    assert( thisRI.start === Year(2003).start)
+    assert( thisRI.end === Year(2003).end)
+
+    //Interval: Thursday the 10th through Thursday the 17th of April 2003
+    //UnitRI: Day
+    //Expected Result: DateTimeException
+    urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+    intercept [DateTimeException] {
+      thisRI = ThisRepeatingInterval(interval1, urInterval)
+    }
+  }
 }
 
