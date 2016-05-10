@@ -226,7 +226,7 @@ class TypesTest extends FunSuite {
     val ldt2 = LocalDateTime.of(2003,5,10,22,10,20,0)
     val interval = SimpleInterval(ldt1,ldt2)
 
-    val pre = rInterval.preceding(interval)
+    val pre = rInterval.preceding(interval.start)
     var next = pre.next()
     assert( next.start === LocalDateTime.of( 2002, 2, 1, 0, 0, 0, 0))
     assert( next.end === LocalDateTime.of( 2002, 3, 1, 0, 0, 0, 0))
@@ -235,7 +235,7 @@ class TypesTest extends FunSuite {
     assert( next.start === LocalDateTime.of( 2002, 1, 1, 0, 0, 0, 0))
     assert( next.end === LocalDateTime.of( 2002, 2, 1, 0, 0, 0, 0))
 
-    val follow = rInterval.following(interval)
+    val follow = rInterval.following(interval.end)
     next = follow.next()
     assert (next.start === LocalDateTime.of( 2003, 6, 1, 0, 0, 0, 0))
     assert( next.end === LocalDateTime.of( 2003, 7, 1, 0, 0, 0, 0))
@@ -250,32 +250,32 @@ class TypesTest extends FunSuite {
     val decadeRI = UnitRepeatingInterval(ChronoUnit.DECADES, mod)
     val weeksRI = UnitRepeatingInterval(ChronoUnit.WEEKS, mod)
 
-    var centuries = centuryRI.preceding(interval)
+    var centuries = centuryRI.preceding(interval.start)
     next = centuries.next
     assert (next.start === LocalDateTime.of(1900,1,1,0,0))
     assert (next.end === LocalDateTime.of(2000,1,1,0,0))
 
-    centuries = centuryRI.following(interval)
+    centuries = centuryRI.following(interval.end)
     next = centuries.next
     assert (next.start === LocalDateTime.of(2100,1,1,0,0))
     assert (next.end === LocalDateTime.of(2200,1,1,0,0))
 
-    var decades = decadeRI.preceding(interval)
+    var decades = decadeRI.preceding(interval.start)
     next = decades.next
     assert (next.start === LocalDateTime.of(1990,1,1,0,0))
     assert (next.end === LocalDateTime.of(2000,1,1,0,0))
 
-    decades = decadeRI.following(interval)
+    decades = decadeRI.following(interval.end)
     next = decades.next
     assert (next.start === LocalDateTime.of(2010,1,1,0,0))
     assert (next.end === LocalDateTime.of(2020,1,1,0,0))
 
-    var weeks = weeksRI.preceding(interval)
+    var weeks = weeksRI.preceding(interval.start)
     next = weeks.next
     assert (next.start === LocalDateTime.of(2002,3,10,0,0))
     assert (next.end === LocalDateTime.of(2002,3,17,0,0))
 
-    weeks = weeksRI.following(interval)
+    weeks = weeksRI.following(interval.end)
     next = weeks.next
     assert (next.start === LocalDateTime.of(2003,5,11,0,0))
     assert (next.end === LocalDateTime.of(2003,5,18,0,0))
@@ -290,7 +290,7 @@ class TypesTest extends FunSuite {
     ////Tests for MONTH_OF_YEAR////
 
     //  Preceding
-    val pre = rInterval.preceding(interval)
+    val pre = rInterval.preceding(interval.start)
     var next = pre.next()
     assert( next.start === LocalDateTime.of(2001,5,1,0,0,0,0))
     assert( next.end === LocalDateTime.of(2001,6,1,0,0,0,0))
@@ -300,7 +300,7 @@ class TypesTest extends FunSuite {
     assert( next.end === LocalDateTime.of(2000,6,1,0,0,0,0))
 
     //  Following
-    val post = rInterval.following(interval)
+    val post = rInterval.following(interval.end)
     next = post.next()
     assert( next.start === LocalDateTime.of(2004,5,1,0,0,0,0))
     assert( next.end === LocalDateTime.of(2004,6,1,0,0,0,0))
@@ -312,7 +312,7 @@ class TypesTest extends FunSuite {
     ////Tests for DAY_OF_MONTH////
 
     //  Preceding
-    val pre2 = rInterval2.preceding(interval)
+    val pre2 = rInterval2.preceding(interval.start)
     next = pre2.next()
     assert( next.start === LocalDateTime.of(2002,1,29,0,0,0,0))
     assert( next.end === LocalDateTime.of(2002,1,30,0,0,0,0))
@@ -322,7 +322,7 @@ class TypesTest extends FunSuite {
     assert( next.end === LocalDateTime.of(2001,12,30,0,0,0,0))
 
     //  Following
-    val post2 = rInterval2.following(interval)
+    val post2 = rInterval2.following(interval.end)
     next = post2.next()
     assert( next.start === LocalDateTime.of(2003,5,29,0,0,0,0))
     assert( next.end === LocalDateTime.of(2003,5,30,0,0,0,0))
@@ -335,9 +335,87 @@ class TypesTest extends FunSuite {
     val rInterval3 = FieldRepeatingInterval( ChronoField.DAY_OF_MONTH, 300, Modifier.Approx)
     intercept [DateTimeException] {
       //Exception thrown here
-      val testException = rInterval3.preceding(interval)
+      val testException = rInterval3.preceding(interval.start)
     }
   }
-  
+
+  test( "LastRepeatingInterval" ) {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    val lastFieldRI = LastRepeatingInterval(interval, frInterval)
+    assert( lastFieldRI.start === LocalDateTime.of(2001,5,1,0,0,0,0))
+    assert( lastFieldRI.end === LocalDateTime.of(2001,6,1,0,0,0,0))
+
+    val lastUnitRI = LastRepeatingInterval(interval, urInterval)
+    assert( lastUnitRI.start === LocalDateTime.of(2002,3,21,0,0,0,0))
+    assert( lastUnitRI.end === LocalDateTime.of(2002,3,22,0,0,0,0))
+  }
+
+  test( "NextRepeatingInterval" ) {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    val nextFieldRI = NextRepeatingInterval(interval, frInterval)
+    assert( nextFieldRI.start === LocalDateTime.of(2004,5,1,0,0,0,0))
+    assert( nextFieldRI.end === LocalDateTime.of(2004,6,1,0,0,0,0))
+
+    val nextUnitRI = NextRepeatingInterval(interval, urInterval)
+    assert( nextUnitRI.start === LocalDateTime.of(2003,5,11,0,0,0,0))
+    assert( nextUnitRI.end === LocalDateTime.of(2003,5,12,0,0,0,0))
+  }
+
+  test( "AfterRepeatingInterval" ) {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    val afterFieldRI = AfterRepeatingInterval(interval, frInterval)
+    assert( afterFieldRI.start === LocalDateTime.of(2004,5,1,0,0,0,0))
+    assert( afterFieldRI.end === LocalDateTime.of(2004,6,1,0,0,0,0))
+
+    val afterUnitRI = AfterRepeatingInterval(interval, urInterval)
+    assert( afterUnitRI.start === LocalDateTime.of(2003,5,11,0,0,0,0))
+    assert( afterUnitRI.end === LocalDateTime.of(2003,5,12,0,0,0,0))
+  }
+
+  test ( "BeforeRepeatingInterval" ) {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    val beforeFieldRI = BeforeRepeatingInterval(interval, frInterval)
+    assert( beforeFieldRI.start === LocalDateTime.of(2001,5,1,0,0,0,0))
+    assert( beforeFieldRI.end === LocalDateTime.of(2001,6,1,0,0,0,0))
+
+    val beforeUnitRI = BeforeRepeatingInterval(interval, urInterval)
+    assert( beforeUnitRI.start === LocalDateTime.of(2002,3,21,0,0,0,0))
+    assert( beforeUnitRI.end === LocalDateTime.of(2002,3,22,0,0,0,0))
+  }
+
+  test ( "NthRepeatingInterval" ) {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    val nthFieldRI = Nth(interval, 1, frInterval)
+    assert( nthFieldRI.start === LocalDateTime.of(2002, 5, 1, 0, 0, 0, 0))
+    assert( nthFieldRI.end === LocalDateTime.of(2002, 6, 1, 0, 0, 0, 0))
+
+    val nthUnitRI = Nth(interval, 3, urInterval)
+    assert( nthUnitRI.start === LocalDateTime.of(2002, 3, 25, 0, 0, 0, 0))
+    assert( nthUnitRI.end === LocalDateTime.of(2002, 3, 26, 0, 0, 0, 0))
+
+    intercept [NotImplementedError] {
+      val nthFailure = Nth(interval, 5, frInterval)
+    }
+  }
 }
 
