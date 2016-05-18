@@ -279,6 +279,33 @@ class TypesTest extends FunSuite {
     next = weeks.next
     assert (next.start === LocalDateTime.of(2003,5,11,0,0))
     assert (next.end === LocalDateTime.of(2003,5,18,0,0))
+
+    val interval2 = SimpleInterval(
+      LocalDateTime.of(2001, 2, 12, 3, 3), LocalDateTime.of(2001,2,14,22,0))
+    val daysRI = UnitRepeatingInterval(ChronoUnit.DAYS,Modifier.Exact)
+
+    var days = daysRI.preceding(interval2.start)
+    next = days.next
+    assert( next.start === LocalDateTime.of(2001,2,11,0,0))
+    assert( next.end === LocalDateTime.of(2001,2,12,0,0))
+
+    days = daysRI.following(interval2.end)
+    next = days.next
+    assert( next.start === LocalDateTime.of(2001,2,15,0,0))
+    assert( next.end === LocalDateTime.of(2001,2,16,0,0))
+
+    val interval3 = SimpleInterval(
+      LocalDateTime.of(2001,2,12,0,0), LocalDateTime.of(2001,2,14,0,0))
+
+    days = daysRI.preceding(interval3.start)
+    next = days.next
+    assert( next.start === LocalDateTime.of(2001,2,11,0,0))
+    assert( next.end === LocalDateTime.of(2001,2,12,0,0))
+
+    days = daysRI.following(interval3.end)
+    next = days.next
+    assert( next.start === LocalDateTime.of(2001,2,14,0,0))
+    assert( next.end === LocalDateTime.of(2001,2,15,0,0))
   }
 
   test( "FieldRepeatingInterval" ) {
@@ -438,71 +465,281 @@ class TypesTest extends FunSuite {
 
     //Interval: Tuesday (1st of February), FieldRI: Friday
     //Expected result: Friday (4th of February)
-    var thisRI = ThisRepeatingInterval(interval, frInterval1)
-    assert( thisRI.start === LocalDateTime.of(2005,2,4,0,0))
-    assert( thisRI.end === LocalDateTime.of(2005,2,5,0,0))
+    var thisRI = ThisRepeatingInterval(interval, frInterval1).iterator
+    var next = thisRI.next
+    assert( next.start === LocalDateTime.of(2005,2,4,0,0))
+    assert( next.end === LocalDateTime.of(2005,2,5,0,0))
+    //Expected: Only one element
+    assert( thisRI.isEmpty )
 
     //Interval: Saturday (8th of March) through Friday (14th of March) 2003
     //FieldRI: Friday
-    //Expected result: Friday (14th of March) 2003
+    //Expected results: Friday (March 7), Friday (March 14)
     val interval3 = SimpleInterval(LocalDateTime.of(2003, 3, 8, 0, 0), LocalDateTime.of(2003, 3, 14, 0, 0))
-    thisRI = ThisRepeatingInterval(interval3, frInterval1)
-    assert( thisRI.start === LocalDateTime.of(2003,3,14,0,0))
-    assert( thisRI.end === LocalDateTime.of(2003,3,15,0,0))
+    thisRI = ThisRepeatingInterval(interval3, frInterval1).iterator
+    next = thisRI.next
+    assert(next.start === LocalDateTime.of(2003,3,7,0,0))
+    assert(next.end === LocalDateTime.of(2003,3,8,0,0))
+    next = thisRI.next
+    assert(next.start === LocalDateTime.of(2003,3,14,0,0))
+    assert(next.end === LocalDateTime.of(2003,3,15,0,0))
+    //Expected: Only two elements
+    assert( thisRI.isEmpty )
 
     //Interval: Thursday the 10th through Thursday the 17th of April 2003, FieldRI: Friday,
-    //Expected Result: Friday (11th of April)
-    thisRI = ThisRepeatingInterval(interval1, frInterval1)
-    assert( thisRI.start === LocalDateTime.of(2003, 4, 11, 0, 0))
-    assert( thisRI.end === LocalDateTime.of( 2003, 4, 12, 0, 0))
+    //Expected Result: Friday (April 11), Friday (April 18)
+    thisRI = ThisRepeatingInterval(interval1, frInterval1).iterator
+    next = thisRI.next
+    assert(next.start === LocalDateTime.of(2003,4,11,0,0))
+    assert(next.end === LocalDateTime.of(2003,4,12,0,0))
+    next = thisRI.next
+    assert(next.start === LocalDateTime.of(2003,4,18,0,0))
+    assert(next.end === LocalDateTime.of(2003,4,19,0,0))
+    //Expected: Only two elements
+    assert( thisRI.isEmpty )
 
     //Interval: 22nd of March 2002 through 10th of February 2003
     //FieldRI: March
-    //Expected Result: March 2002
-    thisRI = ThisRepeatingInterval(interval2, frInterval2)
-    assert( thisRI.start === LocalDateTime.of(2002, 3, 1, 0, 0))
-    assert( thisRI.end === LocalDateTime.of(2002, 4, 1, 0, 0))
+    //Expected Result: March 2002, March 2003
+    thisRI = ThisRepeatingInterval(interval2, frInterval2).iterator
+    next = thisRI.next
+    assert(next.start === LocalDateTime.of(2002,3,1,0,0))
+    assert(next.end === LocalDateTime.of(2002,4,1,0,0))
+    next = thisRI.next
+    assert(next.start === LocalDateTime.of(2003,3,1,0,0))
+    assert(next.end === LocalDateTime.of(2003,4,1,0,0))
+    //Expected: Only two elements
+    assert( thisRI.isEmpty )
 
     //Interval: Thursday the 10th through Thursday the 17th of April 2003, FieldRI: March
     //Expected Result: March 2003
-    thisRI = ThisRepeatingInterval(interval1, frInterval2)
-    assert( thisRI.start === LocalDateTime.of(2003, 3, 1, 0, 0))
-    assert( thisRI.end === LocalDateTime.of(2003, 4, 1, 0, 0))
+    thisRI = ThisRepeatingInterval(interval1, frInterval2).iterator
+    next = thisRI.next
+    assert( next.start === LocalDateTime.of(2003, 3, 1, 0, 0))
+    assert( next.end === LocalDateTime.of(2003, 4, 1, 0, 0))
+    //Expected: Only one element
+    assert( thisRI.isEmpty )
 
-    intercept [DateTimeException] {
-      thisRI = ThisRepeatingInterval(interval2, frInterval1)
-    }
+    //Interval: 22nd of March 2002 through 10th of February 2003
+    //FieldRI: Fridays
+    //Expected Result: All Fridays (48 total)
+    thisRI = ThisRepeatingInterval(interval2, frInterval1).iterator
+    assert(thisRI.size == 48)
+
 
     //Interval: Tuesday (1st of February 2005), UnitRI: Week
-    //Expected result: Sunday, January 30th through Saturday, February 5th 2005
+    //Expected result: One week, Sunday, January 30th through Saturday, February 5th 2005
     var urInterval = UnitRepeatingInterval( ChronoUnit.WEEKS, Modifier.Exact)
-    thisRI = ThisRepeatingInterval(interval, urInterval)
-    assert( thisRI.start === LocalDateTime.of(2005, 1, 30, 0, 0))
-    assert( thisRI.end === LocalDateTime.of(2005, 2, 6, 0, 0))
+    thisRI = ThisRepeatingInterval(interval, urInterval).iterator
+    next = thisRI.next
+    assert( next.start === LocalDateTime.of(2005, 1, 30, 0, 0))
+    assert( next.end === LocalDateTime.of(2005, 2, 6, 0, 0))
+    assert( thisRI.isEmpty )
 
     //Interval: Thursday the 10th through Thursday the 17th of April 2003
     //UnitRI: Month
     //Expected Result: April 2003
     urInterval = UnitRepeatingInterval(ChronoUnit.MONTHS, Modifier.Exact)
-    thisRI = ThisRepeatingInterval(interval1, urInterval)
-    assert( thisRI.start === LocalDateTime.of(2003, 4, 1, 0, 0))
-    assert( thisRI.end === LocalDateTime.of(2003, 5, 1, 0, 0))
+    thisRI = ThisRepeatingInterval(interval1, urInterval).iterator
+    next = thisRI.next
+    assert( next.start === LocalDateTime.of(2003, 4, 1, 0, 0))
+    assert( next.end === LocalDateTime.of(2003, 5, 1, 0, 0))
+    assert( thisRI.isEmpty )
 
     //Interval: 22nd of March 2002 through 10th of February 2003
     //UnitRI: Year
-    //Expected Result: Year of 2003
+    //Expected Result: 2002, 2003
     urInterval = UnitRepeatingInterval(ChronoUnit.YEARS, Modifier.Exact)
-    thisRI = ThisRepeatingInterval(interval2, urInterval)
-    assert( thisRI.start === Year(2003).start)
-    assert( thisRI.end === Year(2003).end)
+    thisRI = ThisRepeatingInterval(interval2, urInterval).iterator
+    next = thisRI.next
+    assert(next.start === Year(2002).start)
+    assert(next.end === Year(2002).end)
+    next = thisRI.next
+    assert(next.start === Year(2003).start)
+    assert(next.end === Year(2003).end)
+    assert( thisRI.isEmpty )
+
 
     //Interval: Thursday the 10th through Thursday the 17th of April 2003
     //UnitRI: Day
-    //Expected Result: DateTimeException
+    //Expected Result: All days in the interval (8 total)
     urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
-    intercept [DateTimeException] {
-      thisRI = ThisRepeatingInterval(interval1, urInterval)
-    }
+    thisRI = ThisRepeatingInterval(interval1, urInterval).iterator
+    assert( thisRI.size == 8 )
+
   }
+
+  test ("RepeatingIntervalUnion") {
+    var interval = SimpleInterval( LocalDateTime.of(2003,1,1,0,0), LocalDateTime.of(2003,1,30,0,0))
+    val fieldRI = FieldRepeatingInterval(ChronoField.MONTH_OF_YEAR,2,Modifier.Exact)
+    val fieldRI2 = FieldRepeatingInterval(ChronoField.DAY_OF_MONTH,20,Modifier.Exact)
+    var unionRI = RepeatingIntervalUnion(Set(fieldRI,fieldRI2))
+
+    assert( unionRI.base === ChronoUnit.DAYS )
+    assert( unionRI.range === ChronoUnit.YEARS )
+
+    ///////////////////////////////////////////////
+    //Interval: January 1, 2003 to January 30, 2003
+    //UnionRI: 20th of the month and Februaries
+    var unionIterator = unionRI.preceding(interval.start)
+    var next = unionIterator.next
+    //Expected: December 20, 2002
+    assert( next.start === LocalDateTime.of(2002,12,20,0,0))
+    assert( next.end === LocalDateTime.of(2002,12,21,0,0))
+
+    next = unionIterator.next
+    //Expected: November 20, 2002
+    assert( next.start === LocalDateTime.of(2002,11,20,0,0))
+    assert( next.end === LocalDateTime.of(2002,11,21,0,0))
+
+    unionIterator = unionRI.following(interval.end)
+    next = unionIterator.next
+    //Expected: February 2003
+    assert( next.start === LocalDateTime.of(2003,2,1,0,0))
+    assert( next.end === LocalDateTime.of(2003,3,1,0,0))
+
+    next = unionIterator.next
+    //Expected: February 20, 2003
+    assert( next.start === LocalDateTime.of(2003,2,20,0,0))
+    assert( next.end === LocalDateTime.of(2003,2,21,0,0))
+
+    interval = SimpleInterval( LocalDateTime.of(2011,7,1,0,0), LocalDateTime.of(2011,7,30,0,0))
+    val unitRI = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+    val unitRI1 = UnitRepeatingInterval(ChronoUnit.WEEKS, Modifier.Exact)
+    val unitRI2 = UnitRepeatingInterval(ChronoUnit.MONTHS, Modifier.Exact)
+    unionRI = RepeatingIntervalUnion(Set(unitRI,unitRI1,unitRI2))
+
+    assert( unionRI.base === ChronoUnit.DAYS )
+    assert( unionRI.range == ChronoUnit.MONTHS )
+
+    ///////////////////////////////////////////////
+    //Interval: July 1, 2003 to July 30, 2011
+    //UnionRI: Days, Weeks, and Months
+    unionIterator = unionRI.preceding(interval.start)
+    next = unionIterator.next
+    //Expected: June 2011
+    assert( next.start === LocalDateTime.of(2011,6,1,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,1,0,0))
+
+    next = unionIterator.next
+    //Expected: June 30, 2011
+    assert( next.start === LocalDateTime.of(2011,6,30,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,1,0,0))
+
+    unionIterator = unionRI.following(interval.end)
+    next = unionIterator.next
+    //Expected: July 30, 2011
+    assert( next.start === LocalDateTime.of(2011,7,30,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,31,0,0))
+
+    next = unionIterator.next
+    //Expected: July 31, 2011
+    assert( next.start === LocalDateTime.of(2011,7,31,0,0))
+    assert( next.end === LocalDateTime.of(2011,8,1,0,0))
+
+    next = unionIterator.next
+    //Expected: Week of July 31 - August 7 2011
+    assert( next.start === LocalDateTime.of(2011,7,31,0,0))
+    assert( next.end === LocalDateTime.of(2011,8,7,0,0))
+
+    ///////////////////////////////////////////////
+    //FieldRI with UnitRI
+    //
+    //Interval: July 1 to July 30, 2011
+    //UnitRI: Weeks
+    //FieldRI: 20th of the month
+    val fieldRI3 = FieldRepeatingInterval(ChronoField.DAY_OF_MONTH,20,Modifier.Exact)
+    unionRI = RepeatingIntervalUnion( Set(unitRI1, fieldRI3))
+
+    //Preceding
+    unionIterator = unionRI.preceding(interval.start)
+    next = unionIterator.next
+    //Expected: June 22 to June 28, 2003
+    assert( next.start === LocalDateTime.of(2011,6,19,0,0))
+    assert( next.end === LocalDateTime.of(2011,6,26,0,0))
+
+    next = unionIterator.next
+    //Expected: June 20, 2003
+    assert( next.start === LocalDateTime.of(2011,6,20,0,0))
+    assert( next.end === LocalDateTime.of(2011,6,21,0,0))
+
+    //Following
+    unionIterator = unionRI.following(interval.end)
+    next = unionIterator.next
+    //Expected: August 7 to August 14, 2011
+    assert( next.start === LocalDateTime.of(2011,7,31,0,0))
+    assert( next.end === LocalDateTime.of(2011,8,7,0,0))
+
+    next = unionIterator.next
+    //Expected: August 7 to August 14, 2011
+    assert( next.start === LocalDateTime.of(2011,8,7,0,0))
+    assert( next.end === LocalDateTime.of(2011,8,14,0,0))
+
+    next = unionIterator.next
+    //Expected: August 14 to August 21, 2011
+    assert( next.start === LocalDateTime.of(2011,8,14,0,0))
+    assert( next.end === LocalDateTime.of(2011,8,21,0,0))
+
+    next = unionIterator.next
+    //Expected: August 20, 2011
+    assert( next.start === LocalDateTime.of(2011,8,20,0,0))
+    assert( next.end === LocalDateTime.of(2011,8,21,0,0))
+
+    ///////////////////////////////////////////////
+    //ThisRI with UnionRI
+    //
+    //Interval: July 1 to July 30, 2011
+    //UnitRI: Weeks
+    //FieldRI: 20th of the month
+    val thisRI = ThisRepeatingInterval(interval,unionRI).iterator
+    next = thisRI.next
+    //Expected: July 3 to July 10, 2011
+    assert( next.start === LocalDateTime.of(2011,7,3,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,10,0,0))
+
+    next = thisRI.next
+    //Expected: July 10 to July 17, 2011
+    assert( next.start === LocalDateTime.of(2011,7,10,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,17,0,0))
+
+    next = thisRI.next
+    //Expected: July 17 to July 24, 2011
+    assert( next.start === LocalDateTime.of(2011,7,17,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,24,0,0))
+
+    next = thisRI.next
+    //Expected: July 20, 2011
+    assert( next.start === LocalDateTime.of(2011,7,20,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,21,0,0))
+
+    next = thisRI.next
+    //Expected: July 24 to July 31, 2011
+    assert( next.start === LocalDateTime.of(2011,7,24,0,0))
+    assert( next.end === LocalDateTime.of(2011,7,31,0,0))
+
+    //Expected: No further intervals
+    assert( thisRI.isEmpty )
+
+  }
+
+//  test ("RepeatingIntervalIntersection") {
+//    //Interval: The year of 2016
+//    val interval = Year(2016)
+//    //The first half of Friday the 13th in January
+//    val intersectRI = RepeatingIntervalIntersection(
+//      Set(
+//        UnitRepeatingInterval(ChronoUnit.HALF_DAYS,Modifier.Exact),
+//        FieldRepeatingInterval(ChronoField.DAY_OF_WEEK,5,Modifier.Exact),
+//        FieldRepeatingInterval(ChronoField.DAY_OF_MONTH,13,Modifier.Exact),
+//        FieldRepeatingInterval(ChronoField.MONTH_OF_YEAR,1,Modifier.Exact)))
+//
+//    assert( intersectRI.base === ChronoUnit.HALF_DAYS)
+//    assert( intersectRI.range === ChronoUnit.YEARS)
+//
+//    val following = intersectRI.following(interval.end)
+//    var next = following.next
+//    assert( next.start === LocalDateTime.of(2017,1,13,0,0))
+//    assert( next.end === LocalDateTime.of(2017,1,13,12,0))
+//  }
 }
 

@@ -191,6 +191,7 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
 }
 
 /**
+  * TODO: Update formal definition
   * Finds the repeated interval(s) containing the given interval. Formally:
   * This([t1,t2): Interval, R: RepeatingInterval): RepeatingInterval
   *
@@ -198,45 +199,16 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   * @param interval
   * @param repeatingInterval
   */
-case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val Interval(start, end) = repeatingInterval match {
-    case ri: FieldRepeatingInterval => {
-      val base = ri.field.getBaseUnit
-      val range = ri.field.getRangeUnit
+case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Seq[Interval] {
+  val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
+  val rangeEnd = RepeatingInterval.truncate(interval.end, repeatingInterval.range).plus(1,repeatingInterval.range)
+  val sequence = repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toIndexedSeq
 
-      if ( Duration.between(interval.start,interval.end).compareTo(range.getDuration) > 0 )
-        throw new DateTimeException("Interval duration is greater than field range duration")
+  override def length: Int = sequence.size
 
-      val rangeStart = RepeatingInterval.truncate(interval.start,range)
-      val rangeInterval = SimpleInterval( rangeStart, rangeStart.plus(1,range))
+  override def iterator: Iterator[Interval] = sequence.toIterator
 
-      //Note: plus(1,base) is called to ensure proper interpretation of Week units by Java's with() method.
-      val startMod = RepeatingInterval.truncate(interval.start,range).plus(1,base).`with`(ri.field,ri.value)
-      val startInterval = SimpleInterval( startMod, startMod.plus(1,base))
-
-      val endMod = RepeatingInterval.truncate(interval.end,range).plus(1,base).`with`(ri.field,ri.value)
-      val endInterval = SimpleInterval( endMod, endMod.plus(1,base))
-
-      //Is the interval contained within the TemporalField's range?
-      if ( rangeInterval.start.isBefore(interval.start) && rangeInterval.end.isAfter(interval.end))
-        startInterval
-      //Does the start of the interval fall within the new interval?
-      else if ( startInterval.start.isBefore(interval.start) && startInterval.end.isAfter(interval.start))
-        startInterval
-      //Does the end of the interval fall within the next new interval?
-      else if ( endInterval.start.isBefore(interval.end) && endInterval.end.isAfter(interval.end))
-        endInterval
-      else
-        ri.following(interval.start).next
-    }
-    case ri: UnitRepeatingInterval => {
-      if ( Duration.between(interval.start,interval.end).compareTo(ri.unit.getDuration) > 0 )
-        throw new DateTimeException("Interval duration is greater than unit duration")
-
-      ri.following(interval.end.minus(1,ri.unit)).next
-    }
-    case _ => ???
-  }
+  override def apply(idx: Int) = sequence(idx)
 }
 
 /**
@@ -390,6 +362,8 @@ case class IntervalSubIntervalIntersection(interval: Interval, subInterval: Repe
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
   def following(ldt: LocalDateTime): Iterator[Interval]
+  val base: TemporalUnit
+  val range: TemporalUnit
 
 }
 
@@ -406,30 +380,38 @@ private[formal] object RepeatingInterval {
 }
 
 case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval {
+  override val base = unit
+  override val range = unit
+
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var end = RepeatingInterval.truncate( ldt, unit ).plus(1,unit)
     var start = end.minus(1, unit)
 
     Iterator.continually {
+      end = start
       start = start.minus(1, unit)
-      end = end.minus(1, unit)
       SimpleInterval(start, end)
     }
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt, unit)
-    var end = start.plus(1,unit)
+    val truncated = RepeatingInterval.truncate(ldt, unit)
+    var end = if ( truncated.isBefore(ldt) ) truncated.plus(1,unit) else truncated
+    var start = end.minus(1,unit)
+
 
     Iterator.continually {
-      start = start.plus(1, unit)
-      end = end.plus(1, unit)
+      start = end
+      end = start.plus(1, unit)
       SimpleInterval(start, end)
     }
   }
 }
 
 case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval {
+  override val base = field.getBaseUnit
+  override val range = field.getRangeUnit
+
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt.`with`(field,value), field.getBaseUnit)
 
@@ -478,24 +460,57 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
 }
 
 case class NumberedRepeatingInterval(repeatingInterval: RepeatingInterval, number: Number) extends RepeatingInterval {
+  override val base = ???
+  override val range = ???
+
   override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
 
   override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
 }
 
 case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
-  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
+  override val base = repeatingIntervals.minBy(_.base.getDuration).base
+  override val range = repeatingIntervals.maxBy(_.range.getDuration).range
 
-  override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
+  implicit val ordering: Ordering[(LocalDateTime,Duration)] =
+    Ordering.Tuple2(scala.math.Ordering.fromLessThan(_ isAfter _), Ordering[Duration].reverse)
+
+  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = {
+    val iterators: Set[BufferedIterator[Interval]] = repeatingIntervals.map(_.preceding(ldt).buffered)
+
+    Iterator.continually {
+      iterators.toList.sortBy {
+        iterator => val interval = iterator.head
+          (interval.end, Duration.between(interval.start,interval.end))
+      }.head.next
+    }
+  }
+
+  override def following(ldt: LocalDateTime): Iterator[Interval]  = {
+    val iterators: Set[BufferedIterator[Interval]] = repeatingIntervals.map(_.following(ldt).buffered)
+
+    Iterator.continually {
+      iterators.toList.sortBy {
+        iterator => val interval = iterator.head
+          (interval.start, Duration.between(interval.start, interval.end))
+      }.last.next
+    }
+  }
 }
 
 case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+  override val base = repeatingIntervals.minBy(_.base.getDuration).base
+  override val range = repeatingIntervals.maxBy(_.range.getDuration).range
+
   override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
 
   override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
 }
 
 case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval {
+  override val base = ???
+  override val range = ???
+
   override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
 
   override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
