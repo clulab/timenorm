@@ -459,9 +459,9 @@ class TypesTest extends FunSuite {
       LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,2,10,22,10,20,0))
 
     //Friday
-    val frInterval1 = FieldRepeatingInterval( ChronoField.DAY_OF_WEEK, 5, Modifier.Exact )
+    val frInterval1 = FieldRepeatingInterval( ChronoField.DAY_OF_WEEK, 5 )
     //March
-    val frInterval2 = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 3, Modifier.Exact )
+    val frInterval2 = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 3 )
 
     //Interval: Tuesday (1st of February), FieldRI: Friday
     //Expected result: Friday (4th of February)
@@ -529,7 +529,7 @@ class TypesTest extends FunSuite {
 
     //Interval: Tuesday (1st of February 2005), UnitRI: Week
     //Expected result: One week, Sunday, January 30th through Saturday, February 5th 2005
-    var urInterval = UnitRepeatingInterval( ChronoUnit.WEEKS, Modifier.Exact)
+    var urInterval = UnitRepeatingInterval( ChronoUnit.WEEKS)
     thisRI = ThisRepeatingInterval(interval, urInterval).iterator
     next = thisRI.next
     assert( next.start === LocalDateTime.of(2005, 1, 30, 0, 0))
@@ -539,7 +539,7 @@ class TypesTest extends FunSuite {
     //Interval: Thursday the 10th through Thursday the 17th of April 2003
     //UnitRI: Month
     //Expected Result: April 2003
-    urInterval = UnitRepeatingInterval(ChronoUnit.MONTHS, Modifier.Exact)
+    urInterval = UnitRepeatingInterval(ChronoUnit.MONTHS)
     thisRI = ThisRepeatingInterval(interval1, urInterval).iterator
     next = thisRI.next
     assert( next.start === LocalDateTime.of(2003, 4, 1, 0, 0))
@@ -549,7 +549,7 @@ class TypesTest extends FunSuite {
     //Interval: 22nd of March 2002 through 10th of February 2003
     //UnitRI: Year
     //Expected Result: 2002, 2003
-    urInterval = UnitRepeatingInterval(ChronoUnit.YEARS, Modifier.Exact)
+    urInterval = UnitRepeatingInterval(ChronoUnit.YEARS)
     thisRI = ThisRepeatingInterval(interval2, urInterval).iterator
     next = thisRI.next
     assert(next.start === Year(2002).start)
@@ -563,7 +563,7 @@ class TypesTest extends FunSuite {
     //Interval: Thursday the 10th through Thursday the 17th of April 2003
     //UnitRI: Day
     //Expected Result: All days in the interval (8 total)
-    urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+    urInterval = UnitRepeatingInterval(ChronoUnit.DAYS)
     thisRI = ThisRepeatingInterval(interval1, urInterval).iterator
     assert( thisRI.size == 8 )
 
@@ -604,9 +604,9 @@ class TypesTest extends FunSuite {
     assert( next.end === LocalDateTime.of(2003,2,21,0,0))
 
     interval = SimpleInterval( LocalDateTime.of(2011,7,1,0,0), LocalDateTime.of(2011,7,30,0,0))
-    val unitRI = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
-    val unitRI1 = UnitRepeatingInterval(ChronoUnit.WEEKS, Modifier.Exact)
-    val unitRI2 = UnitRepeatingInterval(ChronoUnit.MONTHS, Modifier.Exact)
+    val unitRI = UnitRepeatingInterval(ChronoUnit.DAYS)
+    val unitRI1 = UnitRepeatingInterval(ChronoUnit.WEEKS)
+    val unitRI2 = UnitRepeatingInterval(ChronoUnit.MONTHS)
     unionRI = RepeatingIntervalUnion(Set(unitRI,unitRI1,unitRI2))
 
     assert( unionRI.base === ChronoUnit.DAYS )
