@@ -72,7 +72,8 @@ object AnaforaReader {
           case (century, "??") => Century(century.toInt)
         }
       case "Two-Digit-Year" => TwoDigitYear(interval(entity.properties), entity.properties("Value").toInt)
-      case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
+//    TODO handle ThisRepeatingInterval, which is now a Seq[Interval], not an Interval
+//    case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
       case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
       case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
       case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
