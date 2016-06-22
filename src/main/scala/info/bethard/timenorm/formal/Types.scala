@@ -34,7 +34,7 @@ object Modifier {
   */
 trait Period extends TimeExpression with TemporalAmount
 
-case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier) extends Period {
+case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modifier.Exact) extends Period {
 
   val number = n match {
     case IntNumber(x) => x
@@ -71,7 +71,7 @@ case object UnknownPeriod extends Period {
   override def getUnits: util.List[TemporalUnit] = ???
 }
 
-case class PeriodSum(periods: Set[Period], modifier: Modifier) extends Period {
+case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
 
   var map = scala.collection.mutable.Map.empty[TemporalUnit,Long]
 
@@ -379,7 +379,7 @@ private[formal] object RepeatingInterval {
     }
 }
 
-case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends RepeatingInterval {
+case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier = Modifier.Exact) extends RepeatingInterval {
   override val base = unit
   override val range = unit
 
@@ -408,7 +408,7 @@ case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier) extends
   }
 }
 
-case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier) extends RepeatingInterval {
+case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: Modifier = Modifier.Exact) extends RepeatingInterval {
   override val base = field.getBaseUnit
   override val range = field.getRangeUnit
 
