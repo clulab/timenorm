@@ -72,7 +72,7 @@ object AnaforaReader {
           case (century, "??") => Century(century.toInt)
         }
       case "Two-Digit-Year" => TwoDigitYear(interval(entity.properties), entity.properties("Value").toInt)
-//    TODO handle ThisRepeatingInterval, which is now a Seq[Interval], not an Interval
+//    TODO: handle ThisRepeatingInterval, which is now a Seq[Interval], not an Interval
 //    case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
       case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
       case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
@@ -87,7 +87,8 @@ object AnaforaReader {
     }
     entity.properties.getEntity("Sub-Interval") match {
       case None => result
-      case Some(subEntity) => IntervalSubIntervalIntersection(result, repeatingInterval(subEntity))
+//      TODO: handle IntervalSubIntervalIntersection, which is now ThisRepeatingInterval
+//      case Some(subEntity) => IntervalSubIntervalIntersection(result, repeatingInterval(subEntity))
     }
   }
 
