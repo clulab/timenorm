@@ -482,28 +482,27 @@ case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) ex
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
 
-  implicit val ordering: Ordering[(LocalDateTime,Duration)] =
-    Ordering.Tuple2(scala.math.Ordering.fromLessThan(_ isAfter _), Ordering[Duration].reverse)
+  implicit val ordering = Ordering.Tuple2(Ordering.fromLessThan[LocalDateTime](_ isAfter _), Ordering[Duration].reverse)
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval]  = {
-    val iterators: Set[BufferedIterator[Interval]] = repeatingIntervals.map(_.preceding(ldt).buffered)
+    val iterators = repeatingIntervals.map(_.preceding(ldt).buffered).toList
 
     Iterator.continually {
-      iterators.toList.sortBy {
-        iterator => val interval = iterator.head
-          (interval.end, Duration.between(interval.start,interval.end))
-      }.head.next
+      iterators.minBy { iterator =>
+        val interval = iterator.head
+        (interval.end, Duration.between(interval.start,interval.end))
+      }.next
     }
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval]  = {
-    val iterators: Set[BufferedIterator[Interval]] = repeatingIntervals.map(_.following(ldt).buffered)
+    val iterators = repeatingIntervals.map(_.following(ldt).buffered).toList
 
     Iterator.continually {
-      iterators.toList.sortBy {
-        iterator => val interval = iterator.head
-          (interval.start, Duration.between(interval.start, interval.end))
-      }.last.next
+      iterators.maxBy { iterator =>
+        val interval = iterator.head
+        (interval.start, Duration.between(interval.start, interval.end))
+      }.next
     }
   }
 }
