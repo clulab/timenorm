@@ -512,76 +512,41 @@ case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterv
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
 
-  private val startIterator = repeatingIntervals.toList
-    .maxBy(ri => (ri.range.getDuration,ri.base.getDuration))
+  private val sortedRepeatingIntervals = repeatingIntervals.toList
+    .sortBy(ri => (ri.range.getDuration,ri.base.getDuration)).reverse
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval]  = {
-    var startPoint = startIterator.preceding(ldt).next.end
-
-    val iterators: List[BufferedIterator[Interval]] =
-      repeatingIntervals.toList
-        .sortBy(ri => (ri.range.getDuration,ri.base.getDuration)).reverse
-        .map(_.preceding(startPoint).buffered)
-
-    def newIntersect: Iterator[Interval] = {
-      startPoint = startPoint.minus(1,range)
-
-      val intervalList = List(iterators.head.next) ::
-          iterators.tail.map(it => it.takeWhile(interval => it.head.start isAfter startPoint).toList)
-
-      intervalList.tail.foldLeft(intervalList.head) {
-        (list, current) =>
-          current.filter( intersection(_, list))
-      }.toIterator
-    }
-
-    var currentList: Iterator[Interval] = newIntersect
+    var startPoint = sortedRepeatingIntervals.head.preceding(ldt).next.end
+    val iterators = sortedRepeatingIntervals.map(_.preceding(startPoint).buffered)
 
     Iterator.continually {
+      startPoint = startPoint.minus(1,range)
+      val firstInterval = iterators.head.next
+      val othersAfterStart = iterators.tail.map(it => it.takeWhile(_ => it.head.start isAfter startPoint).toList)
 
-      while (currentList.isEmpty)
-        currentList = newIntersect
-
-      currentList.next
-    }
+      othersAfterStart.iterator.foldLeft(List(firstInterval)) {
+        (intersectedIntervals, newIntervals) => newIntervals.filter(isContainedInOneOf(_, intersectedIntervals))
+      }
+    }.flatten
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval]  = {
-    var startPoint: LocalDateTime = startIterator.following(ldt).next.start
-
-    val iterators: List[BufferedIterator[Interval]] =
-      repeatingIntervals.toList
-        .sortBy(ri => (ri.range.getDuration,ri.base.getDuration)).reverse
-        .map(_.following(startPoint).buffered)
-
-    def newIntersect: Iterator[Interval] = {
-      startPoint = startPoint.plus(1,range)
-
-      val intervalList = List(iterators.head.next) ::
-        iterators.tail.map(it => it.takeWhile(interval => it.head.end isBefore startPoint).toList)
-
-      intervalList.tail.foldLeft(intervalList.head) {
-        (list, current) =>
-          current.filter(intersection(_, list))
-      }.toIterator
-    }
-
-    var currentList: Iterator[Interval] = newIntersect
+    var startPoint = sortedRepeatingIntervals.head.following(ldt).next.start
+    val iterators = sortedRepeatingIntervals.map(_.following(startPoint).buffered)
 
     Iterator.continually {
+      startPoint = startPoint.plus(1,range)
+      val firstInterval = iterators.head.next
+      val othersBeforeStart = iterators.tail.map(it => it.takeWhile(_ => it.head.end isBefore startPoint).toList)
 
-      while (currentList.isEmpty)
-        currentList = newIntersect
-
-      currentList.next
-    }
+      othersBeforeStart.iterator.foldLeft(List(firstInterval)) {
+        (intersectedIntervals, newIntervals) => newIntervals.filter(isContainedInOneOf(_, intersectedIntervals))
+      }
+    }.flatten
   }
 
-  private[formal] def intersection(interval: Interval, list: List[Interval]): Boolean = {
-    for ( item <- list )
-      if (!((interval.start isBefore item.start) || (interval.end isAfter item.end)))
-        return true
-    false
+  private def isContainedInOneOf(interval: Interval, intervals: Iterable[Interval]): Boolean = {
+    intervals.exists(i => !(interval.start isBefore i.start) && !(interval.end isAfter i.end))
   }
 }
 
