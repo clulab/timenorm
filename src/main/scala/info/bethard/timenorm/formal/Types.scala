@@ -6,6 +6,7 @@ import java.util
 import java.util.Collections.singletonList
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 trait TimeExpression
 
@@ -190,8 +191,21 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   val end = start.plus(period)
 }
 
+case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
+  val rangeEnd =
+    if (interval.end == rangeStart.plus(1,repeatingInterval.range)) interval.end
+    else RepeatingInterval.truncate(interval.end, repeatingInterval.range).plus(1,repeatingInterval.range)
+  val list: List[Interval] = repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toList
+
+  if ( list.size != 1 )
+    ???
+
+  val Interval(start, end) = list.head
+}
+
+//  TODO: Update formal definition
 /**
-  * TODO: Update formal definition
   * Finds the repeated interval(s) containing the given interval. Formally:
   * This([t1,t2): Interval, R: RepeatingInterval): RepeatingInterval
   *
@@ -199,9 +213,11 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   * @param interval
   * @param repeatingInterval
   */
-case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Seq[Interval] {
+case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval) extends Seq[Interval] {
   val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
-  val rangeEnd = RepeatingInterval.truncate(interval.end, repeatingInterval.range).plus(1,repeatingInterval.range)
+  val rangeEnd =
+    if (interval.end == rangeStart.plus(1,repeatingInterval.range)) interval.end
+    else RepeatingInterval.truncate(interval.end, repeatingInterval.range).plus(1,repeatingInterval.range)
   val sequence = repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toIndexedSeq
 
   override def length: Int = sequence.size
@@ -354,17 +370,11 @@ case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInter
   }
 }
 
-case class IntervalSubIntervalIntersection(interval: Interval, subInterval: RepeatingInterval) extends Interval {
-  val start = ???
-  val end = ???
-}
-
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
   def following(ldt: LocalDateTime): Iterator[Interval]
   val base: TemporalUnit
   val range: TemporalUnit
-
 }
 
 private[formal] object RepeatingInterval {
@@ -415,7 +425,7 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt.`with`(field,value), field.getBaseUnit)
 
-    if (start.isBefore(ldt))
+    if (!start.isAfter(ldt))
       start = start.plus(1,field.getRangeUnit)
 
     Iterator.continually {
@@ -438,7 +448,7 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt`with`(field,value), field.getBaseUnit)
 
-    if (start.isAfter(ldt))
+    if (!start.isBefore(ldt))
       start = start.minus(1,field.getRangeUnit)
 
     Iterator.continually {
@@ -502,9 +512,77 @@ case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterv
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
 
-  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
+  private val startIterator = repeatingIntervals.toList
+    .maxBy(ri => (ri.range.getDuration,ri.base.getDuration))
 
-  override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
+  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = {
+    var startPoint = startIterator.preceding(ldt).next.end
+
+    val iterators: List[BufferedIterator[Interval]] =
+      repeatingIntervals.toList
+        .sortBy(ri => (ri.range.getDuration,ri.base.getDuration)).reverse
+        .map(_.preceding(startPoint).buffered)
+
+    def newIntersect: Iterator[Interval] = {
+      startPoint = startPoint.minus(1,range)
+
+      val intervalList = List(iterators.head.next) ::
+          iterators.tail.map(it => it.takeWhile(interval => it.head.start isAfter startPoint).toList)
+
+      intervalList.tail.foldLeft(intervalList.head) {
+        (list, current) =>
+          current.filter( intersection(_, list))
+      }.toIterator
+    }
+
+    var currentList: Iterator[Interval] = newIntersect
+
+    Iterator.continually {
+
+      while (currentList.isEmpty)
+        currentList = newIntersect
+
+      currentList.next
+    }
+  }
+
+  override def following(ldt: LocalDateTime): Iterator[Interval]  = {
+    var startPoint: LocalDateTime = startIterator.following(ldt).next.start
+
+    val iterators: List[BufferedIterator[Interval]] =
+      repeatingIntervals.toList
+        .sortBy(ri => (ri.range.getDuration,ri.base.getDuration)).reverse
+        .map(_.following(startPoint).buffered)
+
+    def newIntersect: Iterator[Interval] = {
+      startPoint = startPoint.plus(1,range)
+
+      val intervalList = List(iterators.head.next) ::
+        iterators.tail.map(it => it.takeWhile(interval => it.head.end isBefore startPoint).toList)
+
+      intervalList.tail.foldLeft(intervalList.head) {
+        (list, current) =>
+          current.filter(intersection(_, list))
+      }.toIterator
+    }
+
+    var currentList: Iterator[Interval] = newIntersect
+
+    Iterator.continually {
+
+      while (currentList.isEmpty)
+        currentList = newIntersect
+
+      currentList.next
+    }
+  }
+
+  private[formal] def intersection(interval: Interval, list: List[Interval]): Boolean = {
+    for ( item <- list )
+      if (!((interval.start isBefore item.start) || (interval.end isAfter item.end)))
+        return true
+    false
+  }
 }
 
 case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval {
