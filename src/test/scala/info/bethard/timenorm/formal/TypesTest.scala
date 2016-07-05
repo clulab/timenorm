@@ -381,6 +381,49 @@ class TypesTest extends FunSuite {
     assert( lastUnitRI.end === LocalDateTime.of(2002,3,22,0,0,0,0))
   }
 
+  test ("LastRepeatingIntervals") {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
+    //FieldRI: May
+    //Expected: Sequence(May 2001, May 2000, May 1999)
+    val lastFieldRIs = LastRepeatingIntervals(interval, frInterval, IntNumber(3))
+    assert( lastFieldRIs.size == 3)
+
+    assert( lastFieldRIs(0).start === LocalDateTime.of(2001,5,1,0,0))
+    assert( lastFieldRIs(0).end === LocalDateTime.of(2001,6,1,0,0))
+
+    assert( lastFieldRIs(1).start === LocalDateTime.of(2000,5,1,0,0))
+    assert( lastFieldRIs(1).end === LocalDateTime.of(2000,6,1,0,0))
+
+    assert( lastFieldRIs(2).start === LocalDateTime.of(1999,5,1,0,0))
+    assert( lastFieldRIs(2).end === LocalDateTime.of(1999,6,1,0,0))
+
+    //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
+    //UnitRI: Days
+    //Expected: Sequence(March 21, March 20, March 19, March 18, March 17 of 2002)
+    val lastUnitRIs = LastRepeatingIntervals(interval, urInterval, IntNumber(5))
+    assert(lastUnitRIs.size === 5)
+
+    assert( lastUnitRIs(0).start === LocalDateTime.of(2002,3,21,0,0))
+    assert( lastUnitRIs(0).end === LocalDateTime.of(2002,3,22,0,0))
+
+    assert( lastUnitRIs(1).start === LocalDateTime.of(2002,3,20,0,0))
+    assert( lastUnitRIs(1).end === LocalDateTime.of(2002,3,21,0,0))
+
+    assert( lastUnitRIs(2).start === LocalDateTime.of(2002,3,19,0,0))
+    assert( lastUnitRIs(2).end === LocalDateTime.of(2002,3,20,0,0))
+
+    assert( lastUnitRIs(3).start === LocalDateTime.of(2002,3,18,0,0))
+    assert( lastUnitRIs(3).end === LocalDateTime.of(2002,3,19,0,0))
+
+    assert( lastUnitRIs(4).start === LocalDateTime.of(2002,3,17,0,0))
+    assert( lastUnitRIs(4).end === LocalDateTime.of(2002,3,18,0,0))
+  }
+
   test( "NextRepeatingInterval" ) {
     val interval = SimpleInterval(
       LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
@@ -396,19 +439,70 @@ class TypesTest extends FunSuite {
     assert( nextUnitRI.end === LocalDateTime.of(2003,5,12,0,0,0,0))
   }
 
+  test ("NextRepeatingIntervals") {
+    val interval = SimpleInterval(
+      LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
+    val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
+    val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
+
+    //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
+    //FieldRI: May
+    //Expected: Sequence(May 2004, May 2005, May 2006)
+    val nextFieldRIs = NextRepeatingIntervals(interval, frInterval, IntNumber(3))
+    assert(nextFieldRIs.size == 3)
+
+    assert(nextFieldRIs(0).start === LocalDateTime.of(2004,5,1,0,0))
+    assert(nextFieldRIs(0).end === LocalDateTime.of(2004,6,1,0,0))
+
+    assert(nextFieldRIs(1).start === LocalDateTime.of(2005,5,1,0,0))
+    assert(nextFieldRIs(1).end === LocalDateTime.of(2005,6,1,0,0))
+
+    assert(nextFieldRIs(2).start === LocalDateTime.of(2006,5,1,0,0))
+    assert(nextFieldRIs(2).end === LocalDateTime.of(2006,6,1,0,0))
+
+    //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
+    //UnitRI: Days
+    //Expected: Sequence(May 11, May 12, May 13, May 14, May 15 of 2003)
+    val nextUnitRIs = NextRepeatingIntervals(interval, urInterval , IntNumber(5))
+    assert(nextUnitRIs.size == 5)
+
+    assert(nextUnitRIs(0).start === LocalDateTime.of(2003,5,11,0,0))
+    assert(nextUnitRIs(0).end === LocalDateTime.of(2003,5,12,0,0))
+
+    assert(nextUnitRIs(1).start === LocalDateTime.of(2003,5,12,0,0))
+    assert(nextUnitRIs(1).end === LocalDateTime.of(2003,5,13,0,0))
+
+    assert(nextUnitRIs(2).start === LocalDateTime.of(2003,5,13,0,0))
+    assert(nextUnitRIs(2).end === LocalDateTime.of(2003,5,14,0,0))
+
+    assert(nextUnitRIs(3).start === LocalDateTime.of(2003,5,14,0,0))
+    assert(nextUnitRIs(3).end === LocalDateTime.of(2003,5,15,0,0))
+
+    assert(nextUnitRIs(4).start === LocalDateTime.of(2003,5,15,0,0))
+    assert(nextUnitRIs(4).end === LocalDateTime.of(2003,5,16,0,0))
+  }
+
   test( "AfterRepeatingInterval" ) {
     val interval = SimpleInterval(
       LocalDateTime.of(2002,3,22,11,30,30,0), LocalDateTime.of(2003,5,10,22,10,20,0))
     val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
     val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
 
-    val afterFieldRI = AfterRepeatingInterval(interval, frInterval)
+    var afterFieldRI = AfterRepeatingInterval(interval, frInterval)
     assert( afterFieldRI.start === LocalDateTime.of(2004,5,1,0,0,0,0))
     assert( afterFieldRI.end === LocalDateTime.of(2004,6,1,0,0,0,0))
 
-    val afterUnitRI = AfterRepeatingInterval(interval, urInterval)
+    afterFieldRI = AfterRepeatingInterval(interval, frInterval, IntNumber(10))
+    assert( afterFieldRI.start === LocalDateTime.of(2013,5,1,0,0,0,0))
+    assert( afterFieldRI.end === LocalDateTime.of(2013,6,1,0,0,0,0))
+
+    var afterUnitRI = AfterRepeatingInterval(interval, urInterval)
     assert( afterUnitRI.start === LocalDateTime.of(2003,5,11,0,0,0,0))
     assert( afterUnitRI.end === LocalDateTime.of(2003,5,12,0,0,0,0))
+
+    afterUnitRI = AfterRepeatingInterval(interval, urInterval, IntNumber(11))
+    assert( afterUnitRI.start === LocalDateTime.of(2003,5,21,0,0,0,0))
+    assert( afterUnitRI.end === LocalDateTime.of(2003,5,22,0,0,0,0))
   }
 
   test ( "BeforeRepeatingInterval" ) {
@@ -417,13 +511,21 @@ class TypesTest extends FunSuite {
     val frInterval = FieldRepeatingInterval( ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact )
     val urInterval = UnitRepeatingInterval(ChronoUnit.DAYS, Modifier.Exact)
 
-    val beforeFieldRI = BeforeRepeatingInterval(interval, frInterval)
+    var beforeFieldRI = BeforeRepeatingInterval(interval, frInterval)
     assert( beforeFieldRI.start === LocalDateTime.of(2001,5,1,0,0,0,0))
     assert( beforeFieldRI.end === LocalDateTime.of(2001,6,1,0,0,0,0))
 
-    val beforeUnitRI = BeforeRepeatingInterval(interval, urInterval)
+    beforeFieldRI = BeforeRepeatingInterval(interval, frInterval, IntNumber(5))
+    assert (beforeFieldRI.start === LocalDateTime.of(1997, 5, 1, 0, 0))
+    assert (beforeFieldRI.end === LocalDateTime.of(1997, 6, 1, 0, 0))
+
+    var beforeUnitRI = BeforeRepeatingInterval(interval, urInterval)
     assert( beforeUnitRI.start === LocalDateTime.of(2002,3,21,0,0,0,0))
     assert( beforeUnitRI.end === LocalDateTime.of(2002,3,22,0,0,0,0))
+
+    beforeUnitRI = BeforeRepeatingInterval(interval, urInterval, IntNumber(20))
+    assert( beforeUnitRI.start === LocalDateTime.of(2002,3,2,0,0,0,0))
+    assert( beforeUnitRI.end === LocalDateTime.of(2002,3,3,0,0,0,0))
   }
 
   test ( "NthRepeatingInterval" ) {
@@ -443,6 +545,33 @@ class TypesTest extends FunSuite {
     intercept [NotImplementedError] {
       val nthFailure = Nth(interval, 5, frInterval)
     }
+  }
+
+  test ("ThisRepeatingInterval") {
+    var interval: Interval = Year(2016)
+    var repeatingInterval: RepeatingInterval = UnitRepeatingInterval(ChronoUnit.DAYS)
+
+    //Multiple element result, ThisRepeatingIntervals should be used instead
+    intercept [MatchError] {
+      ThisRepeatingInterval(interval,repeatingInterval)
+    }
+
+    //Interval: The Year of 2016
+    //RI: April
+    repeatingInterval = FieldRepeatingInterval(ChronoField.MONTH_OF_YEAR, 4)
+    var thisRI = ThisRepeatingInterval(interval,repeatingInterval)
+    //Expected: "This April" April 2016
+    assert((thisRI.start, thisRI.end) ===
+      (LocalDateTime.of(2016,4,1,0,0), LocalDateTime.of(2016,5,1,0,0)))
+
+    //Interval: July 1, 2016
+    //RI: Months
+    interval = SimpleInterval(LocalDateTime.of(2016,7,1,0,0), LocalDateTime.of(2016,7,2,0,0))
+    repeatingInterval = UnitRepeatingInterval(ChronoUnit.MONTHS)
+    //Expected: "This Month" July 2016
+    thisRI = ThisRepeatingInterval(interval,repeatingInterval)
+    assert((thisRI.start, thisRI.end) ===
+      (LocalDateTime.of(2016,7,1,0,0),LocalDateTime.of(2016,8,1,0,0)))
   }
 
   test ( "ThisRepeatingIntervals" ) {
@@ -565,8 +694,7 @@ class TypesTest extends FunSuite {
     //Expected Result: All days in the interval (8 total)
     urInterval = UnitRepeatingInterval(ChronoUnit.DAYS)
     thisRI = ThisRepeatingIntervals(interval1, urInterval).iterator
-    assert( thisRI.size == 8 )
-
+    assert( thisRI.size == 7 )
   }
 
   test ("RepeatingIntervalUnion") {
@@ -793,33 +921,6 @@ class TypesTest extends FunSuite {
     next = preceding.drop(9).next
     assert(next.start === LocalDateTime.of(2015,11,13,13,0))
     assert(next.end === LocalDateTime.of(2015,11,13,14,0))
-  }
-
-  test ("ThisRepeatingInterval") {
-    var interval: Interval = Year(2016)
-    var repeatingInterval: RepeatingInterval = UnitRepeatingInterval(ChronoUnit.DAYS)
-
-    //Multiple element result, ThisRepeatingIntervals should be used instead
-    intercept [NotImplementedError] {
-      ThisRepeatingInterval(interval,repeatingInterval)
-    }
-
-    //Interval: The Year of 2016
-    //RI: April
-    repeatingInterval = FieldRepeatingInterval(ChronoField.MONTH_OF_YEAR, 4)
-    var thisRI = ThisRepeatingInterval(interval,repeatingInterval)
-    //Expected: "This April" April 2016
-    assert((thisRI.start, thisRI.end) ===
-      (LocalDateTime.of(2016,4,1,0,0), LocalDateTime.of(2016,5,1,0,0)))
-
-    //Interval: July 1, 2016
-    //RI: Months
-    interval = SimpleInterval(LocalDateTime.of(2016,7,1,0,0), LocalDateTime.of(2016,7,2,0,0))
-    repeatingInterval = UnitRepeatingInterval(ChronoUnit.MONTHS)
-    //Expected: "This Month" July 2016
-    thisRI = ThisRepeatingInterval(interval,repeatingInterval)
-    assert((thisRI.start, thisRI.end) ===
-      (LocalDateTime.of(2016,7,1,0,0),LocalDateTime.of(2016,8,1,0,0)))
   }
 }
 

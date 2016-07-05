@@ -191,17 +191,23 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   val end = start.plus(period)
 }
 
-case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
-  val rangeEnd =
-    if (interval.end == rangeStart.plus(1,repeatingInterval.range)) interval.end
-    else RepeatingInterval.truncate(interval.end, repeatingInterval.range).plus(1,repeatingInterval.range)
-  val list: List[Interval] = repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toList
+trait This extends TimeExpression {
+  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval) = {
+    val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
 
-  if ( list.size != 1 )
-    ???
+    //  rangeEnd finds the end of the range by subtracting the smallest unit of a LocalDateTime and
+    //  then truncating the value before adding the value of repeatingInterval's range. This prevents
+    //  errors in cases where interval.end would be the same value as the truncated value of interval.end
+    val rangeEnd =
+      RepeatingInterval.truncate(interval.end.minus(Duration.ofNanos(1)), repeatingInterval.range)
+        .plus(1,repeatingInterval.range)
 
-  val Interval(start, end) = list.head
+    repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toSeq
+  }
+}
+
+case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with This {
+  val Seq(Interval(start,end)) = getIntervals(interval, repeatingInterval)
 }
 
 //  TODO: Update formal definition
@@ -213,18 +219,16 @@ case class ThisRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   * @param interval
   * @param repeatingInterval
   */
-case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval) extends Seq[Interval] {
-  val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
-  val rangeEnd =
-    if (interval.end == rangeStart.plus(1,repeatingInterval.range)) interval.end
-    else RepeatingInterval.truncate(interval.end, repeatingInterval.range).plus(1,repeatingInterval.range)
-  val sequence = repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toIndexedSeq
+case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval)
+  extends Seq[Interval] with This {
 
-  override def length: Int = sequence.size
+  override val seq = getIntervals(interval,repeatingInterval)
 
-  override def iterator: Iterator[Interval] = sequence.toIterator
+  override def length: Int = seq.size
 
-  override def apply(idx: Int) = sequence(idx)
+  override def iterator: Iterator[Interval] = seq.toIterator
+
+  override def apply(idx: Int) = seq(idx)
 }
 
 /**
@@ -239,16 +243,49 @@ case class LastPeriod(interval: Interval, period: Period) extends Interval {
   val end = interval.start
 }
 
+trait Last extends TimeExpression {
+  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval, n: Number) = {
+    val number = n match {
+      case IntNumber(x) => x
+      case _ => ???
+    }
+
+    repeatingInterval.preceding(interval.start).take(number).toSeq
+  }
+}
+
 /**
-  * LastRepeatingInterval finds the n latest repeated intervals that appear before the given interval. Formally:
-  * LastRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
-  * n latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
+  * LastRepeatingInterval finds the latest repeated interval that appears before the given interval. Formally:
+  * LastRepeatingInterval([t1,t2): Interval, R: RepeatingInterval) =
+  * latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
   *
   * @param interval interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
-case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val Interval(start, end) = repeatingInterval.preceding(interval.start).next
+case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Last {
+  val Seq(Interval(start, end)) = getIntervals(interval,repeatingInterval, IntNumber(1))
+}
+
+/**
+  * LastRepeatingIntervals finds the n latest repeated intervals that appear before the given interval. Formally:
+  * LastRepeatingIntervals([t1,t2): Interval, R: RepeatingInterval, n: Number) =
+  * n latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
+  *
+  * @param interval interval to begin from
+  * @param repeatingInterval RI that supplies the appropriate time intervals
+  * @param n the number of intervals ot take
+  */
+case class LastRepeatingIntervals(interval: Interval,
+                                  repeatingInterval: RepeatingInterval,
+                                  n: Number = IntNumber(1)) extends Seq[Interval] with Last {
+
+  override val seq = getIntervals(interval,repeatingInterval,n)
+
+  override def length: Int = seq.length
+
+  override def iterator: Iterator[Interval] = seq.toIterator
+
+  override def apply(idx: Int) = seq(idx)
 }
 
 /**
@@ -263,6 +300,32 @@ case class NextPeriod(interval: Interval, period: Period) extends Interval {
   val end = interval.start.plus(period)
 }
 
+trait Next extends TimeExpression {
+  protected def getIntervals(interval: Interval,
+                             repeatingInterval: RepeatingInterval,
+                             n: Number = IntNumber(1)) = {
+
+    val number = n match {
+      case IntNumber(x) => x
+      case _ => ???
+    }
+
+    repeatingInterval.following(interval.end).take(number).toSeq
+  }
+}
+
+/**
+  * NextRepeatingInterval finds the next earliest repeated intervals that appear after the given interval. Formally:
+  * NextRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
+  * n earliest of {[t.start,t.end) ∈ R: t2 ≤ t.start}
+  *
+  * @param interval interval to begin from
+  * @param repeatingInterval RI that supplies the appropriate time intervals
+  */
+case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Next {
+  val Seq(Interval(start,end)) = getIntervals(interval,repeatingInterval,IntNumber(1))
+}
+
 /**
   * NextRepeatingInterval finds the n earliest repeated intervals that appear after the given interval. Formally:
   * NextRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
@@ -270,9 +333,18 @@ case class NextPeriod(interval: Interval, period: Period) extends Interval {
   *
   * @param interval interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
+  * @param n the number of repeated intervals to take
   */
-case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val Interval(start, end) = repeatingInterval.following(interval.end).next
+case class NextRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval, n: Number = IntNumber(1))
+  extends Seq[Interval] with Next {
+
+  override val seq = getIntervals(interval,repeatingInterval,n)
+
+  override def length: Int = seq.length
+
+  override def iterator: Iterator[Interval] = seq.toIterator
+
+  override def apply(idx: Int) = seq(idx)
 }
 
 /**
@@ -294,9 +366,16 @@ case class BeforePeriod(interval: Interval, period: Period) extends Interval {
   *
   * @param interval interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
+  * @param n the number of intervals to skip
   */
-case class BeforeRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val Interval(start, end) = repeatingInterval.preceding(interval.start).next
+case class BeforeRepeatingInterval(interval: Interval,
+                                   repeatingInterval: RepeatingInterval,
+                                   n: Number = IntNumber(1)) extends Interval {
+  val number = n match {
+    case IntNumber(x) => x
+    case _ => ???
+}
+  val Interval(start, end) = repeatingInterval.preceding(interval.start).drop(number-1).next
 }
 
 /**
@@ -319,8 +398,14 @@ case class AfterPeriod(interval: Interval, period: Period) extends Interval {
   * @param interval
   * @param repeatingInterval
   */
-case class AfterRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val Interval(start, end) = repeatingInterval.following(interval.end).next
+case class AfterRepeatingInterval(interval: Interval,
+                                  repeatingInterval: RepeatingInterval,
+                                  n: Number = IntNumber(1)) extends Interval {
+  val number = n match {
+    case IntNumber(x) => x
+    case _ => ???
+  }
+  val Interval(start, end) = repeatingInterval.following(interval.end).drop(number-1).next
 }
 
 /**
@@ -467,15 +552,6 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
       SimpleInterval(start, start.plus(1,field.getBaseUnit))
     }
   }
-}
-
-case class NumberedRepeatingInterval(repeatingInterval: RepeatingInterval, number: Number) extends RepeatingInterval {
-  override val base = ???
-  override val range = ???
-
-  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
-
-  override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
 }
 
 case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {

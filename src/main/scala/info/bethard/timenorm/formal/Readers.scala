@@ -76,8 +76,10 @@ object AnaforaReader {
 //    case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
       case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
       case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
-      case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
-      case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
+//    TODO: handle Before's new Number argument
+//    case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
+//    TODO: handle After's new Number argument
+//    case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
       case "Between" => Between(interval(entity.properties, "Start-"), interval(entity.properties, "End-"))
       case "Nth" => Nth(
         interval(entity.properties),
@@ -170,7 +172,8 @@ object AnaforaReader {
     }
     entity.properties.getEntity("Number") match {
       case None => result
-      case Some(numberEntity) => NumberedRepeatingInterval(result, number(numberEntity))
+        //TODO: Handle NumberedRepeatingIntervals as part of LastRIs, NextRIs, BeforeRI, and AfterRI
+//      case Some(numberEntity) => NumberedRepeatingInterval(result, number(numberEntity))
     }
   }
 
