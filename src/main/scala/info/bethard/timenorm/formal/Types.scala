@@ -625,15 +625,5 @@ case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterv
   }
 }
 
-case class IntervalAsRepeatingInterval(interval: Interval) extends RepeatingInterval {
-  override val base = ???
-  override val range = ???
-
-  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = ???
-
-  override def following(ldt: LocalDateTime): Iterator[Interval]  = ???
-}
-
-
 case class TimeZone(name: String) extends TimeExpression
 

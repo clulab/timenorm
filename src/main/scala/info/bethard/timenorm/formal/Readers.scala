@@ -72,14 +72,14 @@ object AnaforaReader {
           case (century, "??") => Century(century.toInt)
         }
       case "Two-Digit-Year" => TwoDigitYear(interval(entity.properties), entity.properties("Value").toInt)
-//    TODO: handle ThisRepeatingInterval, which is now a Seq[Interval], not an Interval
-//    case "This" => interval(entity, ThisPeriod, ThisRepeatingInterval)
+      // TODO: handle ThisRepeatingInterval, which is now a Seq[Interval], not an Interval
+      case "This" => ???
       case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
       case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
-//    TODO: handle Before's new Number argument
-//    case "Before" => interval(entity, BeforePeriod, BeforeRepeatingInterval)
-//    TODO: handle After's new Number argument
-//    case "After" => interval(entity, AfterPeriod, AfterRepeatingInterval)
+      // TODO: handle Before's new Number argument
+      case "Before" => ???
+      // TODO: handle After's new Number argument
+      case "After" => ???
       case "Between" => Between(interval(entity.properties, "Start-"), interval(entity.properties, "End-"))
       case "Nth" => Nth(
         interval(entity.properties),
@@ -89,8 +89,8 @@ object AnaforaReader {
     }
     entity.properties.getEntity("Sub-Interval") match {
       case None => result
-//      TODO: handle IntervalSubIntervalIntersection, which is now ThisRepeatingInterval
-//      case Some(subEntity) => IntervalSubIntervalIntersection(result, repeatingInterval(subEntity))
+      // TODO: handle IntervalSubIntervalIntersection, which is now ThisRepeatingInterval
+      case Some(subEntity) => ???
     }
   }
 
@@ -117,9 +117,9 @@ object AnaforaReader {
         RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Intersection" =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
-        val intervals = entity.properties.getEntities("Intervals").map(interval)
-        val allRepeatingIntervals = repeatingIntervals ++ intervals.map(IntervalAsRepeatingInterval)
-        RepeatingIntervalIntersection(allRepeatingIntervals.toSet)
+        // TODO: handle Intersection intervals
+        if (entity.properties.has("Intervals")) ???
+        RepeatingIntervalIntersection(repeatingIntervals.toSet)
       case "Calendar-Interval" => UnitRepeatingInterval(entity.properties("Type") match {
         case "Century" => ChronoUnit.CENTURIES
         case "Quarter-Year" => IsoFields.QUARTER_YEARS
@@ -172,8 +172,8 @@ object AnaforaReader {
     }
     entity.properties.getEntity("Number") match {
       case None => result
-        //TODO: Handle NumberedRepeatingIntervals as part of LastRIs, NextRIs, BeforeRI, and AfterRI
-//      case Some(numberEntity) => NumberedRepeatingInterval(result, number(numberEntity))
+      //TODO: Handle NumberedRepeatingIntervals as part of LastRIs, NextRIs, BeforeRI, and AfterRI
+      case Some(numberEntity) => ???
     }
   }
 
