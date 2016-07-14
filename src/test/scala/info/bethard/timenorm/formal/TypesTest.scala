@@ -543,7 +543,7 @@ class TypesTest extends FunSuite {
     assert( nthUnitRI.end === LocalDateTime.of(2002, 3, 26, 0, 0, 0, 0))
 
     intercept [NotImplementedError] {
-      val nthFailure = Nth(interval, 5, frInterval)
+      val Interval(start, end) = Nth(interval, 5, frInterval)
     }
   }
 
@@ -553,7 +553,7 @@ class TypesTest extends FunSuite {
 
     //Multiple element result, ThisRepeatingIntervals should be used instead
     intercept [MatchError] {
-      ThisRepeatingInterval(interval,repeatingInterval)
+      val Interval(start, end) = ThisRepeatingInterval(interval,repeatingInterval)
     }
 
     //Interval: The Year of 2016
