@@ -11,20 +11,33 @@ import scala.collection.mutable
 trait TimeExpression
 
 trait Number extends TimeExpression
+
 case class IntNumber(n: Int) extends Number
+
 case class FractionalNumber(number: Int, numerator: Int, denominator: Int) extends Number
+
 case class VagueNumber(description: String) extends Number
 
 trait Modifier extends TimeExpression
+
 object Modifier {
+
   case object Exact extends Modifier
+
   case object Approx extends Modifier
+
   case object LessThan extends Modifier
+
   case object MoreThan extends Modifier
+
   case object Start extends Modifier
+
   case object Mid extends Modifier
+
   case object End extends Modifier
+
   case object Fiscal extends Modifier
+
 }
 
 /**
@@ -39,22 +52,22 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
 
   val number = n match {
     case IntNumber(x) => x
-    case n:Number => ???
+    case n: Number => ???
   }
 
   override def addTo(temporal: Temporal): Temporal = {
-    return temporal.plus( number , unit )
+    return temporal.plus(number, unit)
   }
 
   override def get(unit: TemporalUnit): Long = {
-    if ( unit == this.unit )
+    if (unit == this.unit)
       return number
     else
       throw new UnsupportedTemporalTypeException(null)
   }
 
   override def subtractFrom(temporal: Temporal): Temporal = {
-    return temporal.minus( number, unit )
+    return temporal.minus(number, unit)
   }
 
   override def getUnits: java.util.List[TemporalUnit] = {
@@ -74,10 +87,10 @@ case object UnknownPeriod extends Period {
 
 case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
 
-  var map = scala.collection.mutable.Map.empty[TemporalUnit,Long]
+  var map = scala.collection.mutable.Map.empty[TemporalUnit, Long]
 
-  for ( period <- periods; unit <- period.getUnits.asScala )
-      map.get(unit) match {
+  for (period <- periods; unit <- period.getUnits.asScala)
+    map.get(unit) match {
       case Some(value) => map(unit) += period.get(unit)
       case None => map(unit) = period.get(unit)
     }
@@ -87,20 +100,20 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) 
   override def addTo(temporal: Temporal): Temporal = {
     var current = temporal
 
-    for ((u,n) <- map)
+    for ((u, n) <- map)
       current = current.plus(n, u)
 
     current
   }
 
   override def get(unit: TemporalUnit): Long =
-    map.getOrElse( unit, throw new UnsupportedTemporalTypeException(null))
+    map.getOrElse(unit, throw new UnsupportedTemporalTypeException(null))
 
 
   override def subtractFrom(temporal: Temporal): Temporal = {
     var current = temporal
 
-    for ((u,n) <- map)
+    for ((u, n) <- map)
       current = current.minus(n, u)
 
     current
@@ -115,66 +128,70 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) 
   * interval [1990-01-01, 1991-01-01).
   */
 trait Interval extends TimeExpression {
-  def start : LocalDateTime
-  def end : LocalDateTime
+  def start: LocalDateTime
+
+  def end: LocalDateTime
 }
 
 object Interval {
-  def unapply(interval: Interval): Option[(LocalDateTime,LocalDateTime)] = Some(interval.start, interval.end)
+  def unapply(interval: Interval): Option[(LocalDateTime, LocalDateTime)] = Some(interval.start, interval.end)
 }
 
 case object DocumentCreationTime extends Interval {
   def start = ???
+
   def end = ???
 }
 
 case object UnknownInterval extends Interval {
   def start = ???
+
   def end = ???
 }
 
 case class Event(description: String) extends Interval {
   def start = ???
+
   def end = ???
 }
 
 case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Interval
 
 /**
- * A Year represents the interval from the first second of the year (inclusive) to the first second of the
- * next year (exclusive).
- */
+  * A Year represents the interval from the first second of the year (inclusive) to the first second of the
+  * next year (exclusive).
+  */
 case class Year(n: Int) extends Interval {
-  lazy val start = LocalDateTime.of( n, 1, 1, 0, 0, 0, 0 )
-  lazy val end = start.plusYears( 1 )
+  lazy val start = LocalDateTime.of(n, 1, 1, 0, 0, 0, 0)
+  lazy val end = start.plusYears(1)
 }
 
 /**
- * A Decade represents the interval from the first second of the decade (inclusive) to the first second of the
- * next decade (exclusive).
- */
+  * A Decade represents the interval from the first second of the decade (inclusive) to the first second of the
+  * next decade (exclusive).
+  */
 case class Decade(n: Int) extends Interval {
-  lazy val start = LocalDateTime.of( n * 10, 1, 1, 0, 0, 0, 0 )
-  lazy val end = start.plusYears( 10 )
+  lazy val start = LocalDateTime.of(n * 10, 1, 1, 0, 0, 0, 0)
+  lazy val end = start.plusYears(10)
 }
 
 /**
- * A Century represents an interval from the first second of the century (inclusive) to the first second
- * of the next century (exclusive).
- */
+  * A Century represents an interval from the first second of the century (inclusive) to the first second
+  * of the next century (exclusive).
+  */
 case class Century(n: Int) extends Interval {
-  lazy val start = LocalDateTime.of( n * 100, 1, 1, 0, 0, 0, 0 )
-  lazy val end = start.plusYears( 100 )
+  lazy val start = LocalDateTime.of(n * 100, 1, 1, 0, 0, 0, 0)
+  lazy val end = start.plusYears(100)
 }
 
 /**
- * TwoDigitYear creates a one year interval from two digits and the century of another interval.
- * Formally: TwoDigitYear([ABCD-EF-GH,...) : Interval, YZ : Integer) = [ABYZ-01-01, (ABYZ+1)-01-01)
- */
+  * TwoDigitYear creates a one year interval from two digits and the century of another interval.
+  * Formally: TwoDigitYear([ABCD-EF-GH,...) : Interval, YZ : Integer) = [ABYZ-01-01, (ABYZ+1)-01-01)
+  */
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
-  lazy val start = LocalDateTime.of( ( interval.start.getYear() / 100 * 100 ) + twoDigits,
-      1, 1, 0, 0, 0, 0 )
-  lazy val end = start.plusYears( 1 )
+  lazy val start = LocalDateTime.of((interval.start.getYear() / 100 * 100) + twoDigits,
+    1, 1, 0, 0, 0, 0)
+  lazy val end = start.plusYears(1)
 }
 
 /**
@@ -182,12 +199,12 @@ case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
   * This([t1,t2): Interval, Δ: Period) = [ (t1 + t2)/2 - Δ/2, (t1 + t2)/2 + Δ/2 )
   *
   * @param interval interval to center the period upon
-  * @param period period of interest
+  * @param period   period of interest
   */
 case class ThisPeriod(interval: Interval, period: Period) extends Interval {
   lazy val start = {
-    val mid = interval.start.plus(Duration.between(interval.start,interval.end).dividedBy(2))
-    val halfPeriod = Duration.between(interval.start.minus(period),interval.start).dividedBy(2)
+    val mid = interval.start.plus(Duration.between(interval.start, interval.end).dividedBy(2))
+    val halfPeriod = Duration.between(interval.start.minus(period), interval.start).dividedBy(2)
     mid.minus(halfPeriod)
   }
   lazy val end = start.plus(period)
@@ -201,15 +218,15 @@ trait This extends TimeExpression {
     //  then truncating the value before adding the value of repeatingInterval's range. This prevents
     //  errors in cases where interval.end would be the same value as the truncated value of interval.end
     val rangeEnd =
-      RepeatingInterval.truncate(interval.end.minus(Duration.ofNanos(1)), repeatingInterval.range)
-        .plus(1,repeatingInterval.range)
+    RepeatingInterval.truncate(interval.end.minus(Duration.ofNanos(1)), repeatingInterval.range)
+      .plus(1, repeatingInterval.range)
 
     repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toSeq
   }
 }
 
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with This {
-  lazy val Seq(Interval(start,end)) = getIntervals(interval, repeatingInterval)
+  lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval)
 }
 
 //  TODO: Update formal definition
@@ -224,7 +241,7 @@ case class ThisRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
 case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval)
   extends Seq[Interval] with This {
 
-  lazy val intervals = getIntervals(interval,repeatingInterval)
+  lazy val intervals = getIntervals(interval, repeatingInterval)
 
   override def length: Int = intervals.size
 
@@ -238,7 +255,7 @@ case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: Repeati
   * Formally: Last([t1,t2): Interval, Δ: Period = [t1 - Δ, t1)
   *
   * @param interval interval to shift from
-  * @param period period to shift the interval by
+  * @param period   period to shift the interval by
   */
 case class LastPeriod(interval: Interval, period: Period) extends Interval {
   lazy val start = interval.start.minus(period)
@@ -261,11 +278,11 @@ trait Last extends TimeExpression {
   * LastRepeatingInterval([t1,t2): Interval, R: RepeatingInterval) =
   * latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
   *
-  * @param interval interval to begin from
+  * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
 case class LastRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Last {
-  lazy val Seq(Interval(start, end)) = getIntervals(interval,repeatingInterval, IntNumber(1))
+  lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval, IntNumber(1))
 }
 
 /**
@@ -273,15 +290,15 @@ case class LastRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   * LastRepeatingIntervals([t1,t2): Interval, R: RepeatingInterval, n: Number) =
   * n latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
   *
-  * @param interval interval to begin from
+  * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
-  * @param n the number of intervals ot take
+  * @param n                 the number of intervals ot take
   */
 case class LastRepeatingIntervals(interval: Interval,
                                   repeatingInterval: RepeatingInterval,
                                   n: Number = IntNumber(1)) extends Seq[Interval] with Last {
 
-  lazy val intervals = getIntervals(interval,repeatingInterval,n)
+  lazy val intervals = getIntervals(interval, repeatingInterval, n)
 
   override def length: Int = intervals.length
 
@@ -295,7 +312,7 @@ case class LastRepeatingIntervals(interval: Interval,
   * Formally: Next([t1,t2): Interval, Δ: Period = [t2, t2 + Δ)
   *
   * @param interval interval to shift from
-  * @param period period to shift the interval by
+  * @param period   period to shift the interval by
   */
 case class NextPeriod(interval: Interval, period: Period) extends Interval {
   lazy val start = interval.end
@@ -321,11 +338,11 @@ trait Next extends TimeExpression {
   * NextRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
   * n earliest of {[t.start,t.end) ∈ R: t2 ≤ t.start}
   *
-  * @param interval interval to begin from
+  * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
 case class NextRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Next {
-  lazy val Seq(Interval(start,end)) = getIntervals(interval,repeatingInterval,IntNumber(1))
+  lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval, IntNumber(1))
 }
 
 /**
@@ -333,14 +350,14 @@ case class NextRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   * NextRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number) =
   * n earliest of {[t.start,t.end) ∈ R: t2 ≤ t.start}
   *
-  * @param interval interval to begin from
+  * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
-  * @param n the number of repeated intervals to take
+  * @param n                 the number of repeated intervals to take
   */
 case class NextRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval, n: Number = IntNumber(1))
   extends Seq[Interval] with Next {
 
-  lazy val intervals = getIntervals(interval,repeatingInterval,n)
+  lazy val intervals = getIntervals(interval, repeatingInterval, n)
 
   override def length: Int = intervals.length
 
@@ -354,7 +371,7 @@ case class NextRepeatingIntervals(interval: Interval, repeatingInterval: Repeati
   * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ, t2 - Δ)
   *
   * @param interval interval to shift from
-  * @param period period to shift the interval by
+  * @param period   period to shift the interval by
   */
 case class BeforePeriod(interval: Interval, period: Period) extends Interval {
   lazy val start = interval.start.minus(period)
@@ -366,15 +383,15 @@ case class BeforePeriod(interval: Interval, period: Period) extends Interval {
   * BeforeRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number): Interval =
   * Nth latest interval {[t.start, t.end) ∈ R: t.end ≤ t1}
   *
-  * @param interval interval to begin from
+  * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
-  * @param n the number of intervals to skip
+  * @param n                 the number of intervals to skip
   */
 case class BeforeRepeatingInterval(interval: Interval,
                                    repeatingInterval: RepeatingInterval,
                                    n: Number = IntNumber(1)) extends Interval {
   lazy val Interval(start, end) = n match {
-    case IntNumber(number) => repeatingInterval.preceding(interval.start).drop(number-1).next
+    case IntNumber(number) => repeatingInterval.preceding(interval.start).drop(number - 1).next
     case _ => ???
   }
 }
@@ -384,7 +401,7 @@ case class BeforeRepeatingInterval(interval: Interval,
   * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ, t2 +  Δ)
   *
   * @param interval interval to shift from
-  * @param period period to shift the interval by
+  * @param period   period to shift the interval by
   */
 case class AfterPeriod(interval: Interval, period: Period) extends Interval {
   lazy val start = interval.start.plus(period)
@@ -403,7 +420,7 @@ case class AfterRepeatingInterval(interval: Interval,
                                   repeatingInterval: RepeatingInterval,
                                   n: Number = IntNumber(1)) extends Interval {
   lazy val Interval(start, end) = n match {
-    case IntNumber(number) => repeatingInterval.following(interval.end).drop(number-1).next
+    case IntNumber(number) => repeatingInterval.following(interval.end).drop(number - 1).next
     case _ => ???
   }
 }
@@ -413,7 +430,7 @@ case class AfterRepeatingInterval(interval: Interval,
   * Between([t1,t2): startInterval,[t3,t4): endInterval): Interval = [t2,t3)
   *
   * @param startInterval first interval
-  * @param endInterval second interval
+  * @param endInterval   second interval
   */
 case class Between(startInterval: Interval, endInterval: Interval) extends Interval {
   lazy val start = startInterval.end
@@ -426,12 +443,12 @@ case class Between(startInterval: Interval, endInterval: Interval) extends Inter
   * Formally: Nth([t1,t2): Interval, Δ: Period, n: N): Interval = [t1+Δ*(n-1), t1+Δ*n)
   *
   * @param interval the interval to begin from
-  * @param n the number of repetitions of the period to add
-  * @param period the period to scale by
+  * @param n        the number of repetitions of the period to add
+  * @param period   the period to scale by
   */
 case class NthInterval(interval: Interval, n: Number, period: Period) extends Interval {
   lazy val start = n match {
-    case IntNumber(number) => Iterator.fill(number-1)(period).foldLeft(interval.start)(_ plus _)
+    case IntNumber(number) => Iterator.fill(number - 1)(period).foldLeft(interval.start)(_ plus _)
     case _ => ???
   }
   lazy val end = start.plus(period)
@@ -447,7 +464,7 @@ case class NthInterval(interval: Interval, n: Number, period: Period) extends In
   * @param repeatingInterval
   */
 case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval {
-  lazy val Interval(start,end)  = repeatingInterval.following(interval.start).drop(value-1).next match {
+  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(value - 1).next match {
     case result if result.end.isBefore(interval.end) => result
     case _ => ???
   }
@@ -455,21 +472,23 @@ case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInter
 
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
+
   def following(ldt: LocalDateTime): Iterator[Interval]
+
   val base: TemporalUnit
   val range: TemporalUnit
 }
 
 private[formal] object RepeatingInterval {
   def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = tUnit match {
-      case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear/100*100,1,1,0,0)
-      case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear/10*10,1,1,0,0)
-      case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
-      case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
-      case ChronoUnit.WEEKS =>
-        ldt.withDayOfYear(ldt.getDayOfYear-ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
-      case _ => ldt.truncatedTo(tUnit)
-    }
+    case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear / 100 * 100, 1, 1, 0, 0)
+    case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear / 10 * 10, 1, 1, 0, 0)
+    case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
+    case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+    case ChronoUnit.WEEKS =>
+      ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
+    case _ => ldt.truncatedTo(tUnit)
+  }
 }
 
 case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier = Modifier.Exact) extends RepeatingInterval {
@@ -477,7 +496,7 @@ case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier = Modifi
   override val range = unit
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var end = RepeatingInterval.truncate( ldt, unit ).plus(1,unit)
+    var end = RepeatingInterval.truncate(ldt, unit).plus(1, unit)
     var start = end.minus(1, unit)
 
     Iterator.continually {
@@ -489,8 +508,8 @@ case class UnitRepeatingInterval(unit: TemporalUnit, modifier: Modifier = Modifi
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
     val truncated = RepeatingInterval.truncate(ldt, unit)
-    var end = if ( truncated.isBefore(ldt) ) truncated.plus(1,unit) else truncated
-    var start = end.minus(1,unit)
+    var end = if (truncated.isBefore(ldt)) truncated.plus(1, unit) else truncated
+    var start = end.minus(1, unit)
 
 
     Iterator.continually {
@@ -506,13 +525,13 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
   override val range = field.getRangeUnit
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt.`with`(field,value), field.getBaseUnit)
+    var start = RepeatingInterval.truncate(ldt.`with`(field, value), field.getBaseUnit)
 
     if (!start.isAfter(ldt))
-      start = start.plus(1,field.getRangeUnit)
+      start = start.plus(1, field.getRangeUnit)
 
     Iterator.continually {
-      start = start.minus(1,field.getRangeUnit)
+      start = start.minus(1, field.getRangeUnit)
 
       while (start.get(field) != value) {
         start = start.minus(1, field.getRangeUnit)
@@ -524,30 +543,30 @@ case class FieldRepeatingInterval(field: TemporalField, value: Long, modifier: M
         }
       }
 
-      SimpleInterval(start, start.plus(1,field.getBaseUnit))
+      SimpleInterval(start, start.plus(1, field.getBaseUnit))
     }
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt`with`(field,value), field.getBaseUnit)
+    var start = RepeatingInterval.truncate(ldt `with`(field, value), field.getBaseUnit)
 
     if (!start.isBefore(ldt))
-      start = start.minus(1,field.getRangeUnit)
+      start = start.minus(1, field.getRangeUnit)
 
     Iterator.continually {
       start = start.plus(1, field.getRangeUnit)
 
       while (start.get(field) != value) {
-        start = start.plus(1,field.getRangeUnit)
+        start = start.plus(1, field.getRangeUnit)
 
         try
-          start = start.`with`(field,value)
+          start = start.`with`(field, value)
         catch {
           case dte: DateTimeException =>
         }
       }
 
-      SimpleInterval(start, start.plus(1,field.getBaseUnit))
+      SimpleInterval(start, start.plus(1, field.getBaseUnit))
     }
   }
 }
@@ -558,18 +577,18 @@ case class RepeatingIntervalUnion(repeatingIntervals: Set[RepeatingInterval]) ex
 
   implicit val ordering = Ordering.Tuple2(Ordering.fromLessThan[LocalDateTime](_ isAfter _), Ordering[Duration].reverse)
 
-  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = {
+  override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     val iterators = repeatingIntervals.map(_.preceding(ldt).buffered).toList
 
     Iterator.continually {
       iterators.minBy { iterator =>
         val interval = iterator.head
-        (interval.end, Duration.between(interval.start,interval.end))
+        (interval.end, Duration.between(interval.start, interval.end))
       }.next
     }
   }
 
-  override def following(ldt: LocalDateTime): Iterator[Interval]  = {
+  override def following(ldt: LocalDateTime): Iterator[Interval] = {
     val iterators = repeatingIntervals.map(_.following(ldt).buffered).toList
 
     Iterator.continually {
@@ -586,14 +605,14 @@ case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterv
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
 
   private val sortedRepeatingIntervals = repeatingIntervals.toList
-    .sortBy(ri => (ri.range.getDuration,ri.base.getDuration)).reverse
+    .sortBy(ri => (ri.range.getDuration, ri.base.getDuration)).reverse
 
-  override def preceding(ldt: LocalDateTime): Iterator[Interval]  = {
+  override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var startPoint = sortedRepeatingIntervals.head.preceding(ldt).next.end
     val iterators = sortedRepeatingIntervals.map(_.preceding(startPoint).buffered)
 
     Iterator.continually {
-      startPoint = startPoint.minus(1,range)
+      startPoint = startPoint.minus(1, range)
       val firstInterval = iterators.head.next
       val othersAfterStart = iterators.tail.map(it => it.takeWhile(_ => it.head.start isAfter startPoint).toList)
 
@@ -603,12 +622,12 @@ case class RepeatingIntervalIntersection(repeatingIntervals: Set[RepeatingInterv
     }.flatten
   }
 
-  override def following(ldt: LocalDateTime): Iterator[Interval]  = {
+  override def following(ldt: LocalDateTime): Iterator[Interval] = {
     var startPoint = sortedRepeatingIntervals.head.following(ldt).next.start
     val iterators = sortedRepeatingIntervals.map(_.following(startPoint).buffered)
 
     Iterator.continually {
-      startPoint = startPoint.plus(1,range)
+      startPoint = startPoint.plus(1, range)
       val firstInterval = iterators.head.next
       val othersBeforeStart = iterators.tail.map(it => it.takeWhile(_ => it.head.end isBefore startPoint).toList)
 
