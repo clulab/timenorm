@@ -189,9 +189,7 @@ case class Century(n: Int) extends Interval {
   * Formally: TwoDigitYear([ABCD-EF-GH,...) : Interval, YZ : Integer) = [ABYZ-01-01, (ABYZ+1)-01-01)
   */
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
-  lazy val start = LocalDateTime.of((interval.start.getYear() / 100 * 100) + twoDigits,
-    1, 1, 0, 0, 0, 0)
-  lazy val end = start.plusYears(1)
+  lazy val Interval(start, end) = Year(interval.start.getYear() / 100 * 100 + twoDigits)
 }
 
 /**
