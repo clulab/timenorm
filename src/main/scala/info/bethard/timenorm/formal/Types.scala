@@ -137,6 +137,16 @@ object Interval {
   def unapply(interval: Interval): Option[(LocalDateTime, LocalDateTime)] = Some(interval.start, interval.end)
 }
 
+trait Intervals extends TimeExpression with Seq[Interval] {
+  protected def intervals: Seq[Interval]
+
+  override def length: Int = intervals.size
+
+  override def iterator: Iterator[Interval] = intervals.toIterator
+
+  override def apply(idx: Int) = intervals(idx)
+}
+
 case object DocumentCreationTime extends Interval {
   def start = ???
 
@@ -237,15 +247,8 @@ case class ThisRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   * @param repeatingInterval
   */
 case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval)
-  extends Seq[Interval] with This {
-
+  extends Intervals with This {
   lazy val intervals = getIntervals(interval, repeatingInterval)
-
-  override def length: Int = intervals.size
-
-  override def iterator: Iterator[Interval] = intervals.toIterator
-
-  override def apply(idx: Int) = intervals(idx)
 }
 
 /**
@@ -294,15 +297,9 @@ case class LastRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   */
 case class LastRepeatingIntervals(interval: Interval,
                                   repeatingInterval: RepeatingInterval,
-                                  n: Number = IntNumber(1)) extends Seq[Interval] with Last {
+                                  n: Number = IntNumber(1)) extends Intervals with Last {
 
   lazy val intervals = getIntervals(interval, repeatingInterval, n)
-
-  override def length: Int = intervals.length
-
-  override def iterator: Iterator[Interval] = intervals.toIterator
-
-  override def apply(idx: Int) = intervals(idx)
 }
 
 /**
@@ -353,15 +350,8 @@ case class NextRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
   * @param n                 the number of repeated intervals to take
   */
 case class NextRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval, n: Number = IntNumber(1))
-  extends Seq[Interval] with Next {
-
+  extends Intervals with Next {
   lazy val intervals = getIntervals(interval, repeatingInterval, n)
-
-  override def length: Int = intervals.length
-
-  override def iterator: Iterator[Interval] = intervals.toIterator
-
-  override def apply(idx: Int) = intervals(idx)
 }
 
 /**
