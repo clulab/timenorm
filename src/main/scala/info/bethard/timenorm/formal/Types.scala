@@ -264,13 +264,9 @@ case class LastPeriod(interval: Interval, period: Period) extends Interval {
 }
 
 trait Last extends TimeExpression {
-  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval, n: Number) = {
-    val number = n match {
-      case IntNumber(x) => x
-      case _ => ???
-    }
-
-    repeatingInterval.preceding(interval.start).take(number).toSeq
+  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval, n: Number) = n match {
+    case IntNumber(number) => repeatingInterval.preceding(interval.start).take(number).toSeq
+    case _ => ???
   }
 }
 
@@ -298,7 +294,6 @@ case class LastRepeatingInterval(interval: Interval, repeatingInterval: Repeatin
 case class LastRepeatingIntervals(interval: Interval,
                                   repeatingInterval: RepeatingInterval,
                                   n: Number = IntNumber(1)) extends Intervals with Last {
-
   lazy val intervals = getIntervals(interval, repeatingInterval, n)
 }
 
@@ -317,14 +312,9 @@ case class NextPeriod(interval: Interval, period: Period) extends Interval {
 trait Next extends TimeExpression {
   protected def getIntervals(interval: Interval,
                              repeatingInterval: RepeatingInterval,
-                             n: Number = IntNumber(1)) = {
-
-    val number = n match {
-      case IntNumber(x) => x
-      case _ => ???
-    }
-
-    repeatingInterval.following(interval.end).take(number).toSeq
+                             n: Number = IntNumber(1)) = n match {
+    case IntNumber(number) => repeatingInterval.following(interval.end).take(number).toSeq
+    case _ => ???
   }
 }
 
