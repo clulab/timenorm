@@ -210,14 +210,14 @@ case class ThisPeriod(interval: Interval, period: Period) extends Interval {
 
 trait This extends TimeExpression {
   protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval) = {
+    // find a start that aligns to the start of the repeating interval's range unit
     val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
 
-    //  rangeEnd finds the end of the range by subtracting the smallest unit of a LocalDateTime and
-    //  then truncating the value before adding the value of repeatingInterval's range. This prevents
-    //  errors in cases where interval.end would be the same value as the truncated value of interval.end
-    val rangeEnd =
-    RepeatingInterval.truncate(interval.end.minus(Duration.ofNanos(1)), repeatingInterval.range)
-      .plus(1, repeatingInterval.range)
+    // find an end that aligns to the end of the repeating interval's range unit
+    // Note that since Intervals are defined as exclusive of their end, we have to truncate from the nanosecond before
+    // the end, or in some corner cases we would truncate to a time after the desired range
+    val lastNano = interval.end.minus(Duration.ofNanos(1))
+    val rangeEnd = RepeatingInterval.truncate(lastNano, repeatingInterval.range).plus(1, repeatingInterval.range)
 
     repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toSeq
   }
