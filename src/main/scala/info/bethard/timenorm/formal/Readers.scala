@@ -64,54 +64,50 @@ object AnaforaReader {
     }
 
   def interval(entity: Entity)(implicit data: Data): Interval = {
+    val properties = entity.properties
     val result = entity.`type` match {
-      case "Year" =>
-        entity.properties("Value").partition(_ != '?') match {
-          case (year, "") => Year(year.toInt)
-          case (decade, "?") => Decade(decade.toInt)
-          case (century, "??") => Century(century.toInt)
-        }
-      case "Two-Digit-Year" => TwoDigitYear(interval(entity.properties), entity.properties("Value").toInt)
-      // TODO: handle ThisRepeatingInterval, which is now a Seq[Interval], not an Interval
-      case "This" => ???
-      case "Last" => interval(entity, LastPeriod, LastRepeatingInterval)
-      case "Next" => interval(entity, NextPeriod, NextRepeatingInterval)
-      // TODO: handle Before's new Number argument
-      case "Before" => ???
-      // TODO: handle After's new Number argument
-      case "After" => ???
-      case "Between" => Between(interval(entity.properties, "Start-"), interval(entity.properties, "End-"))
-      case "Nth" => Nth(
-        interval(entity.properties),
-        entity.properties("Value").toInt,
-        repeatingInterval(entity.properties.entity("Repeating-Interval")))
-      case "Event" => Event(entity.text)
-    }
-    entity.properties.getEntity("Sub-Interval") match {
-      case None => result
-      // TODO: handle IntervalSubIntervalIntersection, which is now ThisRepeatingInterval
-      case Some(subEntity) => ???
-    }
-  }
-
-  private def interval(entity: Entity,
-                       periodFunc: (Interval, Period) => Interval,
-                       repeatingIntervalFunc: (Interval, RepeatingInterval) => Interval)(implicit data: Data): Interval = {
-    entity.properties.getEntity("Repeating-Interval") match {
-      case Some(repeatingIntervalEntity) =>
-        assert(!entity.properties.has("Period"),
-          s"expected empty Period, found ${entity.xml}")
-        repeatingIntervalFunc(interval(entity.properties), repeatingInterval(repeatingIntervalEntity))
-      case None => entity.properties.getEntity("Period") match {
-        case Some(periodEntity) => periodFunc(interval(entity.properties), period(periodEntity))
-        case None => periodFunc(interval(entity.properties), UnknownPeriod)
+      case "Year" => properties("Value").partition(_ != '?') match {
+        case (year, "") => Year(year.toInt)
+        case (decade, "?") => Decade(decade.toInt)
+        case (century, "??") => Century(century.toInt)
       }
+      case "Event" => Event(entity.text)
+      case "Two-Digit-Year" => TwoDigitYear(interval(properties), properties("Value").toInt)
+      case "Between" => Between(interval(properties, "Start-"), interval(properties, "End-"))
+      case opName => (opName, properties.getEntities("Period"), properties.getEntities("Repeating-Interval")) match {
+        case ("This", Seq(), Seq()) => ThisPeriod(interval(properties), UnknownPeriod)
+        case ("This", Seq(entity), Seq()) => ThisPeriod(interval(properties), period(entity))
+        case ("This", Seq(), Seq(entity)) => ThisRepeatingInterval(interval(properties), repeatingInterval(entity))
+        case ("Last", Seq(), Seq()) => LastPeriod(interval(properties), UnknownPeriod)
+        case ("Last", Seq(entity), Seq()) => LastPeriod(interval(properties), period(entity))
+        case ("Last", Seq(), Seq(entity)) => LastRepeatingInterval(interval(properties), repeatingInterval(entity))
+        case ("Next", Seq(), Seq()) => NextPeriod(interval(properties), UnknownPeriod)
+        case ("Next", Seq(entity), Seq()) => NextPeriod(interval(properties), period(entity))
+        case ("Next", Seq(), Seq(entity)) => NextRepeatingInterval(interval(properties), repeatingInterval(entity))
+        case ("Before", Seq(), Seq()) => BeforePeriod(interval(properties), UnknownPeriod)
+        case ("Before", Seq(entity), Seq()) => BeforePeriod(interval(properties), period(entity))
+        case ("Before", Seq(), Seq(entity)) => BeforeRepeatingInterval(interval(properties), repeatingInterval(entity), number(entity.properties.entity("Number")))
+        case ("After", Seq(), Seq()) => AfterPeriod(interval(properties), UnknownPeriod)
+        case ("After", Seq(entity), Seq()) => AfterPeriod(interval(properties), period(entity))
+        case ("After", Seq(), Seq(entity)) => AfterRepeatingInterval(interval(properties), repeatingInterval(entity), number(entity.properties.entity("Number")))
+        case ("This" | "Last" | "Next" | "Before" | "After", _, _) =>
+          assert(false, s"expected exactly one Period or Repeating-Interval, found ${entity.xml}")
+          ???
+        case ("Nth", Seq(), Seq(entity)) => Nth(interval(properties), properties("Value").toInt, repeatingInterval(entity))
+        case ("Nth", _, _) =>
+          assert(false, s"expected exactly one Repeating-Interval, found ${entity.xml}")
+          ???
+      }
+    }
+    properties.getEntity("Sub-Interval") match {
+      case None => result
+      case Some(subEntity) => ThisRepeatingInterval(result, repeatingInterval(subEntity))
     }
   }
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
     val mod = modifier(entity.properties)
-    var result = entity.`type` match {
+    val result = entity.`type` match {
       case "Union" =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
         RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
@@ -166,14 +162,9 @@ object AnaforaReader {
         }
         FieldRepeatingInterval(field, value, mod)
     }
-    result = entity.properties.getEntity("Sub-Interval") match {
+    entity.properties.getEntity("Sub-Interval") match {
       case None => result
       case Some(subEntity) => RepeatingIntervalIntersection(Set(result, repeatingInterval(subEntity)))
-    }
-    entity.properties.getEntity("Number") match {
-      case None => result
-      //TODO: Handle NumberedRepeatingIntervals as part of LastRIs, NextRIs, BeforeRI, and AfterRI
-      case Some(numberEntity) => ???
     }
   }
 
@@ -181,6 +172,7 @@ object AnaforaReader {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
+    // TODO: handle Seq[Interval] operators for "This", "Last", "Next"
     case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "Nth" | "Event" =>
       interval(entity)
     case "Time-Zone" => TimeZone(entity.text)
