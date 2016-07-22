@@ -67,7 +67,7 @@ class TypesTest extends FunSuite {
     val vagueNumber = VagueNumber("A few")
 
     intercept[scala.NotImplementedError] {
-      val simpleVague = SimplePeriod(unit, vagueNumber, mod)
+      SimplePeriod(unit, vagueNumber, mod).addTo(ldt)
     }
   }
 
@@ -183,10 +183,7 @@ class TypesTest extends FunSuite {
     assert(thisPeriod.start === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
     assert(thisPeriod.end === LocalDateTime.of(2003, 1, 1, 0, 0, 0, 0))
 
-    val interval = new Interval {
-      val start = LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0)
-      val end = LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0)
-    }
+    val interval = SimpleInterval(LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0), LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0))
     val period = SimplePeriod(ChronoUnit.DAYS, IntNumber(5), Modifier.Exact)
     val thisPeriod2 = ThisPeriod(interval, period)
 
@@ -921,6 +918,17 @@ class TypesTest extends FunSuite {
     next = preceding.drop(9).next
     assert(next.start === LocalDateTime.of(2015, 11, 13, 13, 0))
     assert(next.end === LocalDateTime.of(2015, 11, 13, 14, 0))
+  }
+
+  test("isDefined") {
+    val threeDays = SimplePeriod(ChronoUnit.DAYS, IntNumber(3))
+    val fridays = FieldRepeatingInterval(ChronoField.DAY_OF_WEEK, 5)
+    assert(threeDays.isDefined === true)
+    assert(UnknownPeriod.isDefined === false)
+    assert(PeriodSum(Set(threeDays, threeDays)).isDefined === true)
+    assert(PeriodSum(Set(threeDays, UnknownPeriod)).isDefined === false)
+    assert(LastRepeatingInterval(DocumentCreationTime, fridays).isDefined === false)
+    assert(AfterRepeatingInterval(Year(1965), fridays).isDefined === true)
   }
 }
 
