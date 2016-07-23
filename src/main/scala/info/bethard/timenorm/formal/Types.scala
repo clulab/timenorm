@@ -265,19 +265,26 @@ trait This extends TimeExpression {
   }
 }
 
+/**
+  * Finds the repeated interval contained within the given interval. The given interval is first expanded and aligned
+  * to a unit the size of the repeating interval's range. This results in the proper semantics for something like
+  * "this Wednesday", which really means "the Wednesday of this week".
+  *
+  * @param interval          the interval identifying the boundaries of the container
+  * @param repeatingInterval the repeating intervals that should be found within the container
+  */
 case class ThisRepeatingInterval(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with This {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
   lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval)
 }
 
-//  TODO: Update formal definition
 /**
-  * Finds the repeated interval(s) containing the given interval. Formally:
-  * This([t1,t2): Interval, R: RepeatingInterval): RepeatingInterval
+  * Finds the repeated interval contained within the given interval. The given interval is first expanded and aligned
+  * to a unit the size of the repeating interval's range. This results in the proper semantics for something like
+  * "this Wednesday", which really means "the Wednesday of this week".
   *
-  * = { [t3,t4) ∈ R: t3 ≤ t1 ∧ t2 ≤ t4 }
-  * @param interval
-  * @param repeatingInterval
+  * @param interval          the interval identifying the boundaries of the container
+  * @param repeatingInterval the repeating intervals that should be found within the container
   */
 case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: RepeatingInterval)
   extends Intervals with This {
