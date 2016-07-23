@@ -2,11 +2,8 @@ package info.bethard.timenorm.formal
 
 import java.time.temporal._
 import java.time.{DateTimeException, Duration, LocalDateTime}
-import java.util
-import java.util.Collections.singletonList
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 trait TimeExpression {
   def isDefined: Boolean
@@ -62,14 +59,12 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
 
   val isDefined = n.isDefined
 
-  def number = n match {
+  lazy val number = n match {
     case IntNumber(x) => x
     case n: Number => ???
   }
 
-  override def addTo(temporal: Temporal): Temporal = {
-    return temporal.plus(number, unit)
-  }
+  override def addTo(temporal: Temporal): Temporal = temporal.plus(number, unit)
 
   override def get(unit: TemporalUnit): Long = {
     if (unit == this.unit)
@@ -78,13 +73,9 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
       throw new UnsupportedTemporalTypeException(null)
   }
 
-  override def subtractFrom(temporal: Temporal): Temporal = {
-    return temporal.minus(number, unit)
-  }
+  override def subtractFrom(temporal: Temporal): Temporal = temporal.minus(number, unit)
 
-  override def getUnits: java.util.List[TemporalUnit] = {
-    return singletonList(unit)
-  }
+  override def getUnits: java.util.List[TemporalUnit] = java.util.Collections.singletonList(unit)
 }
 
 case object UnknownPeriod extends Period {
@@ -97,7 +88,7 @@ case object UnknownPeriod extends Period {
 
   override def subtractFrom(temporal: Temporal): Temporal = ???
 
-  override def getUnits: util.List[TemporalUnit] = ???
+  override def getUnits: java.util.List[TemporalUnit] = ???
 }
 
 case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
@@ -125,8 +116,7 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) 
     current
   }
 
-  override def get(unit: TemporalUnit): Long =
-    map.getOrElse(unit, throw new UnsupportedTemporalTypeException(null))
+  override def get(unit: TemporalUnit): Long = map.getOrElse(unit, throw new UnsupportedTemporalTypeException(null))
 
 
   override def subtractFrom(temporal: Temporal): Temporal = {
@@ -138,7 +128,7 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) 
     current
   }
 
-  override def getUnits: util.List[TemporalUnit] = list
+  override def getUnits: java.util.List[TemporalUnit] = list
 }
 
 /**
@@ -230,7 +220,7 @@ case class Century(n: Int) extends Interval {
   */
 case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
   val isDefined = interval.isDefined
-  lazy val Interval(start, end) = Year(interval.start.getYear() / 100 * 100 + twoDigits)
+  lazy val Interval(start, end) = Year(interval.start.getYear / 100 * 100 + twoDigits)
 }
 
 /**
