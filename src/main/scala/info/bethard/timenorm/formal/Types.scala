@@ -107,25 +107,14 @@ case class PeriodSum(periods: Set[Period], modifier: Modifier = Modifier.Exact) 
 
   lazy val list = map.keys.toList.sortBy(_.getDuration()).reverse.asJava
 
-  override def addTo(temporal: Temporal): Temporal = {
-    var current = temporal
-
-    for ((u, n) <- map)
-      current = current.plus(n, u)
-
-    current
+  override def addTo(temporal: Temporal): Temporal = map.foldLeft(temporal){
+    case (current, (unit, number)) => current.plus(number, unit)
   }
 
   override def get(unit: TemporalUnit): Long = map.getOrElse(unit, throw new UnsupportedTemporalTypeException(null))
 
-
-  override def subtractFrom(temporal: Temporal): Temporal = {
-    var current = temporal
-
-    for ((u, n) <- map)
-      current = current.minus(n, u)
-
-    current
+  override def subtractFrom(temporal: Temporal): Temporal = map.foldLeft(temporal){
+    case (current, (unit, number)) => current.minus(number, unit)
   }
 
   override def getUnits: java.util.List[TemporalUnit] = list
