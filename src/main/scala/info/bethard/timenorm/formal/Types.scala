@@ -420,8 +420,8 @@ case class AfterPeriod(interval: Interval, period: Period) extends Interval {
   * AfterRepeatingInterval([t1,t2): Interval, R: RepeatingInterval, n: Number): Interval =
   * Nth earliest interval {[t.start, t.end) ∈ R: t2 ≤ t.start}
   *
-  * @param interval
-  * @param repeatingInterval
+  * @param interval          interval to start from
+  * @param repeatingInterval repeating intervals to search over
   */
 case class AfterRepeatingInterval(interval: Interval,
                                   repeatingInterval: RepeatingInterval,
@@ -469,13 +469,13 @@ case class NthInterval(interval: Interval, n: Number, period: Period) extends In
   * of another Interval. Formally: NthRepeatingInterval([t1,t2): Interval, n: Number,
   * R: RepeatingInterval): Interval = Nth of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
   *
-  * @param interval
-  * @param value
-  * @param repeatingInterval
+  * @param interval          interval to start from
+  * @param number            number indicating which item should be selected
+  * @param repeatingInterval repeating intervals to select from
   */
-case class Nth(interval: Interval, value: Int, repeatingInterval: RepeatingInterval) extends Interval {
+case class Nth(interval: Interval, number: Int, repeatingInterval: RepeatingInterval) extends Interval {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(value - 1).next match {
+  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(number - 1).next match {
     case result if result.end.isBefore(interval.end) => result
     case _ => ???
   }
