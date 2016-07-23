@@ -72,10 +72,10 @@ class TypesTest extends FunSuite {
   }
 
   test("PeriodSum") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
-    val period4 = SimplePeriod(ChronoUnit.DAYS, IntNumber(2), Modifier.Mid)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
+    val period4 = SimplePeriod(ChronoUnit.DAYS, 2, Modifier.Mid)
     val periodSum = PeriodSum(Set(period1, period2, period3), Modifier.Exact)
     val ldt = LocalDateTime.of(2000, 6, 10, 0, 0, 0, 0)
 
@@ -103,9 +103,9 @@ class TypesTest extends FunSuite {
   }
 
   test("LastPeriod") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
     val periodSum = PeriodSum(Set(period1, period2, period3), Modifier.Exact)
 
     val year = Year(2000)
@@ -121,9 +121,9 @@ class TypesTest extends FunSuite {
   }
 
   test("NextPeriod") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
     val periodSum = PeriodSum(Set(period1, period2, period3), Modifier.Exact)
 
     val year = Year(2000)
@@ -139,9 +139,9 @@ class TypesTest extends FunSuite {
   }
 
   test("BeforePeriod") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
     val periodSum = PeriodSum(Set(period1, period2, period3), Modifier.Exact)
 
     val year = Year(2000)
@@ -157,9 +157,9 @@ class TypesTest extends FunSuite {
   }
 
   test("AfterPeriod") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, IntNumber(2), Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, IntNumber(3), Modifier.Approx)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
     val periodSum = PeriodSum(Set(period1, period2, period3), Modifier.Exact)
 
     val year = Year(2000)
@@ -175,7 +175,7 @@ class TypesTest extends FunSuite {
   }
 
   test("ThisPeriod") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
 
     val year = Year(2002)
     val thisPeriod = ThisPeriod(year, period1)
@@ -184,7 +184,7 @@ class TypesTest extends FunSuite {
     assert(thisPeriod.end === LocalDateTime.of(2003, 1, 1, 0, 0, 0, 0))
 
     val interval = SimpleInterval(LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0), LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0))
-    val period = SimplePeriod(ChronoUnit.DAYS, IntNumber(5), Modifier.Exact)
+    val period = SimplePeriod(ChronoUnit.DAYS, 5, Modifier.Exact)
     val thisPeriod2 = ThisPeriod(interval, period)
 
     assert(thisPeriod2.start === LocalDateTime.of(2000, 12, 29, 12, 0, 0, 0))
@@ -201,17 +201,17 @@ class TypesTest extends FunSuite {
   }
 
   test("Nth") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, IntNumber(1), Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
 
     val year = Year(2001)
-    val nth = NthInterval(year, IntNumber(2), period1)
+    val nth = NthInterval(year, 2, period1)
 
     assert(nth.start === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
     assert(nth.end === LocalDateTime.of(2003, 1, 1, 0, 0, 0, 0))
 
-    val period2 = SimplePeriod(ChronoUnit.MINUTES, IntNumber(20), Modifier.Exact)
+    val period2 = SimplePeriod(ChronoUnit.MINUTES, 20, Modifier.Exact)
     val periodSum = PeriodSum(Set(period1, period2), Modifier.Exact)
-    val nth2 = NthInterval(year, IntNumber(4), periodSum)
+    val nth2 = NthInterval(year, 4, periodSum)
 
     assert(nth2.start === LocalDateTime.of(2004, 1, 1, 1, 0, 0, 0))
     assert(nth2.end === LocalDateTime.of(2005, 1, 1, 1, 20, 0, 0))
@@ -387,7 +387,7 @@ class TypesTest extends FunSuite {
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
     //Expected: Sequence(May 2001, May 2000, May 1999)
-    val lastFieldRIs = LastRepeatingIntervals(interval, frInterval, IntNumber(3))
+    val lastFieldRIs = LastRepeatingIntervals(interval, frInterval, 3)
     assert(lastFieldRIs.size == 3)
 
     assert(lastFieldRIs(0).start === LocalDateTime.of(2001, 5, 1, 0, 0))
@@ -402,7 +402,7 @@ class TypesTest extends FunSuite {
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //UnitRI: Days
     //Expected: Sequence(March 21, March 20, March 19, March 18, March 17 of 2002)
-    val lastUnitRIs = LastRepeatingIntervals(interval, urInterval, IntNumber(5))
+    val lastUnitRIs = LastRepeatingIntervals(interval, urInterval, 5)
     assert(lastUnitRIs.size === 5)
 
     assert(lastUnitRIs(0).start === LocalDateTime.of(2002, 3, 21, 0, 0))
@@ -445,7 +445,7 @@ class TypesTest extends FunSuite {
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
     //Expected: Sequence(May 2004, May 2005, May 2006)
-    val nextFieldRIs = NextRepeatingIntervals(interval, frInterval, IntNumber(3))
+    val nextFieldRIs = NextRepeatingIntervals(interval, frInterval, 3)
     assert(nextFieldRIs.size == 3)
 
     assert(nextFieldRIs(0).start === LocalDateTime.of(2004, 5, 1, 0, 0))
@@ -460,7 +460,7 @@ class TypesTest extends FunSuite {
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //UnitRI: Days
     //Expected: Sequence(May 11, May 12, May 13, May 14, May 15 of 2003)
-    val nextUnitRIs = NextRepeatingIntervals(interval, urInterval, IntNumber(5))
+    val nextUnitRIs = NextRepeatingIntervals(interval, urInterval, 5)
     assert(nextUnitRIs.size == 5)
 
     assert(nextUnitRIs(0).start === LocalDateTime.of(2003, 5, 11, 0, 0))
@@ -489,7 +489,7 @@ class TypesTest extends FunSuite {
     assert(afterFieldRI.start === LocalDateTime.of(2004, 5, 1, 0, 0, 0, 0))
     assert(afterFieldRI.end === LocalDateTime.of(2004, 6, 1, 0, 0, 0, 0))
 
-    afterFieldRI = AfterRepeatingInterval(interval, frInterval, IntNumber(10))
+    afterFieldRI = AfterRepeatingInterval(interval, frInterval, 10)
     assert(afterFieldRI.start === LocalDateTime.of(2013, 5, 1, 0, 0, 0, 0))
     assert(afterFieldRI.end === LocalDateTime.of(2013, 6, 1, 0, 0, 0, 0))
 
@@ -497,7 +497,7 @@ class TypesTest extends FunSuite {
     assert(afterUnitRI.start === LocalDateTime.of(2003, 5, 11, 0, 0, 0, 0))
     assert(afterUnitRI.end === LocalDateTime.of(2003, 5, 12, 0, 0, 0, 0))
 
-    afterUnitRI = AfterRepeatingInterval(interval, urInterval, IntNumber(11))
+    afterUnitRI = AfterRepeatingInterval(interval, urInterval, 11)
     assert(afterUnitRI.start === LocalDateTime.of(2003, 5, 21, 0, 0, 0, 0))
     assert(afterUnitRI.end === LocalDateTime.of(2003, 5, 22, 0, 0, 0, 0))
   }
@@ -512,7 +512,7 @@ class TypesTest extends FunSuite {
     assert(beforeFieldRI.start === LocalDateTime.of(2001, 5, 1, 0, 0, 0, 0))
     assert(beforeFieldRI.end === LocalDateTime.of(2001, 6, 1, 0, 0, 0, 0))
 
-    beforeFieldRI = BeforeRepeatingInterval(interval, frInterval, IntNumber(5))
+    beforeFieldRI = BeforeRepeatingInterval(interval, frInterval, 5)
     assert(beforeFieldRI.start === LocalDateTime.of(1997, 5, 1, 0, 0))
     assert(beforeFieldRI.end === LocalDateTime.of(1997, 6, 1, 0, 0))
 
@@ -520,7 +520,7 @@ class TypesTest extends FunSuite {
     assert(beforeUnitRI.start === LocalDateTime.of(2002, 3, 21, 0, 0, 0, 0))
     assert(beforeUnitRI.end === LocalDateTime.of(2002, 3, 22, 0, 0, 0, 0))
 
-    beforeUnitRI = BeforeRepeatingInterval(interval, urInterval, IntNumber(20))
+    beforeUnitRI = BeforeRepeatingInterval(interval, urInterval, 20)
     assert(beforeUnitRI.start === LocalDateTime.of(2002, 3, 2, 0, 0, 0, 0))
     assert(beforeUnitRI.end === LocalDateTime.of(2002, 3, 3, 0, 0, 0, 0))
   }
@@ -921,7 +921,7 @@ class TypesTest extends FunSuite {
   }
 
   test("isDefined") {
-    val threeDays = SimplePeriod(ChronoUnit.DAYS, IntNumber(3))
+    val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
     val fridays = FieldRepeatingInterval(ChronoField.DAY_OF_WEEK, 5)
     assert(threeDays.isDefined === true)
     assert(UnknownPeriod.isDefined === false)

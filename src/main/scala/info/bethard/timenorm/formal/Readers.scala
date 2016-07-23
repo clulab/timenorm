@@ -21,6 +21,14 @@ object AnaforaReader {
     }
   }
 
+  def integer(entityOption: Option[Entity])(implicit data: Data): Int = entityOption match {
+    case None => 1
+    case Some(entity) => number(entity) match {
+      case IntNumber(number) => number
+      case _ => ???
+    }
+  }
+
   def modifier(entity: Entity)(implicit data: Data): Modifier = entity.properties("Type") match {
     case "Approx" => Modifier.Approx
     case "Less-Than" => Modifier.LessThan
@@ -86,10 +94,10 @@ object AnaforaReader {
         case ("Next", Seq(), Seq(entity)) => NextRepeatingInterval(interval(properties), repeatingInterval(entity))
         case ("Before", Seq(), Seq()) => BeforePeriod(interval(properties), UnknownPeriod)
         case ("Before", Seq(entity), Seq()) => BeforePeriod(interval(properties), period(entity))
-        case ("Before", Seq(), Seq(entity)) => BeforeRepeatingInterval(interval(properties), repeatingInterval(entity), number(entity.properties.entity("Number")))
+        case ("Before", Seq(), Seq(entity)) => BeforeRepeatingInterval(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
         case ("After", Seq(), Seq()) => AfterPeriod(interval(properties), UnknownPeriod)
         case ("After", Seq(entity), Seq()) => AfterPeriod(interval(properties), period(entity))
-        case ("After", Seq(), Seq(entity)) => AfterRepeatingInterval(interval(properties), repeatingInterval(entity), number(entity.properties.entity("Number")))
+        case ("After", Seq(), Seq(entity)) => AfterRepeatingInterval(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
         case ("This" | "Last" | "Next" | "Before" | "After", _, _) =>
           assert(false, s"expected exactly one Period or Repeating-Interval, found ${entity.xml}")
           ???
