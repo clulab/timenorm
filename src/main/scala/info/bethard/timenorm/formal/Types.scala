@@ -453,7 +453,7 @@ case class Between(startInterval: Interval, endInterval: Interval) extends Inter
   * @param number   the number of repetitions of the period to add
   * @param period   the period to scale by
   */
-case class NthInterval(interval: Interval, number: Int, period: Period) extends Interval {
+case class NthFromStartPeriod(interval: Interval, number: Int, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
   lazy val start = Iterator.fill(number - 1)(period).foldLeft(interval.start)(_ plus _)
   lazy val end = start.plus(period)
@@ -468,7 +468,7 @@ case class NthInterval(interval: Interval, number: Int, period: Period) extends 
   * @param number            number indicating which item should be selected
   * @param repeatingInterval repeating intervals to select from
   */
-case class Nth(interval: Interval, number: Int, repeatingInterval: RepeatingInterval) extends Interval {
+case class NthFromStartRepeatingInterval(interval: Interval, number: Int, repeatingInterval: RepeatingInterval) extends Interval {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
   lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(number - 1).next match {
     case result if result.end.isBefore(interval.end) => result

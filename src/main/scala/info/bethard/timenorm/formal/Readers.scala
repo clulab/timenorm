@@ -101,8 +101,8 @@ object AnaforaReader {
         case ("This" | "Last" | "Next" | "Before" | "After", _, _) =>
           assert(false, s"expected exactly one Period or Repeating-Interval, found ${entity.xml}")
           ???
-        case ("Nth", Seq(), Seq(entity)) => Nth(interval(properties), properties("Value").toInt, repeatingInterval(entity))
-        case ("Nth", _, _) =>
+        case ("NthFromStart", Seq(), Seq(entity)) => NthFromStartRepeatingInterval(interval(properties), properties("Value").toInt, repeatingInterval(entity))
+        case ("NthFromStart", _, _) =>
           assert(false, s"expected exactly one Repeating-Interval, found ${entity.xml}")
           ???
       }
@@ -181,7 +181,7 @@ object AnaforaReader {
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
     // TODO: handle Seq[Interval] operators for "This", "Last", "Next"
-    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "Nth" | "Event" =>
+    case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "NthFromStart" | "Event" =>
       interval(entity)
     case "Time-Zone" => TimeZone(entity.text)
     case _ => repeatingInterval(entity)
