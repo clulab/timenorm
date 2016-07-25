@@ -13,13 +13,17 @@ object AnaforaReader {
     case value => if (!value.contains(".")) {
       IntNumber(value.toInt)
     } else {
-      val doubleValue = value.toDouble
-      val number = doubleValue.toInt
-      // only handle /2 case
-      if (doubleValue - number != 0.5) ???
-      else FractionalNumber(number, 1, 2)
+      val (beforeDot, dotAndAfter) = value.span(_ != '.')
+      val number = if (beforeDot.isEmpty) 0 else beforeDot.toInt
+      val numerator = dotAndAfter.tail.toInt
+      val denominator = math.pow(10, dotAndAfter.size - 1).toInt
+      val g = gcd(numerator, denominator)
+      FractionalNumber(number, numerator / g, denominator / g)
     }
   }
+
+  @scala.annotation.tailrec
+  private def gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 
   def integer(entityOption: Option[Entity])(implicit data: Data): Int = entityOption match {
     case None => 1
@@ -113,6 +117,19 @@ object AnaforaReader {
     }
   }
 
+  def intervals(entity: Entity)(implicit data: Data): Intervals = {
+    entity.`type` match {
+      case "Intersection" => entity.properties.getEntities("Intervals").map(interval) match {
+        case Seq(interval) => entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval) match {
+          case Seq(repeatingInterval) => ThisRepeatingIntervals(interval, repeatingInterval)
+          case repeatingIntervals =>
+            ThisRepeatingIntervals(interval, RepeatingIntervalIntersection(repeatingIntervals.toSet))
+        }
+        case _ => ???
+      }
+    }
+  }
+
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
     val mod = modifier(entity.properties)
     val result = entity.`type` match {
@@ -121,7 +138,6 @@ object AnaforaReader {
         RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Intersection" =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
-        // TODO: handle Intersection intervals
         if (entity.properties.has("Intervals")) ???
         RepeatingIntervalIntersection(repeatingIntervals.toSet)
       case "Calendar-Interval" => UnitRepeatingInterval(entity.properties("Type") match {
@@ -180,6 +196,7 @@ object AnaforaReader {
     case "Number" => number(entity)
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
+    case "Intersection" if entity.properties.has("Intervals") => intervals(entity)
     // TODO: handle Seq[Interval] operators for "This", "Last", "Next"
     case "Year" | "Two-Digit-Year" | "This" | "Last" | "Next" | "Before" | "After" | "Between" | "NthFromStart" | "Event" =>
       interval(entity)
