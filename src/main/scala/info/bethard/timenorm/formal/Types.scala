@@ -280,6 +280,8 @@ case class ThisRepeatingIntervals(interval: Interval, repeatingInterval: Repeati
   extends Intervals with This {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
   lazy val intervals = getIntervals(interval, repeatingInterval)
+  // force the case class toString rather than Seq.toString
+  override lazy val toString = scala.runtime.ScalaRunTime._toString(this)
 }
 
 /**
@@ -327,6 +329,8 @@ case class LastRepeatingIntervals(interval: Interval, repeatingInterval: Repeati
   extends Intervals with Last {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
   lazy val intervals = getIntervals(interval, repeatingInterval, number)
+  // force the case class toString rather than Seq.toString
+  override lazy val toString = scala.runtime.ScalaRunTime._toString(this)
 }
 
 /**
@@ -374,6 +378,8 @@ case class NextRepeatingIntervals(interval: Interval, repeatingInterval: Repeati
   extends Intervals with Next {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
   lazy val intervals = getIntervals(interval, repeatingInterval, number)
+  // force the case class toString rather than Seq.toString
+  override lazy val toString = scala.runtime.ScalaRunTime._toString(this)
 }
 
 /**
