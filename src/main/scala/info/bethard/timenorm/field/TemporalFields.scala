@@ -65,8 +65,8 @@ abstract class ConstantPartialRange(
 
 abstract class MonthDayPartialRange(
     name: String,
-    first: MonthDay,
-    last: MonthDay) extends PartialRange(name, DAY_OF_YEAR) {
+    val first: MonthDay,
+    val last: MonthDay) extends PartialRange(name, DAY_OF_YEAR) {
   def first(temporal: TemporalAccessor): Long = {
     this.first.atYear(YEAR.checkValidIntValue(YEAR.getFrom(temporal))).get(DAY_OF_YEAR)
   }

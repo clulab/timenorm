@@ -3,6 +3,8 @@ package info.bethard.timenorm.formal
 import java.time.temporal._
 import java.time.{DateTimeException, Duration, LocalDateTime}
 
+import info.bethard.timenorm.field.MonthDayPartialRange
+
 import scala.collection.JavaConverters._
 
 trait TimeExpression {
@@ -499,7 +501,8 @@ private[formal] object RepeatingInterval {
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.WEEKS =>
       ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
-    case _ => ldt.truncatedTo(tUnit)
+    case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)
+    case _ => print(tUnit); ldt.truncatedTo(tUnit)
   }
 }
 

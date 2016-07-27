@@ -8,6 +8,8 @@ import org.scalatest.FunSuite
 import java.time.{DateTimeException, DayOfWeek, LocalDateTime}
 import java.util.Collections.singletonList
 
+import info.bethard.timenorm.field.SUMMER_OF_YEAR
+
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
 
@@ -569,6 +571,13 @@ class TypesTest extends FunSuite {
     thisRI = ThisRepeatingInterval(interval, repeatingInterval)
     assert((thisRI.start, thisRI.end) ===
       (LocalDateTime.of(2016, 7, 1, 0, 0), LocalDateTime.of(2016, 8, 1, 0, 0)))
+
+    // Interval: July 1, 2016
+    // RI: Summers
+    // Expected: June 21, 2016 through September 22, 2016
+    thisRI = ThisRepeatingInterval(interval, FieldRepeatingInterval(SUMMER_OF_YEAR, 1))
+    assert((thisRI.start, thisRI.end) ===
+      (LocalDateTime.of(2016, 6, 21, 0, 0), LocalDateTime.of(2016, 9, 22, 0, 0)))
   }
 
   test("ThisRepeatingIntervals") {
