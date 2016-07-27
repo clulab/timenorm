@@ -7,7 +7,7 @@ import info.bethard.anafora.Data
 object ParseAnaforaXMLs {
 
   // annotations that don't represent normalizable time expressions
-  val skip = Set("NotNormalizable", "Frequency")
+  val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
 
   def main(args: Array[String]): Unit = {
     val Array(dir) = args
@@ -19,9 +19,13 @@ object ParseAnaforaXMLs {
         printf("\"%s\"[%s] ", entity.text, entity.spans.map(t => "%s,%s".format(t._1, t._2)).toSeq.sorted.mkString(";"))
         val temporal = AnaforaReader.temporal(entity)
         if (temporal.isDefined) {
-          temporal match {
-            case Interval(start, end) => printf("[%s, %s) ", start, end)
-            case _ =>
+          try {
+            temporal match {
+              case Interval(start, end) => printf("[%s, %s) ", start, end)
+              case _ =>
+            }
+          } catch {
+            case e: MatchError => e.printStackTrace()
           }
         }
         println(temporal)
@@ -31,7 +35,7 @@ object ParseAnaforaXMLs {
 
   def allTimeNormFiles(dir: File): Array[File] = {
     val files = dir.listFiles()
-    val xmlFiles = files.filter(_.getName.matches(".*[.]TimeNorm[^.]*[.](?!preannotation)[^.]*[.][^.]*.xml"))
+    val xmlFiles = files.filter(_.getName.matches(".*[.]TimeNorm[^.]*[.]gold[.]completed[.]xml"))
     val subFiles = files.filter(_.isDirectory).flatMap(allTimeNormFiles)
     xmlFiles ++ subFiles
   }
