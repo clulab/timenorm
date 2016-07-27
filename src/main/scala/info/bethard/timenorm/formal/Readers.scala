@@ -102,12 +102,11 @@ object AnaforaReader {
         case ("After", Seq(), Seq()) => AfterPeriod(interval(properties), UnknownPeriod)
         case ("After", Seq(entity), Seq()) => AfterPeriod(interval(properties), period(entity))
         case ("After", Seq(), Seq(entity)) => AfterRepeatingInterval(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
-        case ("This" | "Last" | "Next" | "Before" | "After", _, _) =>
-          assert(false, s"expected exactly one Period or Repeating-Interval, found ${entity.xml}")
-          ???
+        case ("NthFromStart", Seq(), Seq()) => NthFromStartPeriod(interval(properties), properties("Value").toInt, UnknownPeriod)
         case ("NthFromStart", Seq(), Seq(entity)) => NthFromStartRepeatingInterval(interval(properties), properties("Value").toInt, repeatingInterval(entity))
-        case ("NthFromStart", _, _) =>
-          assert(false, s"expected exactly one Repeating-Interval, found ${entity.xml}")
+        case ("NthFromStart", Seq(entity), Seq()) => NthFromStartPeriod(interval(properties), properties("Value").toInt, period(entity))
+        case ("This" | "Last" | "Next" | "Before" | "After" | "NthFromStart", _, _) =>
+          assert(false, s"expected one Period or Repeating-Interval, found ${entity.xml}")
           ???
       }
     }
