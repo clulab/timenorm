@@ -8,7 +8,7 @@ import org.scalatest.FunSuite
 import java.time.{DateTimeException, DayOfWeek, LocalDateTime}
 import java.util.Collections.singletonList
 
-import info.bethard.timenorm.field.SUMMER_OF_YEAR
+import info.bethard.timenorm.field.{NIGHT_OF_DAY, SUMMER_OF_YEAR, WINTER_OF_YEAR}
 
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
@@ -586,6 +586,20 @@ class TypesTest extends FunSuite {
     thisRI = ThisRepeatingInterval(interval, FieldRepeatingInterval(SUMMER_OF_YEAR, 1))
     assert((thisRI.start, thisRI.end) ===
       (LocalDateTime.of(2016, 6, 21, 0, 0), LocalDateTime.of(2016, 9, 22, 0, 0)))
+
+    // Interval: July 1, 2016
+    // RI: Winters
+    // Expected: December 21, 2016 through March 20, 2017
+    thisRI = ThisRepeatingInterval(interval, FieldRepeatingInterval(WINTER_OF_YEAR, 1))
+    assert((thisRI.start, thisRI.end) ===
+      (LocalDateTime.of(2016, 12, 21, 0, 0), LocalDateTime.of(2017, 3, 20, 0, 0)))
+
+    // Interval: July 1, 2016
+    // RI: NIGHTS
+    // Expected: July 1, 2016 at 21:00 through July 2, 2016 at 04:00
+    thisRI = ThisRepeatingInterval(interval, FieldRepeatingInterval(NIGHT_OF_DAY, 1))
+    assert((thisRI.start, thisRI.end) ===
+      (LocalDateTime.of(2016, 7, 1, 21, 0), LocalDateTime.of(2016, 7, 2, 4, 0)))
   }
 
   test("ThisRepeatingIntervals") {
@@ -858,6 +872,11 @@ class TypesTest extends FunSuite {
     //Expected: July 24 to July 31, 2011
     assert(next.start === LocalDateTime.of(2011, 7, 24, 0, 0))
     assert(next.end === LocalDateTime.of(2011, 7, 31, 0, 0))
+
+    next = thisRI.next
+    //Expected: July 31 to August 6, 2011
+    assert(next.start === LocalDateTime.of(2011, 7, 31, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 7, 0, 0))
 
     //Expected: No further intervals
     assert(thisRI.isEmpty)

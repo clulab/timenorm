@@ -48,8 +48,8 @@ extends TemporalUnit {
 abstract class ConstantPartialRange(
     name: String,
     field: TemporalField,
-    first: Long,
-    last: Long) extends PartialRange(name, field) {
+    val first: Long,
+    val last: Long) extends PartialRange(name, field) {
   private val fixedSize = {
     this.size(first, last, this.field.range().getMinimum(), this.field.range().getMaximum())
   }

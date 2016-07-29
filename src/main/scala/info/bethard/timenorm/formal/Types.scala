@@ -3,7 +3,7 @@ package info.bethard.timenorm.formal
 import java.time.temporal._
 import java.time.{DateTimeException, Duration, LocalDateTime}
 
-import info.bethard.timenorm.field.MonthDayPartialRange
+import info.bethard.timenorm.field.{ConstantPartialRange, MonthDayPartialRange}
 
 import scala.collection.JavaConverters._
 
@@ -239,7 +239,7 @@ trait This extends TimeExpression {
     val lastNano = interval.end.minus(Duration.ofNanos(1))
     val rangeEnd = RepeatingInterval.truncate(lastNano, repeatingInterval.range).plus(1, repeatingInterval.range)
 
-    repeatingInterval.following(rangeStart).takeWhile(!_.end.isAfter(rangeEnd)).toSeq
+    repeatingInterval.following(rangeStart).takeWhile(_.start.isBefore(rangeEnd)).toSeq
   }
 }
 
@@ -488,6 +488,7 @@ private[formal] object RepeatingInterval {
     case ChronoUnit.WEEKS =>
       ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
     case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)
+    case range: ConstantPartialRange => ldt.`with`(range.field, range.first).truncatedTo(range.field.getBaseUnit)
     case _ => ldt.truncatedTo(tUnit)
   }
 }
