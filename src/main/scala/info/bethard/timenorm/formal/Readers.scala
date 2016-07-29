@@ -67,7 +67,7 @@ object AnaforaReader {
           },
           mod)
       }
-      case "Sum" => PeriodSum(entity.properties.getEntities("Periods").map(period).toSet, mod)
+      case "Sum" => Sum(entity.properties.getEntities("Periods").map(period).toSet, mod)
     }
   }
 
@@ -90,24 +90,24 @@ object AnaforaReader {
       }
       case "Between" => Between(interval(properties, "Start-"), interval(properties, "End-"))
       case opName => (opName, properties.getEntities("Period"), properties.getEntities("Repeating-Interval")) match {
-        case ("This", Seq(), Seq()) => ThisPeriod(interval(properties), UnknownPeriod)
-        case ("This", Seq(entity), Seq()) => ThisPeriod(interval(properties), period(entity))
-        case ("This", Seq(), Seq(entity)) => ThisRepeatingInterval(interval(properties), repeatingInterval(entity))
-        case ("Last", Seq(), Seq()) => LastPeriod(interval(properties), UnknownPeriod)
-        case ("Last", Seq(entity), Seq()) => LastPeriod(interval(properties), period(entity))
-        case ("Last", Seq(), Seq(entity)) => LastRepeatingInterval(interval(properties), repeatingInterval(entity))
-        case ("Next", Seq(), Seq()) => NextPeriod(interval(properties), UnknownPeriod)
-        case ("Next", Seq(entity), Seq()) => NextPeriod(interval(properties), period(entity))
-        case ("Next", Seq(), Seq(entity)) => NextRepeatingInterval(interval(properties), repeatingInterval(entity))
-        case ("Before", Seq(), Seq()) => BeforePeriod(interval(properties), UnknownPeriod)
-        case ("Before", Seq(entity), Seq()) => BeforePeriod(interval(properties), period(entity))
-        case ("Before", Seq(), Seq(entity)) => BeforeRepeatingInterval(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
-        case ("After", Seq(), Seq()) => AfterPeriod(interval(properties), UnknownPeriod)
-        case ("After", Seq(entity), Seq()) => AfterPeriod(interval(properties), period(entity))
-        case ("After", Seq(), Seq(entity)) => AfterRepeatingInterval(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
-        case ("NthFromStart", Seq(), Seq()) => NthFromStartPeriod(interval(properties), properties("Value").toInt, UnknownPeriod)
-        case ("NthFromStart", Seq(), Seq(entity)) => NthFromStartRepeatingInterval(interval(properties), properties("Value").toInt, repeatingInterval(entity))
-        case ("NthFromStart", Seq(entity), Seq()) => NthFromStartPeriod(interval(properties), properties("Value").toInt, period(entity))
+        case ("This", Seq(), Seq()) => ThisP(interval(properties), UnknownPeriod)
+        case ("This", Seq(entity), Seq()) => ThisP(interval(properties), period(entity))
+        case ("This", Seq(), Seq(entity)) => ThisRI(interval(properties), repeatingInterval(entity))
+        case ("Last", Seq(), Seq()) => LastP(interval(properties), UnknownPeriod)
+        case ("Last", Seq(entity), Seq()) => LastP(interval(properties), period(entity))
+        case ("Last", Seq(), Seq(entity)) => LastRI(interval(properties), repeatingInterval(entity))
+        case ("Next", Seq(), Seq()) => NextP(interval(properties), UnknownPeriod)
+        case ("Next", Seq(entity), Seq()) => NextP(interval(properties), period(entity))
+        case ("Next", Seq(), Seq(entity)) => NextRI(interval(properties), repeatingInterval(entity))
+        case ("Before", Seq(), Seq()) => BeforeP(interval(properties), UnknownPeriod)
+        case ("Before", Seq(entity), Seq()) => BeforeP(interval(properties), period(entity))
+        case ("Before", Seq(), Seq(entity)) => BeforeRI(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
+        case ("After", Seq(), Seq()) => AfterP(interval(properties), UnknownPeriod)
+        case ("After", Seq(entity), Seq()) => AfterP(interval(properties), period(entity))
+        case ("After", Seq(), Seq(entity)) => AfterRI(interval(properties), repeatingInterval(entity), integer(entity.properties.getEntity("Number")))
+        case ("NthFromStart", Seq(), Seq()) => NthFromStartP(interval(properties), properties("Value").toInt, UnknownPeriod)
+        case ("NthFromStart", Seq(), Seq(entity)) => NthFromStartRI(interval(properties), properties("Value").toInt, repeatingInterval(entity))
+        case ("NthFromStart", Seq(entity), Seq()) => NthFromStartP(interval(properties), properties("Value").toInt, period(entity))
         case ("This" | "Last" | "Next" | "Before" | "After" | "NthFromStart", _, _) =>
           assert(false, s"expected one Period or Repeating-Interval, found ${entity.xml}")
           ???
@@ -115,7 +115,7 @@ object AnaforaReader {
     }
     properties.getEntity("Sub-Interval") match {
       case None => result
-      case Some(subEntity) => ThisRepeatingInterval(result, repeatingInterval(subEntity))
+      case Some(subEntity) => ThisRI(result, repeatingInterval(subEntity))
     }
   }
 
@@ -123,9 +123,9 @@ object AnaforaReader {
     entity.`type` match {
       case "Intersection" => entity.properties.getEntities("Intervals").map(interval) match {
         case Seq(interval) => entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval) match {
-          case Seq(repeatingInterval) => ThisRepeatingIntervals(interval, repeatingInterval)
+          case Seq(repeatingInterval) => ThisRIs(interval, repeatingInterval)
           case repeatingIntervals =>
-            ThisRepeatingIntervals(interval, RepeatingIntervalIntersection(repeatingIntervals.toSet))
+            ThisRIs(interval, Intersection(repeatingIntervals.toSet))
         }
         case _ => ???
       }
@@ -137,48 +137,48 @@ object AnaforaReader {
     val result = entity.`type` match {
       case "Union" =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
-        RepeatingIntervalUnion(repeatingIntervalEntities.map(repeatingInterval).toSet)
+        Union(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Intersection" =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
         if (entity.properties.has("Intervals")) ???
-        RepeatingIntervalIntersection(repeatingIntervals.toSet)
-      case "Calendar-Interval" => UnitRepeatingInterval(entity.properties("Type") match {
+        Intersection(repeatingIntervals.toSet)
+      case "Calendar-Interval" => RepeatingUnit(entity.properties("Type") match {
         case "Century" => ChronoUnit.CENTURIES
         case "Quarter-Year" => IsoFields.QUARTER_YEARS
         case other => ChronoUnit.valueOf(other.toUpperCase + "S")
       }, mod)
-      case "Week-Of-Year" => FieldRepeatingInterval(
+      case "Week-Of-Year" => RepeatingField(
         WeekFields.ISO.weekOfYear(),
         entity.properties("Value").toLong,
         mod)
-      case "Season-Of-Year" => FieldRepeatingInterval(entity.properties("Type") match {
+      case "Season-Of-Year" => RepeatingField(entity.properties("Type") match {
         case "Spring" => SPRING_OF_YEAR
         case "Summer" => SUMMER_OF_YEAR
         case "Fall" => FALL_OF_YEAR
         case "Winter" => WINTER_OF_YEAR
       }, 1L, mod)
       case "Part-Of-Week" => entity.properties("Type") match {
-        case "Weekend" => FieldRepeatingInterval(WEEKEND_OF_WEEK, 1, mod)
-        case "Weekdays" => FieldRepeatingInterval(WEEKEND_OF_WEEK, 0, mod)
+        case "Weekend" => RepeatingField(WEEKEND_OF_WEEK, 1, mod)
+        case "Weekdays" => RepeatingField(WEEKEND_OF_WEEK, 0, mod)
       }
       case "Part-Of-Day" => entity.properties("Type") match {
-        case "Dawn" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Modifier.Approx)
-        case "Morning" => FieldRepeatingInterval(MORNING_OF_DAY, 1, mod)
-        case "Noon" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 12L * 60L * 60L, mod)
-        case "Afternoon" => FieldRepeatingInterval(AFTERNOON_OF_DAY, 1, mod)
-        case "Evening" => FieldRepeatingInterval(EVENING_OF_DAY, 1, mod)
-        case "Dusk" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 19L * 60L * 60L, Modifier.Approx)
-        case "Night" => FieldRepeatingInterval(NIGHT_OF_DAY, 1, mod)
-        case "Midnight" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 0L, mod)
+        case "Dawn" => RepeatingField(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Modifier.Approx)
+        case "Morning" => RepeatingField(MORNING_OF_DAY, 1, mod)
+        case "Noon" => RepeatingField(ChronoField.SECOND_OF_DAY, 12L * 60L * 60L, mod)
+        case "Afternoon" => RepeatingField(AFTERNOON_OF_DAY, 1, mod)
+        case "Evening" => RepeatingField(EVENING_OF_DAY, 1, mod)
+        case "Dusk" => RepeatingField(ChronoField.SECOND_OF_DAY, 19L * 60L * 60L, Modifier.Approx)
+        case "Night" => RepeatingField(NIGHT_OF_DAY, 1, mod)
+        case "Midnight" => RepeatingField(ChronoField.SECOND_OF_DAY, 0L, mod)
       }
       case "Hour-Of-Day" =>
         // TODO: handle time zone
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
-          case Some(ampmEntity) => RepeatingIntervalIntersection(Set(
-            FieldRepeatingInterval(ChronoField.HOUR_OF_AMPM, value, mod),
+          case Some(ampmEntity) => Intersection(Set(
+            RepeatingField(ChronoField.HOUR_OF_AMPM, value, mod),
             repeatingInterval(ampmEntity)))
-          case None => FieldRepeatingInterval(ChronoField.HOUR_OF_DAY, value, mod)
+          case None => RepeatingField(ChronoField.HOUR_OF_DAY, value, mod)
         }
       case name =>
         val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
@@ -192,17 +192,17 @@ object AnaforaReader {
           case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE =>
             entity.properties("Value").toLong
         }
-        FieldRepeatingInterval(field, value, mod)
+        RepeatingField(field, value, mod)
     }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
-      case subEntities => RepeatingIntervalIntersection(Set(result) ++ subEntities.map(repeatingInterval))
+      case subEntities => Intersection(Set(result) ++ subEntities.map(repeatingInterval))
     })
   }
 
   def flatten(repeatingInterval: RepeatingInterval): RepeatingInterval = repeatingInterval match {
-    case RepeatingIntervalIntersection(repeatingIntervals) => RepeatingIntervalIntersection(repeatingIntervals.map{
-      case RepeatingIntervalIntersection(subIntervals) => subIntervals.map(flatten)
+    case Intersection(repeatingIntervals) => Intersection(repeatingIntervals.map{
+      case Intersection(subIntervals) => subIntervals.map(flatten)
       case repeatingInterval => Set(repeatingInterval)
     }.flatten)
     case other => other
