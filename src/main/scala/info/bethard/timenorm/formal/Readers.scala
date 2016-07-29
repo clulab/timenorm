@@ -10,16 +10,19 @@ object AnaforaReader {
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text)
-    case value => if (!value.contains(".")) {
-      IntNumber(value.toInt)
-    } else {
-      val (beforeDot, dotAndAfter) = value.span(_ != '.')
-      val number = if (beforeDot.isEmpty) 0 else beforeDot.toInt
-      val numerator = dotAndAfter.tail.toInt
-      val denominator = math.pow(10, dotAndAfter.size - 1).toInt
-      val g = gcd(numerator, denominator)
-      FractionalNumber(number, numerator / g, denominator / g)
-    }
+    case value =>
+      if (value.contains(".")) {
+        val (beforeDot, dotAndAfter) = value.span(_ != '.')
+        val number = if (beforeDot.isEmpty) 0 else beforeDot.toInt
+        val numerator = dotAndAfter.tail.toInt
+        val denominator = math.pow(10, dotAndAfter.size - 1).toInt
+        val g = gcd(numerator, denominator)
+        FractionalNumber(number, numerator / g, denominator / g)
+      } else if (value.forall(_.isDigit)) {
+        IntNumber(value.toInt)
+      } else {
+        VagueNumber(value)
+      }
   }
 
   @scala.annotation.tailrec
@@ -159,10 +162,12 @@ object AnaforaReader {
         case "Weekdays" => FieldRepeatingInterval(WEEKEND_OF_WEEK, 0, mod)
       }
       case "Part-Of-Day" => entity.properties("Type") match {
+        case "Dawn" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Modifier.Approx)
         case "Morning" => FieldRepeatingInterval(MORNING_OF_DAY, 1, mod)
-        case "Noon" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 43200L, mod)
+        case "Noon" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 12L * 60L * 60L, mod)
         case "Afternoon" => FieldRepeatingInterval(AFTERNOON_OF_DAY, 1, mod)
         case "Evening" => FieldRepeatingInterval(EVENING_OF_DAY, 1, mod)
+        case "Dusk" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 19L * 60L * 60L, Modifier.Approx)
         case "Night" => FieldRepeatingInterval(NIGHT_OF_DAY, 1, mod)
         case "Midnight" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 0L, mod)
       }
@@ -189,9 +194,9 @@ object AnaforaReader {
         }
         FieldRepeatingInterval(field, value, mod)
     }
-    entity.properties.getEntity("Sub-Interval") match {
-      case None => result
-      case Some(subEntity) => RepeatingIntervalIntersection(Set(result, repeatingInterval(subEntity)))
+    entity.properties.getEntities("Sub-Interval") match {
+      case Seq() => result
+      case subEntities => RepeatingIntervalIntersection(Set(result) ++ subEntities.map(repeatingInterval))
     }
   }
 

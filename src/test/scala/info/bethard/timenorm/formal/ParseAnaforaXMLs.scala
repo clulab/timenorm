@@ -18,11 +18,12 @@ object ParseAnaforaXMLs {
       for (entity <- data.entities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
         printf("\"%s\"[%s] ", entity.text, entity.spans.map(t => "%s,%s".format(t._1, t._2)).toSeq.sorted.mkString(";"))
         val temporal = AnaforaReader.temporal(entity)
+        printf("%s ", temporal)
         if (temporal.isDefined) temporal match {
           case Interval(start, end) => printf("[%s, %s) ", start, end)
           case _ =>
         }
-        println(temporal)
+        println()
       }
     }
   }
