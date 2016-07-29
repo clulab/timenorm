@@ -154,6 +154,10 @@ object AnaforaReader {
         case "Fall" => FALL_OF_YEAR
         case "Winter" => WINTER_OF_YEAR
       }, 1L, mod)
+      case "Part-Of-Week" => entity.properties("Type") match {
+        case "Weekend" => FieldRepeatingInterval(WEEKEND_OF_WEEK, 1, mod)
+        case "Weekdays" => FieldRepeatingInterval(WEEKEND_OF_WEEK, 0, mod)
+      }
       case "Part-Of-Day" => entity.properties("Type") match {
         case "Morning" => FieldRepeatingInterval(MORNING_OF_DAY, 1, mod)
         case "Noon" => FieldRepeatingInterval(ChronoField.SECOND_OF_DAY, 43200L, mod)
