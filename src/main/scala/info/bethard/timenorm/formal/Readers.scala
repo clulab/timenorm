@@ -79,12 +79,12 @@ object AnaforaReader {
     val properties = entity.properties
     val result = entity.`type` match {
       case "Year" => properties("Value").partition(_ != '?') match {
-        case (year, "") => Year(year.toInt)
-        case (decade, "?") => Decade(decade.toInt)
-        case (century, "??") => Century(century.toInt)
+        case (year, questionMarks) => Year(year.toInt, questionMarks.size)
       }
       case "Event" => Event(entity.text)
-      case "Two-Digit-Year" => TwoDigitYear(interval(properties), properties("Value").toInt)
+      case "Two-Digit-Year" => properties("Value").partition(_ != '?') match {
+        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, questionMarks.size)
+      }
       case "Between" => Between(interval(properties, "Start-"), interval(properties, "End-"))
       case opName => (opName, properties.getEntities("Period"), properties.getEntities("Repeating-Interval")) match {
         case ("This", Seq(), Seq()) => ThisPeriod(interval(properties), UnknownPeriod)

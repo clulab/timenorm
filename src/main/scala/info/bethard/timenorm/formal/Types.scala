@@ -188,41 +188,27 @@ case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Inte
 
 /**
   * A Year represents the interval from the first second of the year (inclusive) to the first second of the
-  * next year (exclusive).
+  * next year (exclusive). The optional second parameter allows this to also represent decades (nMissingDigits=1),
+  * centuries (nMissingDigits=2), etc.
   */
-case class Year(n: Int) extends Interval {
+case class Year(digits: Int, nMissingDigits: Int = 0) extends Interval {
   val isDefined = true
-  lazy val start = LocalDateTime.of(n, 1, 1, 0, 0, 0, 0)
-  lazy val end = start.plusYears(1)
+  private val durationInYears = math.pow(10, nMissingDigits).toInt
+  lazy val start = LocalDateTime.of(digits * durationInYears, 1, 1, 0, 0, 0, 0)
+  lazy val end = start.plusYears(durationInYears)
 }
 
 /**
-  * A Decade represents the interval from the first second of the decade (inclusive) to the first second of the
-  * next decade (exclusive).
+  * YearSuffix creates an interval by taking the year from another interval and replacing the last digits.
+  * As with Year, the optional second parameter allows YearSuffix to represent decades (nMissingDigits=1),
+  * centuries (nMissingDigits=2), etc.
   */
-case class Decade(n: Int) extends Interval {
-  val isDefined = true
-  lazy val start = LocalDateTime.of(n * 10, 1, 1, 0, 0, 0, 0)
-  lazy val end = start.plusYears(10)
-}
-
-/**
-  * A Century represents an interval from the first second of the century (inclusive) to the first second
-  * of the next century (exclusive).
-  */
-case class Century(n: Int) extends Interval {
-  val isDefined = true
-  lazy val start = LocalDateTime.of(n * 100, 1, 1, 0, 0, 0, 0)
-  lazy val end = start.plusYears(100)
-}
-
-/**
-  * TwoDigitYear creates a one year interval from two digits and the century of another interval.
-  * Formally: TwoDigitYear([ABCD-EF-GH,...) : Interval, YZ : Integer) = [ABYZ-01-01, (ABYZ+1)-01-01)
-  */
-case class TwoDigitYear(interval: Interval, twoDigits: Int) extends Interval {
+case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int = 0) extends Interval {
   val isDefined = interval.isDefined
-  lazy val Interval(start, end) = Year(interval.start.getYear / 100 * 100 + twoDigits)
+  val nSuffixDigits = (math.log10(lastDigits) + 1).toInt
+  val divider = math.pow(10, nSuffixDigits + nMissingDigits).toInt
+  val multiplier = math.pow(10, nSuffixDigits).toInt
+  lazy val Interval(start, end) = Year(interval.start.getYear / divider * multiplier + lastDigits, nMissingDigits)
 }
 
 /**
