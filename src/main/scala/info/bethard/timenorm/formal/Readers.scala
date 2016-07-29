@@ -194,10 +194,18 @@ object AnaforaReader {
         }
         FieldRepeatingInterval(field, value, mod)
     }
-    entity.properties.getEntities("Sub-Interval") match {
+    flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
       case subEntities => RepeatingIntervalIntersection(Set(result) ++ subEntities.map(repeatingInterval))
-    }
+    })
+  }
+
+  def flatten(repeatingInterval: RepeatingInterval): RepeatingInterval = repeatingInterval match {
+    case RepeatingIntervalIntersection(repeatingIntervals) => RepeatingIntervalIntersection(repeatingIntervals.map{
+      case RepeatingIntervalIntersection(subIntervals) => subIntervals.map(flatten)
+      case repeatingInterval => Set(repeatingInterval)
+    }.flatten)
+    case other => other
   }
 
   def temporal(entity: Entity)(implicit data: Data): TimeExpression = entity.`type` match {
