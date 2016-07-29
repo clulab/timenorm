@@ -488,7 +488,7 @@ private[formal] object RepeatingInterval {
     case ChronoUnit.WEEKS =>
       ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
     case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)
-    case _ => print(tUnit); ldt.truncatedTo(tUnit)
+    case _ => ldt.truncatedTo(tUnit)
   }
 }
 
