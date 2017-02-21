@@ -91,4 +91,15 @@ class TemporalExpressionParserTest extends FunSuite {
     assert(parser.parse("3 notti", anchor2).map(_.timeMLValue) === Success("P3NI"))
     assert(parser.parse("alcuni anni", anchor2).map(_.timeMLValue) === Success("PXY"))
   }
+
+  test("parses day-of-week before full date") {
+    val parser = new TemporalExpressionParser
+    val anchor = TimeSpan.of(2000, 1, 1)
+
+    assert(parser.parse("Oct. 26, 2012", anchor).map(_.timeMLValue) === Success("2012-10-26"))
+    assert(parser.parse("Fri., Oct. 26, 2012", anchor).map(_.timeMLValue) === Success("2012-10-26"))
+
+    assert(parser.parse("May 17 2016", anchor).map(_.timeMLValue) === Success("2016-05-17"))
+    assert(parser.parse("Tue May 17 2016", anchor).map(_.timeMLValue) === Success("2016-05-17"))
+  }
 }

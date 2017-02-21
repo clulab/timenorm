@@ -336,9 +336,13 @@ object TimeSpanParse extends CanFail("[TimeSpan]") {
   }
 
   case class FindAbsolute(fields: Map[TemporalField, Int]) extends FieldBasedTimeSpanParse(fields) {
+    val fieldsLargeToSmall = fields.toSeq.sortBy{
+      case (field, _) => field.getRangeUnit.getDuration
+    }.reverse
+
     def toTimeSpan: TimeSpan = {
       val zero = ZonedDateTime.of(LocalDateTime.of(1, 1, 1, 0, 0), ZoneId.of("Z"))
-      val begin = fields.foldLeft(zero) {
+      val begin = this.fieldsLargeToSmall.foldLeft(zero) {
         case (time, (field, value)) => time.`with`(field, value)
       }
       val period = Period(Map(this.minUnit -> 1), Modifier.Exact)
