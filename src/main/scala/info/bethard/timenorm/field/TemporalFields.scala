@@ -26,7 +26,7 @@ extends TemporalUnit {
   
   def isDateBased: Boolean = this.field.isDateBased
   def isTimeBased: Boolean = this.field.isTimeBased
-  def isSupportedBy(temporal: JTemporal): Boolean = this.field.isSupportedBy(temporal)
+  override def isSupportedBy(temporal: JTemporal): Boolean = this.field.isSupportedBy(temporal)
   def addTo[R <: JTemporal](temporal: R, amount: Long): R = {
     val size = this.addToSize(temporal, amount)
     this.field.getBaseUnit().addTo(temporal, amount * size)
@@ -109,7 +109,7 @@ abstract class MonthDayPartialRange(
 
 class BaseUnitOfPartial(name: String, partialRange: PartialRange)
 extends TemporalField {
-  def getDisplayName(locale: Locale): String = this.name
+  override def getDisplayName(locale: Locale): String = this.name
   def getBaseUnit: TemporalUnit = this.partialRange.field.getBaseUnit()
   def getRangeUnit: TemporalUnit = this.partialRange
   def isDateBased: Boolean = this.getBaseUnit.isDateBased && this.getRangeUnit.isDateBased
@@ -322,7 +322,7 @@ object UNSPECIFIED extends TemporalUnit {
   def isTimeBased: Boolean = false
   def getDuration: Duration = FOREVER.getDuration()
   def isDurationEstimated: Boolean = true
-  def isSupportedBy(temporal: JTemporal): Boolean = false
+  override def isSupportedBy(temporal: JTemporal): Boolean = false
   def addTo[R <: JTemporal](temporal: R, amount: Long): R = ???
   def between(temporal1Inclusive: JTemporal, temporal2Exclusive: JTemporal): Long = ???
 }
