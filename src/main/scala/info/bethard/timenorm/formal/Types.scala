@@ -304,6 +304,18 @@ case class LastRI(interval: Interval, repeatingInterval: RepeatingInterval) exte
 }
 
 /**
+  * Finds the latest repeated interval that appears before the end of the given interval. Formally:
+  * Last([t1,t2): Interval, R: RepeatingInterval) = latest of {[t.start,t.end) ∈ R: t.end ≤ t2}
+  *
+  * @param interval          interval to begin from
+  * @param repeatingInterval RI that supplies the appropriate time intervals
+  */
+case class LastFromEndRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
+  val isDefined = interval.isDefined && repeatingInterval.isDefined
+  lazy val Seq(Interval(start, end)) = repeatingInterval.preceding(interval.end).take(1).toSeq
+}
+
+/**
   * Finds the n latest repeated intervals that appear before the given interval. Formally:
   * Last([t1,t2): Interval, R: RepeatingInterval, n: Number) = n latest of {[t.start,t.end) ∈ R: t.end ≤ t1}
   *
