@@ -1,12 +1,15 @@
 package info.bethard.timenorm.formal
 
-import java.time.{DayOfWeek, Month}
+import java.time.{DayOfWeek, Month, LocalDateTime}
 import java.time.temporal.{IsoFields, WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
 import info.bethard.timenorm.field._
 
-object AnaforaReader {
+
+//object AnaforaReader {
+class AnaforaReader(dct: LocalDateTime)(implicit data: Data) {
+  val DCT: SimpleInterval = SimpleInterval(dct, dct.plusDays(1))
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text)
@@ -74,7 +77,7 @@ object AnaforaReader {
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
       case "Link" => interval(properties.entity(prefix + "Interval"))
-      case "DocTime" => DocumentCreationTime
+      case "DocTime" => DocumentCreationTime(DCT)
       case "Unknown" => UnknownInterval
     }
 
@@ -196,7 +199,8 @@ object AnaforaReader {
     }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
-      case subEntities => Intersection(Set(result) ++ subEntities.map(repeatingInterval))
+      //case subEntities => Intersection(Set(result) ++ subEntities.map(repeatingInterval))
+      case subEntities => Intersection(Set(result) ++ Set(repeatingInterval(subEntities.head)))
     })
   }
 

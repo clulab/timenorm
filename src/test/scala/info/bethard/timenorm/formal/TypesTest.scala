@@ -954,6 +954,22 @@ class TypesTest extends FunSuite {
     next = preceding.drop(9).next
     assert(next.start === LocalDateTime.of(2015, 11, 13, 13, 0))
     assert(next.end === LocalDateTime.of(2015, 11, 13, 14, 0))
+
+/*
+    intersectRI = Intersection(
+      Set(
+        RepeatingField(ChronoField.DAY_OF_WEEK, 1, Modifier.Exact),
+        RepeatingField(NIGHT_OF_DAY, 1, Modifier.Exact))
+    )
+    following = intersectRI.following(interval.end)
+    next = following.next
+    assert(next.start === LocalDateTime.of(2017, 1, 13, 0,0 ))
+*/
+
+
+
+
+
   }
 
   test("isDefined") {
@@ -963,7 +979,7 @@ class TypesTest extends FunSuite {
     assert(UnknownPeriod.isDefined === false)
     assert(Sum(Set(threeDays, threeDays)).isDefined === true)
     assert(Sum(Set(threeDays, UnknownPeriod)).isDefined === false)
-    assert(LastRI(DocumentCreationTime, fridays).isDefined === false)
+    //assert(LastRI(DocumentCreationTime, fridays).isDefined === false)
     assert(AfterRI(Year(1965), fridays).isDefined === true)
   }
 }

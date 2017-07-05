@@ -158,12 +158,14 @@ trait Intervals extends TimeExpression with Seq[Interval] {
   override def apply(idx: Int) = intervals(idx)
 }
 
-case object DocumentCreationTime extends Interval {
+case class DocumentCreationTime(dct: SimpleInterval) extends Interval {
   val isDefined = false
 
-  def start = ???
+  //def start = ???
+  def start = dct.start
 
-  def end = ???
+  //def end = ???
+  def end = dct.end
 }
 
 case object UnknownInterval extends Interval {
@@ -569,6 +571,64 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
     }
   }
 }
+
+
+case class EveryNth(field: RepeatingField) extends RepeatingInterval {
+  val isDefined = true
+  override val base = field.base
+  override val range = field.range
+
+  override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
+    var start = RepeatingInterval.truncate(ldt.`with`(field.field, field.value), field.base)
+
+    if (!start.isAfter(ldt))
+      start = start.plus(1, field.range)
+
+    var incr = 1
+    Iterator.continually {
+      start = start.minus(incr, field.range)
+      incr = 2
+
+      while (start.get(field.field) != field.value) {
+        start = start.minus(incr, field.range)
+
+        try
+          start = start.`with`(field.field, field.value)
+        catch {
+          case dte: DateTimeException =>
+        }
+      }
+
+      SimpleInterval(start, start.plus(1, field.base))
+    }
+  }
+
+  override def following(ldt: LocalDateTime): Iterator[Interval] = {
+    var start = RepeatingInterval.truncate(ldt `with`(field.field, field.value), field.base)
+
+    if (!start.isBefore(ldt))
+      start = start.minus(1, field.range)
+
+    var incr = 1
+    Iterator.continually {
+      start = start.plus(incr, field.range)
+      incr = 2
+
+      while (start.get(field.field) != field.value) {
+        start = start.plus(incr, field.range)
+
+        try
+          start = start.`with`(field.field, field.value)
+        catch {
+          case dte: DateTimeException =>
+        }
+      }
+
+      SimpleInterval(start, start.plus(1, field.base))
+    }
+  }
+}
+
 
 case class Union(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
   val isDefined = repeatingIntervals.forall(_.isDefined)

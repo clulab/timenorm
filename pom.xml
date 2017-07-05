@@ -56,6 +56,16 @@
       <artifactId>anti-xml_${scala.version.short}</artifactId>
       <version>0.6.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.lexicalscope.jewelcli</groupId>
+      <artifactId>jewelcli</artifactId>
+      <version>0.8.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.timen</groupId>
+      <artifactId>timen</artifactId>
+      <version>1.0.8</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>
@@ -70,7 +80,7 @@
       <version>2.2.6</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
+<!--    <dependency>
       <groupId>com.lexicalscope.jewelcli</groupId>
       <artifactId>jewelcli</artifactId>
       <version>0.8.9</version>
@@ -81,7 +91,7 @@
       <artifactId>timen</artifactId>
       <version>1.0.8</version>
       <scope>test</scope>
-    </dependency>
+    </dependency>-->
   </dependencies>
 
   <distributionManagement>
@@ -276,6 +286,18 @@
           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
