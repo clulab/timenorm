@@ -13,6 +13,13 @@ import info.bethard.timenorm.field.{NIGHT_OF_DAY, SUMMER_OF_YEAR, WINTER_OF_YEAR
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
 
+  implicit def intervalEquality[T <: Interval] = new org.scalactic.Equality[T] {
+    override def areEqual(a: T, b: Any): Boolean = b match {
+      case Interval(bStart, bEnd) => a.start == bStart && a.end == bEnd
+      case _ => false
+    }
+  }
+
   test("Year") {
     val year = Year(1985)
     assert(year.start === LocalDateTime.of(1985, 1, 1, 0, 0, 0, 0))
@@ -386,6 +393,36 @@ class TypesTest extends FunSuite {
     val lastUnitRI = LastRI(interval, urInterval)
     assert(lastUnitRI.start === LocalDateTime.of(2002, 3, 21, 0, 0, 0, 0))
     assert(lastUnitRI.end === LocalDateTime.of(2002, 3, 22, 0, 0, 0, 0))
+
+    assert(
+      LastRI(SimpleInterval.of(2017, 7, 7), RepeatingUnit(ChronoUnit.DAYS))
+        === SimpleInterval.of(2017, 7, 6))
+    assert(
+      LastRI(SimpleInterval.of(2017, 7, 7), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
+        === SimpleInterval.of(2017, 6, 30))
+
+    assert(
+      LastRI(SimpleInterval.of(2017, 7, 8), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
+        === SimpleInterval.of(2017, 7, 7))
+    assert(
+      LastRI(SimpleInterval.of(2017, 7, 6), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
+        === SimpleInterval.of(2017, 6, 30))
+  }
+
+  test("LastFromEndRepeatingInterval") {
+    assert(
+      LastFromEndRI(SimpleInterval.of(2017, 7, 7), RepeatingUnit(ChronoUnit.DAYS))
+        === SimpleInterval.of(2017, 7, 7))
+    assert(
+      LastFromEndRI(SimpleInterval.of(2017, 7, 7), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
+        === SimpleInterval.of(2017, 7, 7))
+
+    assert(
+      LastFromEndRI(SimpleInterval.of(2017, 7, 8), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
+        === SimpleInterval.of(2017, 7, 7))
+    assert(
+      LastFromEndRI(SimpleInterval.of(2017, 7, 6), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
+        === SimpleInterval.of(2017, 6, 30))
   }
 
   test("LastRepeatingIntervals") {

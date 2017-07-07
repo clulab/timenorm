@@ -185,6 +185,20 @@ case class Event(description: String) extends Interval {
 case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Interval {
   val isDefined = true
 }
+object SimpleInterval {
+  def of(year: Int) = {
+    val start = LocalDateTime.of(year, 1, 1, 0, 0)
+    SimpleInterval(start, start.plusYears(1))
+  }
+  def of(year: Int, month: Int) = {
+    val start = LocalDateTime.of(year, month, 1, 0, 0)
+    SimpleInterval(start, start.plusMonths(1))
+  }
+  def of(year: Int, month: Int, day: Int) = {
+    val start = LocalDateTime.of(year, month, day, 0, 0)
+    SimpleInterval(start, start.plusDays(1))
+  }
+}
 
 /**
   * A Year represents the interval from the first second of the year (inclusive) to the first second of the
@@ -538,7 +552,7 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt.`with`(field, value), field.getBaseUnit)
 
-    if (!start.isAfter(ldt))
+    if (ldt.isAfter(start))
       start = start.plus(1, field.getRangeUnit)
 
     Iterator.continually {
