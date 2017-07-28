@@ -233,6 +233,21 @@ case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int =
   lazy val Interval(start, end) = Year(interval.start.getYear / divider * multiplier + lastDigits, nMissingDigits)
 }
 
+private[timenorm] object PeriodUtil {
+  def expand(interval: Interval, period: Period): Interval = {
+    val mid = interval.start.plus(Duration.between(interval.start, interval.end).dividedBy(2))
+    val halfPeriod = Duration.between(interval.start.minus(period), interval.start).dividedBy(2)
+    val start = mid.minus(halfPeriod)
+    SimpleInterval(start, start.plus(period))
+  }
+  def oneUnit(period: Period): Period = {
+    SimplePeriod(period.getUnits.asScala.maxBy(_.getDuration), 1)
+  }
+  def expandIfLarger(interval: Interval, period: Period): Interval = {
+    if (interval.end.isBefore(interval.start.plus(period))) this.expand(interval, period) else interval
+  }
+}
+
 /**
   * Creates an interval of a given Period length centered on a given interval. Formally:
   * This([t1,t2): Interval, Δ: Period) = [ (t1 + t2)/2 - Δ/2, (t1 + t2)/2 + Δ/2 )
@@ -242,12 +257,7 @@ case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int =
   */
 case class ThisP(interval: Interval, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
-  lazy val start = {
-    val mid = interval.start.plus(Duration.between(interval.start, interval.end).dividedBy(2))
-    val halfPeriod = Duration.between(interval.start.minus(period), interval.start).dividedBy(2)
-    mid.minus(halfPeriod)
-  }
-  lazy val end = start.plus(period)
+  lazy val Interval(start, end) = PeriodUtil.expand(interval, period)
 }
 
 trait This extends TimeExpression {
@@ -402,15 +412,21 @@ case class NextRIs(interval: Interval, repeatingInterval: RepeatingInterval, num
 
 /**
   * Shifts the input interval earlier by a given period length. Formally:
-  * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ, t2 - Δ)
+  * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ - x, t2 - Δ + x)
+  * where x = u1(Δ)/2 if t2 - t1 is smaller than u1(Δ) or 0 otherwise
+  * where u1(Δ) is a period with the same units as Δ but only 1 unit
+  *
+  * In other words, the width of the resulting interval is the maximum of
+  * the widths of the input interval and a 1-unit version of the period
   *
   * @param interval interval to shift from
   * @param period   period to shift the interval by
   */
 case class BeforeP(interval: Interval, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
-  lazy val start = interval.start.minus(period)
-  lazy val end = interval.end.minus(period)
+  lazy val Interval(start, end) = PeriodUtil.expandIfLarger(
+    SimpleInterval(interval.start.minus(period), interval.end.minus(period)),
+    PeriodUtil.oneUnit(period))
 }
 
 /**
@@ -430,15 +446,21 @@ case class BeforeRI(interval: Interval, repeatingInterval: RepeatingInterval, nu
 
 /**
   * Shifts the input interval later by a given period length.
-  * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ, t2 +  Δ)
+  * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ - x, t2 + Δ + x)
+  * where x = u1(Δ)/2 if t2 - t1 is smaller than u1(Δ) or 0 otherwise
+  * where u1(Δ) is a period with the same units as Δ but only 1 unit
+  *
+  * In other words, the width of the resulting interval is the maximum of
+  * the widths of the input interval and a 1-unit version of the period
   *
   * @param interval interval to shift from
   * @param period   period to shift the interval by
   */
 case class AfterP(interval: Interval, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
-  lazy val start = interval.start.plus(period)
-  lazy val end = interval.end.plus(period)
+  lazy val Interval(start, end) = PeriodUtil.expandIfLarger(
+    SimpleInterval(interval.start.plus(period), interval.end.plus(period)),
+    PeriodUtil.oneUnit(period))
 }
 
 /**

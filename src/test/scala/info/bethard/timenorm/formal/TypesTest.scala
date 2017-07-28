@@ -9,6 +9,7 @@ import java.time.{DateTimeException, DayOfWeek, LocalDateTime}
 import java.util.Collections.singletonList
 
 import info.bethard.timenorm.field.{NIGHT_OF_DAY, SUMMER_OF_YEAR, WINTER_OF_YEAR}
+import org.scalactic.Prettifier
 
 @RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite {
@@ -17,6 +18,14 @@ class TypesTest extends FunSuite {
     override def areEqual(a: T, b: Any): Boolean = b match {
       case Interval(bStart, bEnd) => a.start == bStart && a.end == bEnd
       case _ => false
+    }
+  }
+
+  implicit val prettifier = new Prettifier {
+    override def apply(o: Any): String = o match {
+      case interval: SimpleInterval => interval.toString
+      case interval: Interval => s"$interval with range [${interval.start}, ${interval.end})"
+      case _ => Prettifier.default(o)
     }
   }
 
@@ -182,6 +191,11 @@ class TypesTest extends FunSuite {
 
     assert(beforePeriod1.start === LocalDateTime.of(1996, 10, 1, 0, 0, 0, 0))
     assert(beforePeriod1.end === LocalDateTime.of(1997, 10, 1, 0, 0, 0, 0))
+
+    // 2 weeks Before July 28 is the 7-day interval around July 14
+    assert(
+      BeforeP(SimpleInterval.of(2017, 7, 28), SimplePeriod(ChronoUnit.WEEKS, 2))
+        === SimpleInterval(LocalDateTime.of(2017, 7, 11, 0, 0), LocalDateTime.of(2017, 7, 18, 0, 0)))
   }
 
   test("AfterP") {
@@ -200,6 +214,11 @@ class TypesTest extends FunSuite {
 
     assert(afterPeriod1.start === LocalDateTime.of(2003, 4, 1, 0, 0, 0, 0))
     assert(afterPeriod1.end === LocalDateTime.of(2004, 4, 1, 0, 0, 0, 0))
+
+    // 3 months After January 25 is the 1-month interval around April 25
+    assert(
+      AfterP(SimpleInterval.of(2000, 1, 25), SimplePeriod(ChronoUnit.MONTHS, 3))
+        === SimpleInterval(LocalDateTime.of(2000, 4, 10, 0, 0), LocalDateTime.of(2000, 5, 10, 0, 0)))
   }
 
   test("ThisP") {
