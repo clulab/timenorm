@@ -198,6 +198,14 @@ object SimpleInterval {
     val start = LocalDateTime.of(year, month, day, 0, 0)
     SimpleInterval(start, start.plusDays(1))
   }
+  def of(year: Int, month: Int, day: Int, hour: Int) = {
+    val start = LocalDateTime.of(year, month, day, hour, 0)
+    SimpleInterval(start, start.plusHours(1))
+  }
+  def of(year: Int, month: Int, day: Int, hour: Int, minute: Int) = {
+    val start = LocalDateTime.of(year, month, day, hour, minute)
+    SimpleInterval(start, start.plusMinutes(1))
+  }
 }
 
 /**

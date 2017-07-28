@@ -167,7 +167,7 @@ object AnaforaReader {
       case "Part-Of-Day" => entity.properties("Type") match {
         case "Dawn" => RepeatingField(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Modifier.Approx)
         case "Morning" => RepeatingField(MORNING_OF_DAY, 1, mod)
-        case "Noon" => RepeatingField(ChronoField.SECOND_OF_DAY, 12L * 60L * 60L, mod)
+        case "Noon" => RepeatingField(ChronoField.MINUTE_OF_DAY, 12L * 60L, mod)
         case "Afternoon" => RepeatingField(AFTERNOON_OF_DAY, 1, mod)
         case "Evening" => RepeatingField(EVENING_OF_DAY, 1, mod)
         case "Dusk" => RepeatingField(ChronoField.SECOND_OF_DAY, 19L * 60L * 60L, Modifier.Approx)

@@ -32,6 +32,14 @@ class TypesTest extends FunSuite {
     val yearMonthDay = SimpleInterval.of(1985, 6, 17)
     assert(yearMonthDay.start === LocalDateTime.of(1985, 6, 17, 0, 0, 0, 0))
     assert(yearMonthDay.end === LocalDateTime.of(1985, 6, 18, 0, 0, 0, 0))
+
+    val yearMonthDayHour = SimpleInterval.of(1985, 6, 17, 23)
+    assert(yearMonthDayHour.start === LocalDateTime.of(1985, 6, 17, 23, 0, 0, 0))
+    assert(yearMonthDayHour.end === LocalDateTime.of(1985, 6, 18, 0, 0, 0, 0))
+
+    val yearMonthDayHourMinute = SimpleInterval.of(1985, 6, 17, 23, 0)
+    assert(yearMonthDayHourMinute.start === LocalDateTime.of(1985, 6, 17, 23, 0, 0, 0))
+    assert(yearMonthDayHourMinute.end === LocalDateTime.of(1985, 6, 17, 23, 1, 0, 0))
   }
 
   test("Year") {
