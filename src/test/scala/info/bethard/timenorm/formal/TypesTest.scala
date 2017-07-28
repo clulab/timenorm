@@ -239,7 +239,7 @@ class TypesTest extends FunSuite {
 
   test("UnitRepeatingInterval") {
     val ldt1 = LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0)
-    val ldt2 = LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0)
+    val ldt2 = LocalDateTime.of(2003, 5, 11, 22, 10, 20, 0)
     val interval = SimpleInterval(ldt1, ldt2)
 
     val pre = RepeatingUnit(ChronoUnit.MONTHS, Modifier.Exact).preceding(interval.start)
@@ -272,13 +272,15 @@ class TypesTest extends FunSuite {
       decadeRI.following(interval.end).next
         === SimpleInterval(LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.of(2020, 1, 1, 0, 0)))
 
+    // March 11, 2002 is a Monday
     assert(
       weeksRI.preceding(interval.start).next
-        === SimpleInterval(LocalDateTime.of(2002, 3, 10, 0, 0), LocalDateTime.of(2002, 3, 17, 0, 0)))
+        === SimpleInterval(LocalDateTime.of(2002, 3, 11, 0, 0), LocalDateTime.of(2002, 3, 18, 0, 0)))
 
+    // May 12, 2003 is a Monday
     assert(
       weeksRI.following(interval.end).next
-        === SimpleInterval(LocalDateTime.of(2003, 5, 11, 0, 0), LocalDateTime.of(2003, 5, 18, 0, 0)))
+        === SimpleInterval(LocalDateTime.of(2003, 5, 12, 0, 0), LocalDateTime.of(2003, 5, 19, 0, 0)))
 
     val interval2 = SimpleInterval(
       LocalDateTime.of(2001, 2, 12, 3, 3), LocalDateTime.of(2001, 2, 14, 22, 0))
@@ -347,6 +349,11 @@ class TypesTest extends FunSuite {
     assert(
       LastRI(SimpleInterval.of(2017, 7, 6), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
         === SimpleInterval.of(2017, 6, 30))
+
+    // January 2nd is the first Monday of 2017
+    val lastWeek = LastRI(SimpleInterval.of(2017, 1, 9), RepeatingUnit(ChronoUnit.WEEKS))
+    assert(lastWeek.start === LocalDateTime.of(2017, 1, 2, 0, 0))
+    assert(lastWeek.end === LocalDateTime.of(2017, 1, 9, 0, 0))
   }
 
   test("LastFromEndRepeatingInterval") {
@@ -421,6 +428,11 @@ class TypesTest extends FunSuite {
     val nextUnitRI = NextRI(interval, urInterval)
     assert(nextUnitRI.start === LocalDateTime.of(2003, 5, 11, 0, 0, 0, 0))
     assert(nextUnitRI.end === LocalDateTime.of(2003, 5, 12, 0, 0, 0, 0))
+
+    // January 2nd is the first Monday of 2017
+    val nextWeek = NextRI(SimpleInterval.of(2017, 1, 8), RepeatingUnit(ChronoUnit.WEEKS))
+    assert(nextWeek.start === LocalDateTime.of(2017, 1, 9, 0, 0))
+    assert(nextWeek.end === LocalDateTime.of(2017, 1, 16, 0, 0))
   }
 
   test("NextRepeatingIntervals") {
@@ -662,12 +674,12 @@ class TypesTest extends FunSuite {
 
 
     //Interval: Tuesday (1st of February 2005), UnitRI: Week
-    //Expected result: One week, Sunday, January 30th through Saturday, February 5th 2005
+    //Expected result: One week, Monday, January 31st through Sunday, February 6th 2005
     var urInterval = RepeatingUnit(ChronoUnit.WEEKS)
     thisRI = ThisRIs(interval, urInterval).iterator
     next = thisRI.next
-    assert(next.start === LocalDateTime.of(2005, 1, 30, 0, 0))
-    assert(next.end === LocalDateTime.of(2005, 2, 6, 0, 0))
+    assert(next.start === LocalDateTime.of(2005, 1, 31, 0, 0))
+    assert(next.end === LocalDateTime.of(2005, 2, 7, 0, 0))
     assert(thisRI.isEmpty)
 
     //Interval: Thursday the 10th through Thursday the 17th of April 2003
@@ -771,9 +783,14 @@ class TypesTest extends FunSuite {
     assert(next.end === LocalDateTime.of(2011, 8, 1, 0, 0))
 
     next = unionIterator.next
-    //Expected: Week of July 31 - August 7 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 31, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 8, 7, 0, 0))
+    //Expected: August 1, 2011
+    assert(next.start === LocalDateTime.of(2011, 8, 1, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 2, 0, 0))
+
+    next = unionIterator.next
+    //Expected: August 1 through August 7 2011 (August 1, 2011 is a Monday)
+    assert(next.start === LocalDateTime.of(2011, 8, 1, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 8, 0, 0))
 
     ///////////////////////////////////////////////
     //FieldRI with UnitRI
@@ -787,9 +804,9 @@ class TypesTest extends FunSuite {
     //Preceding
     unionIterator = unionRI.preceding(interval.start)
     next = unionIterator.next
-    //Expected: June 22 to June 28, 2003
-    assert(next.start === LocalDateTime.of(2011, 6, 19, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 6, 26, 0, 0))
+    //Expected: June 20 through June 26, 2003 (June 20, 2011 is a Monday)
+    assert(next.start === LocalDateTime.of(2011, 6, 20, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 6, 27, 0, 0))
 
     next = unionIterator.next
     //Expected: June 20, 2003
@@ -799,19 +816,19 @@ class TypesTest extends FunSuite {
     //Following
     unionIterator = unionRI.following(interval.end)
     next = unionIterator.next
-    //Expected: August 7 to August 14, 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 31, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 8, 7, 0, 0))
+    //Expected: August 1 through August 7 2011 (August 1, 2011 is a Monday)
+    assert(next.start === LocalDateTime.of(2011, 8, 1, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 8, 0, 0))
 
     next = unionIterator.next
-    //Expected: August 7 to August 14, 2011
-    assert(next.start === LocalDateTime.of(2011, 8, 7, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 8, 14, 0, 0))
+    //Expected: August 8 through August 14 2011
+    assert(next.start === LocalDateTime.of(2011, 8, 8, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 15, 0, 0))
 
     next = unionIterator.next
-    //Expected: August 14 to August 21, 2011
-    assert(next.start === LocalDateTime.of(2011, 8, 14, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 8, 21, 0, 0))
+    //Expected: August 15 through August 21, 2011
+    assert(next.start === LocalDateTime.of(2011, 8, 15, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 22, 0, 0))
 
     next = unionIterator.next
     //Expected: August 20, 2011
@@ -826,19 +843,19 @@ class TypesTest extends FunSuite {
     //FieldRI: 20th of the month
     val thisRI = ThisRIs(interval, unionRI).iterator
     next = thisRI.next
-    //Expected: July 3 to July 10, 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 3, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 7, 10, 0, 0))
+    //Expected: July 4 through July 10, 2011 (July 4, 2011 is a Monday)
+    assert(next.start === LocalDateTime.of(2011, 7, 4, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 7, 11, 0, 0))
 
     next = thisRI.next
-    //Expected: July 10 to July 17, 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 10, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 7, 17, 0, 0))
+    //Expected: July 11 through July 17, 2011
+    assert(next.start === LocalDateTime.of(2011, 7, 11, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 7, 18, 0, 0))
 
     next = thisRI.next
-    //Expected: July 17 to July 24, 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 17, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 7, 24, 0, 0))
+    //Expected: July 18 through July 24, 2011
+    assert(next.start === LocalDateTime.of(2011, 7, 18, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 7, 25, 0, 0))
 
     next = thisRI.next
     //Expected: July 20, 2011
@@ -846,14 +863,9 @@ class TypesTest extends FunSuite {
     assert(next.end === LocalDateTime.of(2011, 7, 21, 0, 0))
 
     next = thisRI.next
-    //Expected: July 24 to July 31, 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 24, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 7, 31, 0, 0))
-
-    next = thisRI.next
-    //Expected: July 31 to August 6, 2011
-    assert(next.start === LocalDateTime.of(2011, 7, 31, 0, 0))
-    assert(next.end === LocalDateTime.of(2011, 8, 7, 0, 0))
+    //Expected: July 25 through July 31, 2011
+    assert(next.start === LocalDateTime.of(2011, 7, 25, 0, 0))
+    assert(next.end === LocalDateTime.of(2011, 8, 1, 0, 0))
 
     //Expected: No further intervals
     assert(thisRI.isEmpty)

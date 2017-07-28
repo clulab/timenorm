@@ -507,7 +507,7 @@ private[formal] object RepeatingInterval {
     case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.WEEKS =>
-      ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
+      ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue + 1).truncatedTo(ChronoUnit.DAYS)
     case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)
     case range: ConstantPartialRange => ldt.`with`(range.field, range.first).truncatedTo(range.field.getBaseUnit)
     case _ => ldt.truncatedTo(tUnit)
