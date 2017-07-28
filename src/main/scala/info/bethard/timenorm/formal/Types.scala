@@ -104,7 +104,7 @@ case object UnknownPeriod extends Period {
   override def getUnits: java.util.List[TemporalUnit] = ???
 }
 
-case class Sum(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
+case class SumP(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
 
   val isDefined = periods.forall(_.isDefined)
 
@@ -596,7 +596,7 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
   }
 }
 
-case class Union(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+case class UnionRI(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
   val isDefined = repeatingIntervals.forall(_.isDefined)
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
@@ -626,7 +626,7 @@ case class Union(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingIn
   }
 }
 
-case class Intersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
   val isDefined = repeatingIntervals.forall(_.isDefined)
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range

@@ -67,7 +67,7 @@ object AnaforaReader {
           },
           mod)
       }
-      case "Sum" => Sum(entity.properties.getEntities("Periods").map(period).toSet, mod)
+      case "Sum" => SumP(entity.properties.getEntities("Periods").map(period).toSet, mod)
     }
   }
 
@@ -128,7 +128,7 @@ object AnaforaReader {
         case Seq(interval) => entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval) match {
           case Seq(repeatingInterval) => ThisRIs(interval, repeatingInterval)
           case repeatingIntervals =>
-            ThisRIs(interval, Intersection(repeatingIntervals.toSet))
+            ThisRIs(interval, IntersectionRI(repeatingIntervals.toSet))
         }
         case _ => ???
       }
@@ -140,11 +140,11 @@ object AnaforaReader {
     val result = entity.`type` match {
       case "Union" =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
-        Union(repeatingIntervalEntities.map(repeatingInterval).toSet)
+        UnionRI(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Intersection" =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
         if (entity.properties.has("Intervals")) ???
-        Intersection(repeatingIntervals.toSet)
+        IntersectionRI(repeatingIntervals.toSet)
       case "Calendar-Interval" => RepeatingUnit(entity.properties("Type") match {
         case "Century" => ChronoUnit.CENTURIES
         case "Quarter-Year" => IsoFields.QUARTER_YEARS
@@ -178,7 +178,7 @@ object AnaforaReader {
         // TODO: handle time zone
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
-          case Some(ampmEntity) => Intersection(Set(
+          case Some(ampmEntity) => IntersectionRI(Set(
             RepeatingField(ChronoField.HOUR_OF_AMPM, value, mod),
             repeatingInterval(ampmEntity)))
           case None => RepeatingField(ChronoField.HOUR_OF_DAY, value, mod)
@@ -199,13 +199,13 @@ object AnaforaReader {
     }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
-      case subEntities => Intersection(Set(result) ++ subEntities.map(repeatingInterval))
+      case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
     })
   }
 
   def flatten(repeatingInterval: RepeatingInterval): RepeatingInterval = repeatingInterval match {
-    case Intersection(repeatingIntervals) => Intersection(repeatingIntervals.map{
-      case Intersection(subIntervals) => subIntervals.map(flatten)
+    case IntersectionRI(repeatingIntervals) => IntersectionRI(repeatingIntervals.map{
+      case IntersectionRI(subIntervals) => subIntervals.map(flatten)
       case repeatingInterval => Set(repeatingInterval)
     }.flatten)
     case other => other
