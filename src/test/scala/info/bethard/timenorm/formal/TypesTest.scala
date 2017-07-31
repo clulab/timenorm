@@ -341,6 +341,11 @@ class TypesTest extends FunSuite {
     assert(post2.next === SimpleInterval.of(2003, 5, 29))
     assert(post2.next === SimpleInterval.of(2003, 6, 29))
 
+    // make sure that preceding and following are strict (no overlap allowed)
+    val nov = RepeatingField(ChronoField.MONTH_OF_YEAR, 11)
+    assert(nov.preceding(LocalDateTime.of(1989, 11, 2, 0, 0)).next === SimpleInterval.of(1988, 11))
+    assert(nov.following(LocalDateTime.of(1989, 11, 2, 0, 0)).next === SimpleInterval.of(1990, 11))
+
     //No Exception at FieldRepeatingInterval instantiation
     val day300 = RepeatingField(ChronoField.DAY_OF_MONTH, 300, Modifier.Approx)
     intercept[DateTimeException] {

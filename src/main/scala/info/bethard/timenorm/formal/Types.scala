@@ -585,8 +585,9 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt.`with`(field, value), field.getBaseUnit)
+    val end = start.plus(1, field.getBaseUnit)
 
-    if (ldt.isAfter(start))
+    if (!ldt.isBefore(end))
       start = start.plus(1, field.getRangeUnit)
 
     Iterator.continually {
