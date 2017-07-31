@@ -206,6 +206,10 @@ object SimpleInterval {
     val start = LocalDateTime.of(year, month, day, hour, minute)
     SimpleInterval(start, start.plusMinutes(1))
   }
+  def of(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) = {
+    val start = LocalDateTime.of(year, month, day, hour, minute, second)
+    SimpleInterval(start, start.plusSeconds(1))
+  }
 }
 
 /**
@@ -674,7 +678,7 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends Re
       val othersAfterStart = iterators.tail.map(it => it.takeWhile(_ => it.head.start isAfter startPoint).toList)
 
       othersAfterStart.iterator.foldLeft(List(firstInterval)) {
-        (intersectedIntervals, newIntervals) => newIntervals.filter(isContainedInOneOf(_, intersectedIntervals))
+        (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
       }
     }.flatten
   }
@@ -689,13 +693,14 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends Re
       val othersBeforeStart = iterators.tail.map(it => it.takeWhile(_ => it.head.end isBefore startPoint).toList)
 
       othersBeforeStart.iterator.foldLeft(List(firstInterval)) {
-        (intersectedIntervals, newIntervals) => newIntervals.filter(isContainedInOneOf(_, intersectedIntervals))
+        (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
       }
     }.flatten
   }
 
-  private def isContainedInOneOf(interval: Interval, intervals: Iterable[Interval]): Boolean = {
-    intervals.exists(i => !(interval.start isBefore i.start) && !(interval.end isAfter i.end))
+  // check for overlap rather than containment to allow "Thursday nights", "the last week of January", etc.
+  private def overlapsWith(interval: Interval, intervals: Iterable[Interval]): Boolean = {
+    intervals.exists(i => (interval.start isBefore i.end) && (i.start isBefore interval.end))
   }
 }
 
