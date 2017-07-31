@@ -983,13 +983,18 @@ class TypesTest extends FunSuite {
     assert(AfterRI(Year(1965), fridays).isDefined === true)
   }
 
+  test("PRI19980216.2000.0170 (349,358) last week") {
+    assert(
+      LastRI(SimpleInterval.of(1998, 2, 16), RepeatingUnit(ChronoUnit.WEEKS))
+        === SimpleInterval(LocalDateTime.of(1998, 2, 9, 0, 0), LocalDateTime.of(1998, 2, 16, 0, 0)))
+  }
+
   test("APW19990206.0090 (767,781) Thursday night") {
     val dct = SimpleInterval.of(1999, 2, 6, 6, 22, 26)
     val thursday = RepeatingField(ChronoField.DAY_OF_WEEK, 4)
     val night = RepeatingField(NIGHT_OF_DAY, 1)
-    val thursdayNight = IntersectionRI(Set(thursday, night))
     assert(
-      LastRI(dct, thursdayNight)
+      LastRI(dct, IntersectionRI(Set(thursday, night)))
         === SimpleInterval(LocalDateTime.of(1999, 2, 4, 21, 0), LocalDateTime.of(1999, 2, 5, 4, 0)))
   }
 }
