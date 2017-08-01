@@ -994,6 +994,12 @@ class TypesTest extends FunSuite {
         === SimpleInterval(LocalDateTime.of(1998, 2, 9, 0, 0), LocalDateTime.of(1998, 2, 16, 0, 0)))
   }
 
+  test("APW19980322.0749 (988,994) Monday") {
+    assert(
+      NextRI(SimpleInterval.of(1998, 3, 22, 14, 57), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
+        === SimpleInterval.of(1998, 3, 23))
+  }
+
   test("APW19990206.0090 (767,781) Thursday night") {
     val dct = SimpleInterval.of(1999, 2, 6, 6, 22, 26)
     val thursday = RepeatingField(ChronoField.DAY_OF_WEEK, 4)
