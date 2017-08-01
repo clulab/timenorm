@@ -42,6 +42,11 @@ class Entity(xml: Elem) extends Annotation(xml) {
   def text(implicit data: Data): String = spans.map{
     case (start, end) => data.text.substring(start, end)
   }.mkString("...")
+  def entityDescendants(implicit data: Data): IndexedSeq[Entity] = {
+    val childTexts = this.properties.xml.children \ ElemText
+    val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)
+    IndexedSeq(this) ++ childEntities.flatMap(_.entityDescendants)
+  }
 }
 
 object Relation {
