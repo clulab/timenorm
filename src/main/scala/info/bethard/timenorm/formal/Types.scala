@@ -158,6 +158,10 @@ trait Intervals extends TimeExpression with Seq[Interval] {
   override def apply(idx: Int) = intervals(idx)
 }
 
+case class SimpleIntervals(intervals: Seq[Interval]) extends Intervals {
+  val isDefined = true
+}
+
 case object DocumentCreationTime extends Interval {
   val isDefined = false
 
@@ -514,17 +518,32 @@ case class NthFromStartP(interval: Interval, number: Int, period: Period) extend
   * = Nth of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
   *
   * @param interval          interval to start from
-  * @param number            number indicating which item should be selected
+  * @param index             index of the group to be selected (counting from 1)
   * @param repeatingInterval repeating intervals to select from
   */
-case class NthFromStartRI(interval: Interval, number: Int, repeatingInterval: RepeatingInterval) extends Interval {
+case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: RepeatingInterval) extends Interval {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(number - 1).next match {
+  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(index - 1).next match {
     case result if result.end.isBefore(interval.end) => result
     case _ => ???
   }
 }
 
+/**
+  * Selects the Nth group of subintervals from a RepeatingInterval, counting from the start of another Interval.
+  *
+  * @param interval          interval to start from
+  * @param index             index of the group to be selected (counting from 1)
+  * @param number            number of repeated intervals in each group
+  * @param repeatingInterval repeating intervals to select from
+  */
+case class NthFromStartRIs(interval: Interval, index: Int, repeatingInterval: RepeatingInterval, number: Int = 1) extends Intervals {
+  val isDefined = interval.isDefined && repeatingInterval.isDefined
+  lazy val intervals = repeatingInterval.following(interval.start).grouped(number).drop(index - 1).next match {
+    case result if result.forall(_.end.isBefore(interval.end)) => result
+    case _ => ???
+  }
+}
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
 

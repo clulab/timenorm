@@ -11,12 +11,17 @@ import java.util.Collections.singletonList
 import info.bethard.timenorm.field.{NIGHT_OF_DAY, SUMMER_OF_YEAR, WINTER_OF_YEAR}
 import org.scalactic.Prettifier
 
-@RunWith(classOf[JUnitRunner])
-class TypesTest extends FunSuite {
-
+trait TypesSuite {
   implicit def intervalEquality[T <: Interval] = new org.scalactic.Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
       case Interval(bStart, bEnd) => a.start == bStart && a.end == bEnd
+      case _ => false
+    }
+  }
+
+  implicit def intervalsEquality[T <: Intervals] = new org.scalactic.Equality[T] {
+    override def areEqual(a: T, b: Any): Boolean = b match {
+      case i: Intervals => a.toList == i.toList
       case _ => false
     }
   }
@@ -25,9 +30,14 @@ class TypesTest extends FunSuite {
     override def apply(o: Any): String = o match {
       case interval: SimpleInterval => interval.toString
       case interval: Interval => s"$interval with range [${interval.start}, ${interval.end})"
+      case intervals: Intervals => s"$intervals with range ${intervals.map(this.apply)}"
       case _ => Prettifier.default(o)
     }
   }
+}
+
+@RunWith(classOf[JUnitRunner])
+class TypesTest extends FunSuite with TypesSuite {
 
   test("SimpleInterval") {
     val year = SimpleInterval.of(1985)
@@ -1015,6 +1025,12 @@ class TypesTest extends FunSuite {
     assert(NextRI(SimpleInterval.of(1989, 11, 2), nov13) === SimpleInterval.of(1989, 11, 13))
     assert(LastRI(SimpleInterval.of(1989, 11, 14), nov13) === SimpleInterval.of(1989, 11, 13))
     assert(NextRI(SimpleInterval.of(1989, 11, 12), nov13) === SimpleInterval.of(1989, 11, 13))
+  }
+
+  test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
+    assert(
+      NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
+        === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
   }
 }
 
