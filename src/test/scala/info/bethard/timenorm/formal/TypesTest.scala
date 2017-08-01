@@ -1002,5 +1002,13 @@ class TypesTest extends FunSuite {
       LastRI(dct, IntersectionRI(Set(thursday, night)))
         === SimpleInterval(LocalDateTime.of(1999, 2, 4, 21, 0), LocalDateTime.of(1999, 2, 5, 4, 0)))
   }
+
+  test("wsj_0124 (450,457) Nov. 13") {
+    val nov13 = IntersectionRI(
+      Set(RepeatingField(ChronoField.MONTH_OF_YEAR, 11), RepeatingField(ChronoField.DAY_OF_MONTH, 13)))
+    assert(NextRI(SimpleInterval.of(1989, 11, 2), nov13) === SimpleInterval.of(1989, 11, 13))
+    assert(LastRI(SimpleInterval.of(1989, 11, 14), nov13) === SimpleInterval.of(1989, 11, 13))
+    assert(NextRI(SimpleInterval.of(1989, 11, 12), nov13) === SimpleInterval.of(1989, 11, 13))
+  }
 }
 

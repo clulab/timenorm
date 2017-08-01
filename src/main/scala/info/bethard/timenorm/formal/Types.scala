@@ -670,7 +670,12 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends Re
     .sortBy(ri => (ri.range.getDuration, ri.base.getDuration)).reverse
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var startPoint = sortedRepeatingIntervals.head.preceding(ldt).next.end
+    val startInterval = sortedRepeatingIntervals.head.preceding(ldt).next
+    var startPoint = startInterval.end
+    // adjustment for the case where the ldt was in the middle of the interval
+    if (startInterval.start.plus(1, range).isBefore(ldt)) {
+      startPoint = startPoint.plus(1, range)
+    }
     val iterators = sortedRepeatingIntervals.map(_.preceding(startPoint).buffered)
 
     Iterator.continually {
@@ -685,7 +690,12 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends Re
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var startPoint = sortedRepeatingIntervals.head.following(ldt).next.start
+    val startInterval = sortedRepeatingIntervals.head.following(ldt).next
+    var startPoint = startInterval.start
+    // adjustment for the case where the ldt was in the middle of the interval
+    if (startInterval.end.minus(1, range).isAfter(ldt)) {
+      startPoint = startPoint.minus(1, range)
+    }
     val iterators = sortedRepeatingIntervals.map(_.following(startPoint).buffered)
 
     Iterator.continually {
