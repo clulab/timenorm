@@ -61,16 +61,13 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
 
   val isDefined = n.isDefined
 
-  lazy val number = n match {
-    case IntNumber(x) => x
-    case n: Number => ???
-  }
+  lazy val IntNumber(number) = n
 
   override def addTo(temporal: Temporal): Temporal = temporal.plus(number, unit)
 
   override def get(unit: TemporalUnit): Long = {
     if (unit == this.unit)
-      return number
+      number
     else
       throw new UnsupportedTemporalTypeException(null)
   }
