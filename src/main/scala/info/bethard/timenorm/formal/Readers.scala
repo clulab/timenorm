@@ -28,7 +28,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
         val (beforeDot, dotAndAfter) = value.span(_ != '.')
         val number = if (beforeDot.isEmpty) 0 else beforeDot.toInt
         val numerator = dotAndAfter.tail.toInt
-        val denominator = math.pow(10, dotAndAfter.size - 1).toInt
+        val denominator = math.pow(10, dotAndAfter.length - 1).toInt
         val g = gcd(numerator, denominator)
         FractionalNumber(number, numerator / g, denominator / g)
       } else if (value.forall(_.isDigit)) {
@@ -106,10 +106,10 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
     val result = (entity.`type`, valueOption, periods, repeatingIntervals, numbers) match {
       case ("Event", None, N, N, N) => Event(entity.text)
       case ("Year", Some(value), N, N, N) => value.partition(_ != '?') match {
-        case (year, questionMarks) => Year(year.toInt, questionMarks.size)
+        case (year, questionMarks) => Year(year.toInt, questionMarks.length)
       }
       case ("Two-Digit-Year", Some(value), N, N, N) => value.partition(_ != '?') match {
-        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, questionMarks.size)
+        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, questionMarks.length)
       }
       case ("Between", None, N, N, N) => Between(interval(properties, "Start-"), interval(properties, "End-"))
       case ("This", None, N, N, N) => ThisP(interval(properties), UnknownPeriod)
@@ -245,10 +245,10 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
   }
 
   def flatten(repeatingInterval: RepeatingInterval): RepeatingInterval = repeatingInterval match {
-    case IntersectionRI(repeatingIntervals) => IntersectionRI(repeatingIntervals.map{
+    case IntersectionRI(repeatingIntervals) => IntersectionRI(repeatingIntervals.flatMap{
       case IntersectionRI(subIntervals) => subIntervals.map(flatten)
-      case repeatingInterval => Set(repeatingInterval)
-    }.flatten)
+      case rIntervals => Set(rIntervals)
+    })
     case other => other
   }
 
@@ -259,13 +259,12 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
     case "Intersection" if entity.properties.has("Intervals") => intervals(entity)
     case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After"  =>
       interval(entity)
-    case "Last" | "Next" | "NthFromStart" => {
+    case "Last" | "Next" | "NthFromStart" =>
       val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
       repeatingIntervalEntities.flatMap(_.properties.getEntity("Number")).map(number) match {
         case Seq() => interval(entity)
         case Seq(_) => intervals(entity)
       }
-    }
     case "Time-Zone" => TimeZone(entity.text)
     case _ => repeatingInterval(entity)
   }
