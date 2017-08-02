@@ -100,7 +100,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
     val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
     val repeatingIntervals = repeatingIntervalEntities.map(repeatingInterval)
     val numberEntities = repeatingIntervalEntities.map(_.properties.getEntity("Number"))
-    val numbers = numberEntities.filter(_.isDefined).map(integer)
+    val numbers = numberEntities.flatten.map(number)
     val N = Seq()
 
     val result = (entity.`type`, valueOption, periods, repeatingIntervals, numbers) match {
@@ -154,7 +154,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
       entity.properties.getEntities("Repeating-Interval") ++ entity.properties.getEntities("Repeating-Intervals")
     val repeatingIntervals = repeatingIntervalEntities.map(repeatingInterval)
     val numberEntities = repeatingIntervalEntities.map(_.properties.getEntity("Number"))
-    val numbers = numberEntities.filter(_.isDefined).map(integer)
+    val numbers = numberEntities.flatten.map(number)
     val intervalEntities = entity.properties.getEntities("Intervals")
     val intervals = intervalEntities.map(interval)
     val N = Seq()

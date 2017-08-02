@@ -113,7 +113,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
     val vagueNumber = VagueNumber("A few")
 
-    intercept[scala.NotImplementedError] {
+    intercept[scala.MatchError] {
       SimplePeriod(unit, vagueNumber, mod).addTo(ldt)
     }
   }
@@ -362,6 +362,10 @@ class TypesTest extends FunSuite with TypesSuite {
       //Exception thrown here
       val testException = day300.preceding(interval.start)
     }
+
+    val day31 = RepeatingField(ChronoField.DAY_OF_MONTH, 31)
+    val startOfMar1980 = LocalDateTime.of(1980, 3, 1, 0, 0)
+    assert(day31.following(startOfMar1980).next === SimpleInterval.of(1980, 3, 31))
   }
 
   test("LastRI") {
@@ -985,6 +989,13 @@ class TypesTest extends FunSuite with TypesSuite {
     next = preceding.drop(9).next
     assert(next.start === LocalDateTime.of(2015, 11, 13, 13, 0))
     assert(next.end === LocalDateTime.of(2015, 11, 13, 14, 0))
+
+    val march = RepeatingField(ChronoField.MONTH_OF_YEAR, 3)
+    val day31 = RepeatingField(ChronoField.DAY_OF_MONTH, 31)
+    val mar31 = IntersectionRI(Set(march, day31))
+    val startOf1980 = LocalDateTime.of(1980, 1, 1, 0, 0)
+    assert(mar31.following(startOf1980).next === SimpleInterval.of(1980, 3, 31))
+  }
 
 /*
     intersectRI = Intersection(
