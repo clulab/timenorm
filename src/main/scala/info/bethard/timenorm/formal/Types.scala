@@ -260,7 +260,10 @@ case class ThisP(interval: Interval, period: Period) extends Interval {
 }
 
 trait This extends TimeExpression {
-  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval) = {
+  val interval: Interval
+  val repeatingInterval: RepeatingInterval
+  lazy val isDefined = interval.isDefined && repeatingInterval.isDefined
+  lazy val intervals = {
     // find a start that aligns to the start of the repeating interval's range unit
     val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
 
@@ -283,8 +286,7 @@ trait This extends TimeExpression {
   * @param repeatingInterval the repeating intervals that should be found within the container
   */
 case class ThisRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with This {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval)
+  lazy val Seq(Interval(start, end)) = intervals
 }
 
 /**
@@ -297,8 +299,6 @@ case class ThisRI(interval: Interval, repeatingInterval: RepeatingInterval) exte
   */
 case class ThisRIs(interval: Interval, repeatingInterval: RepeatingInterval)
   extends Intervals with This {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val intervals = getIntervals(interval, repeatingInterval)
   // force the case class toString rather than Seq.toString
   override lazy val toString = scala.runtime.ScalaRunTime._toString(this)
 }
