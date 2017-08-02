@@ -129,19 +129,6 @@ case class SimpleIntervals(intervals: Seq[Interval]) extends Intervals {
   val isDefined = true
 }
 
-case class DocumentCreationTime(dct: SimpleInterval) extends Interval {
-  val isDefined = false
-
-  //def start = ???
-  def start = dct.start
-
-  //def end = ???
-  def end = dct.end
-
-  // /def start: LocalDateTime = ???
-  //def end: LocalDateTime = ???
-}
-
 case object UnknownInterval extends Interval {
   val isDefined = false
   def start: LocalDateTime = ???
