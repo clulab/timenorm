@@ -598,22 +598,11 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
     var start = RepeatingInterval.truncate(ldt.`with`(field, value), field.getBaseUnit)
     val end = start.plus(1, field.getBaseUnit)
 
-    if (!ldt.isBefore(end))
-      start = start.plus(1, field.getRangeUnit)
-
+    if (!ldt.isBefore(end)) {
+      start = this.plus1range(start)
+    }
     Iterator.continually {
-      start = start.minus(1, field.getRangeUnit)
-
-      while (start.get(field) != value) {
-        start = start.minus(1, field.getRangeUnit)
-
-        try
-          start = start.`with`(field, value)
-        catch {
-          case dte: DateTimeException =>
-        }
-      }
-
+      start = this.minus1range(start)
       SimpleInterval(start, start.plus(1, field.getBaseUnit))
     }
   }
@@ -621,24 +610,21 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt `with`(field, value), field.getBaseUnit)
 
-    if (!start.isBefore(ldt))
-      start = start.minus(1, field.getRangeUnit)
-
+    if (!start.isBefore(ldt)) {
+      start = minus1range(start)
+    }
     Iterator.continually {
-      start = start.plus(1, field.getRangeUnit)
-
-      while (start.get(field) != value) {
-        start = start.plus(1, field.getRangeUnit)
-
-        try
-          start = start.`with`(field, value)
-        catch {
-          case dte: DateTimeException =>
-        }
-      }
-
+      start = plus1range(start)
       SimpleInterval(start, start.plus(1, field.getBaseUnit))
     }
+  }
+
+  private def plus1range(ldt: LocalDateTime): LocalDateTime = {
+    Iterator.from(1).map(i => ldt.plus(i, field.getRangeUnit)).filter(_.get(field) == value).next
+  }
+
+  private def minus1range(ldt: LocalDateTime): LocalDateTime = {
+    Iterator.from(1).map(i => ldt.minus(i, field.getRangeUnit)).filter(_.get(field) == value).next
   }
 }
 
