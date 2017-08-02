@@ -104,7 +104,7 @@ case object UnknownPeriod extends Period {
   override def getUnits: java.util.List[TemporalUnit] = ???
 }
 
-case class Sum(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
+case class SumP(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
 
   val isDefined = periods.forall(_.isDefined)
 
@@ -158,6 +158,10 @@ trait Intervals extends TimeExpression with Seq[Interval] {
   override def apply(idx: Int) = intervals(idx)
 }
 
+case class SimpleIntervals(intervals: Seq[Interval]) extends Intervals {
+  val isDefined = true
+}
+
 case class DocumentCreationTime(dct: SimpleInterval) extends Interval {
   val isDefined = false
 
@@ -187,6 +191,32 @@ case class Event(description: String) extends Interval {
 case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Interval {
   val isDefined = true
 }
+object SimpleInterval {
+  def of(year: Int) = {
+    val start = LocalDateTime.of(year, 1, 1, 0, 0)
+    SimpleInterval(start, start.plusYears(1))
+  }
+  def of(year: Int, month: Int) = {
+    val start = LocalDateTime.of(year, month, 1, 0, 0)
+    SimpleInterval(start, start.plusMonths(1))
+  }
+  def of(year: Int, month: Int, day: Int) = {
+    val start = LocalDateTime.of(year, month, day, 0, 0)
+    SimpleInterval(start, start.plusDays(1))
+  }
+  def of(year: Int, month: Int, day: Int, hour: Int) = {
+    val start = LocalDateTime.of(year, month, day, hour, 0)
+    SimpleInterval(start, start.plusHours(1))
+  }
+  def of(year: Int, month: Int, day: Int, hour: Int, minute: Int) = {
+    val start = LocalDateTime.of(year, month, day, hour, minute)
+    SimpleInterval(start, start.plusMinutes(1))
+  }
+  def of(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) = {
+    val start = LocalDateTime.of(year, month, day, hour, minute, second)
+    SimpleInterval(start, start.plusSeconds(1))
+  }
+}
 
 /**
   * A Year represents the interval from the first second of the year (inclusive) to the first second of the
@@ -213,6 +243,21 @@ case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int =
   lazy val Interval(start, end) = Year(interval.start.getYear / divider * multiplier + lastDigits, nMissingDigits)
 }
 
+private[timenorm] object PeriodUtil {
+  def expand(interval: Interval, period: Period): Interval = {
+    val mid = interval.start.plus(Duration.between(interval.start, interval.end).dividedBy(2))
+    val halfPeriod = Duration.between(interval.start.minus(period), interval.start).dividedBy(2)
+    val start = mid.minus(halfPeriod)
+    SimpleInterval(start, start.plus(period))
+  }
+  def oneUnit(period: Period): Period = {
+    SimplePeriod(period.getUnits.asScala.maxBy(_.getDuration), 1)
+  }
+  def expandIfLarger(interval: Interval, period: Period): Interval = {
+    if (interval.end.isBefore(interval.start.plus(period))) this.expand(interval, period) else interval
+  }
+}
+
 /**
   * Creates an interval of a given Period length centered on a given interval. Formally:
   * This([t1,t2): Interval, Δ: Period) = [ (t1 + t2)/2 - Δ/2, (t1 + t2)/2 + Δ/2 )
@@ -222,12 +267,7 @@ case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int =
   */
 case class ThisP(interval: Interval, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
-  lazy val start = {
-    val mid = interval.start.plus(Duration.between(interval.start, interval.end).dividedBy(2))
-    val halfPeriod = Duration.between(interval.start.minus(period), interval.start).dividedBy(2)
-    mid.minus(halfPeriod)
-  }
-  lazy val end = start.plus(period)
+  lazy val Interval(start, end) = PeriodUtil.expand(interval, period)
 }
 
 trait This extends TimeExpression {
@@ -382,15 +422,21 @@ case class NextRIs(interval: Interval, repeatingInterval: RepeatingInterval, num
 
 /**
   * Shifts the input interval earlier by a given period length. Formally:
-  * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ, t2 - Δ)
+  * Before([t1,t2): Interval, Δ: Period) = [t1 - Δ - x, t2 - Δ + x)
+  * where x = u1(Δ)/2 if t2 - t1 is smaller than u1(Δ) or 0 otherwise
+  * where u1(Δ) is a period with the same units as Δ but only 1 unit
+  *
+  * In other words, the width of the resulting interval is the maximum of
+  * the widths of the input interval and a 1-unit version of the period
   *
   * @param interval interval to shift from
   * @param period   period to shift the interval by
   */
 case class BeforeP(interval: Interval, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
-  lazy val start = interval.start.minus(period)
-  lazy val end = interval.end.minus(period)
+  lazy val Interval(start, end) = PeriodUtil.expandIfLarger(
+    SimpleInterval(interval.start.minus(period), interval.end.minus(period)),
+    PeriodUtil.oneUnit(period))
 }
 
 /**
@@ -410,15 +456,21 @@ case class BeforeRI(interval: Interval, repeatingInterval: RepeatingInterval, nu
 
 /**
   * Shifts the input interval later by a given period length.
-  * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ, t2 +  Δ)
+  * Formally: After([t1,t2): Interval, Δ: Period) = [t1 +  Δ - x, t2 + Δ + x)
+  * where x = u1(Δ)/2 if t2 - t1 is smaller than u1(Δ) or 0 otherwise
+  * where u1(Δ) is a period with the same units as Δ but only 1 unit
+  *
+  * In other words, the width of the resulting interval is the maximum of
+  * the widths of the input interval and a 1-unit version of the period
   *
   * @param interval interval to shift from
   * @param period   period to shift the interval by
   */
 case class AfterP(interval: Interval, period: Period) extends Interval {
   val isDefined = interval.isDefined && period.isDefined
-  lazy val start = interval.start.plus(period)
-  lazy val end = interval.end.plus(period)
+  lazy val Interval(start, end) = PeriodUtil.expandIfLarger(
+    SimpleInterval(interval.start.plus(period), interval.end.plus(period)),
+    PeriodUtil.oneUnit(period))
 }
 
 /**
@@ -468,17 +520,32 @@ case class NthFromStartP(interval: Interval, number: Int, period: Period) extend
   * = Nth of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
   *
   * @param interval          interval to start from
-  * @param number            number indicating which item should be selected
+  * @param index             index of the group to be selected (counting from 1)
   * @param repeatingInterval repeating intervals to select from
   */
-case class NthFromStartRI(interval: Interval, number: Int, repeatingInterval: RepeatingInterval) extends Interval {
+case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: RepeatingInterval) extends Interval {
   val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(number - 1).next match {
+  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(index - 1).next match {
     case result if result.end.isBefore(interval.end) => result
     case _ => ???
   }
 }
 
+/**
+  * Selects the Nth group of subintervals from a RepeatingInterval, counting from the start of another Interval.
+  *
+  * @param interval          interval to start from
+  * @param index             index of the group to be selected (counting from 1)
+  * @param number            number of repeated intervals in each group
+  * @param repeatingInterval repeating intervals to select from
+  */
+case class NthFromStartRIs(interval: Interval, index: Int, repeatingInterval: RepeatingInterval, number: Int = 1) extends Intervals {
+  val isDefined = interval.isDefined && repeatingInterval.isDefined
+  lazy val intervals = repeatingInterval.following(interval.start).grouped(number).drop(index - 1).next match {
+    case result if result.forall(_.end.isBefore(interval.end)) => result
+    case _ => ???
+  }
+}
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
 
@@ -495,7 +562,7 @@ private[formal] object RepeatingInterval {
     case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.WEEKS =>
-      ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue).truncatedTo(ChronoUnit.DAYS)
+      ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue + 1).truncatedTo(ChronoUnit.DAYS)
     case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)
     case range: ConstantPartialRange => ldt.`with`(range.field, range.first).truncatedTo(range.field.getBaseUnit)
     case _ => ldt.truncatedTo(tUnit)
@@ -539,8 +606,9 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
     var start = RepeatingInterval.truncate(ldt.`with`(field, value), field.getBaseUnit)
+    val end = start.plus(1, field.getBaseUnit)
 
-    if (!start.isAfter(ldt))
+    if (!ldt.isBefore(end))
       start = start.plus(1, field.getRangeUnit)
 
     Iterator.continually {
@@ -584,65 +652,66 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
   }
 }
 
+//case class EveryNth(field: RepeatingField) extends RepeatingInterval {
+//  val isDefined = true
+//  override val base = field.base
+//  override val range = field.range
+//
+//  override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
+//    var start = RepeatingInterval.truncate(ldt.`with`(field.field, field.value), field.base)
+//
+//    if (!start.isAfter(ldt))
+//      start = start.plus(1, field.range)
+//
+//    var incr = 1
+//    Iterator.continually {
+//      start = start.minus(incr, field.range)
+//      incr = 2
+//
+//      while (start.get(field.field) != field.value) {
+//        start = start.minus(incr, field.range)
+//
+//        try
+//          start = start.`with`(field.field, field.value)
+//        catch {
+//          case dte: DateTimeException =>
+//        }
+//      }
+//
+//      SimpleInterval(start, start.plus(1, field.base))
+//    }
+//  }
+//
+//  override def following(ldt: LocalDateTime): Iterator[Interval] = {
+//    var start = RepeatingInterval.truncate(ldt `with`(field.field, field.value), field.base)
+//
+//    if (!start.isBefore(ldt))
+//      start = start.minus(1, field.range)
+//
+//    var incr = 1
+//    Iterator.continually {
+//      start = start.plus(incr, field.range)
+//      incr = 2
+//
+//      while (start.get(field.field) != field.value) {
+//        start = start.plus(incr, field.range)
+//
+//        try
+//          start = start.`with`(field.field, field.value)
+//        catch {
+//          case dte: DateTimeException =>
+//        }
+//      }
+//
+//      SimpleInterval(start, start.plus(1, field.base))
+//    }
+//  }
+//}
+//
+//
+//case class Union(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
 
-case class EveryNth(field: RepeatingField) extends RepeatingInterval {
-  val isDefined = true
-  override val base = field.base
-  override val range = field.range
-
-  override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt.`with`(field.field, field.value), field.base)
-
-    if (!start.isAfter(ldt))
-      start = start.plus(1, field.range)
-
-    var incr = 1
-    Iterator.continually {
-      start = start.minus(incr, field.range)
-      incr = 2
-
-      while (start.get(field.field) != field.value) {
-        start = start.minus(incr, field.range)
-
-        try
-          start = start.`with`(field.field, field.value)
-        catch {
-          case dte: DateTimeException =>
-        }
-      }
-
-      SimpleInterval(start, start.plus(1, field.base))
-    }
-  }
-
-  override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt `with`(field.field, field.value), field.base)
-
-    if (!start.isBefore(ldt))
-      start = start.minus(1, field.range)
-
-    var incr = 1
-    Iterator.continually {
-      start = start.plus(incr, field.range)
-      incr = 2
-
-      while (start.get(field.field) != field.value) {
-        start = start.plus(incr, field.range)
-
-        try
-          start = start.`with`(field.field, field.value)
-        catch {
-          case dte: DateTimeException =>
-        }
-      }
-
-      SimpleInterval(start, start.plus(1, field.base))
-    }
-  }
-}
-
-
-case class Union(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+case class UnionRI(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
   val isDefined = repeatingIntervals.forall(_.isDefined)
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
@@ -672,7 +741,7 @@ case class Union(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingIn
   }
 }
 
-case class Intersection(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
+case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends RepeatingInterval {
   val isDefined = repeatingIntervals.forall(_.isDefined)
   override val base = repeatingIntervals.minBy(_.base.getDuration).base
   override val range = repeatingIntervals.maxBy(_.range.getDuration).range
@@ -681,7 +750,12 @@ case class Intersection(repeatingIntervals: Set[RepeatingInterval]) extends Repe
     .sortBy(ri => (ri.range.getDuration, ri.base.getDuration)).reverse
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var startPoint = sortedRepeatingIntervals.head.preceding(ldt).next.end
+    val startInterval = sortedRepeatingIntervals.head.preceding(ldt).next
+    var startPoint = startInterval.end
+    // adjustment for the case where the ldt was in the middle of the interval
+    if (startInterval.start.plus(1, range).isBefore(ldt)) {
+      startPoint = startPoint.plus(1, range)
+    }
     val iterators = sortedRepeatingIntervals.map(_.preceding(startPoint).buffered)
 
     Iterator.continually {
@@ -690,13 +764,18 @@ case class Intersection(repeatingIntervals: Set[RepeatingInterval]) extends Repe
       val othersAfterStart = iterators.tail.map(it => it.takeWhile(_ => it.head.start isAfter startPoint).toList)
 
       othersAfterStart.iterator.foldLeft(List(firstInterval)) {
-        (intersectedIntervals, newIntervals) => newIntervals.filter(isContainedInOneOf(_, intersectedIntervals))
+        (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
       }
     }.flatten
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var startPoint = sortedRepeatingIntervals.head.following(ldt).next.start
+    val startInterval = sortedRepeatingIntervals.head.following(ldt).next
+    var startPoint = startInterval.start
+    // adjustment for the case where the ldt was in the middle of the interval
+    if (startInterval.end.minus(1, range).isAfter(ldt)) {
+      startPoint = startPoint.minus(1, range)
+    }
     val iterators = sortedRepeatingIntervals.map(_.following(startPoint).buffered)
 
     Iterator.continually {
@@ -705,13 +784,14 @@ case class Intersection(repeatingIntervals: Set[RepeatingInterval]) extends Repe
       val othersBeforeStart = iterators.tail.map(it => it.takeWhile(_ => it.head.end isBefore startPoint).toList)
 
       othersBeforeStart.iterator.foldLeft(List(firstInterval)) {
-        (intersectedIntervals, newIntervals) => newIntervals.filter(isContainedInOneOf(_, intersectedIntervals))
+        (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
       }
     }.flatten
   }
 
-  private def isContainedInOneOf(interval: Interval, intervals: Iterable[Interval]): Boolean = {
-    intervals.exists(i => !(interval.start isBefore i.start) && !(interval.end isAfter i.end))
+  // check for overlap rather than containment to allow "Thursday nights", "the last week of January", etc.
+  private def overlapsWith(interval: Interval, intervals: Iterable[Interval]): Boolean = {
+    intervals.exists(i => (interval.start isBefore i.end) && (i.start isBefore interval.end))
   }
 }
 
