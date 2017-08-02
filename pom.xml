@@ -41,8 +41,8 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <!-- <scala.version>2.12.2</scala.version>
-    <scala.version.short>2.12</scala.version.short> -->
+    <scala.version>2.12.2</scala.version>
+    <scala.version.short>2.12</scala.version.short>
     <scala.version>2.11.8</scala.version>
     <scala.version.short>2.11</scala.version.short>
   </properties>
@@ -58,16 +58,6 @@
       <artifactId>anti-xml_${scala.version.short}</artifactId>
       <version>0.7.11</version>
     </dependency>
-    <dependency>
-      <groupId>com.lexicalscope.jewelcli</groupId>
-      <artifactId>jewelcli</artifactId>
-      <version>0.8.9</version>
-    </dependency>
-    <dependency>
-      <groupId>org.timen</groupId>
-      <artifactId>timen</artifactId>
-      <version>1.0.8</version>
-    </dependency>
 
     <!-- Test -->
     <dependency>
@@ -82,7 +72,7 @@
       <version>3.0.3</version>
       <scope>test</scope>
     </dependency>
-<!--    <dependency>
+    <dependency>
       <groupId>com.lexicalscope.jewelcli</groupId>
       <artifactId>jewelcli</artifactId>
       <version>0.8.9</version>
@@ -93,7 +83,7 @@
       <artifactId>timen</artifactId>
       <version>1.0.8</version>
       <scope>test</scope>
-    </dependency>-->
+     </dependency>
   </dependencies>
 
   <distributionManagement>

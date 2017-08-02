@@ -68,7 +68,7 @@ class ReadersTest extends FunSuite with TypesSuite {
       """.stripMargin)
     implicit val data = new Data(elem, "2000-10-25 noon")
 
-    val dct = LocalDateTime.parse("1998-02-13T15:44:00")
+    val dct = SimpleInterval.of(1998, 2, 13, 15, 4)
     var aReader = new AnaforaReader(dct)
 
     val temporals = data.entities.map(aReader.temporal)
@@ -132,7 +132,7 @@ class ReadersTest extends FunSuite with TypesSuite {
 
     implicit val data = Data(xml, "first nine months of 1997")
 
-    val dct = LocalDateTime.parse("1998-02-06T22:19:00")
+    val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
     var aReader = new AnaforaReader(dct)
 
     val temporals = data.entities.map(aReader.temporal)

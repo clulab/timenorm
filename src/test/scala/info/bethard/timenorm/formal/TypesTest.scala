@@ -995,31 +995,18 @@ class TypesTest extends FunSuite with TypesSuite {
     val mar31 = IntersectionRI(Set(march, day31))
     val startOf1980 = LocalDateTime.of(1980, 1, 1, 0, 0)
     assert(mar31.following(startOf1980).next === SimpleInterval.of(1980, 3, 31))
+
+
+  test("isDefined") {
+    val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
+    val fridays = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
+    assert(threeDays.isDefined === true)
+    assert(UnknownPeriod.isDefined === false)
+    assert(SumP(Set(threeDays, threeDays)).isDefined === true)
+    assert(SumP(Set(threeDays, UnknownPeriod)).isDefined === false)
+    assert(LastRI(DocumentCreationTime, fridays).isDefined === false)
+    assert(AfterRI(Year(1965), fridays).isDefined === true)
   }
-
-/*
-    intersectRI = Intersection(
-      Set(
-        RepeatingField(ChronoField.DAY_OF_WEEK, 1, Modifier.Exact),
-        RepeatingField(NIGHT_OF_DAY, 1, Modifier.Exact))
-    )
-    following = intersectRI.following(interval.end)
-    next = following.next
-    assert(next.start === LocalDateTime.of(2017, 1, 13, 0,0 ))
-
-    }
-*/
-
-//  test("isDefined") {
-//    val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
-//    val fridays = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
-//    assert(threeDays.isDefined === true)
-//    assert(UnknownPeriod.isDefined === false)
-//    assert(SumP(Set(threeDays, threeDays)).isDefined === true)
-//    assert(SumP(Set(threeDays, UnknownPeriod)).isDefined === false)
-//    assert(LastRI(DocumentCreationTime, fridays).isDefined === false)
-//    assert(AfterRI(Year(1965), fridays).isDefined === true)
-//  }
 
   test("PRI19980216.2000.0170 (349,358) last week") {
     assert(
@@ -1029,7 +1016,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
   test("APW19980322.0749 (988,994) Monday") {
     assert(
-      NextRI(DocumentCreationTime(SimpleInterval.of(1998, 3, 22)), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
+      NextRI(SimpleInterval.of(1998, 3, 22, 14, 57), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
         === SimpleInterval.of(1998, 3, 23))
   }
 

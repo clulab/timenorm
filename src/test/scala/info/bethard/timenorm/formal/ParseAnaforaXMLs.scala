@@ -10,34 +10,6 @@ object ParseAnaforaXMLs {
   // annotations that don't represent normalizable time expressions
   val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
 
-  def parseDCT(dctString: String): Seq[Int] = {
-    val datetime = dctString.split("T")
-    if (datetime.size == 2) {
-      val YMD = datetime(0).split("-").map(_.toString.toInt)
-      val HMS = datetime(1).split(":").map(_.toString.toInt)
-      if (YMD.size < 3 || HMS.size == 0)
-        throw new  Exception("DCT malformed")
-      if (HMS.size == 3)
-      //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1),HMS(2))
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else if (HMS.size == 2)
-      //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1))
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else
-      //return Seq(YMD(0),YMD(1),YMD(2),HMS(0))
-        return Seq(YMD(0),YMD(1),YMD(2))
-    } else {
-      val YMD = datetime(0).split("-").map(_.toString.toInt)
-      if (YMD.size == 0)
-        throw new  Exception("DCT malformed")
-      if (YMD.size == 3)
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else if (YMD.size == 2)
-        return Seq(YMD(0),YMD(1))
-      else
-        return Seq(YMD(0))
-    }
-  }
 
   def main(args: Array[String]): Unit = {
     val Array(dir) = args
@@ -45,8 +17,8 @@ object ParseAnaforaXMLs {
       val textPath = xmlFile.getPath.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       println(xmlFile)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
-      val dctString = LocalDateTime.now().toString
-      val dct = parseDCT(dctString)
+      val start = LocalDateTime.now().truncatedTo(DAYS)
+      val dct = SimpleInterval(start, start.plusDays(1))
       val aReader = new AnaforaReader(dct)
       for (entity <- data.entities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
         printf("\"%s\"[%s] ", entity.text, entity.spans.map(t => "%s,%s".format(t._1, t._2)).toSeq.sorted.mkString(";"))
