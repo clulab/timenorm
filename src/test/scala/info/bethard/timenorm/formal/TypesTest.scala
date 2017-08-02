@@ -113,7 +113,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
     val vagueNumber = VagueNumber("A few")
 
-    intercept[scala.NotImplementedError] {
+    intercept[scala.MatchError] {
       SimplePeriod(unit, vagueNumber, mod).addTo(ldt)
     }
   }
