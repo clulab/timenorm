@@ -230,4 +230,43 @@ class ReadersTest extends FunSuite with TypesSuite {
       case _ => fail("expected Seq(year: Y, month: RI, day: RI), found " + temporals)
     }
   }
+
+  test("APW19980306.1001 (1705,1711) Friday") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>117@e@APW19980306.1001@gold</id>
+            <span>0,6</span>
+            <type>Day-Of-Week</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Friday</Type>
+              <Sub-Interval></Sub-Interval>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>118@e@APW19980306.1001@gold</id>
+            <span>0,6</span>
+            <type>Last</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Newswire</Semantics>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>117@e@APW19980306.1001@gold</Repeating-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, "Friday")
+    val temporals = data.entities.map(AnaforaReader.temporal)
+    temporals match {
+      case Seq(friday: RepeatingInterval, last: LastFromEndRI) => assert(!last.isDefined)
+      case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
+    }
+  }
 }
