@@ -6,20 +6,14 @@ import java.time.temporal.{IsoFields, WeekFields, ChronoField, ChronoUnit}
 import info.bethard.anafora.{Properties, Data, Entity}
 import info.bethard.timenorm.field._
 
-//object AnaforaReader {
-class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
+object AnaforaReader {
+    class Exception(message: String) extends java.lang.Exception(message)
+}
 
-  val DCT: SimpleInterval = dct.size match {
-    case 1 => SimpleInterval.of(dct(0))
-    case 2 => SimpleInterval.of(dct(0), dct(1))
-    case 3 => SimpleInterval.of(dct(0), dct(1), dct(2))
-    case 4 => SimpleInterval.of(dct(0), dct(1), dct(2), dct(3))
-    case 5 => SimpleInterval.of(dct(0), dct(1), dct(2), dct(3), dct(4))
-    case 6 => SimpleInterval.of(dct(0), dct(1), dct(2), dct(3), dct(4), dct(5))
-    case _ => throw new  Exception("DCT malformed")
-  }
+class AnaforaReader(dct: SimpleInterval)(implicit data: Data) {
 
-  class Exception(message: String) extends java.lang.Exception(message)
+  val DCT = dct
+
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text)
@@ -45,7 +39,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
     case None => 1
     case Some(entity) => number(entity) match {
       case IntNumber(number) => number
-      case _ => throw new this.Exception(
+      case _ => throw new AnaforaReader.Exception(
         s"""cannot parse integer from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
   }
@@ -88,7 +82,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
       case "Link" => interval(properties.entity(prefix + "Interval"))
-      case "DocTime" => DocumentCreationTime(DCT)
+      case "DocTime" => DCT
       case "Unknown" => UnknownInterval
     }
 
@@ -120,7 +114,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
       case ("Last", None, N, Seq(rInterval), N) => properties.get("Semantics") match {
         case Some("Standard") | None => LastRI(interval(properties), rInterval)
         case Some("Newswire") => LastFromEndRI(interval(properties), rInterval)
-        case _ => throw new this.Exception(
+        case _ => throw new AnaforaReader.Exception(
           s"""cannot parse Last from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
       }
       case ("Next", None, N, N, N) => NextP(interval(properties), UnknownPeriod)
@@ -137,7 +131,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
       case ("NthFromStart", Some(value), N, N, N) => NthFromStartP(interval(properties), value.toInt, UnknownPeriod)
       case ("NthFromStart", Some(value), Seq(period), N, N) => NthFromStartP(interval(properties), value.toInt, period)
       case ("NthFromStart", Some(value), N, Seq(rInterval), N) => NthFromStartRI(interval(properties), value.toInt, rInterval)
-      case _ => throw new this.Exception(
+      case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Interval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
     properties.getEntity("Sub-Interval") match {
@@ -166,7 +160,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
       case ("Next", None, N, Seq(rInterval), Seq(number), N) => NextRIs(interval(entity.properties), rInterval, number)
       case ("NthFromStart", Some(value), N, Seq(rInterval), Seq(number), N) =>
         NthFromStartRIs(interval(entity.properties), value.toInt, rInterval, number)
-      case _ => throw new this.Exception(
+      case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Intervals from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
   }
@@ -179,7 +173,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
         UnionRI(repeatingIntervalEntities.map(repeatingInterval).toSet)
       case "Intersection" =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
-        if (entity.properties.has("Intervals")) throw new this.Exception(
+        if (entity.properties.has("Intervals")) throw new AnaforaReader.Exception(
           s"""cannot parse Intersection from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
         IntersectionRI(repeatingIntervals.toSet)
       case "Calendar-Interval" => RepeatingUnit(entity.properties("Type") match {
@@ -231,7 +225,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
           }
           case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE =>
             entity.properties("Value").toLong
-          case _ => throw new this.Exception(
+          case _ => throw new AnaforaReader.Exception(
             s"""cannot parse ChronoField value from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
         }
         RepeatingField(field, value, mod)
@@ -239,7 +233,7 @@ class AnaforaReader(dct: Seq[Int])(implicit data: Data) {
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
       //case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
-      case subEntities => IntersectionRI(Set(result) ++ Set(repeatingInterval(subEntities.head)))  // Just the first to avoid things like 10:35 a.m. (0735 GMT) Friday
+      case subEntities => IntersectionRI(Set(result) ++ Set(repeatingInterval(subEntities.head)))  // Only take the first SubInterval. If there are more than one the should be equivalent.
 
     })
   }
