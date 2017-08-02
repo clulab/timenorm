@@ -1006,13 +1006,9 @@ class TypesTest extends FunSuite with TypesSuite {
     following = intersectRI.following(interval.end)
     next = following.next
     assert(next.start === LocalDateTime.of(2017, 1, 13, 0,0 ))
+
+    }
 */
-
-
-
-
-
-  }
 
 //  test("isDefined") {
 //    val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
