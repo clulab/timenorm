@@ -13,6 +13,11 @@ trait TimeExpression {
 
 trait Number extends TimeExpression
 
+object Number {
+  import scala.language.implicitConversions
+  implicit def intToNumber(n: Int): Number = IntNumber(n)
+}
+
 case class IntNumber(n: Int) extends Number {
   val isDefined = true
 }
@@ -75,17 +80,6 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
   override def subtractFrom(temporal: Temporal): Temporal = temporal.minus(number, unit)
 
   override def getUnits: java.util.List[TemporalUnit] = java.util.Collections.singletonList(unit)
-}
-
-object SimplePeriod {
-
-  def apply(unit: TemporalUnit, number: Int): SimplePeriod = {
-    SimplePeriod(unit, IntNumber(number), Modifier.Exact)
-  }
-
-  def apply(unit: TemporalUnit, number: Int, modifier: Modifier): SimplePeriod = {
-    SimplePeriod(unit, IntNumber(number), modifier)
-  }
 }
 
 case object UnknownPeriod extends Period {
@@ -322,10 +316,16 @@ case class LastP(interval: Interval, period: Period) extends Interval {
   lazy val end = interval.start
 }
 
-trait Last extends TimeExpression {
-  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval, number: Int) = {
-    repeatingInterval.preceding(interval.start).take(number).toSeq
-  }
+trait IRIN {
+  val interval: Interval
+  val repeatingInterval: RepeatingInterval
+  val number: Number
+  lazy val isDefined = interval.isDefined && repeatingInterval.isDefined && number.isDefined
+  lazy val IntNumber(integer) = number
+}
+
+trait Last extends TimeExpression with IRIN {
+  lazy val intervals: Seq[Interval] = repeatingInterval.preceding(interval.start).take(integer).toSeq
 }
 
 /**
@@ -336,8 +336,8 @@ trait Last extends TimeExpression {
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
 case class LastRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Last {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval, 1)
+  val number = IntNumber(1)
+  lazy val Seq(Interval(start, end)) = intervals
 }
 
 /**
@@ -347,9 +347,9 @@ case class LastRI(interval: Interval, repeatingInterval: RepeatingInterval) exte
   * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
-case class LastFromEndRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Seq(Interval(start, end)) = repeatingInterval.preceding(interval.end).take(1).toSeq
+case class LastFromEndRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with IRIN {
+  val number = IntNumber(1)
+  lazy val Seq(Interval(start, end)) = repeatingInterval.preceding(interval.end).take(integer).toSeq
 }
 
 /**
@@ -360,10 +360,8 @@ case class LastFromEndRI(interval: Interval, repeatingInterval: RepeatingInterva
   * @param repeatingInterval RI that supplies the appropriate time intervals
   * @param number            the number of intervals ot take
   */
-case class LastRIs(interval: Interval, repeatingInterval: RepeatingInterval, number: Int = 1)
+case class LastRIs(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
   extends Intervals with Last {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val intervals = getIntervals(interval, repeatingInterval, number)
   // force the case class toString rather than Seq.toString
   override lazy val toString = scala.runtime.ScalaRunTime._toString(this)
 }
@@ -381,10 +379,8 @@ case class NextP(interval: Interval, period: Period) extends Interval {
   lazy val end = interval.start.plus(period)
 }
 
-trait Next extends TimeExpression {
-  protected def getIntervals(interval: Interval, repeatingInterval: RepeatingInterval, number: Int) = {
-    repeatingInterval.following(interval.end).take(number).toSeq
-  }
+trait Next extends TimeExpression with IRIN {
+  lazy val intervals = repeatingInterval.following(interval.end).take(integer).toSeq
 }
 
 /**
@@ -395,8 +391,8 @@ trait Next extends TimeExpression {
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
 case class NextRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Next {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Seq(Interval(start, end)) = getIntervals(interval, repeatingInterval, 1)
+  val number = IntNumber(1)
+  lazy val Seq(Interval(start, end)) = intervals
 }
 
 /**
@@ -407,10 +403,8 @@ case class NextRI(interval: Interval, repeatingInterval: RepeatingInterval) exte
   * @param repeatingInterval RI that supplies the appropriate time intervals
   * @param number            the number of repeated intervals to take
   */
-case class NextRIs(interval: Interval, repeatingInterval: RepeatingInterval, number: Int = 1)
+case class NextRIs(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
   extends Intervals with Next {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val intervals = getIntervals(interval, repeatingInterval, number)
   // force the case class toString rather than Seq.toString
   override lazy val toString = scala.runtime.ScalaRunTime._toString(this)
 }
@@ -443,10 +437,9 @@ case class BeforeP(interval: Interval, period: Period) extends Interval {
   * @param repeatingInterval RI that supplies the appropriate time intervals
   * @param number            the number of intervals to skip
   */
-case class BeforeRI(interval: Interval, repeatingInterval: RepeatingInterval, number: Int = 1)
-  extends Interval {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Interval(start, end) = repeatingInterval.preceding(interval.start).drop(number - 1).next
+case class BeforeRI(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
+  extends Interval with IRIN {
+  lazy val Interval(start, end) = repeatingInterval.preceding(interval.start).drop(integer - 1).next
 }
 
 /**
@@ -476,10 +469,9 @@ case class AfterP(interval: Interval, period: Period) extends Interval {
   * @param interval          interval to start from
   * @param repeatingInterval repeating intervals to search over
   */
-case class AfterRI(interval: Interval, repeatingInterval: RepeatingInterval, number: Int = 1)
-  extends Interval {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val Interval(start, end) = repeatingInterval.following(interval.end).drop(number - 1).next
+case class AfterRI(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
+  extends Interval with IRIN {
+  lazy val Interval(start, end) = repeatingInterval.following(interval.end).drop(integer - 1).next
 }
 
 /**
@@ -518,8 +510,9 @@ case class NthFromStartP(interval: Interval, number: Int, period: Period) extend
   * @param index             index of the group to be selected (counting from 1)
   * @param repeatingInterval repeating intervals to select from
   */
-case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: RepeatingInterval) extends Interval {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
+case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: RepeatingInterval)
+  extends Interval with IRIN {
+  val number = IntNumber(1)
   lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(index - 1).next match {
     case result if result.end.isBefore(interval.end) => result
     case _ => ???
@@ -534,9 +527,11 @@ case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: Rep
   * @param number            number of repeated intervals in each group
   * @param repeatingInterval repeating intervals to select from
   */
-case class NthFromStartRIs(interval: Interval, index: Int, repeatingInterval: RepeatingInterval, number: Int = 1) extends Intervals {
-  val isDefined = interval.isDefined && repeatingInterval.isDefined
-  lazy val intervals = repeatingInterval.following(interval.start).grouped(number).drop(index - 1).next match {
+case class NthFromStartRIs(interval: Interval, index: Int,
+                           repeatingInterval: RepeatingInterval,
+                           number: Number = IntNumber(1))
+  extends Intervals with IRIN {
+  lazy val intervals = repeatingInterval.following(interval.start).grouped(integer).drop(index - 1).next match {
     case result if result.forall(_.end.isBefore(interval.end)) => result
     case _ => ???
   }

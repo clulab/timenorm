@@ -133,4 +133,52 @@ class ReadersTest extends FunSuite with TypesSuite {
       case _ => fail("expected Seq(nth: NFSRIs, number: N, month: RI, year: Y), found " + temporals)
     }
   }
+
+  test("NYT19980206.0460 (3441,3445) last few months") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>210@e@NYT19980206.0460@gold</id>
+            <span>0,4</span>
+            <type>Last</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Standard</Semantics>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>212@e@NYT19980206.0460@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>211@e@NYT19980206.0460@gold</id>
+            <span>5,8</span>
+            <type>Number</type>
+            <parentsType>Other</parentsType>
+            <properties>
+              <Value>?</Value>
+            </properties>
+          </entity>
+          <entity>
+            <id>212@e@NYT19980206.0460@gold</id>
+            <span>9,15</span>
+            <type>Calendar-Interval</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Month</Type>
+              <Number>211@e@NYT19980206.0460@gold</Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, "last few months")
+    val temporals = data.entities.map(AnaforaReader.temporal)
+    temporals match {
+      case Seq(last: Last, _: Number, _: RepeatingInterval) => assert(!last.isDefined)
+      case _ => fail("expected Seq(nth: NFSRIs, number: N, month: RI, year: Y), found " + temporals)
+    }
+
+  }
 }
