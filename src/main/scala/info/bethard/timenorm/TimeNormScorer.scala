@@ -41,29 +41,42 @@ object TimeNormScorer {
   }
 
   def parseDCT(dctString: String): Seq[Int] = {
-     val datetime = dctString.split("T")
-      if (datetime.size == 2) {
-        val YMD = datetime(0).split("-").map(_.toString.toInt)
-        val HMS = datetime(0).split(":").map(_.toString.toInt)
-        if (YMD.size < 3 || HMS.size == 0)
-          throw new  Exception("DCT malformed")
-        if (HMS.size == 3)
-          return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1),HMS(2))
-        else if (HMS.size == 2)
-          return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1))
-        else
-          return Seq(YMD(0),YMD(1),YMD(2),HMS(0))
-      } else {
-        val YMD = datetime(0).split("-").map(_.toString.toInt)
-        if (YMD.size == 0)
-          throw new  Exception("DCT malformed")
-        if (YMD.size == 3)
-          return Seq(YMD(0),YMD(1),YMD(2))
-        else if (YMD.size == 2)
-          return Seq(YMD(0),YMD(1))
-        else
-          return Seq(YMD(0))
-      }
+    val datetime = dctString.split("T")
+    if (datetime.size == 2) {
+      val YMD = datetime(0).split("-").map(_.toString.toInt)
+      val HMS = datetime(1).split(":").map(_.toString.toInt)
+      if (YMD.size < 3 || HMS.size == 0)
+        throw new  Exception("DCT malformed")
+      if (HMS.size == 3)
+      //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1),HMS(2))
+        return Seq(YMD(0),YMD(1),YMD(2))
+      else if (HMS.size == 2)
+      //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1))
+        return Seq(YMD(0),YMD(1),YMD(2))
+      else
+      //return Seq(YMD(0),YMD(1),YMD(2),HMS(0))
+        return Seq(YMD(0),YMD(1),YMD(2))
+    } else {
+      val YMD = datetime(0).split("-").map(_.toString.toInt)
+      if (YMD.size == 0)
+        throw new  Exception("DCT malformed")
+      if (YMD.size == 3)
+        return Seq(YMD(0),YMD(1),YMD(2))
+      else if (YMD.size == 2)
+        return Seq(YMD(0),YMD(1))
+      else
+        return Seq(YMD(0))
+    }
+  }
+
+  def dctInterval(dctSeq: Seq[Int]): SimpleInterval = dctSeq.size match {
+    case 1 => SimpleInterval.of(dctSeq(0))
+    case 2 => SimpleInterval.of(dctSeq(0), dctSeq(1))
+    case 3 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2))
+    case 4 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3))
+    case 5 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4))
+    case 6 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4), dctSeq(5))
+    case _ => throw new  Exception("DCT malformed")
   }
 
   def compact_intervals(intervals: Seq[Interval]): Seq[Interval] = {

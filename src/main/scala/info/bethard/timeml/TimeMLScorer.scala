@@ -11,8 +11,9 @@ import info.bethard.timenorm.TimeSpan
 import info.bethard.timenorm.formal.{Interval, Intervals, ThisRIs, TimeExpression, _}
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
-
 import info.bethard.anafora.{Annotation, Data, Entity, Properties}
+import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_timex_interval, epoch, get_range_limmits, parseDCT, dctInterval, compact_intervals}
+
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit
@@ -21,96 +22,9 @@ import java.time.Instant
 
 object TimeMLScorer {
 
-  def get_intervals(timex: TimeExpression): Seq[Interval] = {
-
-    var intervals: Seq[Interval] =
-      if (timex.isInstanceOf[Interval]) {
-        println(timex, timex.asInstanceOf[Interval].start)
-        List(SimpleInterval(timex.asInstanceOf[Interval].start, timex.asInstanceOf[Interval].end)) }
-      else if (timex.isInstanceOf[Intervals])
-        timex.asInstanceOf[Intervals].iterator.toList
-      else if (timex.isInstanceOf[RepeatingInterval])
-        Nil
-      else {
-        printf("%s is not a valid TimeExpression class\n", timex.getClass.getSimpleName)
-        //System.err.printf("%s is not a valid TimeExpression class\n", timex.getClass.getSimpleName)
-        throw new IllegalArgumentException
-      }
-    return intervals
-  }
-
   def get_intervals(timespan: TimeSpan): Seq[Interval] = {
     var intervals: Seq[Interval] = List(SimpleInterval(timespan.start.toLocalDateTime(), timespan.end.toLocalDateTime()))
     return intervals
-  }
-
-  def epoch(datetime: java.time.LocalDateTime): Long = datetime.atZone(ZoneId.systemDefault).toEpochSecond
-  def datetime(epoch: Long): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(epoch), ZoneId.systemDefault())
-
-  def get_range_limmits(range: TemporalUnit) : Tuple2[LocalDateTime, LocalDateTime] = range.toString match {
-    case "Years" => (LocalDateTime.now.withDayOfYear(1), LocalDateTime.now.plusYears(1).withDayOfYear(1))
-    case "Hours" => (LocalDateTime.now.withHour(1), LocalDateTime.now.plusDays(1).withHour(1))
-    case "Minutes" => (LocalDateTime.now.withMinute(1), LocalDateTime.now.plusHours(1).withMinute(1))
-    case _ => (LocalDateTime.now.withDayOfMonth(1), LocalDateTime.now.plusMonths(1).withDayOfMonth(1))
-  }
-
-  def parseDCT(dctString: String): Seq[Int] = {
-    val datetime = dctString.split("T")
-    if (datetime.size == 2) {
-      val YMD = datetime(0).split("-").map(_.toString.toInt)
-      val HMS = datetime(1).split(":").map(_.toString.toInt)
-      if (YMD.size < 3 || HMS.size == 0)
-        throw new  Exception("DCT malformed")
-      if (HMS.size == 3)
-        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1),HMS(2))
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else if (HMS.size == 2)
-        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1))
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else
-        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0))
-        return Seq(YMD(0),YMD(1),YMD(2))
-    } else {
-      val YMD = datetime(0).split("-").map(_.toString.toInt)
-      if (YMD.size == 0)
-        throw new  Exception("DCT malformed")
-      if (YMD.size == 3)
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else if (YMD.size == 2)
-        return Seq(YMD(0),YMD(1))
-      else
-        return Seq(YMD(0))
-    }
-  }
-
-  def compact_intervals(intervals: Seq[Interval]): Seq[Interval] = {
-    var compactIntervals: Seq[Interval] = Seq ()
-    if (intervals.size != 0) {
-      for (Interval (start, end) <- intervals) {
-        var newCompact: Seq[Interval] = Seq ()
-        var startZone = epoch (start)
-        var endZone = epoch (end)
-
-        for (Interval (cStart, cEnd) <- compactIntervals) {
-          val cStartZone = epoch (cStart)
-          val cEndZone = epoch (cEnd)
-          val maxStart = Math.max (startZone, cStartZone)
-          val minEnd = Math.min (endZone, cEndZone)
-
-          if (minEnd > maxStart) {
-            val minStart = Math.min (startZone, cStartZone)
-            val maxEnd = Math.max (endZone, cEndZone)
-            startZone = minStart
-            endZone = maxEnd
-          } else {
-            newCompact :+= SimpleInterval (cStart, cEnd)
-          }
-        }
-        newCompact :+= SimpleInterval (datetime (startZone), datetime (endZone) )
-        compactIntervals = newCompact
-      }
-    }
-    return compactIntervals
   }
 
   def score(gsTimex: TimeExpression, gsIntervs: Seq[Interval], sysTimex: TimeSpan, sysIntervs: Seq[Interval]): (Double, Double) = {
@@ -225,15 +139,7 @@ object TimeMLScorer {
 
       val dctString = io.Source.fromFile(dctPath).getLines.toList(0)
       val dctSeq: Seq[Int] = parseDCT(dctString)
-      val dct: SimpleInterval = dctSeq.size match {
-        case 1 => SimpleInterval.of(dctSeq(0))
-        case 2 => SimpleInterval.of(dctSeq(0), dctSeq(1))
-        case 3 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2))
-        case 4 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3))
-        case 5 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4))
-        case 6 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4), dctSeq(5))
-        case _ => throw new  Exception("DCT malformed")
-      }
+      val dct: SimpleInterval = dctInterval(dctSeq)
       printf("DCT: %s\n\n",dctString)
 
       println("Intervals in Gold:")
@@ -246,7 +152,7 @@ object TimeMLScorer {
           try {
             val temporal = aReader.temporal(entity)
             if (temporal.isInstanceOf[Interval] || temporal.isInstanceOf[Intervals]) {
-              val intervals = get_intervals(temporal)
+              val intervals = get_timex_interval(temporal)
               intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
               gs :+= (entity, temporal, intervals)
             }
