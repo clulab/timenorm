@@ -371,203 +371,113 @@ class TypesTest extends FunSuite with TypesSuite {
   test("LastRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val friday = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
+    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
 
-    val lastFieldRI = LastRI(interval, frInterval)
-    assert(lastFieldRI.start === LocalDateTime.of(2001, 5, 1, 0, 0, 0, 0))
-    assert(lastFieldRI.end === LocalDateTime.of(2001, 6, 1, 0, 0, 0, 0))
-
-    val lastUnitRI = LastRI(interval, urInterval)
-    assert(lastUnitRI.start === LocalDateTime.of(2002, 3, 21, 0, 0, 0, 0))
-    assert(lastUnitRI.end === LocalDateTime.of(2002, 3, 22, 0, 0, 0, 0))
-
-    assert(
-      LastRI(SimpleInterval.of(2017, 7, 7), RepeatingUnit(ChronoUnit.DAYS))
-        === SimpleInterval.of(2017, 7, 6))
-    assert(
-      LastRI(SimpleInterval.of(2017, 7, 7), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
-        === SimpleInterval.of(2017, 6, 30))
-
-    assert(
-      LastRI(SimpleInterval.of(2017, 7, 8), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
-        === SimpleInterval.of(2017, 7, 7))
-    assert(
-      LastRI(SimpleInterval.of(2017, 7, 6), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
-        === SimpleInterval.of(2017, 6, 30))
+    assert(LastRI(interval, may) === SimpleInterval.of(2001, 5))
+    assert(LastRI(interval, day) === SimpleInterval.of(2002, 3, 21))
+    assert(LastRI(SimpleInterval.of(2017, 7, 7), day) === SimpleInterval.of(2017, 7, 6))
+    // July 7, 2017 is a Friday
+    assert(LastRI(SimpleInterval.of(2017, 7, 7), friday) === SimpleInterval.of(2017, 6, 30))
+    assert(LastRI(SimpleInterval.of(2017, 7, 8), friday) === SimpleInterval.of(2017, 7, 7))
+    assert(LastRI(SimpleInterval.of(2017, 7, 6), friday) === SimpleInterval.of(2017, 6, 30))
 
     // January 2nd is the first Monday of 2017
     val lastWeek = LastRI(SimpleInterval.of(2017, 1, 9), RepeatingUnit(ChronoUnit.WEEKS))
     assert(lastWeek.start === LocalDateTime.of(2017, 1, 2, 0, 0))
     assert(lastWeek.end === LocalDateTime.of(2017, 1, 9, 0, 0))
-  }
 
-  test("LastFromEndRI") {
-    assert(
-      LastFromEndRI(SimpleInterval.of(2017, 7, 7), RepeatingUnit(ChronoUnit.DAYS))
-        === SimpleInterval.of(2017, 7, 7))
-    assert(
-      LastFromEndRI(SimpleInterval.of(2017, 7, 7), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
-        === SimpleInterval.of(2017, 7, 7))
-
-    assert(
-      LastFromEndRI(SimpleInterval.of(2017, 7, 8), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
-        === SimpleInterval.of(2017, 7, 7))
-    assert(
-      LastFromEndRI(SimpleInterval.of(2017, 7, 6), RepeatingField(ChronoField.DAY_OF_WEEK, 5))
-        === SimpleInterval.of(2017, 6, 30))
+    assert(LastRI(SimpleInterval.of(2017, 7, 7), day, from=Interval.End) === SimpleInterval.of(2017, 7, 7))
+    // July 7, 2017 is a Friday
+    assert(LastRI(SimpleInterval.of(2017, 7, 7), friday, from=Interval.End) === SimpleInterval.of(2017, 7, 7))
+    assert(LastRI(SimpleInterval.of(2017, 7, 8), friday, from=Interval.End) === SimpleInterval.of(2017, 7, 7))
+    assert(LastRI(SimpleInterval.of(2017, 7, 6), friday, from=Interval.End) === SimpleInterval.of(2017, 6, 30))
   }
 
   test("LastRIs") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
     //Expected: Sequence(May 2001, May 2000, May 1999)
-    val lastFieldRIs = LastRIs(interval, frInterval, 3)
-    assert(lastFieldRIs.size == 3)
-
-    assert(lastFieldRIs(0).start === LocalDateTime.of(2001, 5, 1, 0, 0))
-    assert(lastFieldRIs(0).end === LocalDateTime.of(2001, 6, 1, 0, 0))
-
-    assert(lastFieldRIs(1).start === LocalDateTime.of(2000, 5, 1, 0, 0))
-    assert(lastFieldRIs(1).end === LocalDateTime.of(2000, 6, 1, 0, 0))
-
-    assert(lastFieldRIs(2).start === LocalDateTime.of(1999, 5, 1, 0, 0))
-    assert(lastFieldRIs(2).end === LocalDateTime.of(1999, 6, 1, 0, 0))
+    assert(LastRIs(interval, may, 3) === SimpleIntervals(2001 to 1999 by -1 map(y => SimpleInterval.of(y, 5))))
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //UnitRI: Days
     //Expected: Sequence(March 21, March 20, March 19, March 18, March 17 of 2002)
-    val lastUnitRIs = LastRIs(interval, urInterval, 5)
-    assert(lastUnitRIs.size === 5)
+    assert(LastRIs(interval, day, 5) === SimpleIntervals(21 to 17 by -1 map(d => SimpleInterval.of(2002, 3, d))))
 
-    assert(lastUnitRIs(0).start === LocalDateTime.of(2002, 3, 21, 0, 0))
-    assert(lastUnitRIs(0).end === LocalDateTime.of(2002, 3, 22, 0, 0))
-
-    assert(lastUnitRIs(1).start === LocalDateTime.of(2002, 3, 20, 0, 0))
-    assert(lastUnitRIs(1).end === LocalDateTime.of(2002, 3, 21, 0, 0))
-
-    assert(lastUnitRIs(2).start === LocalDateTime.of(2002, 3, 19, 0, 0))
-    assert(lastUnitRIs(2).end === LocalDateTime.of(2002, 3, 20, 0, 0))
-
-    assert(lastUnitRIs(3).start === LocalDateTime.of(2002, 3, 18, 0, 0))
-    assert(lastUnitRIs(3).end === LocalDateTime.of(2002, 3, 19, 0, 0))
-
-    assert(lastUnitRIs(4).start === LocalDateTime.of(2002, 3, 17, 0, 0))
-    assert(lastUnitRIs(4).end === LocalDateTime.of(2002, 3, 18, 0, 0))
+    assert(LastRIs(interval, day, 1, from=Interval.End) === SimpleIntervals(Seq(SimpleInterval.of(2003, 5, 9))))
   }
 
   test("NextRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
 
-    val nextFieldRI = NextRI(interval, frInterval)
-    assert(nextFieldRI.start === LocalDateTime.of(2004, 5, 1, 0, 0, 0, 0))
-    assert(nextFieldRI.end === LocalDateTime.of(2004, 6, 1, 0, 0, 0, 0))
-
-    val nextUnitRI = NextRI(interval, urInterval)
-    assert(nextUnitRI.start === LocalDateTime.of(2003, 5, 11, 0, 0, 0, 0))
-    assert(nextUnitRI.end === LocalDateTime.of(2003, 5, 12, 0, 0, 0, 0))
+    assert(NextRI(interval, may) === SimpleInterval.of(2004, 5))
+    assert(NextRI(interval, RepeatingUnit(ChronoUnit.DAYS)) === SimpleInterval.of(2003, 5, 11))
 
     // January 2nd is the first Monday of 2017
     val nextWeek = NextRI(SimpleInterval.of(2017, 1, 8), RepeatingUnit(ChronoUnit.WEEKS))
-    assert(nextWeek.start === LocalDateTime.of(2017, 1, 9, 0, 0))
-    assert(nextWeek.end === LocalDateTime.of(2017, 1, 16, 0, 0))
+    assert(nextWeek === SimpleInterval(LocalDateTime.of(2017, 1, 9, 0, 0), LocalDateTime.of(2017, 1, 16, 0, 0)))
+
+    assert(NextRI(interval, may, from=Interval.Start) === SimpleInterval.of(2002, 5))
   }
 
   test("NextRIs") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
     //Expected: Sequence(May 2004, May 2005, May 2006)
-    val nextFieldRIs = NextRIs(interval, frInterval, 3)
-    assert(nextFieldRIs.size == 3)
-
-    assert(nextFieldRIs(0).start === LocalDateTime.of(2004, 5, 1, 0, 0))
-    assert(nextFieldRIs(0).end === LocalDateTime.of(2004, 6, 1, 0, 0))
-
-    assert(nextFieldRIs(1).start === LocalDateTime.of(2005, 5, 1, 0, 0))
-    assert(nextFieldRIs(1).end === LocalDateTime.of(2005, 6, 1, 0, 0))
-
-    assert(nextFieldRIs(2).start === LocalDateTime.of(2006, 5, 1, 0, 0))
-    assert(nextFieldRIs(2).end === LocalDateTime.of(2006, 6, 1, 0, 0))
+    assert(NextRIs(interval, may, 3) === SimpleIntervals(2004 to 2006 map(y => SimpleInterval.of(y, 5))))
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //UnitRI: Days
     //Expected: Sequence(May 11, May 12, May 13, May 14, May 15 of 2003)
-    val nextUnitRIs = NextRIs(interval, urInterval, 5)
-    assert(nextUnitRIs.size == 5)
+    assert(NextRIs(interval, day, 5) === SimpleIntervals(11 to 15 map(d => SimpleInterval.of(2003, 5, d))))
 
-    assert(nextUnitRIs(0).start === LocalDateTime.of(2003, 5, 11, 0, 0))
-    assert(nextUnitRIs(0).end === LocalDateTime.of(2003, 5, 12, 0, 0))
-
-    assert(nextUnitRIs(1).start === LocalDateTime.of(2003, 5, 12, 0, 0))
-    assert(nextUnitRIs(1).end === LocalDateTime.of(2003, 5, 13, 0, 0))
-
-    assert(nextUnitRIs(2).start === LocalDateTime.of(2003, 5, 13, 0, 0))
-    assert(nextUnitRIs(2).end === LocalDateTime.of(2003, 5, 14, 0, 0))
-
-    assert(nextUnitRIs(3).start === LocalDateTime.of(2003, 5, 14, 0, 0))
-    assert(nextUnitRIs(3).end === LocalDateTime.of(2003, 5, 15, 0, 0))
-
-    assert(nextUnitRIs(4).start === LocalDateTime.of(2003, 5, 15, 0, 0))
-    assert(nextUnitRIs(4).end === LocalDateTime.of(2003, 5, 16, 0, 0))
+    assert(
+      NextRIs(interval, day, 3, from=Interval.Start)
+        === SimpleIntervals(23 to 25 map(d => SimpleInterval.of(2002, 3, d))))
   }
 
   test("AfterRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
 
-    var afterFieldRI = AfterRI(interval, frInterval)
-    assert(afterFieldRI.start === LocalDateTime.of(2004, 5, 1, 0, 0, 0, 0))
-    assert(afterFieldRI.end === LocalDateTime.of(2004, 6, 1, 0, 0, 0, 0))
+    assert(AfterRI(interval, may) === SimpleInterval.of(2004, 5))
+    assert(AfterRI(interval, may, 10) === SimpleInterval.of(2013, 5))
+    assert(AfterRI(interval, day) === SimpleInterval.of(2003, 5, 11))
+    assert(AfterRI(interval, day, 11) === SimpleInterval.of(2003, 5, 21))
 
-    afterFieldRI = AfterRI(interval, frInterval, 10)
-    assert(afterFieldRI.start === LocalDateTime.of(2013, 5, 1, 0, 0, 0, 0))
-    assert(afterFieldRI.end === LocalDateTime.of(2013, 6, 1, 0, 0, 0, 0))
-
-    var afterUnitRI = AfterRI(interval, urInterval)
-    assert(afterUnitRI.start === LocalDateTime.of(2003, 5, 11, 0, 0, 0, 0))
-    assert(afterUnitRI.end === LocalDateTime.of(2003, 5, 12, 0, 0, 0, 0))
-
-    afterUnitRI = AfterRI(interval, urInterval, 11)
-    assert(afterUnitRI.start === LocalDateTime.of(2003, 5, 21, 0, 0, 0, 0))
-    assert(afterUnitRI.end === LocalDateTime.of(2003, 5, 22, 0, 0, 0, 0))
+    assert(AfterRI(interval, may, from=Interval.Start) === SimpleInterval.of(2002, 5))
+    assert(AfterRI(interval, day, from=Interval.Start) === SimpleInterval.of(2002, 3, 23))
   }
 
   test("BeforeRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
 
-    var beforeFieldRI = BeforeRI(interval, frInterval)
-    assert(beforeFieldRI.start === LocalDateTime.of(2001, 5, 1, 0, 0, 0, 0))
-    assert(beforeFieldRI.end === LocalDateTime.of(2001, 6, 1, 0, 0, 0, 0))
+    assert(BeforeRI(interval, may) === SimpleInterval.of(2001, 5))
+    assert(BeforeRI(interval, may, 5) === SimpleInterval.of(1997, 5))
+    assert(BeforeRI(interval, day) === SimpleInterval.of(2002, 3, 21))
+    assert(BeforeRI(interval, day, 20) === SimpleInterval.of(2002, 3, 2))
 
-    beforeFieldRI = BeforeRI(interval, frInterval, 5)
-    assert(beforeFieldRI.start === LocalDateTime.of(1997, 5, 1, 0, 0))
-    assert(beforeFieldRI.end === LocalDateTime.of(1997, 6, 1, 0, 0))
-
-    var beforeUnitRI = BeforeRI(interval, urInterval)
-    assert(beforeUnitRI.start === LocalDateTime.of(2002, 3, 21, 0, 0, 0, 0))
-    assert(beforeUnitRI.end === LocalDateTime.of(2002, 3, 22, 0, 0, 0, 0))
-
-    beforeUnitRI = BeforeRI(interval, urInterval, 20)
-    assert(beforeUnitRI.start === LocalDateTime.of(2002, 3, 2, 0, 0, 0, 0))
-    assert(beforeUnitRI.end === LocalDateTime.of(2002, 3, 3, 0, 0, 0, 0))
+    assert(BeforeRI(interval, may, from=Interval.End) === SimpleInterval.of(2002, 5))
+    assert(BeforeRI(interval, day, from=Interval.End) === SimpleInterval.of(2003, 5, 9))
   }
 
   test("NthFromStartRI") {

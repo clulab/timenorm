@@ -116,6 +116,14 @@ trait Interval extends TimeExpression {
 
 object Interval {
   def unapply(interval: Interval): Option[(LocalDateTime, LocalDateTime)] = Some(interval.start, interval.end)
+
+  sealed trait Point extends (Interval => LocalDateTime)
+  case object Start extends Point {
+    override def apply(interval: Interval): LocalDateTime = interval.start
+  }
+  case object End extends Point {
+    override def apply(interval: Interval): LocalDateTime = interval.end
+  }
 }
 
 trait Intervals extends TimeExpression with Seq[Interval] {
@@ -289,7 +297,8 @@ trait IRIN {
 }
 
 trait Last extends TimeExpression with IRIN {
-  lazy val intervals: Seq[Interval] = repeatingInterval.preceding(interval.start).take(integer).toSeq
+  val from: Interval => LocalDateTime
+  lazy val intervals: Seq[Interval] = repeatingInterval.preceding(from(interval)).take(integer).toSeq
 }
 
 /**
@@ -299,21 +308,11 @@ trait Last extends TimeExpression with IRIN {
   * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
-case class LastRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Last {
+case class LastRI(interval: Interval,
+                  repeatingInterval: RepeatingInterval,
+                  from: Interval.Point = Interval.Start) extends Interval with Last {
   val number = IntNumber(1)
   lazy val Seq(Interval(start, end)) = intervals
-}
-
-/**
-  * Finds the latest repeated interval that appears before the end of the given interval. Formally:
-  * Last([t1,t2): Interval, R: RepeatingInterval) = latest of {[t.start,t.end) ∈ R: t.end ≤ t2}
-  *
-  * @param interval          interval to begin from
-  * @param repeatingInterval RI that supplies the appropriate time intervals
-  */
-case class LastFromEndRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with IRIN {
-  val number = IntNumber(1)
-  lazy val Seq(Interval(start, end)) = repeatingInterval.preceding(interval.end).take(integer).toSeq
 }
 
 /**
@@ -324,7 +323,10 @@ case class LastFromEndRI(interval: Interval, repeatingInterval: RepeatingInterva
   * @param repeatingInterval RI that supplies the appropriate time intervals
   * @param number            the number of intervals ot take
   */
-case class LastRIs(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
+case class LastRIs(interval: Interval,
+                   repeatingInterval: RepeatingInterval,
+                   number: Number = IntNumber(1),
+                   from: Interval.Point = Interval.Start)
   extends Intervals with Last {
   // force the case class toString rather than Seq.toString
   override lazy val toString: String = scala.runtime.ScalaRunTime._toString(this)
@@ -344,7 +346,8 @@ case class NextP(interval: Interval, period: Period) extends Interval {
 }
 
 trait Next extends TimeExpression with IRIN {
-  lazy val intervals: Seq[Interval] = repeatingInterval.following(interval.end).take(integer).toSeq
+  val from: Interval => LocalDateTime
+  lazy val intervals: Seq[Interval] = repeatingInterval.following(from(interval)).take(integer).toSeq
 }
 
 /**
@@ -354,7 +357,9 @@ trait Next extends TimeExpression with IRIN {
   * @param interval          interval to begin from
   * @param repeatingInterval RI that supplies the appropriate time intervals
   */
-case class NextRI(interval: Interval, repeatingInterval: RepeatingInterval) extends Interval with Next {
+case class NextRI(interval: Interval,
+                  repeatingInterval: RepeatingInterval,
+                  from: Interval.Point = Interval.End) extends Interval with Next {
   val number = IntNumber(1)
   lazy val Seq(Interval(start, end)) = intervals
 }
@@ -367,8 +372,10 @@ case class NextRI(interval: Interval, repeatingInterval: RepeatingInterval) exte
   * @param repeatingInterval RI that supplies the appropriate time intervals
   * @param number            the number of repeated intervals to take
   */
-case class NextRIs(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
-  extends Intervals with Next {
+case class NextRIs(interval: Interval,
+                   repeatingInterval: RepeatingInterval,
+                   number: Number = IntNumber(1),
+                   from: Interval.Point = Interval.End) extends Intervals with Next {
   // force the case class toString rather than Seq.toString
   override lazy val toString: String = scala.runtime.ScalaRunTime._toString(this)
 }
@@ -401,9 +408,12 @@ case class BeforeP(interval: Interval, period: Period) extends Interval {
   * @param repeatingInterval RI that supplies the appropriate time intervals
   * @param number            the number of intervals to skip
   */
-case class BeforeRI(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
+case class BeforeRI(interval: Interval,
+                    repeatingInterval: RepeatingInterval,
+                    number: Number = IntNumber(1),
+                    from: Interval.Point = Interval.Start)
   extends Interval with IRIN {
-  lazy val Interval(start, end) = repeatingInterval.preceding(interval.start).drop(integer - 1).next
+  lazy val Interval(start, end) = repeatingInterval.preceding(from(interval)).drop(integer - 1).next
 }
 
 /**
@@ -433,9 +443,11 @@ case class AfterP(interval: Interval, period: Period) extends Interval {
   * @param interval          interval to start from
   * @param repeatingInterval repeating intervals to search over
   */
-case class AfterRI(interval: Interval, repeatingInterval: RepeatingInterval, number: Number = IntNumber(1))
-  extends Interval with IRIN {
-  lazy val Interval(start, end) = repeatingInterval.following(interval.end).drop(integer - 1).next
+case class AfterRI(interval: Interval,
+                   repeatingInterval: RepeatingInterval,
+                   number: Number = IntNumber(1),
+                   from: Interval.Point = Interval.End) extends Interval with IRIN {
+  lazy val Interval(start, end) = repeatingInterval.following(from(interval)).drop(integer - 1).next
 }
 
 /**

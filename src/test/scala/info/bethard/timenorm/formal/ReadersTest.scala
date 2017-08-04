@@ -269,7 +269,7 @@ class ReadersTest extends FunSuite with TypesSuite {
             <type>Last</type>
             <parentsType>Operator</parentsType>
             <properties>
-              <Semantics>Newswire</Semantics>
+              <Semantics>Interval-Included</Semantics>
               <Interval-Type>DocTime</Interval-Type>
               <Interval></Interval>
               <Period></Period>
@@ -284,7 +284,7 @@ class ReadersTest extends FunSuite with TypesSuite {
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(friday: RepeatingInterval, last: LastFromEndRI) => assert (last === SimpleInterval(start, start.plusDays(1)))
+      case Seq(friday: RepeatingInterval, last: LastRI) => assert (last === SimpleInterval(start, start.plusDays(1)))
       case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
     }
   }
