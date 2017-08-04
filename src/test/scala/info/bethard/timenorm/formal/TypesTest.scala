@@ -1004,7 +1004,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(UnknownPeriod.isDefined === false)
     assert(SumP(Set(threeDays, threeDays)).isDefined === true)
     assert(SumP(Set(threeDays, UnknownPeriod)).isDefined === false)
-    assert(LastRI(DocumentCreationTime, fridays).isDefined === false)
+    assert(LastRI(SimpleInterval.of(1998, 2, 16), fridays).isDefined === true)
     assert(AfterRI(Year(1965), fridays).isDefined === true)
   }
 
