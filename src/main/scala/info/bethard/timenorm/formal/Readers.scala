@@ -1,13 +1,17 @@
 package info.bethard.timenorm.formal
 
-import java.time.{DayOfWeek, Month}
+import java.time.{DayOfWeek, Month, LocalDateTime}
 import java.time.temporal.{IsoFields, WeekFields, ChronoField, ChronoUnit}
 
 import info.bethard.anafora.{Properties, Data, Entity}
 import info.bethard.timenorm.field._
 
 object AnaforaReader {
-  class Exception(message: String) extends java.lang.Exception(message)
+    class Exception(message: String) extends java.lang.Exception(message)
+}
+
+class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
+
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text)
@@ -76,7 +80,7 @@ object AnaforaReader {
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
       case "Link" => interval(properties.entity(prefix + "Interval"))
-      case "DocTime" => DocumentCreationTime
+      case "DocTime" => DCT
       case "Unknown" => UnknownInterval
     }
 
@@ -226,7 +230,9 @@ object AnaforaReader {
     }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
-      case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
+      //case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
+      case subEntities => IntersectionRI(Set(result) ++ Set(repeatingInterval(subEntities.head)))  // Only take the first SubInterval. If there are more than one the should be equivalent.
+
     })
   }
 
