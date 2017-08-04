@@ -1038,8 +1038,8 @@ class TypesTest extends FunSuite with TypesSuite {
   }
 
   test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
-      assert(
-        NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
+    assert(
+      NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
         === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
   }
 }
