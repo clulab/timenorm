@@ -997,29 +997,16 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(mar31.following(startOf1980).next === SimpleInterval.of(1980, 3, 31))
   }
 
-/*
-    intersectRI = Intersection(
-      Set(
-        RepeatingField(ChronoField.DAY_OF_WEEK, 1, Modifier.Exact),
-        RepeatingField(NIGHT_OF_DAY, 1, Modifier.Exact))
-    )
-    following = intersectRI.following(interval.end)
-    next = following.next
-    assert(next.start === LocalDateTime.of(2017, 1, 13, 0,0 ))
-
-    }
-*/
-
-//  test("isDefined") {
-//    val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
-//    val fridays = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
-//    assert(threeDays.isDefined === true)
-//    assert(UnknownPeriod.isDefined === false)
-//    assert(SumP(Set(threeDays, threeDays)).isDefined === true)
-//    assert(SumP(Set(threeDays, UnknownPeriod)).isDefined === false)
-//    assert(LastRI(DocumentCreationTime, fridays).isDefined === false)
-//    assert(AfterRI(Year(1965), fridays).isDefined === true)
-//  }
+  test("isDefined") {
+    val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
+    val fridays = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
+    assert(threeDays.isDefined === true)
+    assert(UnknownPeriod.isDefined === false)
+    assert(SumP(Set(threeDays, threeDays)).isDefined === true)
+    assert(SumP(Set(threeDays, UnknownPeriod)).isDefined === false)
+    assert(LastRI(SimpleInterval.of(1998, 2, 16), fridays).isDefined === true)
+    assert(AfterRI(Year(1965), fridays).isDefined === true)
+  }
 
   test("PRI19980216.2000.0170 (349,358) last week") {
     assert(
@@ -1029,7 +1016,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
   test("APW19980322.0749 (988,994) Monday") {
     assert(
-      NextRI(SimpleInterval.of(1998, 3, 22), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
+      NextRI(SimpleInterval.of(1998, 3, 22, 14, 57), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
         === SimpleInterval.of(1998, 3, 23))
   }
 
@@ -1050,11 +1037,10 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(NextRI(SimpleInterval.of(1989, 11, 12), nov13) === SimpleInterval.of(1989, 11, 13))
   }
 
-  test("69@e@APW19980306.1001@isma5916 (1705,1711) Friday")
-  {
-    assert(
-    LastRI(SimpleInterval.of(1998, 3, 6, 13, 19), RepeatingField(ChronoField.DAY_OF_WEEK,  5))
-    === SimpleInterval.of(1998, 3, 6))
+  test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
+      assert(
+        NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
+        === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
   }
 }
 

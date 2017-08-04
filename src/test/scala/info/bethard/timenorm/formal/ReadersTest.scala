@@ -236,7 +236,7 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>.convert
     implicit val data = Data(xml, "19980331")
-    val start = LocalDateTime.now().truncatedTo(DAYS)
+    val start = LocalDateTime.of(1998, 3, 31, 0, 0)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
@@ -279,12 +279,12 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>.convert
     implicit val data = Data(xml, "Friday")
-    val start = LocalDateTime.now().truncatedTo(DAYS)
+    val start = LocalDateTime.of(1998, 3, 6, 0, 0)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(friday: RepeatingInterval, last: LastFromEndRI) => assert(!last.isDefined)
+      case Seq(friday: RepeatingInterval, last: LastFromEndRI) => assert (last === SimpleInterval(start, start.plusDays(1)))
       case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
     }
   }
