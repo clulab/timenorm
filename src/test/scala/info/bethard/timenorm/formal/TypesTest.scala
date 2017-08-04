@@ -1029,7 +1029,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
   test("APW19980322.0749 (988,994) Monday") {
     assert(
-      NextRI(DocumentCreationTime(SimpleInterval.of(1998, 3, 22)), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
+      NextRI(SimpleInterval.of(1998, 3, 22), RepeatingField(ChronoField.DAY_OF_WEEK, 1))
         === SimpleInterval.of(1998, 3, 23))
   }
 
@@ -1048,12 +1048,6 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(NextRI(SimpleInterval.of(1989, 11, 2), nov13) === SimpleInterval.of(1989, 11, 13))
     assert(LastRI(SimpleInterval.of(1989, 11, 14), nov13) === SimpleInterval.of(1989, 11, 13))
     assert(NextRI(SimpleInterval.of(1989, 11, 12), nov13) === SimpleInterval.of(1989, 11, 13))
-  }
-
-  test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
-    assert(
-      NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
-        === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
   }
 
   test("69@e@APW19980306.1001@isma5916 (1705,1711) Friday")
