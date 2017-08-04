@@ -10,9 +10,7 @@ object AnaforaReader {
     class Exception(message: String) extends java.lang.Exception(message)
 }
 
-class AnaforaReader(dct: SimpleInterval)(implicit data: Data) {
-
-  val DCT = dct
+class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
 
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
