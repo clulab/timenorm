@@ -1,6 +1,8 @@
 package info.bethard.timenorm.formal
 
+import java.time.LocalDateTime
 import java.time.temporal.ChronoField
+import java.time.temporal.ChronoUnit.{DAYS}
 
 import com.codecommit.antixml._
 import info.bethard.anafora.Data
@@ -66,7 +68,11 @@ class ReadersTest extends FunSuite with TypesSuite {
         |</data>
       """.stripMargin)
     implicit val data = new Data(elem, "2000-10-25 noon")
-    val temporals = data.entities.map(AnaforaReader.temporal)
+
+    val dct = SimpleInterval.of(1998, 2, 13, 15, 44)
+    var aReader = new AnaforaReader(dct)
+
+    val temporals = data.entities.map(aReader.temporal)
     temporals match {
       case Seq(year: Interval, _: RepeatingInterval, _: RepeatingInterval, noon: RepeatingField) =>
         assert(year === SimpleInterval.of(2000, 10, 25, 12, 0))
@@ -126,7 +132,11 @@ class ReadersTest extends FunSuite with TypesSuite {
     </data>.convert
 
     implicit val data = Data(xml, "first nine months of 1997")
-    val temporals = data.entities.map(AnaforaReader.temporal)
+
+    val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+
+    val temporals = data.entities.map(aReader.temporal)
     temporals match {
       case Seq(nth: NthFromStartRIs, number: Number, month: RepeatingInterval, year: Year) =>
         assert(nth === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
@@ -174,7 +184,10 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>.convert
     implicit val data = Data(xml, "last few months")
-    val temporals = data.entities.map(AnaforaReader.temporal)
+    val start = LocalDateTime.now().truncatedTo(DAYS)
+    val dct = SimpleInterval(start, start.plusDays(1))
+    val aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
     temporals match {
       case Seq(last: Last, _: Number, _: RepeatingInterval) => assert(!last.isDefined)
       case _ => fail("expected Seq(last: Last, number: N, month: RI), found " + temporals)
@@ -223,7 +236,10 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>.convert
     implicit val data = Data(xml, "19980331")
-    val temporals = data.entities.map(AnaforaReader.temporal)
+    val start = LocalDateTime.now().truncatedTo(DAYS)
+    val dct = SimpleInterval(start, start.plusDays(1))
+    val aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
     temporals match {
       case Seq(year: Interval, _: RepeatingInterval, _: RepeatingInterval) =>
         assert(year === SimpleInterval.of(1998, 3, 31))
@@ -263,7 +279,10 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>.convert
     implicit val data = Data(xml, "Friday")
-    val temporals = data.entities.map(AnaforaReader.temporal)
+    val start = LocalDateTime.now().truncatedTo(DAYS)
+    val dct = SimpleInterval(start, start.plusDays(1))
+    val aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
     temporals match {
       case Seq(friday: RepeatingInterval, last: LastFromEndRI) => assert(!last.isDefined)
       case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
