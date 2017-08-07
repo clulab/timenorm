@@ -44,7 +44,7 @@ object TimeNormScorer {
      val datetime = dctString.split("T")
       if (datetime.size == 2) {
         val YMD = datetime(0).split("-").map(_.toString.toInt)
-        val HMS = datetime(0).split(":").map(_.toString.toInt)
+        val HMS = datetime(1).split(":").map(_.toString.toInt)
         if (YMD.size < 3 || HMS.size == 0)
           throw new  Exception("DCT malformed")
         if (HMS.size == 3)
