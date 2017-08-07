@@ -11,9 +11,9 @@ import info.bethard.timenorm.TimeSpan
 import info.bethard.timenorm.formal.{Interval, Intervals, ThisRIs, TimeExpression, _}
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
-import info.bethard.anafora.{Annotation, Data, Entity, Properties}
-import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_timex_interval, epoch, get_range_limmits, parseDCT, dctInterval, compact_intervals}
 
+import info.bethard.anafora.{Annotation, Data, Entity, Properties}
+import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_intervals_timex, epoch, datetime, parseDCT, dctInterval, compact_intervals, get_range_limmits}
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit
@@ -21,6 +21,7 @@ import java.time.LocalDateTime
 import java.time.Instant
 
 object TimeMLScorer {
+
 
   def get_intervals(timespan: TimeSpan): Seq[Interval] = {
     var intervals: Seq[Interval] = List(SimpleInterval(timespan.start.toLocalDateTime(), timespan.end.toLocalDateTime()))
@@ -152,7 +153,7 @@ object TimeMLScorer {
           try {
             val temporal = aReader.temporal(entity)
             if (temporal.isInstanceOf[Interval] || temporal.isInstanceOf[Intervals]) {
-              val intervals = get_timex_interval(temporal)
+              val intervals = get_intervals_timex(temporal)
               intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
               gs :+= (entity, temporal, intervals)
             }
