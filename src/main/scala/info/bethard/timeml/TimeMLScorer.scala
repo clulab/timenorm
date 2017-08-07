@@ -133,8 +133,8 @@ object TimeMLScorer {
     var sum_sys = 0
     for (xmlFile <- allTimeNormFiles(new File(dir))) {
       val fileName = xmlFile.getName.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
-      val textPath = textDir + "/" + fileName
-      val dctPath = dctDir + "/" + fileName
+      val textPath = textDir + "/" + fileName + "/" + fileName + ".txt"
+      val dctPath = dctDir + "/" + fileName + ".dct"
       val outPath = outDir + "/" + fileName
       printf("Document: %s\n",fileName)
 
