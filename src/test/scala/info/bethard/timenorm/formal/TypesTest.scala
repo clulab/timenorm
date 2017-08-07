@@ -1008,6 +1008,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(AfterRI(Year(1965), fridays).isDefined === true)
   }
 
+
   test("PRI19980216.2000.0170 (349,358) last week") {
     assert(
       LastRI(SimpleInterval.of(1998, 2, 16), RepeatingUnit(ChronoUnit.WEEKS))
