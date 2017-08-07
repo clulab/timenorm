@@ -18,6 +18,7 @@ object ParseAnaforaXMLs {
       val textPath = xmlFile.getPath.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       println(xmlFile)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
+
       val start = LocalDateTime.now().truncatedTo(DAYS)
       val dct = SimpleInterval(start, start.plusDays(1))
       val aReader = new AnaforaReader(dct)

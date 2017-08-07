@@ -1,19 +1,29 @@
 package info.bethard.anafora
 
 import com.codecommit.antixml.Elem
-import com.codecommit.antixml.{ text => ElemText }
+import com.codecommit.antixml.{text => ElemText}
 import com.codecommit.antixml.XML
-
+import com.codecommit.antixml.*
 
 object Data {
-  def fromPaths(xmlPath: String, textPath: String) = apply(
-    XML.fromSource(io.Source.fromFile(xmlPath)),
-    io.Source.fromFile(textPath).mkString)
-  def apply(xml: Elem, text: String) = new Data(xml, text)
+  def fromPaths(xmlPath: String, textPath: Option[String]) = textPath match {
+    case None => apply(
+      XML.fromSource(io.Source.fromFile(xmlPath)),
+      None
+    )
+    case Some(textPath) => apply(
+      XML.fromSource(io.Source.fromFile(xmlPath)),
+      Some(io.Source.fromFile(textPath).mkString))
+  }
+  def apply(xml: Elem, text: Option[String]) = text match {
+    case None => new Data(xml, None)
+    case Some(text) => new Data(xml, Some(text.replaceAll("(\r\n)|\r|\n", "\n")))
+  }
 }
-class Data(xml: Elem, val text: String) {
+class Data(xml: Elem, val text: Option[String]) {
   lazy val entities: IndexedSeq[Entity] = xml \ "annotations" \ "entity" map Entity.apply
   lazy val relations: IndexedSeq[Relation] = xml \ "annotations" \ "relation" map Relation.apply
+  lazy val topEntities : IndexedSeq[Entity] = this.entities.filter(x => !(xml \\ "properties" \ * \ ElemText contains(x.id)))
   private[anafora] lazy val idToEntity: Map[String, Entity] = this.entities.map(e => e.id -> e)(scala.collection.breakOut)
   private[anafora] lazy val idToRelation: Map[String, Relation] = this.relations.map(r => r.id -> r)(scala.collection.breakOut)
 }
@@ -39,9 +49,34 @@ class Entity(xml: Elem) extends Annotation(xml) {
       case Array(start, end) => (start, end)
     }).sorted
   lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
-  def text(implicit data: Data): String = spans.map{
-    case (start, end) => data.text.substring(start, end)
-  }.mkString("...")
+  def text(implicit data: Data): Option[String] = data.text match {
+    case None => None
+    case Some(text) => Some( spans.map{
+      case (start, end) => text.substring(start, end)
+    }.mkString("..."))
+  }
+  private def recursiveSpan(entity: Entity, start: Int, end: Int)(implicit data:Data): (Int, Int) = {
+    var newStart: Int = start
+    var newEnd: Int = end
+    for (result <- entity.xml  \ "properties" \ * \ ElemText map (p => data.entities filter (e => e.id == p))) {
+      if (result.length > 0) for (childEntity <- result) {
+        newStart = List(newStart, childEntity.fullSpan._1).min
+        newEnd = List(newEnd, childEntity.fullSpan._2).max
+        recursiveSpan(childEntity, newStart, newEnd) match {
+          case (x, y) => newStart = x; newEnd = y
+          case _ =>
+        }
+      }
+    }
+    (newStart, newEnd)
+  }
+  def expandedSpan(implicit data: Data): (Int, Int) = recursiveSpan(this, fullSpan._1, fullSpan._2)
+  def expandedText(implicit data: Data): Option[String] = data.text match {
+    case None => None
+    case Some(text) => Some( {val (start, end) = expandedSpan
+                    text.substring(start, end)
+                    }.mkString("..."))
+  }
   def entityDescendants(implicit data: Data): IndexedSeq[Entity] = {
     val childTexts = this.properties.xml.children \ ElemText
     val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)
