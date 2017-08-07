@@ -68,26 +68,6 @@ class Entity(xml: Elem) extends Annotation(xml) {
     val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)
     IndexedSeq(this) ++ childEntities.flatMap(_.entityDescendants)
   }
-  private def recursiveSpan(entity: Entity, start: Int, end: Int)(implicit data:Data): (Int, Int) = {
-    var newStart: Int = start
-    var newEnd: Int = end
-    for (result <- entity.xml  \ "properties" \ * \ ElemText map (p => data.entities filter (e => e.id == p))) {
-      if (result.length > 0) for (childEntity <- result) {
-        newStart = List(newStart, childEntity.fullSpan._1).min
-        newEnd = List(newEnd, childEntity.fullSpan._2).max
-        recursiveSpan(childEntity, newStart, newEnd) match {
-          case (x, y) => newStart = x; newEnd = y
-          case _ =>
-        }
-      }
-    }
-    (newStart, newEnd)
-  }
-  def expandedSpan(implicit data: Data): (Int, Int) = recursiveSpan(this, fullSpan._1, fullSpan._2)
-  def expandedText(implicit data: Data): String = {
-    val (start, end) = expandedSpan
-    data.text.substring(start, end)
-  }.mkString
 }
 
 object Relation {
