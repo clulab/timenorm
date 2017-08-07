@@ -18,8 +18,9 @@ object ParseAnaforaXMLs {
       val textPath = xmlFile.getPath.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       println(xmlFile)
       implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
-      val dctString = LocalDateTime.now().toString
-      val dct = parseDCT(dctString)
+
+      val start = LocalDateTime.now().truncatedTo(DAYS)
+      val dct = SimpleInterval(start, start.plusDays(1))
       val aReader = new AnaforaReader(dct)
       for (entity <- data.entities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
         printf("\"%s\"[%s] ", entity.text, entity.spans.map(t => "%s,%s".format(t._1, t._2)).toSeq.sorted.mkString(";"))
