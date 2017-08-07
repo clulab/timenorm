@@ -140,6 +140,21 @@ object TimeNormScorer {
       val outPath = outDir + "/" + fileName + "/" + xmlFile.getName
       println(xmlFile)
 
+
+      val dctString = io.Source.fromFile(dctPath).getLines.toList(0)
+      val dctSeq: Seq[Int] = parseDCT(dctString)
+      val dct: SimpleInterval = dctSeq.size match {
+        case 1 => SimpleInterval.of(dctSeq(0))
+        case 2 => SimpleInterval.of(dctSeq(0), dctSeq(1))
+        case 3 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2))
+        case 4 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3))
+        case 5 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4))
+        case 6 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4), dctSeq(5))
+        case _ => throw new  Exception("DCT malformed")
+      }
+      printf("DCT: %s\n\n",dctString)
+
+      println("Intervals in Gold:")
       try {
         var gs: List[Tuple3[Entity, TimeExpression, Seq[Interval]]] = Nil
         val gsdata = Data.fromPaths(xmlFile.getPath, textPath)

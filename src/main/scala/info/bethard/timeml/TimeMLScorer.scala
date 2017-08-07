@@ -52,6 +52,66 @@ object TimeMLScorer {
     case _ => (LocalDateTime.now.withDayOfMonth(1), LocalDateTime.now.plusMonths(1).withDayOfMonth(1))
   }
 
+
+  def parseDCT(dctString: String): Seq[Int] = {
+    val datetime = dctString.split("T")
+    if (datetime.size == 2) {
+      val YMD = datetime(0).split("-").map(_.toString.toInt)
+      val HMS = datetime(1).split(":").map(_.toString.toInt)
+      if (YMD.size < 3 || HMS.size == 0)
+        throw new  Exception("DCT malformed")
+      if (HMS.size == 3)
+        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1),HMS(2))
+        return Seq(YMD(0),YMD(1),YMD(2))
+      else if (HMS.size == 2)
+        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1))
+        return Seq(YMD(0),YMD(1),YMD(2))
+      else
+        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0))
+        return Seq(YMD(0),YMD(1),YMD(2))
+    } else {
+      val YMD = datetime(0).split("-").map(_.toString.toInt)
+      if (YMD.size == 0)
+        throw new  Exception("DCT malformed")
+      if (YMD.size == 3)
+        return Seq(YMD(0),YMD(1),YMD(2))
+      else if (YMD.size == 2)
+        return Seq(YMD(0),YMD(1))
+      else
+        return Seq(YMD(0))
+    }
+  }
+
+  def compact_intervals(intervals: Seq[Interval]): Seq[Interval] = {
+    var compactIntervals: Seq[Interval] = Seq ()
+    if (intervals.size != 0) {
+      for (Interval (start, end) <- intervals) {
+        var newCompact: Seq[Interval] = Seq ()
+        var startZone = epoch (start)
+        var endZone = epoch (end)
+
+        for (Interval (cStart, cEnd) <- compactIntervals) {
+          val cStartZone = epoch (cStart)
+          val cEndZone = epoch (cEnd)
+          val maxStart = Math.max (startZone, cStartZone)
+          val minEnd = Math.min (endZone, cEndZone)
+
+          if (minEnd > maxStart) {
+            val minStart = Math.min (startZone, cStartZone)
+            val maxEnd = Math.max (endZone, cEndZone)
+            startZone = minStart
+            endZone = maxEnd
+          } else {
+            newCompact :+= SimpleInterval (cStart, cEnd)
+          }
+        }
+        newCompact :+= SimpleInterval (datetime (startZone), datetime (endZone) )
+        compactIntervals = newCompact
+      }
+    }
+    return compactIntervals
+  }
+
   def score(gsTimex: TimeExpression, gsIntervs: Seq[Interval], sysTimex: TimeSpan, sysIntervs: Seq[Interval]): (Double, Double) = {
 
     var gsIntervals = gsIntervs
@@ -156,6 +216,21 @@ object TimeMLScorer {
       val outPath = outDir + "/" + fileName
       println(xmlFile)
 
+
+      val dctString = io.Source.fromFile(dctPath).getLines.toList(0)
+      val dctSeq: Seq[Int] = parseDCT(dctString)
+      val dct: SimpleInterval = dctSeq.size match {
+        case 1 => SimpleInterval.of(dctSeq(0))
+        case 2 => SimpleInterval.of(dctSeq(0), dctSeq(1))
+        case 3 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2))
+        case 4 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3))
+        case 5 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4))
+        case 6 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4), dctSeq(5))
+        case _ => throw new  Exception("DCT malformed")
+      }
+      printf("DCT: %s\n\n",dctString)
+
+      println("Intervals in Gold:")
       try {
         var gs: List[Tuple3[Entity, TimeExpression, Seq[Interval]]] = Nil
         val gsdata = Data.fromPaths(xmlFile.getPath, textPath)
