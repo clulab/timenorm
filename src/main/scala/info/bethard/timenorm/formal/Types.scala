@@ -125,8 +125,19 @@ trait Intervals extends TimeExpression with Seq[Interval] {
   override def apply(idx: Int): Interval = intervals(idx)
 }
 
+<<<<<<< HEAD
 case class SimpleIntervals(intervals: Seq[Interval]) extends Intervals {
   val isDefined = true
+=======
+case class DocumentCreationTime(dct: SimpleInterval) extends Interval {
+  val isDefined = false
+
+  //def start = ???
+  def start = dct.start
+
+  //def end = ???
+  def end = dct.end
+>>>>>>> Time scorer for anafora and timeml
 }
 
 case object UnknownInterval extends Interval {

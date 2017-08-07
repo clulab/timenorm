@@ -12,7 +12,6 @@ object AnaforaReader {
 
 class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
 
-
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text)
     case value =>

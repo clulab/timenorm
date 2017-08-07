@@ -1,19 +1,20 @@
 package info.bethard.anafora
 
 import com.codecommit.antixml.Elem
-import com.codecommit.antixml.{ text => ElemText }
+import com.codecommit.antixml.{text => ElemText}
 import com.codecommit.antixml.XML
-
+import com.codecommit.antixml.*
 
 object Data {
   def fromPaths(xmlPath: String, textPath: String) = apply(
     XML.fromSource(io.Source.fromFile(xmlPath)),
     io.Source.fromFile(textPath).mkString)
-  def apply(xml: Elem, text: String) = new Data(xml, text)
+  def apply(xml: Elem, text: String) = new Data(xml, text.replaceAll("(\r\n)|\r|\n", "\n"))
 }
 class Data(xml: Elem, val text: String) {
   lazy val entities: IndexedSeq[Entity] = xml \ "annotations" \ "entity" map Entity.apply
   lazy val relations: IndexedSeq[Relation] = xml \ "annotations" \ "relation" map Relation.apply
+  lazy val topEntities : IndexedSeq[Entity] = this.entities.filter(x => !(xml \\ "properties" \ * \ ElemText contains(x.id)))
   private[anafora] lazy val idToEntity: Map[String, Entity] = this.entities.map(e => e.id -> e)(scala.collection.breakOut)
   private[anafora] lazy val idToRelation: Map[String, Relation] = this.relations.map(r => r.id -> r)(scala.collection.breakOut)
 }
@@ -47,6 +48,26 @@ class Entity(xml: Elem) extends Annotation(xml) {
     val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)
     IndexedSeq(this) ++ childEntities.flatMap(_.entityDescendants)
   }
+  private def recursiveSpan(entity: Entity, start: Int, end: Int)(implicit data:Data): (Int, Int) = {
+    var newStart: Int = start
+    var newEnd: Int = end
+    for (result <- entity.xml  \ "properties" \ * \ ElemText map (p => data.entities filter (e => e.id == p))) {
+      if (result.length > 0) for (childEntity <- result) {
+        newStart = List(newStart, childEntity.fullSpan._1).min
+        newEnd = List(newEnd, childEntity.fullSpan._2).max
+        recursiveSpan(childEntity, newStart, newEnd) match {
+          case (x, y) => newStart = x; newEnd = y
+          case _ =>
+        }
+      }
+    }
+    (newStart, newEnd)
+  }
+  def expandedSpan(implicit data: Data): (Int, Int) = recursiveSpan(this, fullSpan._1, fullSpan._2)
+  def expandedText(implicit data: Data): String = {
+    val (start, end) = expandedSpan
+    data.text.substring(start, end)
+  }.mkString
 }
 
 object Relation {
