@@ -122,10 +122,9 @@ object TimeMLScorer {
   val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
 
   def main(args: Array[String]): Unit = {
-    val textDir = args(0)
-    val dctDir = args(1)
-    val outDir = args(2)
-    val Array(dir) = args.drop(3)
+    val dctDir = args(0)
+    val outDir = args(1)
+    val Array(dir) = args.drop(2)
     var sum_precision: Double = 0
     var sum_recall: Double = 0
     var sum_cases = 0
@@ -133,7 +132,6 @@ object TimeMLScorer {
     var sum_sys = 0
     for (xmlFile <- allTimeNormFiles(new File(dir))) {
       val fileName = xmlFile.getName.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
-      val textPath = textDir + "/" + fileName + "/" + fileName + ".txt"
       val dctPath = dctDir + "/" + fileName + "/" + fileName + ".dct"
       val outPath = outDir + "/" + fileName
       printf("Document: %s\n",fileName)
@@ -146,7 +144,7 @@ object TimeMLScorer {
       println("Intervals in Gold:")
       try {
         var gs: List[Tuple3[Entity, TimeExpression, Seq[Interval]]] = Nil
-        val gsdata = Data.fromPaths(xmlFile.getPath, textPath)
+        val gsdata = Data.fromPaths(xmlFile.getPath, None)
         implicit var data = gsdata
         var aReader = new AnaforaReader(dct)
         for (entity <- data.topEntities.sortBy(_.expandedSpan); if !skip.contains(entity.`type`)) {
