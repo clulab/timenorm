@@ -1,7 +1,6 @@
 package info.bethard.timeml
 
-import java.io.File
-import java.time.YearMonth
+import java.io.{File, FileNotFoundException}
 import java.time.format.DateTimeParseException
 
 import com.codecommit.antixml._
@@ -14,102 +13,19 @@ import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 import info.bethard.anafora.{Annotation, Data, Entity, Properties}
+import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_intervals_timex, epoch, datetime, parseDCT, dctInterval, compact_intervals, get_range_limmits}
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit
 import java.time.LocalDateTime
+import java.time.Instant
 
 object TimeMLScorer {
 
-  def get_intervals(timex: TimeExpression): Seq[Interval] = {
-
-    var intervals: Seq[Interval] =
-      if (timex.isInstanceOf[Interval])
-        List(SimpleInterval(timex.asInstanceOf[Interval].start, timex.asInstanceOf[Interval].end))
-      else if (timex.isInstanceOf[Intervals])
-        timex.asInstanceOf[Intervals].iterator.toList
-      else if (timex.isInstanceOf[RepeatingInterval])
-        Nil
-      else {
-        printf("%s is not a valid TimeExpression class\n", timex.getClass.getSimpleName)
-        //System.err.printf("%s is not a valid TimeExpression class\n", timex.getClass.getSimpleName)
-        throw new IllegalArgumentException
-      }
-    return intervals
-  }
 
   def get_intervals(timespan: TimeSpan): Seq[Interval] = {
     var intervals: Seq[Interval] = List(SimpleInterval(timespan.start.toLocalDateTime(), timespan.end.toLocalDateTime()))
     return intervals
-  }
-
-  def epoch(datetime: java.time.LocalDateTime): Long = datetime.atZone(ZoneId.systemDefault).toEpochSecond
-
-  def get_range_limmits(range: TemporalUnit) : Tuple2[LocalDateTime, LocalDateTime] = range.toString match {
-    case "Years" => (LocalDateTime.now.withDayOfYear(1), LocalDateTime.now.plusYears(1).withDayOfYear(1))
-    case "Hours" => (LocalDateTime.now.withHour(1), LocalDateTime.now.plusDays(1).withHour(1))
-    case "Minutes" => (LocalDateTime.now.withMinute(1), LocalDateTime.now.plusHours(1).withMinute(1))
-    case _ => (LocalDateTime.now.withDayOfMonth(1), LocalDateTime.now.plusMonths(1).withDayOfMonth(1))
-  }
-
-
-  def parseDCT(dctString: String): Seq[Int] = {
-    val datetime = dctString.split("T")
-    if (datetime.size == 2) {
-      val YMD = datetime(0).split("-").map(_.toString.toInt)
-      val HMS = datetime(1).split(":").map(_.toString.toInt)
-      if (YMD.size < 3 || HMS.size == 0)
-        throw new  Exception("DCT malformed")
-      if (HMS.size == 3)
-        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1),HMS(2))
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else if (HMS.size == 2)
-        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0),HMS(1))
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else
-        //return Seq(YMD(0),YMD(1),YMD(2),HMS(0))
-        return Seq(YMD(0),YMD(1),YMD(2))
-    } else {
-      val YMD = datetime(0).split("-").map(_.toString.toInt)
-      if (YMD.size == 0)
-        throw new  Exception("DCT malformed")
-      if (YMD.size == 3)
-        return Seq(YMD(0),YMD(1),YMD(2))
-      else if (YMD.size == 2)
-        return Seq(YMD(0),YMD(1))
-      else
-        return Seq(YMD(0))
-    }
-  }
-
-  def compact_intervals(intervals: Seq[Interval]): Seq[Interval] = {
-    var compactIntervals: Seq[Interval] = Seq ()
-    if (intervals.size != 0) {
-      for (Interval (start, end) <- intervals) {
-        var newCompact: Seq[Interval] = Seq ()
-        var startZone = epoch (start)
-        var endZone = epoch (end)
-
-        for (Interval (cStart, cEnd) <- compactIntervals) {
-          val cStartZone = epoch (cStart)
-          val cEndZone = epoch (cEnd)
-          val maxStart = Math.max (startZone, cStartZone)
-          val minEnd = Math.min (endZone, cEndZone)
-
-          if (minEnd > maxStart) {
-            val minStart = Math.min (startZone, cStartZone)
-            val maxEnd = Math.max (endZone, cEndZone)
-            startZone = minStart
-            endZone = maxEnd
-          } else {
-            newCompact :+= SimpleInterval (cStart, cEnd)
-          }
-        }
-        newCompact :+= SimpleInterval (datetime (startZone), datetime (endZone) )
-        compactIntervals = newCompact
-      }
-    }
-    return compactIntervals
   }
 
   def score(gsTimex: TimeExpression, gsIntervs: Seq[Interval], sysTimex: TimeSpan, sysIntervs: Seq[Interval]): (Double, Double) = {
@@ -141,6 +57,13 @@ object TimeMLScorer {
       }
       gstotal = Double.PositiveInfinity
       systotal = Double.PositiveInfinity
+    }
+
+    if (sysIntervals.size != 0) {
+      sysIntervals = compact_intervals(sysIntervals)
+    }
+    if (gsIntervals.size != 0) {
+      gsIntervals = compact_intervals(gsIntervals)
     }
 
     if (sysIntervals.size != 0) {
@@ -176,7 +99,6 @@ object TimeMLScorer {
     }
 
     var intersec : Double = 0
-    println (gsIntervals.size, sysIntervals.size)
     for (Interval(gsStart, gsEnd) <- gsIntervals) {
       val gsStartZone = epoch(gsStart)
       val gsEndZone = epoch(gsEnd)
@@ -192,7 +114,7 @@ object TimeMLScorer {
     val P : Double = intersec/systotal
     val R : Double = intersec/gstotal
 
-    print (P,R)
+    printf ("  Precision: %.3f\tRecall: %.3f",P,R)
     return (P, R)
   }
 
@@ -214,20 +136,11 @@ object TimeMLScorer {
       val textPath = textDir + "/" + fileName
       val dctPath = dctDir + "/" + fileName
       val outPath = outDir + "/" + fileName
-      println(xmlFile)
-
+      printf("Document: %s\n",fileName)
 
       val dctString = io.Source.fromFile(dctPath).getLines.toList(0)
       val dctSeq: Seq[Int] = parseDCT(dctString)
-      val dct: SimpleInterval = dctSeq.size match {
-        case 1 => SimpleInterval.of(dctSeq(0))
-        case 2 => SimpleInterval.of(dctSeq(0), dctSeq(1))
-        case 3 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2))
-        case 4 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3))
-        case 5 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4))
-        case 6 => SimpleInterval.of(dctSeq(0), dctSeq(1), dctSeq(2), dctSeq(3), dctSeq(4), dctSeq(5))
-        case _ => throw new  Exception("DCT malformed")
-      }
+      val dct: SimpleInterval = dctInterval(dctSeq)
       printf("DCT: %s\n\n",dctString)
 
       println("Intervals in Gold:")
@@ -235,15 +148,13 @@ object TimeMLScorer {
         var gs: List[Tuple3[Entity, TimeExpression, Seq[Interval]]] = Nil
         val gsdata = Data.fromPaths(xmlFile.getPath, textPath)
         implicit var data = gsdata
-        val dctString = io.Source.fromFile(dctPath).getLines.toList(0)
-        val dct = LocalDateTime.parse(dctString)
         var aReader = new AnaforaReader(dct)
         for (entity <- data.topEntities.sortBy(_.expandedSpan); if !skip.contains(entity.`type`)) {
           try {
             val temporal = aReader.temporal(entity)
             if (temporal.isInstanceOf[Interval] || temporal.isInstanceOf[Intervals]) {
-              val intervals = get_intervals(temporal)
-              intervals.map(i => printf("%s [%s, %s) ", entity.id, i.start, i.end))
+              val intervals = get_intervals_timex(temporal)
+              intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
               gs :+= (entity, temporal, intervals)
             }
           } catch {
@@ -258,6 +169,7 @@ object TimeMLScorer {
         println()
         sum_gs += gs.length
 
+        println("Intervals in Answer:")
         var sys: List[Tuple3[TIMEX, TimeSpan, Seq[Interval]]] = Nil
         for (xmlFile <- allTimeNormFiles(new File(outPath))) {
           val timeMLanafora = new TimeMLanaforaDocument(xmlFile)
@@ -273,10 +185,10 @@ object TimeMLScorer {
                 val timeSpan = TimeSpan.fromTimeMLValue(value)
                 val intervals = get_intervals(timeSpan.asInstanceOf[TimeSpan])
                 sys :+= ((timex.asInstanceOf[TIMEX], timeSpan.asInstanceOf[TimeSpan], intervals))
-                printf("%s [%s, %s) ", timex.id, timeSpan.start, timeSpan.end)
+                printf("  %s [%s, %s) \n", timex.id, timeSpan.start, timeSpan.end)
               }
             } catch {
-              case ex: Exception => println(timex.id, timex.text, ex)
+              case ex: Exception => //println(timex.id, timex.text, ex)
               case ex: NotImplementedError => println(timex.id, timex.text, ex)
 
             }
@@ -285,6 +197,7 @@ object TimeMLScorer {
         println()
         sum_sys += sys.length
 
+        println("Intersections:")
         for (gstimex <- gs) {
           val gsentity = gstimex._1
           var max_recall = 0.0
@@ -293,11 +206,13 @@ object TimeMLScorer {
               val sysentity = systimex._1
               if (gsentity.expandedSpan._1 <= sysentity.fullSpan._2 && gsentity.expandedSpan._2 >= sysentity.fullSpan._1) {
                 try {
-                  printf("%s \"%s\"[%s] ", gsentity.id, gsentity.expandedText, gsentity.expandedSpan)
-                  printf("%s\n", gstimex._2)
-                  printf("%s \"%s\"[%s] ", sysentity.id, sysentity.text, sysentity.fullSpan)
-                  printf("%s\n", systimex._2)
+                  printf("  Gold: %s \"%s\" %s \n", gsentity.id, gsentity.expandedSpan, gsentity.expandedText)
+                  printf("\t%s\n", gstimex._2)
+                  printf("\t%s\n", gstimex._3)
+                  printf("  Answ: %s \"%s\" %s \n", sysentity.id, sysentity.fullSpan, sysentity.text)
+                  printf("\t%s\n", systimex._3)
                   val (precision, recall) = score(gstimex._2, gstimex._3, systimex._2, systimex._3)
+                  println()
                   sum_precision += precision
                   if (recall > max_recall) max_recall = recall
                   sum_cases += 1
@@ -315,6 +230,8 @@ object TimeMLScorer {
         }
       } catch {
         case ex: MatchError => println(ex)
+        case ex: FileNotFoundException => println(ex)
+
       }
     }
 
@@ -324,15 +241,15 @@ object TimeMLScorer {
     printf("Gold cases: %d\n",sum_gs)
     printf("Sys cases: %d\n",sum_sys)
     printf("Intersec cases: %d\n", sum_cases)
-    printf("Precision: %f\n", precision)
-    printf("Recall: %f\n", recall)
-    printf("F1: %f\n", fscore)
+    printf("Precision: %.3f\n", precision)
+    printf("Recall: %.3f\n", recall)
+    printf("F1: %.3f\n", fscore)
   }
 
 
   def allTimeNormFiles(dir: File): Array[File] = {
     val files = dir.listFiles()
-    val xmlFiles = files.filter(_.getName.matches(".*[.]TimeNorm[^.]*[.]gold[.]completed[.]xml"))
+    val xmlFiles = files.filter(_.getName.matches(".*[.]xml"))
     val subFiles = files.filter(_.isDirectory).flatMap(allTimeNormFiles)
     xmlFiles ++ subFiles
   }
