@@ -213,7 +213,7 @@ object TimeNormScorer {
     for (xmlFile <- allTimeNormFiles(new File(dir))) {
       val fileName = xmlFile.getName.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       val textPath = textDir + "/" + fileName + "/" + fileName + ".txt"
-      val dctPath = dctDir + "/" + fileName + ".dct"
+      val dctPath = dctDir + "/" + fileName + "/" + fileName + ".dct"
       val outPath = outDir + "/" + fileName
       printf("Document: %s\n",fileName)
 
