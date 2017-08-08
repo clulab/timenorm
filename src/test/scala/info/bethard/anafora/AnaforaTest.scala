@@ -55,7 +55,7 @@ class AnaforaTest extends FunSuite {
       </annotations>
     </data>.convert
 
-    implicit val data = Data(xml, "abcdefghijklmnopqrstuvwxyz0123456789")
+    implicit val data = Data(xml, Some("abcdefghijklmnopqrstuvwxyz0123456789"))
     assert(data.entities.size === 2)
     assert(data.relations.size === 2)
     val Seq(time, event) = data.entities
@@ -65,7 +65,7 @@ class AnaforaTest extends FunSuite {
     assert(time.`type` === "TIMEX3")
     assert(time.spans === IndexedSeq((12, 20), (25, 30)))
     assert(time.fullSpan === (12, 30))
-    assert(time.text === "mnopqrst...z0123")
+    assert(time.text === Some("mnopqrst...z0123"))
     assert(time.properties("functionInDocument") === "CREATION_TIME")
     assert(time.properties("type") === "DATE")
     assert(time.properties("temporalFunction") === "false")

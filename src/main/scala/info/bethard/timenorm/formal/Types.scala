@@ -143,7 +143,7 @@ case object UnknownInterval extends Interval {
   def end: LocalDateTime = ???
 }
 
-case class Event(description: String) extends Interval {
+case class Event(description: Option[String]) extends Interval {
   val isDefined = false
   def start: LocalDateTime = ???
   def end: LocalDateTime = ???
