@@ -14,7 +14,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
 
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
-    case "?" => VagueNumber(entity.text)
+    case "?" => VagueNumber(entity.text.getOrElse(""))
     case value =>
       if (value.contains(".")) {
         val (beforeDot, dotAndAfter) = value.span(_ != '.')
@@ -99,7 +99,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     val Inc = Some("Interval-Included")
 
     val result = (entity.`type`, valueOption, periods, repeatingIntervals, numbers, semantics) match {
-      case ("Event", None, N, N, N, None) => Event(entity.text)
+      case ("Event", None, N, N, N, None) => Event(entity.text.getOrElse(""))
       case ("Year", Some(value), N, N, N, None) => value.partition(_ != '?') match {
         case (year, questionMarks) => Year(year.toInt, questionMarks.length)
       }
@@ -261,7 +261,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
         case Seq() => interval(entity)
         case Seq(_) => intervals(entity)
       }
-    case "Time-Zone" => TimeZone(entity.text)
+    case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
     case _ => repeatingInterval(entity)
   }
 }
