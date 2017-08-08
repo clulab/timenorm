@@ -26,7 +26,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       } else if (value.forall(_.isDigit)) {
         IntNumber(value.toInt)
       } else {
-        VagueNumber(value)
+        VagueNumber(Some(value))
       }
   }
 
@@ -69,7 +69,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
           ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
           entity.properties.getEntity("Number") match {
             case Some(numberEntity) => number(numberEntity)
-            case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber("2+")
+            case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber(Some("2+"))
           },
           mod)
       }
