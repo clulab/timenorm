@@ -26,7 +26,7 @@ case class FractionalNumber(number: Int, numerator: Int, denominator: Int) exten
   val isDefined = true
 }
 
-case class VagueNumber(description: String) extends Number {
+case class VagueNumber(description: Option[String]) extends Number {
   val isDefined = false
 }
 
@@ -686,7 +686,7 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval]) extends Re
   }
 }
 
-case class TimeZone(name: String) extends TimeExpression {
+case class TimeZone(name: Option[String]) extends TimeExpression {
   val isDefined = false
 }
 
