@@ -14,7 +14,9 @@ trait TimeExpression {
 trait Number extends TimeExpression
 
 object Number {
+
   import scala.language.implicitConversions
+
   implicit def intToNumber(n: Int): Number = IntNumber(n)
 }
 
@@ -35,14 +37,23 @@ trait Modifier extends TimeExpression {
 }
 
 object Modifier {
+
   case object Exact extends Modifier
+
   case object Approx extends Modifier
+
   case object LessThan extends Modifier
+
   case object MoreThan extends Modifier
+
   case object Start extends Modifier
+
   case object Mid extends Modifier
+
   case object End extends Modifier
+
   case object Fiscal extends Modifier
+
 }
 
 /**
@@ -75,9 +86,13 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
 
 case object UnknownPeriod extends Period {
   val isDefined = false
+
   override def addTo(temporal: Temporal): Temporal = ???
+
   override def get(unit: TemporalUnit): Long = ???
+
   override def subtractFrom(temporal: Temporal): Temporal = ???
+
   override def getUnits: java.util.List[TemporalUnit] = ???
 }
 
@@ -85,19 +100,19 @@ case class SumP(periods: Set[Period], modifier: Modifier = Modifier.Exact) exten
 
   val isDefined: Boolean = periods.forall(_.isDefined)
 
-  lazy val map: Map[TemporalUnit, Long] = Map.empty ++ periods.flatMap(_.getUnits.asScala).map{
+  lazy val map: Map[TemporalUnit, Long] = Map.empty ++ periods.flatMap(_.getUnits.asScala).map {
     unit => (unit, periods.filter(_.getUnits.contains(unit)).map(_.get(unit)).sum)
   }
 
   lazy val list: java.util.List[TemporalUnit] = map.keys.toList.sortBy(_.getDuration()).reverse.asJava
 
-  override def addTo(temporal: Temporal): Temporal = map.foldLeft(temporal){
+  override def addTo(temporal: Temporal): Temporal = map.foldLeft(temporal) {
     case (current, (unit, number)) => current.plus(number, unit)
   }
 
   override def get(unit: TemporalUnit): Long = map.getOrElse(unit, throw new UnsupportedTemporalTypeException(null))
 
-  override def subtractFrom(temporal: Temporal): Temporal = map.foldLeft(temporal){
+  override def subtractFrom(temporal: Temporal): Temporal = map.foldLeft(temporal) {
     case (current, (unit, number)) => current.minus(number, unit)
   }
 
@@ -111,6 +126,7 @@ case class SumP(periods: Set[Period], modifier: Modifier = Modifier.Exact) exten
   */
 trait Interval extends TimeExpression {
   def start: LocalDateTime
+
   def end: LocalDateTime
 }
 
@@ -118,18 +134,24 @@ object Interval {
   def unapply(interval: Interval): Option[(LocalDateTime, LocalDateTime)] = Some(interval.start, interval.end)
 
   sealed trait Point extends (Interval => LocalDateTime)
+
   case object Start extends Point {
     override def apply(interval: Interval): LocalDateTime = interval.start
   }
+
   case object End extends Point {
     override def apply(interval: Interval): LocalDateTime = interval.end
   }
+
 }
 
 trait Intervals extends TimeExpression with Seq[Interval] {
   protected def intervals: Seq[Interval]
+
   override def length: Int = intervals.size
+
   override def iterator: Iterator[Interval] = intervals.toIterator
+
   override def apply(idx: Int): Interval = intervals(idx)
 }
 
@@ -139,40 +161,50 @@ case class SimpleIntervals(intervals: Seq[Interval]) extends Intervals {
 
 case object UnknownInterval extends Interval {
   val isDefined = false
+
   def start: LocalDateTime = ???
+
   def end: LocalDateTime = ???
 }
 
 case class Event(description: String) extends Interval {
   val isDefined = false
+
   def start: LocalDateTime = ???
+
   def end: LocalDateTime = ???
 }
 
 case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Interval {
   val isDefined = true
 }
+
 object SimpleInterval {
   def of(year: Int): SimpleInterval = {
     val start = LocalDateTime.of(year, 1, 1, 0, 0)
     SimpleInterval(start, start.plusYears(1))
   }
+
   def of(year: Int, month: Int): SimpleInterval = {
     val start = LocalDateTime.of(year, month, 1, 0, 0)
     SimpleInterval(start, start.plusMonths(1))
   }
+
   def of(year: Int, month: Int, day: Int): SimpleInterval = {
     val start = LocalDateTime.of(year, month, day, 0, 0)
     SimpleInterval(start, start.plusDays(1))
   }
+
   def of(year: Int, month: Int, day: Int, hour: Int): SimpleInterval = {
     val start = LocalDateTime.of(year, month, day, hour, 0)
     SimpleInterval(start, start.plusHours(1))
   }
+
   def of(year: Int, month: Int, day: Int, hour: Int, minute: Int): SimpleInterval = {
     val start = LocalDateTime.of(year, month, day, hour, minute)
     SimpleInterval(start, start.plusMinutes(1))
   }
+
   def of(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int): SimpleInterval = {
     val start = LocalDateTime.of(year, month, day, hour, minute, second)
     SimpleInterval(start, start.plusSeconds(1))
@@ -211,9 +243,11 @@ private[timenorm] object PeriodUtil {
     val start = mid.minus(halfPeriod)
     SimpleInterval(start, start.plus(period))
   }
+
   def oneUnit(period: Period): Period = {
     SimplePeriod(period.getUnits.asScala.maxBy(_.getDuration), 1)
   }
+
   def expandIfLarger(interval: Interval, period: Period): Interval = {
     if (interval.end.isBefore(interval.start.plus(period))) this.expand(interval, period) else interval
   }
@@ -482,6 +516,7 @@ case class NthFromStartP(interval: Interval, number: Int, period: Period) extend
   * NthFromStart([t1,t2): Interval, n: Number, R: RepeatingInterval): Interval
   * = Nth of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
   *
+  *
   * @param interval          interval to start from
   * @param index             index of the group to be selected (counting from 1)
   * @param repeatingInterval repeating intervals to select from
@@ -515,7 +550,9 @@ case class NthFromStartRIs(interval: Interval, index: Int,
 
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
+
   def following(ldt: LocalDateTime): Iterator[Interval]
+
   val base: TemporalUnit
   val range: TemporalUnit
 }

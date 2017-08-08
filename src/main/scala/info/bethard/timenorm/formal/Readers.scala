@@ -7,7 +7,9 @@ import info.bethard.anafora.{Properties, Data, Entity}
 import info.bethard.timenorm.field._
 
 object AnaforaReader {
-    class Exception(message: String) extends java.lang.Exception(message)
+
+  class Exception(message: String) extends java.lang.Exception(message)
+
 }
 
 class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
@@ -113,23 +115,23 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       case ("Last", None, N, N, N, _) => LastP(interval(properties), UnknownPeriod)
       case ("Last", None, Seq(period), N, N, _) => LastP(interval(properties), period)
       case ("Last", None, N, Seq(rInterval), N, Exc) => LastRI(interval(properties), rInterval)
-      case ("Last", None, N, Seq(rInterval), N, Inc) => LastRI(interval(properties), rInterval, from=Interval.End)
+      case ("Last", None, N, Seq(rInterval), N, Inc) => LastRI(interval(properties), rInterval, from = Interval.End)
       case ("Next", None, N, N, N, _) => NextP(interval(properties), UnknownPeriod)
       case ("Next", None, Seq(period), N, N, _) => NextP(interval(properties), period)
       case ("Next", None, N, Seq(rInterval), N, Exc) => NextRI(interval(properties), rInterval)
-      case ("Next", None, N, Seq(rInterval), N, Inc) => NextRI(interval(properties), rInterval, from=Interval.Start)
+      case ("Next", None, N, Seq(rInterval), N, Inc) => NextRI(interval(properties), rInterval, from = Interval.Start)
       case ("Before", None, N, N, N, _) => BeforeP(interval(properties), UnknownPeriod)
       case ("Before", None, Seq(period), N, N, _) => BeforeP(interval(properties), period)
       case ("Before", None, N, Seq(rInterval), N, Exc) => BeforeRI(interval(properties), rInterval)
-      case ("Before", None, N, Seq(rInterval), N, Inc) => BeforeRI(interval(properties), rInterval, from=Interval.End)
+      case ("Before", None, N, Seq(rInterval), N, Inc) => BeforeRI(interval(properties), rInterval, from = Interval.End)
       case ("Before", None, N, Seq(rInterval), Seq(number), Exc) => BeforeRI(interval(properties), rInterval, number)
-      case ("Before", None, N, Seq(rInterval), Seq(number), Inc) => BeforeRI(interval(properties), rInterval, number, from=Interval.End)
+      case ("Before", None, N, Seq(rInterval), Seq(number), Inc) => BeforeRI(interval(properties), rInterval, number, from = Interval.End)
       case ("After", None, N, N, N, _) => AfterP(interval(properties), UnknownPeriod)
       case ("After", None, Seq(period), N, N, _) => AfterP(interval(properties), period)
       case ("After", None, N, Seq(rInterval), N, Exc) => AfterRI(interval(properties), rInterval)
-      case ("After", None, N, Seq(rInterval), N, Inc) => AfterRI(interval(properties), rInterval, from=Interval.Start)
+      case ("After", None, N, Seq(rInterval), N, Inc) => AfterRI(interval(properties), rInterval, from = Interval.Start)
       case ("After", None, N, Seq(rInterval), Seq(number), Exc) => AfterRI(interval(properties), rInterval, number)
-      case ("After", None, N, Seq(rInterval), Seq(number), Inc) => AfterRI(interval(properties), rInterval, number, from=Interval.Start)
+      case ("After", None, N, Seq(rInterval), Seq(number), Inc) => AfterRI(interval(properties), rInterval, number, from = Interval.Start)
       case ("NthFromStart", Some(value), N, N, N, None) => NthFromStartP(interval(properties), value.toInt, UnknownPeriod)
       case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthFromStartP(interval(properties), value.toInt, period)
       case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthFromStartRI(interval(properties), value.toInt, rInterval)
@@ -235,13 +237,13 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
       //case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
-      case subEntities => IntersectionRI(Set(result) ++ Set(repeatingInterval(subEntities.head)))  // Only take the first SubInterval. If there are more than one the should be equivalent.
+      case subEntities => IntersectionRI(Set(result) ++ Set(repeatingInterval(subEntities.head))) // Only take the first SubInterval. If there are more than one the should be equivalent.
 
     })
   }
 
   def flatten(repeatingInterval: RepeatingInterval): RepeatingInterval = repeatingInterval match {
-    case IntersectionRI(repeatingIntervals) => IntersectionRI(repeatingIntervals.flatMap{
+    case IntersectionRI(repeatingIntervals) => IntersectionRI(repeatingIntervals.flatMap {
       case IntersectionRI(subIntervals) => subIntervals.map(flatten)
       case rIntervals => Set(rIntervals)
     })
@@ -253,7 +255,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     case "Modifier" => modifier(entity)
     case "Period" | "Sum" => period(entity)
     case "Intersection" if entity.properties.has("Intervals") => intervals(entity)
-    case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After"  =>
+    case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After" =>
       interval(entity)
     case "Last" | "Next" | "NthFromStart" =>
       val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")

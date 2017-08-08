@@ -388,11 +388,11 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(lastWeek.start === LocalDateTime.of(2017, 1, 2, 0, 0))
     assert(lastWeek.end === LocalDateTime.of(2017, 1, 9, 0, 0))
 
-    assert(LastRI(SimpleInterval.of(2017, 7, 7), day, from=Interval.End) === SimpleInterval.of(2017, 7, 7))
+    assert(LastRI(SimpleInterval.of(2017, 7, 7), day, from = Interval.End) === SimpleInterval.of(2017, 7, 7))
     // July 7, 2017 is a Friday
-    assert(LastRI(SimpleInterval.of(2017, 7, 7), friday, from=Interval.End) === SimpleInterval.of(2017, 7, 7))
-    assert(LastRI(SimpleInterval.of(2017, 7, 8), friday, from=Interval.End) === SimpleInterval.of(2017, 7, 7))
-    assert(LastRI(SimpleInterval.of(2017, 7, 6), friday, from=Interval.End) === SimpleInterval.of(2017, 6, 30))
+    assert(LastRI(SimpleInterval.of(2017, 7, 7), friday, from = Interval.End) === SimpleInterval.of(2017, 7, 7))
+    assert(LastRI(SimpleInterval.of(2017, 7, 8), friday, from = Interval.End) === SimpleInterval.of(2017, 7, 7))
+    assert(LastRI(SimpleInterval.of(2017, 7, 6), friday, from = Interval.End) === SimpleInterval.of(2017, 6, 30))
   }
 
   test("LastRIs") {
@@ -404,14 +404,14 @@ class TypesTest extends FunSuite with TypesSuite {
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
     //Expected: Sequence(May 2001, May 2000, May 1999)
-    assert(LastRIs(interval, may, 3) === SimpleIntervals(2001 to 1999 by -1 map(y => SimpleInterval.of(y, 5))))
+    assert(LastRIs(interval, may, 3) === SimpleIntervals(2001 to 1999 by -1 map (y => SimpleInterval.of(y, 5))))
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //UnitRI: Days
     //Expected: Sequence(March 21, March 20, March 19, March 18, March 17 of 2002)
-    assert(LastRIs(interval, day, 5) === SimpleIntervals(21 to 17 by -1 map(d => SimpleInterval.of(2002, 3, d))))
+    assert(LastRIs(interval, day, 5) === SimpleIntervals(21 to 17 by -1 map (d => SimpleInterval.of(2002, 3, d))))
 
-    assert(LastRIs(interval, day, 1, from=Interval.End) === SimpleIntervals(Seq(SimpleInterval.of(2003, 5, 9))))
+    assert(LastRIs(interval, day, 1, from = Interval.End) === SimpleIntervals(Seq(SimpleInterval.of(2003, 5, 9))))
   }
 
   test("NextRI") {
@@ -426,7 +426,7 @@ class TypesTest extends FunSuite with TypesSuite {
     val nextWeek = NextRI(SimpleInterval.of(2017, 1, 8), RepeatingUnit(ChronoUnit.WEEKS))
     assert(nextWeek === SimpleInterval(LocalDateTime.of(2017, 1, 9, 0, 0), LocalDateTime.of(2017, 1, 16, 0, 0)))
 
-    assert(NextRI(interval, may, from=Interval.Start) === SimpleInterval.of(2002, 5))
+    assert(NextRI(interval, may, from = Interval.Start) === SimpleInterval.of(2002, 5))
   }
 
   test("NextRIs") {
@@ -438,16 +438,16 @@ class TypesTest extends FunSuite with TypesSuite {
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
     //Expected: Sequence(May 2004, May 2005, May 2006)
-    assert(NextRIs(interval, may, 3) === SimpleIntervals(2004 to 2006 map(y => SimpleInterval.of(y, 5))))
+    assert(NextRIs(interval, may, 3) === SimpleIntervals(2004 to 2006 map (y => SimpleInterval.of(y, 5))))
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //UnitRI: Days
     //Expected: Sequence(May 11, May 12, May 13, May 14, May 15 of 2003)
-    assert(NextRIs(interval, day, 5) === SimpleIntervals(11 to 15 map(d => SimpleInterval.of(2003, 5, d))))
+    assert(NextRIs(interval, day, 5) === SimpleIntervals(11 to 15 map (d => SimpleInterval.of(2003, 5, d))))
 
     assert(
-      NextRIs(interval, day, 3, from=Interval.Start)
-        === SimpleIntervals(23 to 25 map(d => SimpleInterval.of(2002, 3, d))))
+      NextRIs(interval, day, 3, from = Interval.Start)
+        === SimpleIntervals(23 to 25 map (d => SimpleInterval.of(2002, 3, d))))
   }
 
   test("AfterRI") {
@@ -461,8 +461,8 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(AfterRI(interval, day) === SimpleInterval.of(2003, 5, 11))
     assert(AfterRI(interval, day, 11) === SimpleInterval.of(2003, 5, 21))
 
-    assert(AfterRI(interval, may, from=Interval.Start) === SimpleInterval.of(2002, 5))
-    assert(AfterRI(interval, day, from=Interval.Start) === SimpleInterval.of(2002, 3, 23))
+    assert(AfterRI(interval, may, from = Interval.Start) === SimpleInterval.of(2002, 5))
+    assert(AfterRI(interval, day, from = Interval.Start) === SimpleInterval.of(2002, 3, 23))
   }
 
   test("BeforeRI") {
@@ -476,8 +476,8 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(BeforeRI(interval, day) === SimpleInterval.of(2002, 3, 21))
     assert(BeforeRI(interval, day, 20) === SimpleInterval.of(2002, 3, 2))
 
-    assert(BeforeRI(interval, may, from=Interval.End) === SimpleInterval.of(2002, 5))
-    assert(BeforeRI(interval, day, from=Interval.End) === SimpleInterval.of(2003, 5, 9))
+    assert(BeforeRI(interval, may, from = Interval.End) === SimpleInterval.of(2002, 5))
+    assert(BeforeRI(interval, day, from = Interval.End) === SimpleInterval.of(2003, 5, 9))
   }
 
   test("NthFromStartRI") {
