@@ -6,15 +6,8 @@ import com.codecommit.antixml.XML
 
 
 object Data {
-  def fromPaths(xmlPath: String, textPath: Option[String]) =textPath match {
-    case None => apply(
-      XML.fromSource(io.Source.fromFile(xmlPath)),
-      None
-    )
-    case Some(textPath) => apply(
-      XML.fromSource(io.Source.fromFile(xmlPath)),
-      Some(io.Source.fromFile(textPath).mkString))
-  }
+  def fromPaths(xmlPath: String, textPath: Option[String]) = apply(
+      XML.fromSource(io.Source.fromFile(xmlPath)), textPath.map(p => io.Source.fromFile(p).mkString))
   def apply(xml: Elem, text: Option[String]) = new Data(xml, text)
 }
 class Data(xml: Elem, val text: Option[String]) {
@@ -45,12 +38,9 @@ class Entity(xml: Elem) extends Annotation(xml) {
       case Array(start, end) => (start, end)
     }).sorted
   lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
-  def text(implicit data: Data): Option[String] = data.text match {
-    case None => None
-    case Some(text) => Some( spans.map{
+  def text(implicit data: Data): Option[String] = data.text.map(text => spans.map {
       case (start, end) => text.substring(start, end)
     }.mkString("..."))
-  }
   def entityDescendants(implicit data: Data): IndexedSeq[Entity] = {
     val childTexts = this.properties.xml.children \ ElemText
     val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)

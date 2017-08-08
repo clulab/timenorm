@@ -111,7 +111,7 @@ class TypesTest extends FunSuite with TypesSuite {
       assert(simple.get(ChronoUnit.MONTHS) === 60)
     }
 
-    val vagueNumber = VagueNumber(Some("A few"))
+    val vagueNumber = VagueNumber("A few")
 
     intercept[scala.MatchError] {
       SimplePeriod(unit, vagueNumber, mod).addTo(ldt)
