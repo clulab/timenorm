@@ -17,7 +17,7 @@ object ParseAnaforaXMLs {
     for (xmlFile <- allTimeNormFiles(new File(dir))) {
       val textPath = xmlFile.getPath.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       println(xmlFile)
-      implicit val data = Data.fromPaths(xmlFile.getPath, textPath)
+      implicit val data = Data.fromPaths(xmlFile.getPath, Some(textPath))
 
       val start = LocalDateTime.now().truncatedTo(DAYS)
       val dct = SimpleInterval(start, start.plusDays(1))

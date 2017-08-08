@@ -67,7 +67,7 @@ class ReadersTest extends FunSuite with TypesSuite {
         |</annotations>`
         |</data>
       """.stripMargin)
-    implicit val data = new Data(elem, "2000-10-25 noon")
+    implicit val data = new Data(elem, Some("2000-10-25 noon"))
 
     val dct = SimpleInterval.of(1998, 2, 13, 15, 44)
     var aReader = new AnaforaReader(dct)
@@ -131,7 +131,7 @@ class ReadersTest extends FunSuite with TypesSuite {
       </annotations>
     </data>.convert
 
-    implicit val data = Data(xml, "first nine months of 1997")
+    implicit val data = Data(xml, Some("first nine months of 1997"))
 
     val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
     var aReader = new AnaforaReader(dct)
@@ -183,7 +183,7 @@ class ReadersTest extends FunSuite with TypesSuite {
           </entity>
         </annotations>
       </data>.convert
-    implicit val data = Data(xml, "last few months")
+    implicit val data = Data(xml, Some("last few months"))
     val start = LocalDateTime.now().truncatedTo(DAYS)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
@@ -235,7 +235,7 @@ class ReadersTest extends FunSuite with TypesSuite {
           </entity>
         </annotations>
       </data>.convert
-    implicit val data = Data(xml, "19980331")
+    implicit val data = Data(xml, Some("19980331"))
     val start = LocalDateTime.of(1998, 3, 31, 0, 0)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
@@ -278,7 +278,7 @@ class ReadersTest extends FunSuite with TypesSuite {
           </entity>
         </annotations>
       </data>.convert
-    implicit val data = Data(xml, "Friday")
+    implicit val data = Data(xml, Some("Friday"))
     val start = LocalDateTime.of(1998, 3, 6, 0, 0)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
