@@ -6,15 +6,8 @@ import com.codecommit.antixml.XML
 import com.codecommit.antixml.*
 
 object Data {
-  def fromPaths(xmlPath: String, textPath: Option[String]) = textPath match {
-    case None => apply(
-      XML.fromSource(io.Source.fromFile(xmlPath)),
-      None
-    )
-    case Some(textPath) => apply(
-      XML.fromSource(io.Source.fromFile(xmlPath)),
-      Some(io.Source.fromFile(textPath).mkString))
-  }
+  def fromPaths(xmlPath: String, textPath: Option[String]) = apply(
+    XML.fromSource(io.Source.fromFile(xmlPath)), textPath.map(p => io.Source.fromFile(p).mkString))
   def apply(xml: Elem, text: Option[String]) = text match {
     case None => new Data(xml, None)
     case Some(text) => new Data(xml, Some(text.replaceAll("(\r\n)|\r|\n", "\n")))
@@ -49,12 +42,9 @@ class Entity(xml: Elem) extends Annotation(xml) {
       case Array(start, end) => (start, end)
     }).sorted
   lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
-  def text(implicit data: Data): Option[String] = data.text match {
-    case None => None
-    case Some(text) => Some( spans.map{
-      case (start, end) => text.substring(start, end)
-    }.mkString("..."))
-  }
+  def text(implicit data: Data): Option[String] = data.text.map(text => spans.map {
+    case (start, end) => text.substring(start, end)
+  }.mkString("..."))
   private def recursiveSpan(entity: Entity, start: Int, end: Int)(implicit data:Data): (Int, Int) = {
     var newStart: Int = start
     var newEnd: Int = end
@@ -74,8 +64,8 @@ class Entity(xml: Elem) extends Annotation(xml) {
   def expandedText(implicit data: Data): Option[String] = data.text match {
     case None => None
     case Some(text) => Some( {val (start, end) = expandedSpan
-                    text.substring(start, end)
-                    }.mkString("..."))
+      text.substring(start, end)
+    }.mkString("..."))
   }
   def entityDescendants(implicit data: Data): IndexedSeq[Entity] = {
     val childTexts = this.properties.xml.children \ ElemText

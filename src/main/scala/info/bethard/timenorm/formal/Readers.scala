@@ -13,7 +13,7 @@ object AnaforaReader {
 class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
-    case "?" => VagueNumber(entity.text)
+    case "?" => VagueNumber(entity.text.getOrElse(""))
     case value =>
       if (value.contains(".")) {
         val (beforeDot, dotAndAfter) = value.span(_ != '.')
@@ -25,7 +25,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       } else if (value.forall(_.isDigit)) {
         IntNumber(value.toInt)
       } else {
-        VagueNumber(Some(value))
+        VagueNumber(value)
       }
   }
 
@@ -68,7 +68,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
           ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
           entity.properties.getEntity("Number") match {
             case Some(numberEntity) => number(numberEntity)
-            case None => if (entity.text.last != 's') IntNumber (1) else VagueNumber(Some("2+") )
+            case None => if (entity.text.last != 's') IntNumber (1) else VagueNumber("2+")
           }, mod)
       }
       case "Sum" => SumP(entity.properties.getEntities("Periods").map(period).toSet, mod)
@@ -94,7 +94,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     val N = Seq()
 
     val result = (entity.`type`, valueOption, periods, repeatingIntervals, numbers) match {
-      case ("Event", None, N, N, N) => Event(entity.text)
+      case ("Event", None, N, N, N) => Event(entity.text.getOrElse(""))
       case ("Year", Some(value), N, N, N) => value.partition(_ != '?') match {
         case (year, questionMarks) => Year(year.toInt, questionMarks.length)
       }
@@ -255,7 +255,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
         case Seq() => interval(entity)
         case Seq(_) => intervals(entity)
       }
-    case "Time-Zone" => TimeZone(entity.text)
+    case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
     case _ => repeatingInterval(entity)
   }
 }
