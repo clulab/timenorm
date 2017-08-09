@@ -355,10 +355,71 @@ class ReadersTest extends FunSuite with TypesSuite {
     val aReader = new AnaforaReader(SimpleInterval.of(1998, 3, 22))
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(sunday: RepeatingInterval, last: LastRI, before: BeforeP, event: Event, intersection: IntersectionI) =>
+      case Seq(_: RepeatingInterval, last: LastRI, _: BeforeP, _: Event, intersection: IntersectionI) =>
         assert(last === SimpleInterval.of(1998, 3, 22))
         assert(!intersection.isDefined)
-      case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
+      case _ => fail("expected Seq(sunday: RI, last: I, before: I, event: I, intersection: I), found " + temporals)
+    }
+  }
+
+  test("APW19980219.0476 (1164,1171) January this year") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>164@e@APW19980219.0476@gold</id>
+            <span>1164,1171</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>January</Type>
+              <Sub-Interval></Sub-Interval>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>166@e@APW19980219.0476@gold</id>
+            <span>1177,1181</span>
+            <type>Calendar-Interval</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Year</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>185@e@APW19980219.0476@gold</id>
+            <span>1172,1176</span>
+            <type>This</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>166@e@APW19980219.0476@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>200@e@APW19980219.0476@gold</id>
+            <span>1164,1171</span>
+            <type>Intersection</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Intervals>185@e@APW19980219.0476@gold</Intervals>
+              <Repeating-Intervals>164@e@APW19980219.0476@gold</Repeating-Intervals>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, None)
+    val aReader = new AnaforaReader(SimpleInterval.of(1998, 2, 19))
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(_: RepeatingInterval, _: RepeatingInterval, _: ThisRI, intersection: Intervals) =>
+        assert(intersection === SimpleIntervals(Seq(SimpleInterval.of(1998, 1))))
+      case _ => fail("expected Seq(january: RI, year: RI, this: I, intersection: Is), found " + temporals)
     }
   }
 }

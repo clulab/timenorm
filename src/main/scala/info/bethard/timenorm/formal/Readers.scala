@@ -254,7 +254,8 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
 
   def temporal(entity: Entity)(implicit data: Data): TimeExpression = {
     val intervalEntities = entity.properties.getEntities("Intervals")
-    val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
+    val repeatingIntervalEntities =
+      entity.properties.getEntities("Repeating-Interval") ++ entity.properties.getEntities("Repeating-Intervals")
     entity.`type` match {
       case "Number" => number(entity)
       case "Modifier" => modifier(entity)
