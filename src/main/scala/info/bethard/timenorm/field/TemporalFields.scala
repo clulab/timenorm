@@ -302,6 +302,16 @@ object DECADE_OF_CENTURY extends TemporalField {
   }
 }
 
+object QUARTER_CENTURIES extends TemporalUnit {
+  override def isDateBased: Boolean = true
+  override def isTimeBased: Boolean = false
+  override def getDuration: Duration = YEARS.getDuration.multipliedBy(25L)
+  override def isDurationEstimated: Boolean =  YEARS.isDurationEstimated
+  override def addTo[R <: JTemporal](temporal: R, amount: Long): R = YEARS.addTo(temporal, amount * 25)
+  override def between(temporal1Inclusive: JTemporal, temporal2Exclusive: JTemporal): Long =
+    YEARS.between(temporal1Inclusive, temporal2Exclusive) / 25
+}
+
 object YEAR_OF_CENTURY extends TemporalField {
   def getBaseUnit: TemporalUnit = YEARS
   def getRangeUnit: TemporalUnit = CENTURIES

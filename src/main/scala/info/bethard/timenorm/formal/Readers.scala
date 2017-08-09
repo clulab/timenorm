@@ -208,6 +208,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
           s"""cannot parse Intersection from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
         IntersectionRI(repeatingIntervals.toSet)
       case ("Calendar-Interval" , Some("Century")) => RepeatingUnit(ChronoUnit.CENTURIES, mod)
+      case ("Calendar-Interval" , Some("Quarter-Century")) => RepeatingUnit(QUARTER_CENTURIES, mod)
       case ("Calendar-Interval" , Some("Quarter-Year")) => RepeatingUnit(IsoFields.QUARTER_YEARS, mod)
       case ("Calendar-Interval" , Some(AnaforaReader.SomePluralChronoUnit(unit))) => RepeatingUnit(unit, mod)
       case ("Week-Of-Year", None) => RepeatingField(WeekFields.ISO.weekOfYear(), entity.properties("Value").toLong, mod)

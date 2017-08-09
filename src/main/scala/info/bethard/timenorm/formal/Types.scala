@@ -3,7 +3,7 @@ package info.bethard.timenorm.formal
 import java.time.temporal._
 import java.time.{Duration, LocalDateTime}
 
-import info.bethard.timenorm.field.{ConstantPartialRange, MonthDayPartialRange}
+import info.bethard.timenorm.field.{ConstantPartialRange, MonthDayPartialRange, QUARTER_CENTURIES}
 
 import scala.collection.JavaConverters._
 
@@ -570,6 +570,7 @@ trait RepeatingInterval extends TimeExpression {
 private[formal] object RepeatingInterval {
   def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = tUnit match {
     case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear / 100 * 100, 1, 1, 0, 0)
+    case QUARTER_CENTURIES => LocalDateTime.of(ldt.getYear / 25 * 25, 1, 1, 0, 0)
     case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear / 10 * 10, 1, 1, 0, 0)
     case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)

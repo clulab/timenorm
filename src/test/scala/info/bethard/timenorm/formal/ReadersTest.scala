@@ -422,4 +422,33 @@ class ReadersTest extends FunSuite with TypesSuite {
       case _ => fail("expected Seq(january: RI, year: RI, this: I, intersection: Is), found " + temporals)
     }
   }
+
+  test("NYT19980206.0460 (1095,1110) quarter-century") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>307@e@NYT19980206.0460@gold</id>
+            <span>1095,1110</span>
+            <type>Calendar-Interval</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Quarter-Century</Type>
+              <Number/>
+              <Modifier/>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, None)
+    val dct = SimpleInterval.of(1998, 2, 6)
+    val aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(quarterCentury: RepeatingInterval) =>
+        assert(ThisRI(dct, quarterCentury)
+          === SimpleInterval(LocalDateTime.of(1975, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 1, 0, 0)))
+      case _ => fail("expected Seq(quarter-century: RI), found " + temporals)
+    }
+  }
 }
