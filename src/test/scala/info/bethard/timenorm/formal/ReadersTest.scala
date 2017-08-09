@@ -287,4 +287,78 @@ class ReadersTest extends FunSuite with TypesSuite {
       case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
     }
   }
+
+  test("APW19980322.0749 (3918,3925) Earlier Sunday") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>125@e@APW19980322.0749@gold</id>
+            <span>3926,3932</span>
+            <type>Day-Of-Week</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Sunday</Type>
+              <Sub-Interval></Sub-Interval>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>177@e@APW19980322.0749@gold</id>
+            <span>3926,3932</span>
+            <type>Last</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Interval-Included</Semantics>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>125@e@APW19980322.0749@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>178@e@APW19980322.0749@gold</id>
+            <span>3918,3925</span>
+            <type>Before</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>Link</Interval-Type>
+              <Interval>179@e@APW19980322.0749@gold</Interval>
+              <Period></Period>
+              <Repeating-Interval></Repeating-Interval>
+              <Semantics>Interval-Not-Included</Semantics>
+            </properties>
+          </entity>
+          <entity>
+            <id>179@e@APW19980322.0749@gold</id>
+            <span>3750,3759</span>
+            <type>Event</type>
+            <parentsType>Other</parentsType>
+            <properties>
+            </properties>
+          </entity>
+          <entity>
+            <id>180@e@APW19980322.0749@gold</id>
+            <span>3918,3925</span>
+            <type>Intersection</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Intervals>178@e@APW19980322.0749@gold</Intervals>
+              <Intervals>177@e@APW19980322.0749@gold</Intervals>
+              <Repeating-Intervals></Repeating-Intervals>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, None)
+    val aReader = new AnaforaReader(SimpleInterval.of(1998, 3, 22))
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(sunday: RepeatingInterval, last: LastRI, before: BeforeP, event: Event, intersection: IntersectionI) =>
+        assert(last === SimpleInterval.of(1998, 3, 22))
+        assert(!intersection.isDefined)
+      case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
+    }
+  }
 }

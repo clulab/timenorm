@@ -91,7 +91,8 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     val valueOption = entity.properties.get("Value")
     val periodEntities = entity.properties.getEntities("Period")
     val periods = periodEntities.map(period)
-    val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
+    val repeatingIntervalEntities =
+      entity.properties.getEntities("Repeating-Interval") ++ entity.properties.getEntities("Repeating-Intervals")
     val repeatingIntervals = repeatingIntervalEntities.map(repeatingInterval)
     val numberEntities = repeatingIntervalEntities.map(_.properties.getEntity("Number"))
     val numbers = numberEntities.flatten.map(number)
@@ -135,6 +136,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       case ("NthFromStart", Some(value), N, N, N, None) => NthFromStartP(interval(properties), value.toInt, UnknownPeriod)
       case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthFromStartP(interval(properties), value.toInt, period)
       case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthFromStartRI(interval(properties), value.toInt, rInterval)
+      case ("Intersection", None, N, N, N, None) => IntersectionI(entity.properties.getEntities("Intervals").map(interval))
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Interval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
@@ -250,20 +252,23 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     case other => other
   }
 
-  def temporal(entity: Entity)(implicit data: Data): TimeExpression = entity.`type` match {
-    case "Number" => number(entity)
-    case "Modifier" => modifier(entity)
-    case "Period" | "Sum" => period(entity)
-    case "Intersection" if entity.properties.has("Intervals") => intervals(entity)
-    case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After" =>
-      interval(entity)
-    case "Last" | "Next" | "NthFromStart" =>
-      val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
-      repeatingIntervalEntities.flatMap(_.properties.getEntity("Number")).map(number) match {
-        case Seq() => interval(entity)
-        case Seq(_) => intervals(entity)
-      }
-    case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
-    case _ => repeatingInterval(entity)
+  def temporal(entity: Entity)(implicit data: Data): TimeExpression = {
+    val intervalEntities = entity.properties.getEntities("Intervals")
+    val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
+    entity.`type` match {
+      case "Number" => number(entity)
+      case "Modifier" => modifier(entity)
+      case "Period" | "Sum" => period(entity)
+      case "Intersection" if intervalEntities.size > 1 && repeatingIntervalEntities.isEmpty => interval(entity)
+      case "Intersection" if intervalEntities.size == 1 && repeatingIntervalEntities.nonEmpty => intervals(entity)
+      case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After" => interval(entity)
+      case "Last" | "Next" | "NthFromStart" =>
+        repeatingIntervalEntities.flatMap(_.properties.getEntity("Number")).map(number) match {
+          case Seq() => interval(entity)
+          case Seq(_) => intervals(entity)
+        }
+      case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
+      case _ => repeatingInterval(entity)
+    }
   }
 }

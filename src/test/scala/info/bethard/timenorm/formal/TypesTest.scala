@@ -907,6 +907,28 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(mar31.following(startOf1980).next === SimpleInterval.of(1980, 3, 31))
   }
 
+  test("IntersectionI") {
+    assert(IntersectionI(Seq(SimpleInterval.of(1998), SimpleInterval.of(1998, 2))) === SimpleInterval.of(1998, 2))
+    assert(IntersectionI(Seq(
+      SimpleInterval(LocalDateTime.of(2017, 4, 25, 0, 0), LocalDateTime.of(2017, 6, 30, 0, 0)),
+      SimpleInterval(LocalDateTime.of(2017, 2, 2, 0, 0), LocalDateTime.of(2017, 5, 7, 0, 0)),
+      SimpleInterval(LocalDateTime.of(2017, 3, 15, 0, 0), LocalDateTime.of(2017, 4, 28, 0, 0))))
+      === SimpleInterval(LocalDateTime.of(2017, 4, 25, 0, 0), LocalDateTime.of(2017, 4, 28, 0, 0)))
+
+    // two intervals that don't intersect at all
+    intercept[UnsupportedOperationException] {
+      val Interval(_, _) = IntersectionI(Seq(SimpleInterval.of(1998), SimpleInterval.of(2000)))
+    }
+
+    // three intervals that intersect in pairs, but not all together
+    intercept[UnsupportedOperationException] {
+      val Interval(_, _) = IntersectionI(Seq(
+        SimpleInterval(LocalDateTime.of(2017, 4, 25, 0, 0), LocalDateTime.of(2017, 6, 30, 0, 0)),
+        SimpleInterval(LocalDateTime.of(2017, 2, 2, 0, 0), LocalDateTime.of(2017, 5, 7, 0, 0)),
+        SimpleInterval(LocalDateTime.of(2017, 3, 15, 0, 0), LocalDateTime.of(2017, 4, 25, 0, 0))))
+    }
+  }
+
   test("isDefined") {
     val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
     val fridays = RepeatingField(ChronoField.DAY_OF_WEEK, 5)

@@ -548,6 +548,16 @@ case class NthFromStartRIs(interval: Interval, index: Int,
   }
 }
 
+case class IntersectionI(intervals: Seq[Interval]) extends Interval {
+  val isDefined = intervals.forall(_.isDefined)
+  implicit val ldtOrdering = Ordering.fromLessThan[LocalDateTime](_ isBefore _)
+  lazy val Interval(start, end) = intervals.sortBy(_.start).reduceLeft[Interval] {
+    case (i1, i2) if i1.end.isAfter(i2.start) =>
+      SimpleInterval(ldtOrdering.max(i1.start, i2.start), ldtOrdering.min(i1.end, i2.end))
+    case _ => throw new UnsupportedOperationException("Intervals do not intersect: " + intervals)
+  }
+}
+
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
 
