@@ -109,6 +109,10 @@ class TemporalFieldsTest extends FunSuite {
     test(FALLS)
     test(WINTERS)
   }
+
+  test("quarter centuries") {
+    assert(LocalDate.of(2017, 8, 9).plus(2L, QUARTER_CENTURIES) === LocalDate.of(2067, 8, 9))
+  }
   
   private def assertSeasonDay(date: LocalDate, seasonOfYear: PartialOfRangeUnit, dayOfSeason: Int): Unit = {
     assert(date.get(seasonOfYear) === 1)

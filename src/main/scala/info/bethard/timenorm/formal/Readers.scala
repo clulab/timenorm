@@ -10,6 +10,32 @@ object AnaforaReader {
 
   class Exception(message: String) extends java.lang.Exception(message)
 
+  private object SomeChronoField {
+    def unapply(name: String): Option[ChronoField] =
+      try {
+        Some(ChronoField.valueOf(name.replace('-', '_').toUpperCase()))
+      } catch {
+        case _: IllegalArgumentException => None
+      }
+  }
+
+  private object SomeChronoUnit {
+    def unapply(name: String): Option[ChronoUnit] =
+      try {
+        Some(ChronoUnit.valueOf(name.toUpperCase()))
+      } catch {
+        case _: IllegalArgumentException => None
+      }
+  }
+
+  private object SomePluralChronoUnit {
+    def unapply(name: String): Option[ChronoUnit] =
+      try {
+        Some(ChronoUnit.valueOf(name.toUpperCase() + "S"))
+      } catch {
+        case _: IllegalArgumentException => None
+      }
+  }
 }
 
 class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
@@ -67,13 +93,12 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
           assert(!entity.properties.has("Number"), s"expected empty Number, found ${entity.xml}")
           assert(!entity.properties.has("Modifier"), s"expected empty Modifier, found ${entity.xml}")
           UnknownPeriod
-        case _ => SimplePeriod(
-          ChronoUnit.valueOf(entity.properties("Type").toUpperCase()),
-          entity.properties.getEntity("Number") match {
+        case AnaforaReader.SomeChronoUnit(unit) =>
+          val n: Number = entity.properties.getEntity("Number") match {
             case Some(numberEntity) => number(numberEntity)
             case None => if (entity.text.last != 's') IntNumber(1) else VagueNumber("2+")
-          },
-          mod)
+          }
+          SimplePeriod(unit, n, mod)
       }
       case "Sum" => SumP(entity.properties.getEntities("Periods").map(period).toSet, mod)
     }
@@ -83,6 +108,8 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     properties(prefix + "Interval-Type") match {
       case "Link" => interval(properties.entity(prefix + "Interval"))
       case "DocTime" => DCT
+      case "DocTime-Year" => SimpleInterval.of(DCT.start.getYear)
+      case "DocTime-Era" => SimpleInterval(LocalDateTime.of(0, 1, 1, 0, 0), LocalDateTime.MAX)
       case "Unknown" => UnknownInterval
     }
 
@@ -91,7 +118,8 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     val valueOption = entity.properties.get("Value")
     val periodEntities = entity.properties.getEntities("Period")
     val periods = periodEntities.map(period)
-    val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
+    val repeatingIntervalEntities =
+      entity.properties.getEntities("Repeating-Interval") ++ entity.properties.getEntities("Repeating-Intervals")
     val repeatingIntervals = repeatingIntervalEntities.map(repeatingInterval)
     val numberEntities = repeatingIntervalEntities.map(_.properties.getEntity("Number"))
     val numbers = numberEntities.flatten.map(number)
@@ -135,6 +163,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       case ("NthFromStart", Some(value), N, N, N, None) => NthFromStartP(interval(properties), value.toInt, UnknownPeriod)
       case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthFromStartP(interval(properties), value.toInt, period)
       case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthFromStartRI(interval(properties), value.toInt, rInterval)
+      case ("Intersection", None, N, N, N, None) => IntersectionI(entity.properties.getEntities("Intervals").map(interval))
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Interval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
@@ -171,45 +200,35 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
 
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
     val mod = modifier(entity.properties)
-    val result = entity.`type` match {
-      case "Union" =>
+    val result = (entity.`type`, entity.properties.get("Type")) match {
+      case ("Union", None) =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
         UnionRI(repeatingIntervalEntities.map(repeatingInterval).toSet)
-      case "Intersection" =>
+      case ("Intersection", None) =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
         if (entity.properties.has("Intervals")) throw new AnaforaReader.Exception(
           s"""cannot parse Intersection from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
         IntersectionRI(repeatingIntervals.toSet)
-      case "Calendar-Interval" => RepeatingUnit(entity.properties("Type") match {
-        case "Century" => ChronoUnit.CENTURIES
-        case "Quarter-Year" => IsoFields.QUARTER_YEARS
-        case other => ChronoUnit.valueOf(other.toUpperCase + "S")
-      }, mod)
-      case "Week-Of-Year" => RepeatingField(
-        WeekFields.ISO.weekOfYear(),
-        entity.properties("Value").toLong,
-        mod)
-      case "Season-Of-Year" => RepeatingField(entity.properties("Type") match {
-        case "Spring" => SPRING_OF_YEAR
-        case "Summer" => SUMMER_OF_YEAR
-        case "Fall" => FALL_OF_YEAR
-        case "Winter" => WINTER_OF_YEAR
-      }, 1L, mod)
-      case "Part-Of-Week" => entity.properties("Type") match {
-        case "Weekend" => RepeatingField(WEEKEND_OF_WEEK, 1, mod)
-        case "Weekdays" => RepeatingField(WEEKEND_OF_WEEK, 0, mod)
-      }
-      case "Part-Of-Day" => entity.properties("Type") match {
-        case "Dawn" => RepeatingField(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Modifier.Approx)
-        case "Morning" => RepeatingField(MORNING_OF_DAY, 1, mod)
-        case "Noon" => RepeatingField(ChronoField.MINUTE_OF_DAY, 12L * 60L, mod)
-        case "Afternoon" => RepeatingField(AFTERNOON_OF_DAY, 1, mod)
-        case "Evening" => RepeatingField(EVENING_OF_DAY, 1, mod)
-        case "Dusk" => RepeatingField(ChronoField.SECOND_OF_DAY, 19L * 60L * 60L, Modifier.Approx)
-        case "Night" => RepeatingField(NIGHT_OF_DAY, 1, mod)
-        case "Midnight" => RepeatingField(ChronoField.SECOND_OF_DAY, 0L, mod)
-      }
-      case "Hour-Of-Day" =>
+      case ("Calendar-Interval" , Some("Century")) => RepeatingUnit(ChronoUnit.CENTURIES, mod)
+      case ("Calendar-Interval" , Some("Quarter-Century")) => RepeatingUnit(QUARTER_CENTURIES, mod)
+      case ("Calendar-Interval" , Some("Quarter-Year")) => RepeatingUnit(IsoFields.QUARTER_YEARS, mod)
+      case ("Calendar-Interval" , Some(AnaforaReader.SomePluralChronoUnit(unit))) => RepeatingUnit(unit, mod)
+      case ("Week-Of-Year", None) => RepeatingField(WeekFields.ISO.weekOfYear(), entity.properties("Value").toLong, mod)
+      case ("Season-Of-Year", Some("Spring")) => RepeatingField(SPRING_OF_YEAR, 1L, mod)
+      case ("Season-Of-Year", Some("Summer")) => RepeatingField(SUMMER_OF_YEAR, 1L, mod)
+      case ("Season-Of-Year", Some("Fall")) => RepeatingField(FALL_OF_YEAR, 1L, mod)
+      case ("Season-Of-Year", Some("Winter")) => RepeatingField(WINTER_OF_YEAR, 1L, mod)
+      case ("Part-Of-Week", Some("Weekend")) => RepeatingField(WEEKEND_OF_WEEK, 1, mod)
+      case ("Part-Of-Week", Some("Weekdays")) => RepeatingField(WEEKEND_OF_WEEK, 0, mod)
+      case ("Part-Of-Day", Some("Dawn")) => RepeatingField(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Modifier.Approx)
+      case ("Part-Of-Day", Some("Morning")) => RepeatingField(MORNING_OF_DAY, 1, mod)
+      case ("Part-Of-Day", Some("Noon")) => RepeatingField(ChronoField.MINUTE_OF_DAY, 12L * 60L, mod)
+      case ("Part-Of-Day", Some("Afternoon")) => RepeatingField(AFTERNOON_OF_DAY, 1, mod)
+      case ("Part-Of-Day", Some("Evening")) => RepeatingField(EVENING_OF_DAY, 1, mod)
+      case ("Part-Of-Day", Some("Dusk")) => RepeatingField(ChronoField.SECOND_OF_DAY, 19L * 60L * 60L, Modifier.Approx)
+      case ("Part-Of-Day", Some("Night")) => RepeatingField(NIGHT_OF_DAY, 1, mod)
+      case ("Part-Of-Day", Some("Midnight")) => RepeatingField(ChronoField.SECOND_OF_DAY, 0L, mod)
+      case ("Hour-Of-Day", None) =>
         // TODO: handle time zone
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
@@ -218,8 +237,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
             repeatingInterval(ampmEntity)))
           case None => RepeatingField(ChronoField.HOUR_OF_DAY, value, mod)
         }
-      case name =>
-        val field = ChronoField.valueOf(name.replace('-', '_').toUpperCase())
+      case (AnaforaReader.SomeChronoField(field), _) =>
         val value: Long = field match {
           case ChronoField.MONTH_OF_YEAR => Month.valueOf(entity.properties("Type").toUpperCase()).getValue
           case ChronoField.DAY_OF_WEEK => DayOfWeek.valueOf(entity.properties("Type").toUpperCase()).getValue
@@ -233,6 +251,8 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
             s"""cannot parse ChronoField value from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
         }
         RepeatingField(field, value, mod)
+      case _ => throw new AnaforaReader.Exception(
+        s"""cannot parse RepeatingInterval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
@@ -250,20 +270,24 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     case other => other
   }
 
-  def temporal(entity: Entity)(implicit data: Data): TimeExpression = entity.`type` match {
-    case "Number" => number(entity)
-    case "Modifier" => modifier(entity)
-    case "Period" | "Sum" => period(entity)
-    case "Intersection" if entity.properties.has("Intervals") => intervals(entity)
-    case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After" =>
-      interval(entity)
-    case "Last" | "Next" | "NthFromStart" =>
-      val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Interval")
-      repeatingIntervalEntities.flatMap(_.properties.getEntity("Number")).map(number) match {
-        case Seq() => interval(entity)
-        case Seq(_) => intervals(entity)
-      }
-    case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
-    case _ => repeatingInterval(entity)
+  def temporal(entity: Entity)(implicit data: Data): TimeExpression = {
+    val intervalEntities = entity.properties.getEntities("Intervals")
+    val repeatingIntervalEntities =
+      entity.properties.getEntities("Repeating-Interval") ++ entity.properties.getEntities("Repeating-Intervals")
+    entity.`type` match {
+      case "Number" => number(entity)
+      case "Modifier" => modifier(entity)
+      case "Period" | "Sum" => period(entity)
+      case "Intersection" if intervalEntities.size > 1 && repeatingIntervalEntities.isEmpty => interval(entity)
+      case "Intersection" if intervalEntities.size == 1 && repeatingIntervalEntities.nonEmpty => intervals(entity)
+      case "Event" | "Year" | "Two-Digit-Year" | "Between" | "This" | "Before" | "After" => interval(entity)
+      case "Last" | "Next" | "NthFromStart" =>
+        repeatingIntervalEntities.flatMap(_.properties.getEntity("Number")).map(number) match {
+          case Seq() => interval(entity)
+          case Seq(_) => intervals(entity)
+        }
+      case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
+      case _ => repeatingInterval(entity)
+    }
   }
 }

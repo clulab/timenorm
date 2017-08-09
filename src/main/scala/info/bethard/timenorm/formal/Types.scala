@@ -3,7 +3,7 @@ package info.bethard.timenorm.formal
 import java.time.temporal._
 import java.time.{Duration, LocalDateTime}
 
-import info.bethard.timenorm.field.{ConstantPartialRange, MonthDayPartialRange}
+import info.bethard.timenorm.field.{ConstantPartialRange, MonthDayPartialRange, QUARTER_CENTURIES}
 
 import scala.collection.JavaConverters._
 
@@ -525,8 +525,8 @@ case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: Rep
   extends Interval with IRIN {
   val number = IntNumber(1)
   lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(index - 1).next match {
-    case result if result.end.isBefore(interval.end) => result
-    case _ => ???
+    case result if !result.end.isAfter(interval.end) => result
+    case result => ???
   }
 }
 
@@ -548,6 +548,16 @@ case class NthFromStartRIs(interval: Interval, index: Int,
   }
 }
 
+case class IntersectionI(intervals: Seq[Interval]) extends Interval {
+  val isDefined = intervals.forall(_.isDefined)
+  implicit val ldtOrdering = Ordering.fromLessThan[LocalDateTime](_ isBefore _)
+  lazy val Interval(start, end) = intervals.sortBy(_.start).reduceLeft[Interval] {
+    case (i1, i2) if i1.end.isAfter(i2.start) =>
+      SimpleInterval(ldtOrdering.max(i1.start, i2.start), ldtOrdering.min(i1.end, i2.end))
+    case _ => throw new UnsupportedOperationException("Intervals do not intersect: " + intervals)
+  }
+}
+
 trait RepeatingInterval extends TimeExpression {
   def preceding(ldt: LocalDateTime): Iterator[Interval]
 
@@ -560,8 +570,11 @@ trait RepeatingInterval extends TimeExpression {
 private[formal] object RepeatingInterval {
   def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = tUnit match {
     case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear / 100 * 100, 1, 1, 0, 0)
+    case QUARTER_CENTURIES => LocalDateTime.of(ldt.getYear / 25 * 25, 1, 1, 0, 0)
     case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear / 10 * 10, 1, 1, 0, 0)
     case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
+    case IsoFields.QUARTER_YEARS =>
+      ldt.withMonth((ldt.getMonthValue - 1) / 4 + 1).withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.WEEKS =>
       ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue + 1).truncatedTo(ChronoUnit.DAYS)
