@@ -108,6 +108,8 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
     properties(prefix + "Interval-Type") match {
       case "Link" => interval(properties.entity(prefix + "Interval"))
       case "DocTime" => DCT
+      case "DocTime-Year" => SimpleInterval.of(DCT.start.getYear)
+      case "DocTime-Era" => SimpleInterval(LocalDateTime.of(0, 1, 1, 0, 0), LocalDateTime.MAX)
       case "Unknown" => UnknownInterval
     }
 

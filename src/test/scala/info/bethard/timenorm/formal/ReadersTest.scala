@@ -451,4 +451,86 @@ class ReadersTest extends FunSuite with TypesSuite {
       case _ => fail("expected Seq(quarter-century: RI), found " + temporals)
     }
   }
+
+  test("wsj_0266 (489,496) 20th century") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>27@e@wsj_0266@isma5916</id>
+            <span>489,496</span>
+            <type>Calendar-Interval</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Century</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>28@e@wsj_0266@isma5916</id>
+            <span>484,488</span>
+            <type>NthFromStart</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>DocTime-Era</Interval-Type>
+              <Interval></Interval>
+              <Value>20</Value>
+              <Period></Period>
+              <Repeating-Interval>27@e@wsj_0266@isma5916</Repeating-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, None)
+    val dct = SimpleInterval.of(1989, 11, 1)
+    val aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(_: RepeatingInterval, nth: NthFromStartRI) =>
+        assert(nth === SimpleInterval(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 1, 0, 0)))
+      case _ => fail("expected Seq(century: RI, 20th: I), found " + temporals)
+    }
+  }
+
+  test("wsj_0348 (293,300) third quarter") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>23@e@wsj_0348@isma5916</id>
+            <span>293,300</span>
+            <type>Calendar-Interval</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Quarter-Year</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>24@e@wsj_0348@isma5916</id>
+            <span>287,292</span>
+            <type>NthFromStart</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>DocTime-Year</Interval-Type>
+              <Interval></Interval>
+              <Value>3</Value>
+              <Period></Period>
+              <Repeating-Interval>23@e@wsj_0348@isma5916</Repeating-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>.convert
+    implicit val data = Data(xml, None)
+    val dct = SimpleInterval.of(1989, 11, 1)
+    val aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(_: RepeatingInterval, nth: NthFromStartRI) =>
+        assert(nth === SimpleInterval(LocalDateTime.of(1989, 7, 1, 0, 0), LocalDateTime.of(1989, 10, 1, 0, 0)))
+      case _ => fail("expected Seq(quarter: RI, 3rd: I), found " + temporals)
+    }
+  }
 }
