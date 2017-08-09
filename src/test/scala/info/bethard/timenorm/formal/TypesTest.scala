@@ -500,6 +500,9 @@ class TypesTest extends FunSuite with TypesSuite {
     intercept[NotImplementedError] {
       val Interval(start, end) = NthFromStartRI(interval, 5, frInterval)
     }
+
+    assert(NthFromStartRI(SimpleInterval.of(2017), 4, RepeatingUnit(IsoFields.QUARTER_YEARS))
+      === SimpleInterval(LocalDateTime.of(2017, 10, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)))
   }
 
   test("ThisRI") {

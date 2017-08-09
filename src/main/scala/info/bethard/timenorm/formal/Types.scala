@@ -525,8 +525,8 @@ case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: Rep
   extends Interval with IRIN {
   val number = IntNumber(1)
   lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(index - 1).next match {
-    case result if result.end.isBefore(interval.end) => result
-    case _ => ???
+    case result if !result.end.isAfter(interval.end) => result
+    case result => ???
   }
 }
 
