@@ -1,6 +1,6 @@
 package info.bethard.timenorm.formal
 
-import java.time.temporal.{ChronoField, ChronoUnit, TemporalUnit, UnsupportedTemporalTypeException}
+import java.time.temporal._
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -387,6 +387,9 @@ class TypesTest extends FunSuite with TypesSuite {
     val lastWeek = LastRI(SimpleInterval.of(2017, 1, 9), RepeatingUnit(ChronoUnit.WEEKS))
     assert(lastWeek.start === LocalDateTime.of(2017, 1, 2, 0, 0))
     assert(lastWeek.end === LocalDateTime.of(2017, 1, 9, 0, 0))
+
+    assert(LastRI(interval, RepeatingUnit(IsoFields.QUARTER_YEARS))
+      === SimpleInterval(LocalDateTime.of(2001, 10, 1, 0, 0), LocalDateTime.of(2002, 1, 1, 0, 0)))
 
     assert(LastRI(SimpleInterval.of(2017, 7, 7), day, from = Interval.End) === SimpleInterval.of(2017, 7, 7))
     // July 7, 2017 is a Friday
