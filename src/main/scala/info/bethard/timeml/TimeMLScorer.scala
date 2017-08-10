@@ -156,11 +156,11 @@ object TimeMLScorer {
               gs :+= (entity, temporal, intervals)
             }
           } catch {
-            case ex: IllegalArgumentException => println(entity.id, entity.expandedText, ex)
-            case ex: NumberFormatException => println(entity.id, entity.expandedText, ex)
-            case ex: AssertionError => println(entity.id, entity.expandedText, ex)
-            case ex: NotImplementedError => println(entity.id, entity.expandedText, ex)
-            case ex: Exception => println(entity.id, entity.expandedText, ex)
+            case ex: IllegalArgumentException => println(entity.id, ex)
+            case ex: NumberFormatException => println(entity.id, ex)
+            case ex: AssertionError => println(entity.id, ex)
+            case ex: NotImplementedError => println(entity.id, ex)
+            case ex: Exception => println(entity.id, ex)
 
           }
         }
@@ -204,10 +204,10 @@ object TimeMLScorer {
               val sysentity = systimex._1
               if (gsentity.expandedSpan._1 <= sysentity.fullSpan._2 && gsentity.expandedSpan._2 >= sysentity.fullSpan._1) {
                 try {
-                  printf("  Gold: %s \"%s\" %s \n", gsentity.id, gsentity.expandedSpan, gsentity.expandedText)
+                  printf("  Gold: %s \"%s\"\n", gsentity.id, gsentity.expandedSpan)
                   printf("\t%s\n", gstimex._2)
                   printf("\t%s\n", gstimex._3)
-                  printf("  Answ: %s \"%s\" %s \n", sysentity.id, sysentity.fullSpan, sysentity.text)
+                  printf("  Answ: %s \"%s\"\n", sysentity.id, sysentity.fullSpan)
                   printf("\t%s\n", systimex._3)
                   val (precision, recall) = score(gstimex._2, gstimex._3, systimex._2, systimex._3)
                   println()
