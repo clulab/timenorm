@@ -281,10 +281,10 @@ object TimeNormScorer {
             if (gsentity.expandedSpan._1 <= sysentity.expandedSpan._2 && gsentity.expandedSpan._2 >= sysentity.expandedSpan._1) {
               try {
                 data = gsdata
-                printf("  Gold: %s \"%s\" %s \n", gsentity.id, gsentity.expandedSpan, gsentity.expandedText)
+                printf("  Gold: %s \"%s\"\n", gsentity.id, gsentity.expandedSpan)
                 printf("\t%s\n", gstimex._3)
                 data = sysdata
-                printf("  Answ: %s \"%s\" %s \n", sysentity.id, sysentity.expandedSpan, sysentity.expandedText)
+                printf("  Answ: %s \"%s\"\n", sysentity.id, sysentity.expandedSpan)
                 printf("\t%s\n", systimex._3)
                 val (precision, recall) = score(gstimex._2, gstimex._3, systimex._2, systimex._3)
                 sum_precision += precision
