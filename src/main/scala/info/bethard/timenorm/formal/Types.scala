@@ -6,6 +6,7 @@ import java.time.{Duration, LocalDateTime}
 import info.bethard.timenorm.field.{ConstantPartialRange, MonthDayPartialRange, QUARTER_CENTURIES}
 
 import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 trait TimeExpression {
   def isDefined: Boolean
@@ -619,7 +620,7 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
   override val range: TemporalUnit = field.getRangeUnit
 
   override def preceding(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt.`with`(field, value), field.getBaseUnit)
+    var start = RepeatingInterval.truncate(this.withFieldValue(ldt, _.plus(_, _)), field.getBaseUnit)
     val end = start.plus(1, field.getBaseUnit)
 
     if (!ldt.isBefore(end)) {
@@ -632,7 +633,7 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
   }
 
   override def following(ldt: LocalDateTime): Iterator[Interval] = {
-    var start = RepeatingInterval.truncate(ldt `with`(field, value), field.getBaseUnit)
+    var start = RepeatingInterval.truncate(this.withFieldValue(ldt, _.minus(_, _)), field.getBaseUnit)
 
     if (!start.isBefore(ldt)) {
       start = minus1range(start)
@@ -641,6 +642,16 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
       start = plus1range(start)
       SimpleInterval(start, start.plus(1, field.getBaseUnit))
     }
+  }
+
+  private def withFieldValue(ldt: LocalDateTime,
+                             update: (LocalDateTime, Int, TemporalUnit) => LocalDateTime): LocalDateTime = {
+    if (!field.range().isValidValue(value)) {
+      ldt.`with`(field, value) // guaranteed to throw an exception
+    }
+    Iterator.from(0).map(i => Try(update(ldt, i, field.getRangeUnit).`with`(field, value))).collect{
+      case Success(ldt) => ldt
+    }.next
   }
 
   private def plus1range(ldt: LocalDateTime): LocalDateTime = {
