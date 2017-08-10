@@ -366,6 +366,10 @@ class TypesTest extends FunSuite with TypesSuite {
     val day31 = RepeatingField(ChronoField.DAY_OF_MONTH, 31)
     val startOfMar1980 = LocalDateTime.of(1980, 3, 1, 0, 0)
     assert(day31.following(startOfMar1980).next === SimpleInterval.of(1980, 3, 31))
+
+    val feb15 = LocalDateTime.of(2000, 2, 15, 0, 0)
+    assert(day31.following(feb15).next === SimpleInterval.of(2000, 3, 31))
+    assert(day31.preceding(feb15).next === SimpleInterval.of(2000, 1, 31))
   }
 
   test("LastRI") {
@@ -979,6 +983,15 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(
       NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
         === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
+  }
+
+  test("wsj_0346 (889,894) year ended March 31") {
+    val march = RepeatingField(ChronoField.MONTH_OF_YEAR, 3)
+    val day31 = RepeatingField(ChronoField.DAY_OF_MONTH, 31)
+    val march31 = IntersectionRI(Set(march, day31))
+    assert(
+      LastP(LastRI(SimpleInterval.of(1989, 11, 1), march31), SimplePeriod(ChronoUnit.YEARS, 1))
+        === SimpleInterval(LocalDateTime.of(1988, 3, 31, 0, 0), LocalDateTime.of(1989, 3, 31, 0, 0)))
   }
 }
 
