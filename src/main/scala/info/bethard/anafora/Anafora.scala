@@ -3,16 +3,13 @@ package info.bethard.anafora
 import com.codecommit.antixml.Elem
 import com.codecommit.antixml.{text => ElemText}
 import com.codecommit.antixml.XML
-
 import com.codecommit.antixml.*
 
 object Data {
   def fromPaths(xmlPath: String, textPath: Option[String]) = apply(
     XML.fromSource(io.Source.fromFile(xmlPath)), textPath.map(p => io.Source.fromFile(p).mkString))
-
   def apply(xml: Elem, text: Option[String]) = new Data(xml, text)
 }
-
 class Data(xml: Elem, val text: Option[String]) {
   lazy val entities: IndexedSeq[Entity] = xml \ "annotations" \ "entity" map Entity.apply
   lazy val relations: IndexedSeq[Relation] = xml \ "annotations" \ "relation" map Relation.apply
@@ -36,23 +33,19 @@ abstract class Annotation(val xml: Elem) {
 object Entity {
   def apply(xml: Elem) = new Entity(xml)
 }
-
 class Entity(xml: Elem) extends Annotation(xml) {
   lazy val spans: IndexedSeq[(Int, Int)] =
     (xml \ "span" \ ElemText).flatMap(_.split(";")).map(_.split(",").map(_.toInt) match {
       case Array(start, end) => (start, end)
     }).sorted
   lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
-
   def text(implicit data: Data): Option[String] = data.text.map(text => spans.map {
     case (start, end) => text.substring(start, end)
   }.mkString("..."))
-
   def expandedSpan(implicit data: Data): (Int, Int) = {
     val allSpans = entityDescendants.flatMap(_.spans)
     (allSpans.map(_._1).min, allSpans.map(_._2).max)
   }
-
   def entityDescendants(implicit data: Data): IndexedSeq[Entity] = {
     val childTexts = this.properties.xml.children \ ElemText
     val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)
