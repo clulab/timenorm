@@ -3,6 +3,7 @@ package info.bethard.anafora
 import com.codecommit.antixml.Elem
 import com.codecommit.antixml.{text => ElemText}
 import com.codecommit.antixml.XML
+
 import com.codecommit.antixml.*
 
 object Data {
