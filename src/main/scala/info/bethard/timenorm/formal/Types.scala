@@ -499,51 +499,83 @@ case class Between(startInterval: Interval, endInterval: Interval) extends Inter
 }
 
 /**
-  * Creates an interval that is the nth repetition of the period following the start of the interval.
-  * Formally: NthFromStart([t1,t2): Interval, Δ: Period, n: N): Interval = [t1+Δ*(n-1), t1+Δ*n)
+  * Creates an interval that is the nth repetition of the period in of the interval. Formally:
+  * Nth([t1,t2): Interval, Δ: Period, n: N, Start): Interval = [t1+Δ*(n-1), t1+Δ*n)
+  * Nth([t1,t2): Interval, Δ: Period, n: N, End): Interval = [t2-Δ*(n-1), t2-Δ*n)
   *
   * @param interval the interval to begin from
-  * @param number   the number of repetitions of the period to add
+  * @param index    the number of repetitions of the period to add
   * @param period   the period to scale by
+  * @param from     which end of the interval to start at
   */
-case class NthFromStartP(interval: Interval, number: Int, period: Period) extends Interval {
+case class NthP(interval: Interval,
+                index: Int,
+                period: Period,
+                from: Interval.Point = Interval.Start) extends Interval {
   val isDefined: Boolean = interval.isDefined && period.isDefined
-  lazy val start: LocalDateTime = Iterator.fill(number - 1)(period).foldLeft(interval.start)(_ plus _)
-  lazy val end: LocalDateTime = start.plus(period)
+  lazy val Interval(start, end) = {
+    val periods = Iterator.fill(index - 1)(period)
+    from match {
+      case Interval.Start =>
+        val start = periods.foldLeft(interval.start)(_ plus _)
+        val end = start.plus(period)
+        SimpleInterval(start, end)
+      case Interval.End =>
+        val end = periods.foldLeft(interval.end)(_ minus _)
+        val start = end.minus(period)
+        SimpleInterval(start, end)
+    }
+  }
+}
+
+trait IRINP extends IRIN {
+  val from: Interval.Point
+  lazy val intervalsFromPoint: Iterator[Interval] = from match {
+    case Interval.Start => repeatingInterval.following(interval.start)
+    case Interval.End => repeatingInterval.preceding(interval.end)
+  }
 }
 
 /**
-  * Selects the Nth subinterval of a RepeatingInterval, counting from the start of another Interval. Formally:
-  * NthFromStart([t1,t2): Interval, n: Number, R: RepeatingInterval): Interval
-  * = Nth of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
+  * Selects the Nth subinterval of a RepeatingInterval in another Interval. Formally:
+  * Nth([t1,t2): Interval, n: Number, R: RepeatingInterval, Start): Interval
+  * = Nth, counting forward from t1, of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
+  * Nth([t1,t2): Interval, n: Number, R: RepeatingInterval, End): Interval
+  * = Nth, counting backward from t2, of {[t.start, t.end) ∈ R : t1 ≤ t.start ∧ t.end ≤ t2}
   *
   *
   * @param interval          interval to start from
   * @param index             index of the group to be selected (counting from 1)
   * @param repeatingInterval repeating intervals to select from
+  * @param from              which end of the interval to start at
   */
-case class NthFromStartRI(interval: Interval, index: Int, repeatingInterval: RepeatingInterval)
-  extends Interval with IRIN {
+case class NthRI(interval: Interval,
+                 index: Int,
+                 repeatingInterval: RepeatingInterval,
+                 from: Interval.Point = Interval.Start)
+  extends Interval with IRINP {
   val number = IntNumber(1)
-  lazy val Interval(start, end) = repeatingInterval.following(interval.start).drop(index - 1).next match {
+  lazy val Interval(start, end) = intervalsFromPoint.drop(index - 1).next match {
     case result if !result.end.isAfter(interval.end) => result
-    case result => ???
+    case _ => ???
   }
 }
 
 /**
-  * Selects the Nth group of subintervals from a RepeatingInterval, counting from the start of another Interval.
+  * Selects the Nth group of subintervals from a RepeatingInterval in another Interval.
   *
   * @param interval          interval to start from
   * @param index             index of the group to be selected (counting from 1)
   * @param number            number of repeated intervals in each group
   * @param repeatingInterval repeating intervals to select from
+  * @param from              which end of the interval to start at
   */
-case class NthFromStartRIs(interval: Interval, index: Int,
-                           repeatingInterval: RepeatingInterval,
-                           number: Number = IntNumber(1))
-  extends Intervals with IRIN {
-  lazy val intervals: Seq[Interval] = repeatingInterval.following(interval.start).grouped(integer).drop(index - 1).next match {
+case class NthRIs(interval: Interval, index: Int,
+                  repeatingInterval: RepeatingInterval,
+                  number: Number = IntNumber(1),
+                  from: Interval.Point = Interval.Start)
+  extends Intervals with IRINP {
+  lazy val intervals: Seq[Interval] = intervalsFromPoint.grouped(integer).drop(index - 1).next match {
     case result if result.forall(_.end.isBefore(interval.end)) => result
     case _ => ???
   }

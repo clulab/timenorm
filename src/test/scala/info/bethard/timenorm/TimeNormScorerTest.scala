@@ -14,25 +14,25 @@ import info.bethard.timenorm.field.{NIGHT_OF_DAY}
 class TimeNormScorerTest extends FunSuite with TypesSuite {
 
   test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
-    val gold = NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
+    val gold = NthRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
     val gold_intervals = get_intervals(gold)
 
     // first nine months of 1997
-    val timex1 = NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
+    val timex1 = NthRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
     val timex1_intervals = get_intervals(timex1)
     assert(
       score(gold, gold_intervals, timex1, timex1_intervals)  === (1.0, 1.0)
     )
 
     // first month of 1997
-    val timex2 = NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 1)
+    val timex2 = NthRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 1)
     val timex2_intervals = get_intervals(timex2)
     assert(
       score(gold, gold_intervals, timex2, timex2_intervals)  === (1.0, (31.0/273)) // January has 31 days and the interval has 273 days
     )
 
     // first eleven months of 1997
-    val timex3 = NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 11)
+    val timex3 = NthRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 11)
     val timex3_intervals = get_intervals(timex3)
     assert(
       score(gold, gold_intervals, timex3, timex3_intervals)  === ((273.0/334), 1.0) // December has 31 days (365-31=334)

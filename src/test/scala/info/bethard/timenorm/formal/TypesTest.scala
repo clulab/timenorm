@@ -257,21 +257,13 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(between.end === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
   }
 
-  test("NthFromStartP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+  test("NthP") {
+    assert(NthP(Year(2001), 2, SimplePeriod(ChronoUnit.YEARS, 1)) === SimpleInterval.of(2002))
+    assert(NthP(Year(2001), 2, SimplePeriod(ChronoUnit.YEARS, 1), from = Interval.End) === SimpleInterval.of(2000))
 
-    val year = Year(2001)
-    val nth = NthFromStartP(year, 2, period1)
-
-    assert(nth.start === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
-    assert(nth.end === LocalDateTime.of(2003, 1, 1, 0, 0, 0, 0))
-
-    val period2 = SimplePeriod(ChronoUnit.MINUTES, 20, Modifier.Exact)
-    val periodSum = SumP(Set(period1, period2), Modifier.Exact)
-    val nth2 = NthFromStartP(year, 4, periodSum)
-
-    assert(nth2.start === LocalDateTime.of(2004, 1, 1, 1, 0, 0, 0))
-    assert(nth2.end === LocalDateTime.of(2005, 1, 1, 1, 20, 0, 0))
+    val periodSum = SumP(Set(SimplePeriod(ChronoUnit.YEARS, 1), SimplePeriod(ChronoUnit.MINUTES, 20)))
+    assert(NthP(Year(2001), 4, periodSum)
+      === SimpleInterval(LocalDateTime.of(2004, 1, 1, 1, 0, 0), LocalDateTime.of(2005, 1, 1, 1, 20, 0)))
   }
 
   test("RepeatingUnit") {
@@ -487,25 +479,22 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(BeforeRI(interval, day, from = Interval.End) === SimpleInterval.of(2003, 5, 9))
   }
 
-  test("NthFromStartRI") {
+  test("NthRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val frInterval = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val urInterval = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
 
-    val nthFieldRI = NthFromStartRI(interval, 1, frInterval)
-    assert(nthFieldRI.start === LocalDateTime.of(2002, 5, 1, 0, 0, 0, 0))
-    assert(nthFieldRI.end === LocalDateTime.of(2002, 6, 1, 0, 0, 0, 0))
+    assert(NthRI(interval, 1, RepeatingField(ChronoField.MONTH_OF_YEAR, 5)) === SimpleInterval.of(2002, 5))
+    assert(NthRI(interval, 1, RepeatingField(ChronoField.MONTH_OF_YEAR, 5), from = Interval.End)
+      === SimpleInterval.of(2002, 5))
 
-    val nthUnitRI = NthFromStartRI(interval, 3, urInterval)
-    assert(nthUnitRI.start === LocalDateTime.of(2002, 3, 25, 0, 0, 0, 0))
-    assert(nthUnitRI.end === LocalDateTime.of(2002, 3, 26, 0, 0, 0, 0))
+    assert(NthRI(interval, 3, RepeatingUnit(ChronoUnit.DAYS)) === SimpleInterval.of(2002, 3, 25))
+    assert(NthRI(interval, 3, RepeatingUnit(ChronoUnit.DAYS), from = Interval.End) === SimpleInterval.of(2003, 5, 7))
 
     intercept[NotImplementedError] {
-      val Interval(start, end) = NthFromStartRI(interval, 5, frInterval)
+      val Interval(_, _) = NthRI(interval, 5, RepeatingField(ChronoField.MONTH_OF_YEAR, 5))
     }
 
-    assert(NthFromStartRI(SimpleInterval.of(2017), 4, RepeatingUnit(IsoFields.QUARTER_YEARS))
+    assert(NthRI(SimpleInterval.of(2017), 4, RepeatingUnit(IsoFields.QUARTER_YEARS))
       === SimpleInterval(LocalDateTime.of(2017, 10, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)))
   }
 
@@ -981,7 +970,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
   test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
     assert(
-      NthFromStartRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
+      NthRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
         === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
   }
 

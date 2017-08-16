@@ -160,9 +160,9 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       case ("After", None, N, Seq(rInterval), N, Inc) => AfterRI(interval(properties), rInterval, from = Interval.Start)
       case ("After", None, N, Seq(rInterval), Seq(number), Exc) => AfterRI(interval(properties), rInterval, number)
       case ("After", None, N, Seq(rInterval), Seq(number), Inc) => AfterRI(interval(properties), rInterval, number, from = Interval.Start)
-      case ("NthFromStart", Some(value), N, N, N, None) => NthFromStartP(interval(properties), value.toInt, UnknownPeriod)
-      case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthFromStartP(interval(properties), value.toInt, period)
-      case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthFromStartRI(interval(properties), value.toInt, rInterval)
+      case ("NthFromStart", Some(value), N, N, N, None) => NthP(interval(properties), value.toInt, UnknownPeriod)
+      case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthP(interval(properties), value.toInt, period)
+      case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthRI(interval(properties), value.toInt, rInterval)
       case ("Intersection", None, N, N, N, None) => IntersectionI(entity.properties.getEntities("Intervals").map(interval))
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Interval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
@@ -192,7 +192,7 @@ class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
       case ("Last", None, N, Seq(rInterval), Seq(number), N) => LastRIs(interval(entity.properties), rInterval, number)
       case ("Next", None, N, Seq(rInterval), Seq(number), N) => NextRIs(interval(entity.properties), rInterval, number)
       case ("NthFromStart", Some(value), N, Seq(rInterval), Seq(number), N) =>
-        NthFromStartRIs(interval(entity.properties), value.toInt, rInterval, number)
+        NthRIs(interval(entity.properties), value.toInt, rInterval, number)
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Intervals from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
     }
