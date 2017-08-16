@@ -13,7 +13,7 @@ import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 import info.bethard.anafora.{Annotation, Data, Entity, Properties}
-import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_intervals_timex, epoch, datetime, parseDCT, dctInterval, compact_intervals, get_range_limmits}
+import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_intervals_timex, epoch, datetime, parseDCT, compact_intervals, get_range_limmits}
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit
@@ -137,8 +137,7 @@ object TimeMLScorer {
       printf("Document: %s\n",fileName)
 
       val dctString = io.Source.fromFile(dctPath).getLines.toList(0)
-      val dctSeq: Seq[Int] = parseDCT(dctString)
-      val dct: SimpleInterval = dctInterval(dctSeq)
+      val dct: Interval = parseDCT(dctString)
       printf("DCT: %s\n\n",dctString)
 
       println("Intervals in Gold:")

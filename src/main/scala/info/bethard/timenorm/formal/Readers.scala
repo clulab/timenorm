@@ -38,7 +38,7 @@ object AnaforaReader {
   }
 }
 
-class AnaforaReader(val DCT: SimpleInterval)(implicit data: Data) {
+class AnaforaReader(val DCT: Interval)(implicit data: Data) {
 
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {

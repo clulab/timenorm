@@ -6,12 +6,19 @@ import info.bethard.anafora.Data
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import info.bethard.timenorm.TimeNormScorer.{get_intervals, score}
+import info.bethard.timenorm.TimeNormScorer.{get_intervals, score, parseDCT}
 import info.bethard.timenorm.field.{NIGHT_OF_DAY}
 
 
 @RunWith(classOf[JUnitRunner])
 class TimeNormScorerTest extends FunSuite with TypesSuite {
+
+  test("parseDCT") {
+    assert(parseDCT("1998-05-31") === SimpleInterval.of(1998, 5, 31))
+    assert(parseDCT("2017-08-01T12") === SimpleInterval.of(2017, 8, 1, 12))
+    assert(parseDCT("2017-08-01T12:59") === SimpleInterval.of(2017, 8, 1, 12, 59))
+    assert(parseDCT("2017-08-01T12:59:33") === SimpleInterval.of(2017, 8, 1, 12, 59, 33))
+  }
 
   test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
     val gold = NthRIs(Year(1997), 1, RepeatingUnit(ChronoUnit.MONTHS), 9)
