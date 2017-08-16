@@ -14,20 +14,10 @@ import java.time.temporal.TemporalUnit
 
 object TimeNormScorer {
   
-  def get_intervals(timex: TimeExpression): Seq[Interval] = {
-
-    var intervals: Seq[Interval] =
-      if (timex.isInstanceOf[Interval])
-        List(SimpleInterval(timex.asInstanceOf[Interval].start, timex.asInstanceOf[Interval].end))
-      else if (timex.isInstanceOf[Intervals])
-        timex.asInstanceOf[Intervals].iterator.toList
-      else if (timex.isInstanceOf[RepeatingInterval])
-        Nil
-      else {
-        printf("%s is not a valid TimeExpression class\n", timex.getClass.getSimpleName)
-        throw new IllegalArgumentException
-      }
-    return intervals
+  def get_intervals(timex: TimeExpression): Seq[Interval] = timex match {
+    case interval: Interval => List(interval)
+    case intervals: Intervals => intervals
+    case _: RepeatingInterval => Seq.empty
   }
 
   def epoch(datetime: java.time.LocalDateTime): Long = datetime.atZone(ZoneId.systemDefault).toEpochSecond
