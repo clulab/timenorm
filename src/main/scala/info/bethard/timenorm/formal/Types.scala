@@ -379,7 +379,7 @@ case class LastRIs(interval: Interval,
 case class NextP(interval: Interval, period: Period) extends Interval {
   val isDefined: Boolean = interval.isDefined && period.isDefined
   lazy val start: LocalDateTime = interval.end
-  lazy val end: LocalDateTime = interval.start.plus(period)
+  lazy val end: LocalDateTime = start.plus(period)
 }
 
 trait Next extends TimeExpression with IRIN {

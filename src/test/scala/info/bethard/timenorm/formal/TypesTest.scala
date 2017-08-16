@@ -168,21 +168,16 @@ class TypesTest extends FunSuite with TypesSuite {
   }
 
   test("NextP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
-    val periodSum = SumP(Set(period1, period2, period3), Modifier.Exact)
+    assert(NextP(Year(2000), SimplePeriod(ChronoUnit.YEARS, 1)) === SimpleInterval.of(2001))
 
-    val year = Year(2000)
-    val nextPeriod = NextP(year, period1)
+    assert(NextP(SimpleInterval.of(2017, 8, 16), SimplePeriod(ChronoUnit.WEEKS, 2))
+      === SimpleInterval(LocalDateTime.of(2017, 8, 17, 0, 0), LocalDateTime.of(2017, 8, 31, 0, 0)))
 
-    assert(nextPeriod.start === year.end)
-    assert(nextPeriod.end === LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0))
-
-    val nextPeriod1 = NextP(year, periodSum)
-
-    assert(nextPeriod1.start === year.end)
-    assert(nextPeriod1.end === LocalDateTime.of(2003, 4, 1, 0, 0, 0, 0))
+    assert(NextP(Year(2000), SumP(Set(
+      SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact),
+      SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal),
+      SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx))))
+      === SimpleInterval(LocalDateTime.of(2001, 1, 1, 0, 0), LocalDateTime.of(2004, 4, 1, 0, 0, 0, 0)))
   }
 
   test("BeforeP") {
