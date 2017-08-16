@@ -130,7 +130,7 @@ trait Interval extends TimeExpression {
 
   def end: LocalDateTime
 
-  def contains(interval: Interval) = !interval.start.isBefore(start) && !interval.end.isAfter(end)
+  def contains(interval: Interval): Boolean = !interval.start.isBefore(start) && !interval.end.isAfter(end)
 }
 
 object Interval {
@@ -584,8 +584,8 @@ case class NthRIs(interval: Interval, index: Int,
 }
 
 case class IntersectionI(intervals: Seq[Interval]) extends Interval {
-  val isDefined = intervals.forall(_.isDefined)
-  implicit val ldtOrdering = Ordering.fromLessThan[LocalDateTime](_ isBefore _)
+  val isDefined: Boolean = intervals.forall(_.isDefined)
+  implicit val ldtOrdering: Ordering[LocalDateTime] = Ordering.fromLessThan(_ isBefore _)
   lazy val Interval(start, end) = intervals.sortBy(_.start).reduceLeft[Interval] {
     case (i1, i2) if i1.end.isAfter(i2.start) =>
       SimpleInterval(ldtOrdering.max(i1.start, i2.start), ldtOrdering.min(i1.end, i2.end))
@@ -684,7 +684,7 @@ case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier 
       ldt.`with`(field, value) // guaranteed to throw an exception
     }
     Iterator.from(0).map(i => Try(update(ldt, i, field.getRangeUnit).`with`(field, value))).collect{
-      case Success(ldt) => ldt
+      case Success(updatedLDT) => updatedLDT
     }.next
   }
 
