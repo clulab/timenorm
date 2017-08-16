@@ -88,13 +88,13 @@ case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modi
 case object UnknownPeriod extends Period {
   val isDefined = false
 
-  override def addTo(temporal: Temporal): Temporal = ???
+  override def addTo(temporal: Temporal): Temporal = throw new UnsupportedOperationException
 
-  override def get(unit: TemporalUnit): Long = ???
+  override def get(unit: TemporalUnit): Long = throw new UnsupportedOperationException
 
-  override def subtractFrom(temporal: Temporal): Temporal = ???
+  override def subtractFrom(temporal: Temporal): Temporal = throw new UnsupportedOperationException
 
-  override def getUnits: java.util.List[TemporalUnit] = ???
+  override def getUnits: java.util.List[TemporalUnit] = throw new UnsupportedOperationException
 }
 
 case class SumP(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
@@ -129,6 +129,8 @@ trait Interval extends TimeExpression {
   def start: LocalDateTime
 
   def end: LocalDateTime
+
+  def contains(interval: Interval) = !interval.start.isBefore(start) && !interval.end.isAfter(end)
 }
 
 object Interval {
@@ -163,17 +165,17 @@ case class SimpleIntervals(intervals: Seq[Interval]) extends Intervals {
 case object UnknownInterval extends Interval {
   val isDefined = false
 
-  def start: LocalDateTime = ???
+  def start: LocalDateTime = throw new UnsupportedOperationException
 
-  def end: LocalDateTime = ???
+  def end: LocalDateTime = throw new UnsupportedOperationException
 }
 
 case class Event(description: String) extends Interval {
   val isDefined = false
 
-  def start: LocalDateTime = ???
+  def start: LocalDateTime = throw new UnsupportedOperationException
 
-  def end: LocalDateTime = ???
+  def end: LocalDateTime = throw new UnsupportedOperationException
 }
 
 case class SimpleInterval(start: LocalDateTime, end: LocalDateTime) extends Interval {
@@ -556,8 +558,8 @@ case class NthRI(interval: Interval,
   extends Interval with IRINP {
   val number = IntNumber(1)
   lazy val Interval(start, end) = intervalsFromPoint.drop(index - 1).next match {
-    case result if !result.end.isAfter(interval.end) => result
-    case _ => ???
+    case result if interval contains result => result
+    case result => throw new UnsupportedOperationException(s"${result.end} is outside of $interval")
   }
 }
 
@@ -576,8 +578,8 @@ case class NthRIs(interval: Interval, index: Int,
                   from: Interval.Point = Interval.Start)
   extends Intervals with IRINP {
   lazy val intervals: Seq[Interval] = intervalsFromPoint.grouped(integer).drop(index - 1).next match {
-    case result if result.forall(_.end.isBefore(interval.end)) => result
-    case _ => ???
+    case result if result.forall(interval.contains) => result
+    case result => throw new UnsupportedOperationException(s"one of $result is outside of $interval")
   }
 }
 

@@ -490,8 +490,12 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(NthRI(interval, 3, RepeatingUnit(ChronoUnit.DAYS)) === SimpleInterval.of(2002, 3, 25))
     assert(NthRI(interval, 3, RepeatingUnit(ChronoUnit.DAYS), from = Interval.End) === SimpleInterval.of(2003, 5, 7))
 
-    intercept[NotImplementedError] {
+    intercept[UnsupportedOperationException] {
       val Interval(_, _) = NthRI(interval, 5, RepeatingField(ChronoField.MONTH_OF_YEAR, 5))
+    }
+
+    intercept[UnsupportedOperationException] {
+      val Interval(_, _) = NthRI(interval, 2, RepeatingField(ChronoField.MONTH_OF_YEAR, 5), from = Interval.End)
     }
 
     assert(NthRI(SimpleInterval.of(2017), 4, RepeatingUnit(IsoFields.QUARTER_YEARS))
