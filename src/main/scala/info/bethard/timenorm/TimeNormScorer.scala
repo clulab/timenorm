@@ -75,6 +75,10 @@ object TimeNormScorer {
     return compactIntervals
   }
 
+  def score(timex1: TimeExpression, timex2: TimeExpression): (Double, Double) = {
+    score(timex1, get_intervals(timex1), timex2, get_intervals(timex2))
+  }
+
 
   def score(gsTimex: TimeExpression, gsIntervs: Seq[Interval], sysTimex: TimeExpression, sysIntervs: Seq[Interval]): (Double, Double) = {
     var gsIntervals = gsIntervs
