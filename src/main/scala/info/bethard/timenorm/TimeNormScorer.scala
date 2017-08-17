@@ -17,18 +17,11 @@ object TimeNormScorer {
   def get_intervals(timex: TimeExpression): Seq[Interval] = timex match {
     case interval: Interval => List(interval)
     case intervals: Intervals => intervals
-    case _: RepeatingInterval => Seq.empty
+    case _ => Seq.empty
   }
 
   def epoch(datetime: java.time.LocalDateTime): Long = datetime.atZone(ZoneId.systemDefault).toEpochSecond
   def datetime(epoch: Long): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(epoch), ZoneId.systemDefault())
-
-  def get_range_limmits(range: TemporalUnit) : Tuple2[LocalDateTime, LocalDateTime] = range.toString match {
-    case "Years" => (LocalDateTime.now.withDayOfYear(1), LocalDateTime.now.plusYears(1).withDayOfYear(1))
-    case "Hours" => (LocalDateTime.now.withHour(1), LocalDateTime.now.plusDays(1).withHour(1))
-    case "Minutes" => (LocalDateTime.now.withMinute(1), LocalDateTime.now.plusHours(1).withMinute(1))
-    case _ => (LocalDateTime.now.withDayOfMonth(1), LocalDateTime.now.plusMonths(1).withDayOfMonth(1))
-  }
 
   def parseDCT(dctString: String): Interval = dctString.split("T") match {
     case Array(date) => date.split("-").map(_.toInt) match {
@@ -45,130 +38,55 @@ object TimeNormScorer {
     }
   }
 
-  def compact_intervals(intervals: Seq[Interval]): Seq[Interval] = {
-      var compactIntervals: Seq[Interval] = Seq ()
-      if (intervals.size != 0) {
-        for (Interval (start, end) <- intervals) {
-        var newCompact: Seq[Interval] = Seq ()
-        var startZone = epoch (start)
-        var endZone = epoch (end)
-
-        for (Interval (cStart, cEnd) <- compactIntervals) {
-          val cStartZone = epoch (cStart)
-          val cEndZone = epoch (cEnd)
-          val maxStart = Math.max (startZone, cStartZone)
-          val minEnd = Math.min (endZone, cEndZone)
-
-          if (minEnd > maxStart) {
-            val minStart = Math.min (startZone, cStartZone)
-            val maxEnd = Math.max (endZone, cEndZone)
-            startZone = minStart
-            endZone = maxEnd
-          } else {
-            newCompact :+= SimpleInterval (cStart, cEnd)
-          }
-        }
-        newCompact :+= SimpleInterval (datetime (startZone), datetime (endZone) )
-        compactIntervals = newCompact
-      }
-    }
-    return compactIntervals
-  }
-
   def score(timex1: TimeExpression, timex2: TimeExpression): (Double, Double) = {
-    score(timex1, get_intervals(timex1), timex2, get_intervals(timex2))
+    // find the earliest interval start and the latest interval end (so RepeatingIntervals can be bounded)
+    val intervalUnion: Seq[Interval] = Seq(timex2, timex2).flatMap(get_intervals)
+    val window = SimpleInterval(intervalUnion.map(_.start).min, intervalUnion.map(_.end).min)
+
+    // intersect the intervals from each time expression, and take the sum of their sizes
+    val intersectionSize = intersect(intervals(timex1, window), intervals(timex2, window)).map(size).sum
+
+    // return the precision and recall
+    (intersectionSize / size(timex2), intersectionSize / size(timex1))
   }
 
-
-  def score(gsTimex: TimeExpression, gsIntervs: Seq[Interval], sysTimex: TimeExpression, sysIntervs: Seq[Interval]): (Double, Double) = {
-    var gsIntervals = gsIntervs
-    var sysIntervals = sysIntervs
-
-    var gstotal : Double = 0
-    var systotal : Double = 0
-    if (gsIntervals.size == 0 && sysIntervals.size == 0) {
-      val gsRange = gsTimex.asInstanceOf[RepeatingInterval].range
-      val sysRange = sysTimex.asInstanceOf[RepeatingInterval].range
-      val range = gsRange.getDuration.getSeconds > sysRange.getDuration.getSeconds match {
-        case true => gsRange
-        case false => sysRange
-      }
-      val (rangeStart, rangeEnd) : (LocalDateTime, LocalDateTime) = get_range_limmits(range)
-      val gsFollowing = gsTimex.asInstanceOf[RepeatingInterval].following(rangeStart)
-      var gsNext = gsFollowing.next
-      while (epoch(gsNext.start) < epoch(rangeEnd)) {
-        gsIntervals :+= gsNext
-        gsNext = gsFollowing.next
-      }
-      val sysFollowing = sysTimex.asInstanceOf[RepeatingInterval].following(rangeStart)
-      var sysNext = sysFollowing.next
-      while (epoch(sysNext.start) < epoch(rangeEnd)) {
-        sysIntervals :+= sysNext
-        sysNext = sysFollowing.next
-      }
-      gstotal = Double.PositiveInfinity
-      systotal = Double.PositiveInfinity
-    }
-
-    if (sysIntervals.size != 0) {
-      sysIntervals = compact_intervals(sysIntervals)
-    }
-    if (gsIntervals.size != 0) {
-      gsIntervals = compact_intervals(gsIntervals)
-    }
-
-    if (sysIntervals.size != 0) {
-      for (Interval(sysStart, sysEnd) <- sysIntervals) {
-        val sysStartZone = epoch(sysStart)
-        val sysEndZone = epoch(sysEnd)
-        systotal += (sysEndZone - sysStartZone)
-      }
-    } else if (gsIntervals.size != 0) {
-      val sysFollowing = sysTimex.asInstanceOf[RepeatingInterval].following(gsIntervals(0).start)
-      var sysNext = sysFollowing.next
-      while (epoch(sysNext.start) < epoch(gsIntervals.last.end)) {
-        sysIntervals :+= sysNext
-        sysNext = sysFollowing.next
-      }
-      systotal = Double.PositiveInfinity
-    }
-
-    if (gsIntervals.size != 0) {
-      for (Interval(gsStart, gsEnd) <- gsIntervals) {
-        val gsStartZone = epoch(gsStart)
-        val gsEndZone = epoch(gsEnd)
-        gstotal += (gsEndZone - gsStartZone)
-      }
-    } else if (sysIntervals.size != 0) {
-      val gsFollowing = gsTimex.asInstanceOf[RepeatingInterval].following(sysIntervals(0).start)
-      var gsNext = gsFollowing.next
-      while (epoch(gsNext.start) < epoch(sysIntervals.last.end)) {
-        gsIntervals :+= gsNext
-        gsNext = gsFollowing.next
-      }
-      gstotal = Double.PositiveInfinity
-    }
-
-    var intersec : Double = 0
-    for (Interval(gsStart, gsEnd) <- gsIntervals) {
-      val gsStartZone = epoch(gsStart)
-      val gsEndZone = epoch(gsEnd)
-      for (Interval(sysStart, sysEnd) <- sysIntervals) {
-        val sysStartZone = epoch(sysStart)
-        val sysEndZone = epoch(sysEnd)
-        val maxStart = Math.max(gsStartZone, sysStartZone)
-        val minEnd = Math.min(gsEndZone, sysEndZone)
-        if (minEnd > maxStart) intersec += (minEnd - maxStart)
-      }
-    }
-
-    val P : Double = intersec/systotal
-    val R : Double = intersec/gstotal
-
-    printf ("  Precision: %.3f\tRecall: %.3f",P,R)
-    return (P, R)
+  def intervals(timex: TimeExpression, window: Interval): Seq[Interval] = timex match {
+    case interval: Interval => Seq(interval)
+    case intervals: Intervals => intervals
+    case rInterval: RepeatingInterval =>
+      val start = rInterval.preceding(window.start).next.end
+      rInterval.following(start).takeWhile(_.start isBefore window.end).toSeq
+    case _ => Seq.empty
   }
 
+  def size(timex: TimeExpression): Double = timex match {
+    case interval: Interval => epoch(interval.end) - epoch(interval.start)
+    case intervals: Intervals => intervals.map(size).sum
+    case _: RepeatingInterval => Double.PositiveInfinity
+    case _ => 0
+  }
+
+  implicit val ldtOrdering: Ordering[LocalDateTime] = Ordering.fromLessThan(_ isBefore _)
+  implicit val intervalOrdering: Ordering[Interval] = Ordering.by(i => (i.start, i.end))
+
+  def intersect(intervals1: Seq[Interval], intervals2: Seq[Interval]): Seq[Interval] = {
+    import ldtOrdering.mkOrderingOps
+    // finds all overlaps between the two sets of intervals
+    intervals1.flatMap(i1 => intervals2.flatMap(i2 => if (i1.start < i2.end && i2.start < i1.end) {
+      Seq(SimpleInterval(i1.start max i2.start, i1.end min i2.end))
+    } else {
+      Seq.empty[Interval]
+    })).sorted.foldLeft[List[Interval]](Nil) {
+      // always add the first interval to the result
+      case (Nil, next) => List(next)
+      // if the next interval overlaps with the last, merge it, otherwise, add it
+      case (last :: rest, next) => if (last.end < next.start) {
+        next :: last :: rest
+      } else {
+        SimpleInterval(last.start, next.end max last.end) :: rest
+      }
+    }.reverse
+  }
 
   val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
 
@@ -257,7 +175,8 @@ object TimeNormScorer {
                 data = sysdata
                 printf("  Answ: %s \"%s\"\n", sysentity.id, sysentity.expandedSpan)
                 printf("\t%s\n", systimex._3)
-                val (precision, recall) = score(gstimex._2, gstimex._3, systimex._2, systimex._3)
+                val (precision, recall) = score(gstimex._2, systimex._2)
+                printf ("  Precision: %.3f\tRecall: %.3f", precision, recall)
                 sum_precision += precision
                 if (recall > max_recall) max_recall = recall
                 sum_cases += 1
