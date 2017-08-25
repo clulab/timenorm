@@ -19,9 +19,9 @@ trait TypesSuite {
     }
   }
 
-  implicit def intervalsEquality[T <: Intervals] = new org.scalactic.Equality[T] {
+  implicit def intervalsEquality[T <: Seq[_ <: Interval]] = new org.scalactic.Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
-      case i: Intervals => a.toList == i.toList
+      case i: Seq[_] => a.size == i.size && (a zip i).forall{ case (x, y) => intervalEquality.areEqual(x, y) }
       case _ => false
     }
   }
@@ -30,7 +30,10 @@ trait TypesSuite {
     override def apply(o: Any): String = o match {
       case interval: SimpleInterval => interval.toString
       case interval: Interval => s"$interval with range [${interval.start}, ${interval.end})"
-      case intervals: Intervals => s"$intervals with range ${intervals.map(this.apply)}"
+      case seq: Seq[_] =>
+        val intervals = seq.collect{ case Interval(s, e) => (s, e) }
+        if (intervals.isEmpty) Prettifier.default(seq)
+        else s"""$seq with ranges ${intervals.mkString("[", ",", "]")}"""
       case _ => Prettifier.default(o)
     }
   }

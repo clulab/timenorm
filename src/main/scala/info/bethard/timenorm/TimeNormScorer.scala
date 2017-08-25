@@ -1,23 +1,29 @@
 package info.bethard.timenorm
 
-import info.bethard.timenorm.formal.{Interval, ThisRIs, TimeExpression}
+import info.bethard.timenorm.formal.{Interval, TimeExpression}
 import info.bethard.timenorm.formal._
-import java.time.temporal.ChronoField._
-import java.time.temporal.ChronoUnit._
 
-import info.bethard.anafora.{Annotation, Data, Entity, Properties}
-import java.io.{File, FileNotFoundException}
-import java.time.format.DateTimeParseException
-import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
-import java.time.temporal.TemporalUnit
+import info.bethard.anafora.Data
+import java.io.File
+import java.time.{Instant, LocalDateTime, ZoneId}
+
+import scala.util.Try
 
 
 object TimeNormScorer {
-  
-  def get_intervals(timex: TimeExpression): Seq[Interval] = timex match {
-    case interval: Interval => List(interval)
-    case intervals: Intervals => intervals
-    case _ => Seq.empty
+
+  case class Timex(id: String, textSpan: (Int, Int), time: TimeExpression) {
+    val (textStart, textEnd) = textSpan
+
+    def textOverlaps(that: Timex): Boolean = {
+      this.textStart < that.textEnd && that.textStart < this.textEnd
+    }
+  }
+  object Timex {
+    def allFrom(reader: AnaforaReader)(implicit data: Data): Seq[Timex] = {
+      data.topEntities.filter(e => !skip.contains(e.`type`)).flatMap(e =>
+        Try(Timex(e.id, e.fullSpan, reader.temporal(e))).fold(ex => {ex.printStackTrace(); Seq.empty}, ts => Seq(ts)))
+    }
   }
 
   def epoch(datetime: java.time.LocalDateTime): Long = datetime.atZone(ZoneId.systemDefault).toEpochSecond
@@ -38,38 +44,54 @@ object TimeNormScorer {
     }
   }
 
-  def score(timex1: TimeExpression, timex2: TimeExpression): (Double, Double) = {
-    // find the earliest interval start and the latest interval end (so RepeatingIntervals can be bounded)
-    val intervalUnion: Seq[Interval] = Seq(timex2, timex2).flatMap(get_intervals)
-    val window = SimpleInterval(intervalUnion.map(_.start).min, intervalUnion.map(_.end).min)
-
-    // intersect the intervals from each time expression, and take the sum of their sizes
-    val intersectionSize = intersect(intervals(timex1, window), intervals(timex2, window)).map(size).sum
-
-    // return the precision and recall
-    (intersectionSize / size(timex2), intersectionSize / size(timex1))
+  def score(gold: TimeExpression, system: TimeExpression): (Double, Double) = {
+    val intersectionSize = intervalIntersection(Seq(gold), Seq(system)).map(size).sum
+    (intersectionSize / size(system), intersectionSize / size(gold))
   }
 
-  def intervals(timex: TimeExpression, window: Interval): Seq[Interval] = timex match {
-    case interval: Interval => Seq(interval)
-    case intervals: Intervals => intervals
-    case rInterval: RepeatingInterval =>
-      val start = rInterval.preceding(window.start).next.end
-      rInterval.following(start).takeWhile(_.start isBefore window.end).toSeq
-    case _ => Seq.empty
+  def intervalPrecision(gold: Seq[TimeExpression], system: Seq[TimeExpression]): Double = {
+    val intersectionSize = intervalIntersection(gold, system).map(size).sum
+    if (intersectionSize == 0) 0.0 else intersectionSize / system.map(size).sum
   }
 
-  def size(timex: TimeExpression): Double = timex match {
-    case interval: Interval => epoch(interval.end) - epoch(interval.start)
-    case intervals: Intervals => intervals.map(size).sum
-    case _: RepeatingInterval => Double.PositiveInfinity
-    case _ => 0
+  def intervalScores(goldTimexes: Seq[Timex],
+                     systemTimexes: Seq[Timex],
+                     verbose: Boolean = false): (Seq[Double], Seq[Double]) = {
+    val precisions = for (systemTimex <- systemTimexes) yield {
+      val overlappingTimexes = goldTimexes.filter(systemTimex.textOverlaps)
+      val precision = intervalPrecision(overlappingTimexes.map(_.time), Seq(systemTimex.time))
+      if (verbose) {
+        println(s"  Gold: $overlappingTimexes ${overlappingTimexes.map(_.time).map(intervals)}")
+        println(s"  Answ: $systemTimex ${intervals(systemTimex.time)}")
+        printf("  Precision: %.3f\n", precision)
+      }
+      precision
+    }
+    val recalls = for (goldTimex <- goldTimexes) yield {
+      val overlappingTimexes = systemTimexes.filter(goldTimex.textOverlaps)
+      val recall = intervalPrecision(overlappingTimexes.map(_.time), Seq(goldTimex.time))
+      if (verbose) {
+        println(s"  Gold: $goldTimex ${intervals(goldTimex.time)}")
+        println(s"  Answ: $overlappingTimexes ${overlappingTimexes.map(_.time).map(intervals)}")
+        printf("  Recall: %.3f\n", recall)
+      }
+      recall
+    }
+    (precisions, recalls)
   }
 
   implicit val ldtOrdering: Ordering[LocalDateTime] = Ordering.fromLessThan(_ isBefore _)
   implicit val intervalOrdering: Ordering[Interval] = Ordering.by(i => (i.start, i.end))
 
-  def intersect(intervals1: Seq[Interval], intervals2: Seq[Interval]): Seq[Interval] = {
+  def intervalIntersection(timexes1: Seq[TimeExpression], timexes2: Seq[TimeExpression]): Seq[Interval] = {
+    // find the earliest interval start and the latest interval end (so RepeatingIntervals can be bounded)
+    val intervalUnion = timexes1 ++ timexes2 flatMap intervals
+    val window = SimpleInterval(intervalUnion.map(_.start).min, intervalUnion.map(_.end).min)
+
+    // intersect the intervals (now including those from RepeatingIntervals) from each set of time expressions
+    val intervals1 = timexes1.flatMap(t => intervals(t, window))
+    val intervals2 = timexes2.flatMap(t => intervals(t, window))
+
     import ldtOrdering.mkOrderingOps
     // finds all overlaps between the two sets of intervals
     intervals1.flatMap(i1 => intervals2.flatMap(i2 => if (i1.start < i2.end && i2.start < i1.end) {
@@ -88,18 +110,35 @@ object TimeNormScorer {
     }.reverse
   }
 
+  def intervals(timex: TimeExpression): Seq[Interval] = timex match {
+    case interval: Interval => List(interval)
+    case intervals: Intervals => intervals
+    case _ => Seq.empty
+  }
+
+  def intervals(timex: TimeExpression, window: Interval): Seq[Interval] = timex match {
+    case interval: Interval => Seq(interval)
+    case intervals: Intervals => intervals
+    case rInterval: RepeatingInterval =>
+      val start = rInterval.preceding(window.start).next.end
+      rInterval.following(start).takeWhile(_.start isBefore window.end).toSeq
+    case _ => Seq.empty
+  }
+
+  def size(timex: TimeExpression): Double = timex match {
+    case interval: Interval => epoch(interval.end) - epoch(interval.start)
+    case intervals: Intervals => intervals.map(size).sum
+    case _: RepeatingInterval => Double.PositiveInfinity
+    case _ => 0
+  }
+
   val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
 
   def main(args: Array[String]): Unit = {
-    val dctDir = args(0)
-    val outDir = args(1)
-    val Array(dir) = args.drop(2)
-    var sum_precision: Double = 0
-    var sum_recall: Double = 0
-    var sum_cases = 0
+    val Array(dctDir, outDir, dir) = args
     var sum_gs = 0
     var sum_sys = 0
-    for (xmlFile <- allTimeNormFiles(new File(dir))) {
+    val precisionRecalls = for (xmlFile <- allTimeNormFiles(new File(dir))) yield {
       val fileName = xmlFile.getName.replaceAll("[.][^.]*[.][^.]*[.][^.]*.xml", "")
       val dctPath = dctDir + "/" + fileName + "/" + fileName + ".dct"
       val outPath = outDir + "/" + fileName
@@ -109,101 +148,37 @@ object TimeNormScorer {
       val dct: Interval = parseDCT(dctString)
       printf("DCT: %s\n\n",dctString)
 
+      val goldData = Data.fromPaths(xmlFile.getPath, None)
+      val goldTimexes = Timex.allFrom(new AnaforaReader(dct)(goldData))(goldData)
+      sum_gs += goldTimexes.size
+
       println("Intervals in Gold:")
-      try {
-        var gs: List[Tuple3[Entity, TimeExpression, Seq[Interval]]] = Nil
-        val gsdata = Data.fromPaths(xmlFile.getPath, None)
-        implicit var data = gsdata
-        var aReader = new AnaforaReader(dct)
-        for (entity <- data.topEntities.sortBy(_.fullSpan); if !skip.contains(entity.`type`)) {
-          try {
-            val temporal = aReader.temporal(entity)
-            if (temporal.isInstanceOf[Interval] || temporal.isInstanceOf[Intervals]) {
-              val intervals = get_intervals(temporal)
-              intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
-              gs :+= (entity, temporal, intervals)
-            }
-          } catch {
-            case ex: IllegalArgumentException => println(ex)
-            case ex: NumberFormatException => println(ex)
-            case ex: AssertionError => println(ex)
-            case ex: NotImplementedError => println(ex)
-            case ex: Exception => println(ex)
-          }
-        }
-        println()
-        sum_gs += gs.length
-
-        println("Intervals in Answer:")
-        var sys: List[Tuple3[Entity, TimeExpression, Seq[Interval]]] = Nil
-        val outFile = allTimeNormFiles(new File(outPath))(0)
-        val outFilePath = outPath + "/" + outFile.getName
-        val sysdata = Data.fromPaths(outFilePath, None)
-        data = sysdata
-        aReader = new AnaforaReader(dct)
-        for (entity <- data.topEntities.sortBy(_.expandedSpan); if !skip.contains(entity.`type`)) {
-          try {
-            val temporal = aReader.temporal(entity)
-            if (temporal.isInstanceOf[Interval] || temporal.isInstanceOf[Intervals]) {
-              val intervals = get_intervals(temporal)
-              intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
-              sys :+= (entity, temporal, intervals)
-            }
-          } catch {
-            case ex: IllegalArgumentException => println(ex)
-            case ex: NumberFormatException => println(ex)
-            case ex: AssertionError => println(ex)
-            case ex: NotImplementedError => println(ex)
-            case ex: Exception => println(ex)
-          }
-        }
-        println()
-        sum_sys += sys.length
-
-        println("Intersections:")
-        for (gstimex <- gs) {
-          val gsentity = gstimex._1
-          var max_recall = 0.0
-          try {
-          for (systimex <- sys) {
-            val sysentity = systimex._1
-            if (gsentity.expandedSpan._1 <= sysentity.expandedSpan._2 && gsentity.expandedSpan._2 >= sysentity.expandedSpan._1) {
-              try {
-                data = gsdata
-                printf("  Gold: %s \"%s\"\n", gsentity.id, gsentity.expandedSpan)
-                printf("\t%s\n", gstimex._3)
-                data = sysdata
-                printf("  Answ: %s \"%s\"\n", sysentity.id, sysentity.expandedSpan)
-                printf("\t%s\n", systimex._3)
-                val (precision, recall) = score(gstimex._2, systimex._2)
-                printf ("  Precision: %.3f\tRecall: %.3f", precision, recall)
-                sum_precision += precision
-                if (recall > max_recall) max_recall = recall
-                sum_cases += 1
-              } catch {
-                case ex: IllegalArgumentException => println(ex)
-                case ex: NotImplementedError => println(ex)
-              }
-              println()
-            }
-          }
-          } catch {
-            case ex: Exception => println(ex)
-          }
-          sum_recall += max_recall
-        }
-      } catch {
-        case ex: MatchError => ex.printStackTrace
-        case ex: FileNotFoundException => println(ex)
+      for (timex <- goldTimexes; interval <- intervals(timex.time)) {
+        println(s"  ${timex.id} [${interval.start}, ${interval.end})")
       }
-    }
 
-    val precision = sum_precision / sum_sys
-    val recall = sum_recall / sum_gs
+      val outFile = allTimeNormFiles(new File(outPath))(0)
+      val outFilePath = outPath + "/" + outFile.getName
+      val systemData = Data.fromPaths(outFilePath, None)
+      val systemTimexes = Timex.allFrom(new AnaforaReader(dct)(systemData))(systemData)
+      sum_sys += systemTimexes.size
+
+      println("Intervals in Answer:")
+      for (timex <- systemTimexes; interval <- intervals(timex.time)) {
+        println(s"  ${timex.id} [${interval.start}, ${interval.end})")
+      }
+
+      println("Intersections:")
+      intervalScores(goldTimexes, systemTimexes)
+    }
+    val (docPrecisions, docRecalls) = precisionRecalls.unzip
+    val precisions = docPrecisions.flatten
+    val recalls = docRecalls.flatten
+    val precision = precisions.sum / precisions.length
+    val recall = recalls.sum / recalls.length
     val fscore = 2 * precision * recall / (precision + recall)
     printf("Gold cases: %d\n",sum_gs)
     printf("Sys cases: %d\n",sum_sys)
-    printf("Intersec cases: %d\n", sum_cases)
     printf("Precision: %.3f\n", precision)
     printf("Recall: %.3f\n", recall)
     printf("F1: %.3f\n", fscore)

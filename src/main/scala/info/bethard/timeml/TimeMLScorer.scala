@@ -13,7 +13,7 @@ import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 import info.bethard.anafora.{Annotation, Data, Entity, Properties}
-import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_intervals_timex, parseDCT, score}
+import info.bethard.timenorm.TimeNormScorer.{intervals => get_intervals_timex, parseDCT, score}
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit

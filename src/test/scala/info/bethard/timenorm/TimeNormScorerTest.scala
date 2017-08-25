@@ -5,7 +5,7 @@ import java.time.temporal.{ChronoField, ChronoUnit}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import info.bethard.timenorm.TimeNormScorer.{get_intervals, score, parseDCT}
+import info.bethard.timenorm.TimeNormScorer.{parseDCT, score, intervalPrecision, intervalScores, Timex}
 import info.bethard.timenorm.field.NIGHT_OF_DAY
 
 
@@ -74,5 +74,35 @@ class TimeNormScorerTest extends FunSuite with TypesSuite {
     // Nov.
     val timex2 = LastRI(SimpleInterval.of(1989, 12), nov)
     assertScore(gold, timex2, 1.0/30, 1.0) // November has 30 days
+  }
+
+  test("intervalPrecision") {
+    val jan1999ThroughDec1999 = SimpleInterval.of(1999)
+    val feb1999ThroughJul1999 = NextP(SimpleInterval.of(1999, 1), SimplePeriod(ChronoUnit.MONTHS, 6))
+    val aug1999ThroughFeb2000 = NextP(SimpleInterval.of(1999, 7), SimplePeriod(ChronoUnit.MONTHS, 7))
+
+    assert(
+      intervalPrecision(Seq(jan1999ThroughDec1999), Seq(feb1999ThroughJul1999, aug1999ThroughFeb2000))
+        === (365 - 31) / (365.0 + 29))
+    assert(
+      intervalPrecision(Seq(feb1999ThroughJul1999, aug1999ThroughFeb2000), Seq(jan1999ThroughDec1999))
+        === (365 - 31) / 365.0)
+  }
+
+  test("intervalScores") {
+    val goldTimexes = Seq(
+      Timex("G1", (0, 3), SimpleInterval.of(1980, 5)),
+      Timex("G2", (5, 10), SimpleInterval.of(1985, 2, 1)),
+      Timex("G3", (11, 12), SimpleInterval.of(1985, 2, 2)),
+    )
+    val systemTimexes = Seq(
+      Timex("S1", (0, 1), SimpleInterval.of(1980, 5, 1)),
+      Timex("S2", (2, 3), SimpleInterval.of(1980, 5, 31)),
+      Timex("S3", (3, 5), SimpleInterval.of(1980, 5)),
+      Timex("S4", (9, 12), SimpleInterval.of(1985, 2)),
+    )
+    val (precisions, recalls) = intervalScores(goldTimexes, systemTimexes)
+    assert(precisions === Seq(1.0, 1.0, 0.0, 2/28.0))
+    assert(recalls === Seq(2/31.0, 1.0, 1.0))
   }
 }
