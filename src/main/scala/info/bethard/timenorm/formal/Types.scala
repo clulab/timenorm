@@ -501,6 +501,19 @@ case class Between(startInterval: Interval, endInterval: Interval) extends Inter
 }
 
 /**
+  * Finds the interval between two input intervals including both intervals. Formally:
+  * Between([t1,t2): startInterval,[t3,t4): endInterval): Interval = [t1,t4)
+  *
+  * @param startInterval first interval
+  * @param endInterval   second interval
+  */
+case class BetweenInclusive(startInterval: Interval, endInterval: Interval) extends Interval {
+  val isDefined: Boolean = startInterval.isDefined && endInterval.isDefined
+  lazy val start: LocalDateTime = startInterval.start
+  lazy val end: LocalDateTime = endInterval.end
+}
+
+/**
   * Creates an interval that is the nth repetition of the period in of the interval. Formally:
   * Nth([t1,t2): Interval, Δ: Period, n: N, Start): Interval = [t1+Δ*(n-1), t1+Δ*n)
   * Nth([t1,t2): Interval, Δ: Period, n: N, End): Interval = [t2-Δ*(n-1), t2-Δ*n)
