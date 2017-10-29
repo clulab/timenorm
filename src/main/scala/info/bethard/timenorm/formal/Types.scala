@@ -494,10 +494,16 @@ case class AfterRI(interval: Interval,
   * @param startInterval first interval
   * @param endInterval   second interval
   */
-case class Between(startInterval: Interval, endInterval: Interval) extends Interval {
+case class Between(startInterval: Interval, endInterval: Interval, startIncluded: Option[String], endIncluded: Option[String]) extends Interval {
   val isDefined: Boolean = startInterval.isDefined && endInterval.isDefined
-  lazy val start: LocalDateTime = startInterval.end
-  lazy val end: LocalDateTime = endInterval.start
+  lazy val (start: LocalDateTime) = startIncluded match {
+    case Some("Included") => startInterval.start
+    case _ => startInterval.end
+  }
+  lazy val (end: LocalDateTime) = endIncluded match {
+    case Some("Included") => endInterval.end
+    case _ => endInterval.start
+  }
 }
 
 /**
