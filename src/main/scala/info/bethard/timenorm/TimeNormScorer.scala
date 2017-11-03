@@ -25,9 +25,7 @@ object TimeNormScorer {
         Try(Timex(e.id, e.fullSpan, reader.temporal(e))).fold(ex => {ex.printStackTrace(); Seq.empty}, ts => Seq(ts)))
     }
     def allIntervalsFrom(reader: AnaforaReader)(implicit data: Data): Seq[Timex] = {
-      data.topEntities.filter(e => !skip.contains(e.`type`)).flatMap(e =>
-        Try(Timex(e.id, e.fullSpan, reader.temporal(e))).fold(ex => {ex.printStackTrace(); Seq.empty}, ts => Seq(ts))).filter(t => intervals(t.time).size >
-          0 && intervals(t.time).map(i => i.isDefined).reduce(_&&_))
+      allFrom(reader)(data).filter(t => intervals(t.time).size > 0 && intervals(t.time).map(i => i.isDefined).reduce(_&&_))
     }
   }
 
