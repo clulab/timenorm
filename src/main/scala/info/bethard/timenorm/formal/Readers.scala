@@ -104,6 +104,13 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     }
   }
 
+  def included(property: Option[String]): Boolean =
+    property match {
+      case Some("Included") => true
+      case Some("Not-Included") => false
+      case None => false
+    }
+
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
       case "Link" => interval(properties.entity(prefix + "Interval"))
@@ -136,7 +143,8 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Two-Digit-Year", Some(value), N, N, N, None) => value.partition(_ != '?') match {
         case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, questionMarks.length)
       }
-      case ("Between", None, N, N, N, None) => Between(interval(properties, "Start-"), interval(properties, "End-"))
+      case ("Between", None, N, N, N, None) => Between(interval(properties, "Start-"), interval(properties, "End-"),
+                                                        included(properties.get("Start-Included")), included(properties.get("End-Included")))
       case ("This", None, N, N, N, None) => ThisP(interval(properties), UnknownPeriod)
       case ("This", None, Seq(period), N, N, None) => ThisP(interval(properties), period)
       case ("This", None, N, Seq(rInterval), N, None) => ThisRI(interval(properties), rInterval)

@@ -24,6 +24,9 @@ object TimeNormScorer {
       data.topEntities.filter(e => !skip.contains(e.`type`)).flatMap(e =>
         Try(Timex(e.id, e.fullSpan, reader.temporal(e))).fold(ex => {ex.printStackTrace(); Seq.empty}, ts => Seq(ts)))
     }
+    def allIntervalsFrom(reader: AnaforaReader)(implicit data: Data): Seq[Timex] = {
+      allFrom(reader)(data).filter(t => intervals(t.time).size > 0 && intervals(t.time).forall(i => i.isDefined))
+    }
   }
 
   def epoch(datetime: java.time.LocalDateTime): Long = datetime.atZone(ZoneId.systemDefault).toEpochSecond
@@ -149,7 +152,7 @@ object TimeNormScorer {
       printf("DCT: %s\n\n",dctString)
 
       val goldData = Data.fromPaths(xmlFile.getPath, None)
-      val goldTimexes = Timex.allFrom(new AnaforaReader(dct)(goldData))(goldData)
+      val goldTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(goldData))(goldData)
       sum_gs += goldTimexes.size
 
       println("Intervals in Gold:")
@@ -160,7 +163,7 @@ object TimeNormScorer {
       val outFile = allTimeNormFiles(new File(outPath))(0)
       val outFilePath = outPath + "/" + outFile.getName
       val systemData = Data.fromPaths(outFilePath, None)
-      val systemTimexes = Timex.allFrom(new AnaforaReader(dct)(systemData))(systemData)
+      val systemTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(systemData))(systemData)
       sum_sys += systemTimexes.size
 
       println("Intervals in Answer:")
