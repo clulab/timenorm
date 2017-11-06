@@ -13,7 +13,7 @@ import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 import info.bethard.anafora.{Annotation, Data, Entity, Properties}
-import info.bethard.timenorm.TimeNormScorer.{get_intervals => get_intervals_timex, epoch, datetime, parseDCT, compact_intervals, get_range_limmits}
+import info.bethard.timenorm.TimeNormScorer.{intervals => get_intervals_timex, parseDCT, score}
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit
@@ -27,97 +27,6 @@ object TimeMLScorer {
     var intervals: Seq[Interval] = List(SimpleInterval(timespan.start.toLocalDateTime(), timespan.end.toLocalDateTime()))
     return intervals
   }
-
-  def score(gsTimex: TimeExpression, gsIntervs: Seq[Interval], sysTimex: TimeSpan, sysIntervs: Seq[Interval]): (Double, Double) = {
-
-    var gsIntervals = gsIntervs
-    var sysIntervals = sysIntervs
-
-    var gstotal : Double = 0
-    var systotal : Double = 0
-    if (gsIntervals.size == 0 && sysIntervals.size == 0) {
-      val gsRange = gsTimex.asInstanceOf[RepeatingInterval].range
-      val sysRange = sysTimex.asInstanceOf[RepeatingInterval].range
-      val range = gsRange.getDuration.getSeconds > sysRange.getDuration.getSeconds match {
-        case true => gsRange
-        case false => sysRange
-      }
-      val (rangeStart, rangeEnd) : (LocalDateTime, LocalDateTime) = get_range_limmits(range)
-      val gsFollowing = gsTimex.asInstanceOf[RepeatingInterval].following(rangeStart)
-      var gsNext = gsFollowing.next
-      while (epoch(gsNext.start) < epoch(rangeEnd)) {
-        gsIntervals :+= gsNext
-        gsNext = gsFollowing.next
-      }
-      val sysFollowing = sysTimex.asInstanceOf[RepeatingInterval].following(rangeStart)
-      var sysNext = sysFollowing.next
-      while (epoch(sysNext.start) < epoch(rangeEnd)) {
-        sysIntervals :+= sysNext
-        sysNext = sysFollowing.next
-      }
-      gstotal = Double.PositiveInfinity
-      systotal = Double.PositiveInfinity
-    }
-
-    if (sysIntervals.size != 0) {
-      sysIntervals = compact_intervals(sysIntervals)
-    }
-    if (gsIntervals.size != 0) {
-      gsIntervals = compact_intervals(gsIntervals)
-    }
-
-    if (sysIntervals.size != 0) {
-      for (Interval(sysStart, sysEnd) <- sysIntervals) {
-        val sysStartZone = epoch(sysStart)
-        val sysEndZone = epoch(sysEnd)
-        systotal += (sysEndZone - sysStartZone)
-      }
-    } else if (gsIntervals.size != 0) {
-      val sysFollowing = sysTimex.asInstanceOf[RepeatingInterval].following(gsIntervals(0).start)
-      var sysNext = sysFollowing.next
-      while (epoch(sysNext.start) < epoch(gsIntervals.last.end)) {
-        sysIntervals :+= sysNext
-        sysNext = sysFollowing.next
-      }
-      systotal = Double.PositiveInfinity
-    }
-
-    if (gsIntervals.size != 0) {
-      for (Interval(gsStart, gsEnd) <- gsIntervals) {
-        val gsStartZone = epoch(gsStart)
-        val gsEndZone = epoch(gsEnd)
-        gstotal += (gsEndZone - gsStartZone)
-      }
-    } else if (sysIntervals.size != 0) {
-      val gsFollowing = gsTimex.asInstanceOf[RepeatingInterval].following(sysIntervals(0).start)
-      var gsNext = gsFollowing.next
-      while (epoch(gsNext.start) < epoch(sysIntervals.last.end)) {
-        gsIntervals :+= gsNext
-        gsNext = gsFollowing.next
-      }
-      gstotal = Double.PositiveInfinity
-    }
-
-    var intersec : Double = 0
-    for (Interval(gsStart, gsEnd) <- gsIntervals) {
-      val gsStartZone = epoch(gsStart)
-      val gsEndZone = epoch(gsEnd)
-      for (Interval(sysStart, sysEnd) <- sysIntervals) {
-        val sysStartZone = epoch(sysStart)
-        val sysEndZone = epoch(sysEnd)
-        val maxStart = Math.max(gsStartZone, sysStartZone)
-        val minEnd = Math.min(gsEndZone, sysEndZone)
-        if (minEnd > maxStart) intersec += (minEnd - maxStart)
-      }
-    }
-
-    val P : Double = intersec/systotal
-    val R : Double = intersec/gstotal
-
-    printf ("  Precision: %.3f\tRecall: %.3f",P,R)
-    return (P, R)
-  }
-
 
   val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
 
@@ -167,7 +76,7 @@ object TimeMLScorer {
         sum_gs += gs.length
 
         println("Intervals in Answer:")
-        var sys: List[Tuple3[TIMEX, TimeSpan, Seq[Interval]]] = Nil
+        var sys: List[Tuple3[TIMEX, TimeExpression, Seq[Interval]]] = Nil
         for (xmlFile <- allTimeNormFiles(new File(outPath))) {
           val timeMLanafora = new TimeMLanaforaDocument(xmlFile)
           for (timex <- timeMLanafora.timeExpressions.sortBy(_.fullSpan)) {
@@ -180,8 +89,8 @@ object TimeMLScorer {
                 val rmTimeZone = raw"(:\d{2})-\d+".r
                 val value = rmTimeZone.replaceAllIn(timex.value(0),"$1")
                 val timeSpan = TimeSpan.fromTimeMLValue(value)
-                val intervals = get_intervals(timeSpan.asInstanceOf[TimeSpan])
-                sys :+= ((timex.asInstanceOf[TIMEX], timeSpan.asInstanceOf[TimeSpan], intervals))
+                val interval = SimpleInterval(timeSpan.start.toLocalDateTime(), timeSpan.end.toLocalDateTime())
+                sys :+= ((timex.asInstanceOf[TIMEX], interval, Seq(interval)))
                 printf("  %s [%s, %s) \n", timex.id, timeSpan.start, timeSpan.end)
               }
             } catch {
@@ -208,7 +117,7 @@ object TimeMLScorer {
                   printf("\t%s\n", gstimex._3)
                   printf("  Answ: %s \"%s\"\n", sysentity.id, sysentity.fullSpan)
                   printf("\t%s\n", systimex._3)
-                  val (precision, recall) = score(gstimex._2, gstimex._3, systimex._2, systimex._3)
+                  val (precision, recall) = score(gstimex._2, systimex._2)
                   println()
                   sum_precision += precision
                   if (recall > max_recall) max_recall = recall
