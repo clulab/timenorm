@@ -233,7 +233,10 @@ case class Year(digits: Int, nMissingDigits: Int = 0) extends Interval {
   */
 case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int = 0) extends Interval {
   val isDefined: Boolean = interval.isDefined
-  val nSuffixDigits: Int = (math.log10(lastDigits) + 1).toInt
+  val nSuffixDigits: Int = lastDigits match {
+    case 0 => 1
+    case _ => (math.log10(lastDigits) + 1).toInt
+  }
   val divider: Int = math.pow(10, nSuffixDigits + nMissingDigits).toInt
   val multiplier: Int = math.pow(10, nSuffixDigits).toInt
   lazy val Interval(start, end) = Year(interval.start.getYear / divider * multiplier + lastDigits, nMissingDigits)
@@ -619,8 +622,7 @@ private[formal] object RepeatingInterval {
     case IsoFields.QUARTER_YEARS =>
       ldt.withMonth((ldt.getMonthValue - 1) / 4 + 1).withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
-    case ChronoUnit.WEEKS =>
-      ldt.withDayOfYear(ldt.getDayOfYear - ldt.getDayOfWeek.getValue + 1).truncatedTo(ChronoUnit.DAYS)
+    case ChronoUnit.WEEKS => ldt.withDayOfYear((ldt.getDayOfYear - ldt.getDayOfWeek.getValue + 1) max 1).truncatedTo(ChronoUnit.DAYS)
     case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)
     case range: ConstantPartialRange => ldt.`with`(range.field, range.first).truncatedTo(range.field.getBaseUnit)
     case _ => ldt.truncatedTo(tUnit)
@@ -657,7 +659,7 @@ case class RepeatingUnit(unit: TemporalUnit, modifier: Modifier = Modifier.Exact
 }
 
 case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier = Modifier.Exact) extends RepeatingInterval {
-  val isDefined = true
+  val isDefined = field.range.isValidValue(value)
   override val base: TemporalUnit = field.getBaseUnit
   override val range: TemporalUnit = field.getRangeUnit
 

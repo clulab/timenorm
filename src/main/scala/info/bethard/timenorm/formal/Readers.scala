@@ -241,9 +241,9 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
           case Some(ampmEntity) => IntersectionRI(Set(
-            RepeatingField(ChronoField.HOUR_OF_AMPM, value, mod),
+            RepeatingField(ChronoField.CLOCK_HOUR_OF_AMPM, value, mod),
             repeatingInterval(ampmEntity)))
-          case None => RepeatingField(ChronoField.HOUR_OF_DAY, value, mod)
+          case None => RepeatingField(ChronoField.CLOCK_HOUR_OF_DAY, value, mod)
         }
       case (AnaforaReader.SomeChronoField(field), _) =>
         val value: Long = field match {
