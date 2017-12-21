@@ -54,7 +54,8 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       } else if (value.forall(_.isDigit)) {
         IntNumber(value.toInt)
       } else {
-        VagueNumber(value)
+        throw new AnaforaReader.Exception(
+        s"""cannot parse number "${entity.text}""")
       }
   }
 
