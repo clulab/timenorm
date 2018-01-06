@@ -141,7 +141,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
         case (year, questionMarks) => Year(year.toInt, questionMarks.length)
       }
       case ("Two-Digit-Year", Some(value), N, N, N, None) => value.partition(_ != '?') match {
-        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, questionMarks.length)
+        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, year.length, questionMarks.length)
       }
       case ("Between", None, N, N, N, None) => Between(interval(properties, "Start-"), interval(properties, "End-"),
                                                         included(properties.get("Start-Included")), included(properties.get("End-Included")))

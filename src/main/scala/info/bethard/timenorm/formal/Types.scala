@@ -231,11 +231,14 @@ case class Year(digits: Int, nMissingDigits: Int = 0) extends Interval {
   * As with Year, the optional second parameter allows YearSuffix to represent decades (nMissingDigits=1),
   * centuries (nMissingDigits=2), etc.
   */
-case class YearSuffix(interval: Interval, lastDigits: Int, nMissingDigits: Int = 0) extends Interval {
+case class YearSuffix(interval: Interval, lastDigits: Int, nlastDigits: Int = 0, nMissingDigits: Int = 0) extends Interval {
   val isDefined: Boolean = interval.isDefined
-  val nSuffixDigits: Int = lastDigits match {
-    case 0 => 1
-    case _ => (math.log10(lastDigits) + 1).toInt
+  val nSuffixDigits: Int = nlastDigits match {
+    case 0 => lastDigits match {
+      case 0 => 1
+      case _ => (math.log10(lastDigits) + 1).toInt
+    }
+    case _ => nlastDigits
   }
   val divider: Int = math.pow(10, nSuffixDigits + nMissingDigits).toInt
   val multiplier: Int = math.pow(10, nSuffixDigits).toInt

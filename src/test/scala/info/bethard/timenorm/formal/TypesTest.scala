@@ -84,15 +84,15 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(YearSuffix(Year(132, 1), 85) === SimpleInterval.of(1385))
     assert(YearSuffix(Year(23, 2), 22) === SimpleInterval.of(2322))
 
-    val yearPlus1DigitDecade = YearSuffix(Year(1903), 3, 1)
+    val yearPlus1DigitDecade = YearSuffix(Year(1903), 3, nMissingDigits = 1)
     assert(yearPlus1DigitDecade.start === LocalDateTime.of(1930, 1, 1, 0, 0, 0, 0))
     assert(yearPlus1DigitDecade.end === LocalDateTime.of(1940, 1, 1, 0, 0, 0, 0))
 
-    val decadePlus1DigitDecade = YearSuffix(Year(132, 1), 8, 1)
+    val decadePlus1DigitDecade = YearSuffix(Year(132, 1), 8, nMissingDigits = 1)
     assert(decadePlus1DigitDecade.start === LocalDateTime.of(1380, 1, 1, 0, 0, 0, 0))
     assert(decadePlus1DigitDecade.end === LocalDateTime.of(1390, 1, 1, 0, 0, 0, 0))
 
-    val decadePlus3DigitDecade = YearSuffix(Year(132, 1), 240, 1)
+    val decadePlus3DigitDecade = YearSuffix(Year(132, 1), 240, nMissingDigits = 1)
     assert(decadePlus3DigitDecade.start === LocalDateTime.of(2400, 1, 1, 0, 0, 0, 0))
     assert(decadePlus3DigitDecade.end === LocalDateTime.of(2410, 1, 1, 0, 0, 0, 0))
   }
@@ -319,6 +319,12 @@ class TypesTest extends FunSuite with TypesSuite {
       LocalDateTime.of(2001, 2, 12, 0, 0), LocalDateTime.of(2001, 2, 14, 0, 0))
     assert(daysRI.preceding(interval3.start).next === SimpleInterval.of(2001, 2, 11))
     assert(daysRI.following(interval3.end).next === SimpleInterval.of(2001, 2, 14))
+
+    // December 31, 2012 is a Monday
+    val ldt3 = LocalDateTime.of(2013,1,8,0,0)
+    assert(
+      weeksRI.preceding(ldt3).next
+        === SimpleInterval(LocalDateTime.of(2012, 12, 31, 0, 0), LocalDateTime.of(2013, 1, 7, 0, 0)))
   }
 
   test("RepeatingField") {
