@@ -79,20 +79,20 @@ class TypesTest extends FunSuite with TypesSuite {
   }
 
   test("YearSuffix") {
-    assert(YearSuffix(Year(1903), 37) === SimpleInterval.of(1937))
-    assert(YearSuffix(Year(2016), 418) === SimpleInterval.of(2418))
-    assert(YearSuffix(Year(132, 1), 85) === SimpleInterval.of(1385))
-    assert(YearSuffix(Year(23, 2), 22) === SimpleInterval.of(2322))
+    assert(YearSuffix(Year(1903), 37, 2) === SimpleInterval.of(1937))
+    assert(YearSuffix(Year(2016), 418, 3) === SimpleInterval.of(2418))
+    assert(YearSuffix(Year(132, 1), 85, 2) === SimpleInterval.of(1385))
+    assert(YearSuffix(Year(23, 2), 22, 2) === SimpleInterval.of(2322))
 
-    val yearPlus1DigitDecade = YearSuffix(Year(1903), 3, nMissingDigits = 1)
+    val yearPlus1DigitDecade = YearSuffix(Year(1903), 3, 1, 1)
     assert(yearPlus1DigitDecade.start === LocalDateTime.of(1930, 1, 1, 0, 0, 0, 0))
     assert(yearPlus1DigitDecade.end === LocalDateTime.of(1940, 1, 1, 0, 0, 0, 0))
 
-    val decadePlus1DigitDecade = YearSuffix(Year(132, 1), 8, nMissingDigits = 1)
+    val decadePlus1DigitDecade = YearSuffix(Year(132, 1), 8, 1, 1)
     assert(decadePlus1DigitDecade.start === LocalDateTime.of(1380, 1, 1, 0, 0, 0, 0))
     assert(decadePlus1DigitDecade.end === LocalDateTime.of(1390, 1, 1, 0, 0, 0, 0))
 
-    val decadePlus3DigitDecade = YearSuffix(Year(132, 1), 240, nMissingDigits = 1)
+    val decadePlus3DigitDecade = YearSuffix(Year(132, 1), 240, 3, 1)
     assert(decadePlus3DigitDecade.start === LocalDateTime.of(2400, 1, 1, 0, 0, 0, 0))
     assert(decadePlus3DigitDecade.end === LocalDateTime.of(2410, 1, 1, 0, 0, 0, 0))
   }

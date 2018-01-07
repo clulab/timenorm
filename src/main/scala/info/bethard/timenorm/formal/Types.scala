@@ -67,7 +67,7 @@ trait Period extends TimeExpression with TemporalAmount
 
 case class SimplePeriod(unit: TemporalUnit, n: Number, modifier: Modifier = Modifier.Exact) extends Period {
 
-  val isDefined: Boolean = n.isDefined
+  val isDefined: Boolean = n.isDefined && modifier == Modifier.Exact
 
   lazy val IntNumber(number) = n
 
@@ -99,7 +99,7 @@ case object UnknownPeriod extends Period {
 
 case class SumP(periods: Set[Period], modifier: Modifier = Modifier.Exact) extends Period {
 
-  val isDefined: Boolean = periods.forall(_.isDefined)
+  val isDefined: Boolean = periods.forall(_.isDefined) && modifier == Modifier.Exact
 
   lazy val map: Map[TemporalUnit, Long] = Map.empty ++ periods.flatMap(_.getUnits.asScala).map {
     unit => (unit, periods.filter(_.getUnits.contains(unit)).map(_.get(unit)).sum)
@@ -231,15 +231,8 @@ case class Year(digits: Int, nMissingDigits: Int = 0) extends Interval {
   * As with Year, the optional second parameter allows YearSuffix to represent decades (nMissingDigits=1),
   * centuries (nMissingDigits=2), etc.
   */
-case class YearSuffix(interval: Interval, lastDigits: Int, nlastDigits: Int = 0, nMissingDigits: Int = 0) extends Interval {
+case class YearSuffix(interval: Interval, lastDigits: Int, nSuffixDigits: Int, nMissingDigits: Int = 0) extends Interval {
   val isDefined: Boolean = interval.isDefined
-  val nSuffixDigits: Int = nlastDigits match {
-    case 0 => lastDigits match {
-      case 0 => 1
-      case _ => (math.log10(lastDigits) + 1).toInt
-    }
-    case _ => nlastDigits
-  }
   val divider: Int = math.pow(10, nSuffixDigits + nMissingDigits).toInt
   val multiplier: Int = math.pow(10, nSuffixDigits).toInt
   lazy val Interval(start, end) = Year(interval.start.getYear / divider * multiplier + lastDigits, nMissingDigits)
@@ -633,7 +626,7 @@ private[formal] object RepeatingInterval {
 }
 
 case class RepeatingUnit(unit: TemporalUnit, modifier: Modifier = Modifier.Exact) extends RepeatingInterval {
-  val isDefined = true
+  val isDefined = modifier == Modifier.Exact
   override val base: TemporalUnit = unit
   override val range: TemporalUnit = unit
 
@@ -662,7 +655,7 @@ case class RepeatingUnit(unit: TemporalUnit, modifier: Modifier = Modifier.Exact
 }
 
 case class RepeatingField(field: TemporalField, value: Long, modifier: Modifier = Modifier.Exact) extends RepeatingInterval {
-  val isDefined = field.range.isValidValue(value)
+  val isDefined = field.range.isValidValue(value) && modifier == Modifier.Exact
   override val base: TemporalUnit = field.getBaseUnit
   override val range: TemporalUnit = field.getRangeUnit
 

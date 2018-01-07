@@ -59,9 +59,11 @@ object TimeMLScorer {
           try {
             val temporal = aReader.temporal(entity)
             if (temporal.isInstanceOf[Interval] || temporal.isInstanceOf[Intervals]) {
-              val intervals = get_intervals_timex(temporal)
-              intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
-              gs :+= (entity, temporal, intervals)
+              val intervals = get_intervals_timex(temporal).filter(i => i.isDefined)
+              if (intervals.length > 0) {
+                intervals.map(i => printf("  %s [%s, %s) \n", entity.id, i.start, i.end))
+                gs :+= (entity, temporal, intervals)
+              }
             }
           } catch {
             case ex: IllegalArgumentException => println(entity.id, ex)
