@@ -141,7 +141,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
         case (year, questionMarks) => Year(year.toInt, questionMarks.length)
       }
       case ("Two-Digit-Year", Some(value), N, N, N, None) => value.partition(_ != '?') match {
-        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, questionMarks.length)
+        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, year.length, questionMarks.length)
       }
       case ("Between", None, N, N, N, None) => Between(interval(properties, "Start-"), interval(properties, "End-"),
                                                         included(properties.get("Start-Included")), included(properties.get("End-Included")))
@@ -241,9 +241,9 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
         val value = entity.properties("Value").toLong
         entity.properties.getEntity("AMPM-Of-Day") match {
           case Some(ampmEntity) => IntersectionRI(Set(
-            RepeatingField(ChronoField.HOUR_OF_AMPM, value, mod),
+            RepeatingField(ChronoField.CLOCK_HOUR_OF_AMPM, value, mod),
             repeatingInterval(ampmEntity)))
-          case None => RepeatingField(ChronoField.HOUR_OF_DAY, value, mod)
+          case None => RepeatingField(ChronoField.CLOCK_HOUR_OF_DAY, value, mod)
         }
       case (AnaforaReader.SomeChronoField(field), _) =>
         val value: Long = field match {
