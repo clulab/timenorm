@@ -58,5 +58,6 @@ case class TIMEX(elem: Elem) {
   val text = elem \ "properties" \ "value" \ nodeText
   val entityType = elem \ "properties" \ "type" \ nodeText
   val value = elem \ "properties" \ "value" \ nodeText
+  val mod = elem  \ "properties" \ "mod" \ nodeText
   var functionInDocumentOption = "None"
 }
