@@ -34,6 +34,7 @@ object TimeMLScorer {
     val dctDir = args(0)
     val outDir = args(1)
     val Array(dir) = args.drop(2)
+    val verbose = false
     var sum_precision: Double = 0
     var sum_recall: Double = 0
     var sum_cases = 0
@@ -83,11 +84,11 @@ object TimeMLScorer {
           val timeMLanafora = new TimeMLanaforaDocument(xmlFile)
           for (timex <- timeMLanafora.timeExpressions.sortBy(_.fullSpan)) {
             try {
-
               if (!(timex.value(0).isEmpty ||
                     timex.value(0).startsWith("P") ||
                     timex.value(0).startsWith("T") ||
-                    timex.value(0).contains('X'))) {
+                    timex.value(0).contains('X') ||
+                    timex.mod.length > 0)) {
                 val rmTimeZone = raw"(:\d{2})-\d+".r
                 val value = rmTimeZone.replaceAllIn(timex.value(0),"$1")
                 val timeSpan = TimeSpan.fromTimeMLValue(value)
@@ -120,6 +121,10 @@ object TimeMLScorer {
                   printf("  Answ: %s \"%s\"\n", sysentity.id, sysentity.fullSpan)
                   printf("\t%s\n", systimex._3)
                   val (precision, recall) = score(gstimex._2, systimex._2)
+		  if (verbose) {
+		     printf("  Recall: %.3f\n", recall)
+        	     printf("  Precision: %.3f\n", precision)
+		   }
                   println()
                   sum_precision += precision
                   if (recall > max_recall) max_recall = recall
