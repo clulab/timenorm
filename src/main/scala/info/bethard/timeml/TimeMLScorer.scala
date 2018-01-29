@@ -84,6 +84,7 @@ object TimeMLScorer {
           val timeMLanafora = new TimeMLanaforaDocument(xmlFile)
           for (timex <- timeMLanafora.timeExpressions.sortBy(_.fullSpan)) {
             try {
+
               if (!(timex.value(0).isEmpty ||
                     timex.value(0).startsWith("P") ||
                     timex.value(0).startsWith("T") ||
