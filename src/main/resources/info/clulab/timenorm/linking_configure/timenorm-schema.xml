@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<schema>
+  <!-- http://colorbrewer2.org/?type=qualitative&scheme=Paired&n=10 -->
+  <defaultattribute>
+    <required>True</required>
+  </defaultattribute>
+  <definition>
+    <entities type="Duration" color="a6cee3">
+      <entity type="Period" color="a6cee3" hotkey="p">
+	<properties>
+	  <property type="Type" input="choice">,Millennia,Centuries,Quarter-Centuries,Decades,Years,Quarter-Years,Months,Weeks,Days,Hours,Minutes,Seconds,Unknown</property>
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+    </entities>
+    <entities type="Repeating-Interval" color="b2df8a">
+      <entity type="Calendar-Interval" color="b2df8a" hotkey="c">
+	<properties>
+	  <property type="Type" input="choice">,Millennium,Century,Quarter-Century,Decade,Year,Quarter-Year,Month,Week,Day,Hour,Minute,Second</property>
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Quarter-Of-Year" color="b2df8a">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Season-Of-Year" color="b2df8a">
+	<properties>
+	  <property type="Type" input="choice">,Unknown,Spring,Summer,Fall,Winter</property>
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Month-Of-Year" color="b2df8a" hotkey="m">
+	<properties>
+	  <property type="Type" input="choice">,January,February,March,April,May,June,July,August,September,October,November,December</property>
+	  <property type="Sub-Interval" input="list" maxlink="1" required="False" instanceOf="Day-Of-Month" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Week-Of-Year" color="b2df8a">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Day-Of-Week,Part-Of-Week" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Day-Of-Month" color="b2df8a" hotkey="d">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Part-Of-Day,Hour-Of-Day" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Day-Of-Week" color="b2df8a" hotkey="w">
+	<properties>
+	  <property type="Type" input="choice">,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday</property>
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Part-Of-Day,Hour-Of-Day" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Part-Of-Week" color="b2df8a">
+	<properties>
+	  <property type="Type" input="choice">,Weekdays,Weekend</property>
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Part-Of-Day" color="b2df8a">
+	<properties>
+	  <property type="Type" input="choice">,Dawn,Day,Morning,Noon,Afternoon,Evening,Dusk,Night,Midnight,Unknown</property>
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="AMPM-Of-Day" color="b2df8a">
+	<properties>
+	  <property type="Type" input="choice">,AM,PM</property>
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Hour-Of-Day" color="b2df8a" hotkey="h">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="AMPM-Of-Day" input="list" maxlink="1" required="False" instanceOf="AMPM-Of-Day" />
+	  <property type="Time-Zone" input="list" maxlink="1" required="False" instanceOf="Time-Zone" />
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Minute-Of-Hour" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Minute-Of-Hour" color="b2df8a" hotkey="1">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Second-Of-Minute" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Second-Of-Minute" color="b2df8a" hotkey="s">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Time-Zone" color="b2df8a" hotkey="z" />
+    </entities>
+    <entities type="Interval" color="cab2d6">
+      <entity type="Year" color="cab2d6" hotkey="y">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Season-Of-Year,Month-Of-Year,Week-Of-Year" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+    </entities>
+    <entities type="Operator" color="83978E">
+      <entity type="Sum" color="739BB0">
+	<properties>
+	  <property type="Periods" input="list" required="False" instanceOf="Period,Sum,Difference" />
+	</properties>
+      </entity>
+      <entity type="Difference" color="739BB0">
+	<properties>
+	  <property type="Period1" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Period2" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	</properties>
+      </entity>
+      <entity type="Union" color="7FAC57" hotkey="u">
+	<properties>
+	  <property type="Repeating-Intervals" input="list" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Intersection" color="7FAC57" hotkey="i">
+	<properties>
+	  <property type="Intervals" input="list" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Repeating-Intervals" input="list" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Every-Nth" color="7FAC57">
+	<properties>
+	  <property type="Value" input="text" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Two-Digit-Year" color="977FA3" hotkey="2">
+	<properties>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Value" input="text" />
+	  <property type="Sub-Interval" input="list" required="False" instanceOf="Season-Of-Year,Month-Of-Year,Week-Of-Year" />
+	</properties>
+      </entity>
+      <entity type="This" color="977FA3" hotkey="t">
+	<properties>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Last" color="977FA3" hotkey="l">
+	<properties>
+	  <property type="Semantics" input="choice">Interval-Not-Included,Interval-Included</property>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Next" color="977FA3" hotkey="n">
+	<properties>
+	  <property type="Semantics" input="choice">Interval-Not-Included,Interval-Included</property>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Before" color="977FA3" hotkey="b">
+	<properties>
+	  <property type="Semantics" input="choice">Interval-Not-Included,Interval-Included</property>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="After" color="977FA3" hotkey="a">
+	<properties>
+	  <property type="Semantics" input="choice">Interval-Not-Included,Interval-Included</property>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="Between" color="977FA3">
+	<properties>
+	  <property type="Start-Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Start-Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Start-Included" input="choice">Not-Included,Included</property>
+	  <property type="End-Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="End-Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="End-Included" input="choice">Not-Included,Included</property>
+	</properties>
+      </entity>
+      <entity type="NthFromStart" color="977FA3">
+	<properties>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Value" input="text" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+      <entity type="NthFromEnd" color="977FA3">
+	<properties>
+	  <property type="Interval-Type" input="choice">,Link,DocTime,DocTime-Era,DocTime-Year,Unknown</property>
+	  <property type="Interval" input="list" maxlink="1" required="False" instanceOf="Year,Two-Digit-Year,This,Last,Next,Before,After,Between,NthFromStart,NthFromEnd,Event" />
+	  <property type="Value" input="text" />
+	  <property type="Period" input="list" maxlink="1" required="False" instanceOf="Period,Sum,Difference" />
+	  <property type="Repeating-Interval" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	</properties>
+      </entity>
+    </entities>
+    <entities type="Other" color="fcad84">
+      <entity type="Number" color="fdbf6f" hotkey="#">
+	<properties>
+	  <property type="Value" input="text" />
+	</properties>
+      </entity>
+      <entity type="Modifier" color="fb9a99">
+	<properties>
+	  <property type="Type" input="choice">,Approx,Less-Than,More-Than,Start,Mid,End,Fiscal</property>
+	</properties>
+      </entity>
+      <entity type="Frequency" color="ff7030" hotkey="f">
+	<properties>
+	  <property type="Type" input="choice">,Century,Quarter-Century,Decade,Year,Quarter-Year,Month,Week,Day,Hour,Minute,Second,Other</property>
+	  <property type="Every" input="list" maxlink="1" required="False" instanceOf="Frequency,Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
+	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
+	</properties>
+      </entity>
+      <entity type="Event" color="e0e0e0" hotkey="e" />
+      <entity type="PreAnnotation" color="ffff99" />
+      <entity type="NotNormalizable" color="e31a1c" hotkey="!" />
+    </entities>
+  </definition>
+</schema>
