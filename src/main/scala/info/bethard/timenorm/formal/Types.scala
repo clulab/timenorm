@@ -270,7 +270,6 @@ case class ThisP(interval: Interval, period: Period) extends Interval {
 trait This extends TimeExpression {
   val interval: Interval
   val repeatingInterval: RepeatingInterval
-  lazy val isDefined: Boolean = interval.isDefined && repeatingInterval.isDefined
   lazy val intervals: Seq[Interval] = {
     // find a start that aligns to the start of the repeating interval's range unit
     val rangeStart = RepeatingInterval.truncate(interval.start, repeatingInterval.range)
@@ -283,6 +282,7 @@ trait This extends TimeExpression {
 
     repeatingInterval.following(rangeStart).takeWhile(_.start.isBefore(rangeEnd)).toSeq
   }
+  lazy val isDefined: Boolean = interval.isDefined && repeatingInterval.isDefined && intervals.length == 1
 }
 
 /**
