@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<schema>
+<definition>
+<entities type="TimeML">
+	<entity type="EVENT" color="FF8080">
+        <properties>
+            <property type="class" input="choice">OCCURRENCE,PERCEPTION,REPORTING,ASPECTUAL,STATE,I_STATE,I_ACTION</property>
+            <!-- not part of TimeML, but present in TempEval 2013 -->
+            <property type="stem" input="text" />
+        </properties>
+	</entity>
+	<entity type="TIMEX3" color="80FF80">
+        <properties>
+            <property type="type" input="choice">DATE,TIME,DURATION,SET</property>
+            <property type="functionInDocument" input="choice">CREATION_TIME,EXPIRATION_TIME,MODIFICATION_TIME,PUBLICATION_TIME,RELEASE_TIME,RECEPTION_TIME,NONE</property>
+            <property type="beginPoint" input="list" instanceOf="TIMEX3" />
+            <property type="endPoint" input="list" instanceOf="TIMEX3" />
+            <property type="quant" input="text" />
+            <property type="freq" input="text" />
+            <property type="temporalFunction" input="choice">true,false</property>
+            <property type="value" input="text" />
+            <property type="valueFromFunction" input="text" />
+            <property type="mod" input="choice">BEFORE,AFTER,ON_OR_BEFORE,ON_OR_AFTER,LESS_THAN,MORE_THAN,EQUAL_OR_LESS,EQUAL_OR_MORE,START,MID,END,APPROX</property>
+            <property type="anchorTimeID" input="list" instanceOf="TIMEX3" />
+            <property type="comment" input="text" />
+        </properties>
+	</entity>
+	<entity type="SIGNAL" color="8080FF">
+        <properties>
+            <property type="comment" input="text" />
+        </properties>
+	</entity>
+</entities>
+<relations type="TimeML">
+	<relation type="MAKEINSTANCE">
+        <properties>
+            <property type="eventID" input="list" instanceOf="EVENT" />
+            <property type="signalID" input="list" instanceOf="SIGNAL" />
+            <property type="pos" input="choice">ADJECTIVE,NOUN,VERB,PREPOSITION,OTHER</property>
+            <property type="tense" input="choice">FUTURE,INFINITIVE,PAST,PASTPART,PRESENT,PRESPART,NONE</property>
+            <property type="aspect" input="choice">PROGRESSIVE,PERFECTIVE,PERFECTIVE_PROGRESSIVE,NONE</property>
+            <property type="cardinality" input="text" />
+            <property type="polarity" input="choice">NEG,POS</property>
+            <property type="modality" input="text" />
+            <property type="comment" input="text" />
+        </properties>
+	</relation>
+	<relation type="TLINK">
+        <properties>
+            <property type="eventInstanceID" input="list" instanceOf="MAKEINSTANCE" />
+            <property type="timeID" input="list" instanceOf="TIMEX3" />
+            <property type="signalID" input="list" instanceOf="SIGNAL" />
+            <property type="relatedToEventInstance" input="list" instanceOf="MAKEINSTANCE" />
+            <property type="relatedToTime" input="list" instanceOf="TIMEX3" />
+            <property type="relType" input="choice">BEFORE,AFTER,INCLUDES,IS_INCLUDED,DURING,SIMULTANEOUS,IAFTER,IBEFORE,IDENTITY,BEGINS,ENDS,BEGUN_BY,ENDED_BY,DURING_INV</property>
+            <property type="comment" input="text" />
+            <property type="syntax" input="text" />
+            <!-- not part of TimeML, but present in TempEval 2013 -->
+            <property type="origin" input="text" />
+        </properties>
+	</relation>
+	<relation type="SLINK">
+        <properties>
+            <property type="eventInstanceID" input="list" instanceOf="MAKEINSTANCE" />
+            <property type="signalID" input="list" instanceOf="SIGNAL" />
+            <property type="subordinatedEventInstance" input="list" instanceOf="MAKEINSTANCE" />
+            <property type="relType" input="choice">MODAL,EVIDENTIAL,NEG_EVIDENTIAL,FACTIVE,COUNTER_FACTIVE,CONDITIONAL</property>
+            <property type="comment" input="text" />
+            <property type="syntax" input="text" />
+        </properties>
+	</relation>
+	<relation type="ALINK">
+        <properties>
+            <property type="eventInstanceID" input="list" instanceOf="MAKEINSTANCE" />
+            <property type="signalID" input="list" instanceOf="SIGNAL" />
+            <property type="relatedToEventInstance" input="list" instanceOf="MAKEINSTANCE" />
+            <property type="relType" input="choice">INITIATES,CULMINATES,TERMINATES,CONTINUES,REINITIATES</property>
+            <property type="comment" input="text" />
+            <property type="syntax" input="text" />
+        </properties>
+	</relation>
+</relations>
+</definition>
+</schema>
