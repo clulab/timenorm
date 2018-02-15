@@ -218,7 +218,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>info.bethard.timenorm.TemporalExpressionParser</mainClass>
+              <mainClass>org.clulab.timenorm.TemporalExpressionParser</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
