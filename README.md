@@ -15,17 +15,17 @@ The primary entry point for most users is `TemporalExpressionParser`,
 which parses a `Temporal` from a string:
 
 ```scala
-scala> import info.bethard.timenorm._, scala.util.Success
-import info.bethard.timenorm._
+scala> import org.clulab.timenorm._, scala.util.Success
+import org.clulab.timenorm._
 import scala.util.Success
 
 scala> // Create a new English parser (Italian also available)
 scala> val parser = TemporalExpressionParser.en()
-parser: info.bethard.timenorm.TemporalExpressionParser = info.bethard.timenorm.TemporalExpressionParser@5a654e05
+parser: org.clulab.timenorm.TemporalExpressionParser = org.clulab.timenorm.TemporalExpressionParser@5a654e05
 
 scala> // parse an expression given an anchor time (here, assuming it succeeds)
 scala> val Success(temporal) = parser.parse("two weeks ago", TimeSpan.of(2013, 1, 4))
-temporal: info.bethard.timenorm.Temporal = TimeSpan(2012-12-17T00:00Z,2012-12-24T00:00Z,Period(Map(Weeks -> 1),Exact),Exact)
+temporal: org.clulab.timenorm.Temporal = TimeSpan(2012-12-17T00:00Z,2012-12-24T00:00Z,Period(Map(Weeks -> 1),Exact),Exact)
 
 scala> // express the Temporal as a TimeML value
 scala> temporal.timeMLValue
@@ -45,19 +45,19 @@ semantically compositional operators as described in:
 > In: Proceedings of the Tenth International Conference on Language
 > Resources and Evaluation (LREC 2016). pp. 3779-3786.
 
-The operators are available in the `info.bethard.timenorm.formal`
+The operators are available in the `org.clulab.timenorm.formal`
 package, and can combine fields and units from the `java.time` library
 to describe complex temporal expressions:
 
 ```scala
-scala> import info.bethard.timenorm.formal._, java.time.temporal.ChronoField._, java.time.temporal.ChronoUnit._
-import info.bethard.timenorm.formal._
+scala> import org.clulab.timenorm.formal._, java.time.temporal.ChronoField._, java.time.temporal.ChronoUnit._
+import org.clulab.timenorm.formal._
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 scala> // the 3-year period following the year 1985
 scala> NextP(Year(1985), SimplePeriod(YEARS, 3))
-res0: info.bethard.timenorm.formal.NextP = NextP(Year(1985,0),SimplePeriod(Years,IntNumber(3),Exact))
+res0: org.clulab.timenorm.formal.NextP = NextP(Year(1985,0),SimplePeriod(Years,IntNumber(3),Exact))
 
 scala> (res0.start, res0.end)
 res1: (java.time.LocalDateTime, java.time.LocalDateTime) = (1986-01-01T00:00,1989-01-01T00:00)
@@ -72,7 +72,7 @@ scala> NextRI(
      |   IntersectionRI(Set(
      |     RepeatingField(DAY_OF_WEEK, 5),
      |     RepeatingField(DAY_OF_MONTH, 13))))
-res2: info.bethard.timenorm.formal.NextRI = NextRI(ThisRI(ThisRI(Year(1985,0),RepeatingField(MonthOfYear,3,Exact)),RepeatingField(DayOfMonth,15,Exact)),IntersectionRI(Set(RepeatingField(DayOfWeek,5,Exact), RepeatingField(DayOfMonth,13,Exact))),<function1>)
+res2: org.clulab.timenorm.formal.NextRI = NextRI(ThisRI(ThisRI(Year(1985,0),RepeatingField(MonthOfYear,3,Exact)),RepeatingField(DayOfMonth,15,Exact)),IntersectionRI(Set(RepeatingField(DayOfWeek,5,Exact), RepeatingField(DayOfMonth,13,Exact))),<function1>)
 
 scala> (res2.start, res2.end)
 res3: (java.time.LocalDateTime, java.time.LocalDateTime) = (1985-09-13T00:00,1985-09-14T00:00)
