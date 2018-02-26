@@ -30,14 +30,14 @@ object TemporalExpressionParser {
    * The built-in English time parser.
    */
   def en(): TemporalExpressionParser = new TemporalExpressionParser(
-    grammarURL=this.getClass.getResource("/info/bethard/timenorm/en.grammar"),
+    grammarURL=this.getClass.getResource("/org/clulab/timenorm/en.grammar"),
     tokenize=DefaultTokenizer)
 
   /**
    * The built-in Italian time parser.
    */
   def it(): TemporalExpressionParser = new TemporalExpressionParser(
-    grammarURL=this.getClass.getResource("/info/bethard/timenorm/it.grammar"),
+    grammarURL=this.getClass.getResource("/org/clulab/timenorm/it.grammar"),
     tokenize=ItalianTokenizer)
 
   /**
@@ -102,7 +102,7 @@ object TemporalExpressionParser {
  *        for the default English grammar. Other languages may require alternate tokenizers.
  */
 class TemporalExpressionParser(
-    grammarURL: URL = classOf[TemporalExpressionParser].getResource("/info/bethard/timenorm/en.grammar"),
+    grammarURL: URL = classOf[TemporalExpressionParser].getResource("/org/clulab/timenorm/en.grammar"),
     tokenize: String => IndexedSeq[String] = DefaultTokenizer) {
   private val logger = Logger.getLogger(this.getClass.getName)
   private val grammarText = Source.fromURL(grammarURL, "UTF-8").mkString
