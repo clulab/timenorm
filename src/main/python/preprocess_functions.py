@@ -5,6 +5,8 @@ from nltk.tag.stanford import StanfordPOSTagger
 import nltk
 import anafora
 from collections import OrderedDict
+from collections import deque
+
 
 def addannotation_to_dict(posi_info_dict,annotation,raw_text):
     if posi_info_dict.has_key(annotation.spans[0][0]):
@@ -129,7 +131,43 @@ def add_start_end(sent_tokenize_span_list,start):
         max_len.append(sent_end-sent_start)
     return sent_tokenize_span_list_new,max_len
 
-def rule_based_tokenizer(sent,sent_span): # sent,sent_span
+def split_sentence_based_on_rules(sent):
+
+
+    if re.search(r' \.+ ', sent):
+        sentences = re.split(r' \.+ ', sent)
+    elif re.search(r'@ ---- @', sent):
+        sentences = re.split(r'@ ---- @', sent)
+    elif re.search(r'\.\w+\:', sent):
+        sent = re.sub(r'\.(\w+)\:', r'. \1:', sent)
+        sentences = sent_tokenize(sent)
+    elif re.search(r'\, as well as', sent):
+        sent = sent.replace(', as well as', '. As well as')
+        sentences = sent_tokenize(sent)
+    elif re.search(r'[a-z\.]+[A-Z][a-z]+:', sent):
+        k = re.findall(r' [a-z\.]+([A-Z][a-z]+:)', sent)
+        p = chr(ord(max(sent)) + 1)
+        sentences = sent.replace(k[0], p + k[0]).split(p)
+    elif re.search(r'\; ', sent):
+        sent = re.sub(r'\; ', r'. ', sent)
+        sentences = sent_tokenize(sent)
+    elif re.search(r', and, ', sent):
+        sent = sent.replace(', and, ', '. And, ')
+        sentences = sent_tokenize(sent)
+    elif re.search(r'president\: Wechsler', sent):
+        sent = sent.replace(': ', '. ')
+        sentences = sent_tokenize(sent)
+    elif re.search(r'\, ', sent):
+        sentences = re.split(r'\, ', sent)
+    else:
+        sentences = [sent[:349],sent[350:]]
+        print("Using greedy sentence tokenization")
+
+    text_len = [len(sentence) for sentence in sentences]
+    return sentences
+
+
+def rule_based_tokenizer(sent_ori,sent_span): # sent,sent_span
 
     #sent = "@ % This @ Oct 25 Oct 24 Year @ U.S. ................... 315.2 316.4 +23.1 @ Britain ................ 646.4 643.1 +18.4 @ Canada ................. 426.9 426.4 +16.3 @ Japan .................. 1547.1 1550.9 + 8.9 @ France ................. 518.6 521.2 +17.1 @ Germany ................ 236.7 241.0 +13.8 @ Hong Kong .............. 2049.2 2068.9 + 1.0 @ Switzerland ............ 212.6 216.5 +23.0 @ Australia .............. 326.0 329.4 +12.3 @ World index ............ 532.4 533.4 + 7.7 @ Weekly Percentage Leaders"
     #sent = "U.S. Attorney Denise E. O'Donnell declined to discuss what federal charges were being pursued, but she said that in a case like this, potential charges would be abortion-related violence, the use of a firearm in an act of violence, crossing state lines to commit a crime, and, if the suspect's act was tied to an organization, violation of the so-called RICO statutes, which prohibit an organized criminal enterprise."
@@ -137,34 +175,21 @@ def rule_based_tokenizer(sent,sent_span): # sent,sent_span
     #sent = "Thursday's Markets: @ Earnings @ Data Cause @ Stock Fall @ --- @ Industrials Sink 39.55; @ Bonds Slip, but Dollar @ Soars Against Pound @ ---- @ By Douglas R. Sease @ Staff Reporter of The Wall Street Journal 10/27/89 WALL STREET JOURNAL (J) MONETARY NEWS, FOREIGN EXCHANGE, TRADE (MON) STOCK INDEXES (NDX) STOCK MARKET, OFFERINGS (STK) FINANCIAL, ACCOUNTING, LEASING (FIN) BOND MARKET NEWS (BON) FOREIGN-EXCHANGE MARKETS (FRX) TREASURY DEPARTMENT (TRE)"
     #start = 20
     #end = 20 + len(sent)
+    text_len = []
     start, end  = sent_span
-
-    if re.search(r' \.+ ',sent):
-        sentences = re.split(r' \.+ ', sent)
-    elif re.search(r'@ ---- @', sent):
-        sentences = re.split(r'@ ---- @', sent)
-    elif re.search(r'\.\w+\:', sent):
-        sent = re.sub(r'\.(\w+)\:', r'. \1:', sent)
-        sentences = sent_tokenize(sent)
-    elif re.search(r'\, as well as',sent):
-        sent = sent.replace(', as well as','. As well as')
-        sentences = sent_tokenize(sent)
-    elif re.search(r', and, ',sent):
-        sent = sent.replace(', and, ','. And, ')
-        sentences = sent_tokenize(sent)
-    elif re.search(r'president\: Wechsler',sent):
-        sent = sent.replace(': ', '. ')
-        sentences = sent_tokenize(sent)
-    elif re.search(r'\; ', sent):
-        sent = re.sub(r'\; ', r'. ', sent)
-        sentences = sent_tokenize(sent)
-    elif re.search(r'\, ', sent):
-        sentences = re.split(r'\, ', sent)
-    else:
-        sentences = [sent]
+    sentences = deque([sent_ori])
+    sent_output = []
+    while sentences.__len__() > 0:
+        sent = sentences.popleft()
+        if len(sent) >= 350:
+            sentences_temp = split_sentence_based_on_rules(sent)
+            for sentence_temp in sentences_temp:
+                sentences.append(sentence_temp)
+        else:
+            sent_output.append(sent)
 
 
-    sent_tokenize_span_list = spans(sentences, sent)
+    sent_tokenize_span_list = spans(sent_output, sent_ori)
     sent_tokenize_span_list , max_len = add_start_end(sent_tokenize_span_list,start)
     #print sent_tokenize_span_list,max_len
     return sent_tokenize_span_list , max_len
