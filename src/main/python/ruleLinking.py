@@ -6,7 +6,7 @@ Created on Sat Feb 18 18:50:43 2017
 @author: egoitz
 """
 
-import anafora_ego, text2num
+import anafora_funct, text2num
 import dateutil.parser as dprs
 
 from lxml import etree
@@ -36,8 +36,8 @@ args = parser.parse_args()
 path = args.input
 out_path = args.output
 
-tnschema = anafora_ego.get_schema(tn_schema)
-types = anafora_ego.get_types(date_types)
+tnschema = anafora_funct.get_schema(tn_schema)
+types = anafora_funct.get_types(date_types)
 
 
 

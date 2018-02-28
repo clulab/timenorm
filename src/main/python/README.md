@@ -2,7 +2,8 @@
 
 ## Requirements
 Python version: 2.7.13
-Python Package: h5py, nltk 3.2.4, anaforatools, keras 1.2.1 , theano 0.9.0
+Python Package: h5py, nltk 3.2.4, anaforatools, keras 1.2.1 , theano 0.9.0rc2
+Addition resources: text2num.py (Please download this file from https://github.com/ghewgill/text2num/blob/master/text2num.py)
 
 ## Usages
 To processe the documents, please run:
