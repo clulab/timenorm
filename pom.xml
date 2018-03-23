@@ -128,16 +128,30 @@
     </dependency>
   </dependencies>
 
-  <distributionManagement>
-    <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
+  <repositories>
     <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>snapshots-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+	<updatePolicy>daily</updatePolicy>
+      </snapshots>
     </repository>
-  </distributionManagement>
+  </repositories>
+  
+  <!-- <distributionManagement> -->
+  <!--   <snapshotRepository> -->
+  <!--     <id>ossrh</id> -->
+  <!--     <url>https://oss.sonatype.org/content/repositories/snapshots</url> -->
+  <!--   </snapshotRepository> -->
+  <!--   <repository> -->
+  <!--     <id>ossrh</id> -->
+  <!--     <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url> -->
+  <!--   </repository> -->
+  <!-- </distributionManagement> -->
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
