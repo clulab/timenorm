@@ -57,6 +57,50 @@
       <version>0.7.11</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.25</version>
+    </dependency>
+    <dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>slf4j-log4j12</artifactId>
+       <version>1.7.25</version>
+    </dependency>
+
+    
+    <dependency>
+        <groupId>org.datavec</groupId>
+        <artifactId>datavec-data-image</artifactId>
+        <version>0.9.2-SNAPSHOT</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-modelimport</artifactId>
+      <version>0.9.2-SNAPSHOT</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native</artifactId>
+      <version>0.9.2-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native-api</artifactId>
+      <version>0.9.2-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.play</groupId>
+      <artifactId>play-json_2.12</artifactId>
+      <version>2.6.9</version>
+    </dependency>
+
+
+    
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>
