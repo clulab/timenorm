@@ -19,7 +19,7 @@ import scala.util.Try
 import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.temporal.IsoFields.QUARTER_YEARS
-import java.io.FileInputStream
+import java.io.{InputStream, FileInputStream}
 
 import play.api.libs.json._
 
@@ -61,8 +61,8 @@ object TemporalCharbasedParser {
 
 class TemporalCharbasedParser(modelFile: String) {
   private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
-  private val char2int = readDict(new FileInputStream("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/vocab/char2int.txt"))
-  private val unicode2int = readDict(new FileInputStream("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/vocab/unicate2int.txt"))
+  private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
+  private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
 
   private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Co", "Cs", "Pd", "Pi", "Pf", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Ps", "Pe")
 
@@ -98,7 +98,7 @@ class TemporalCharbasedParser(modelFile: String) {
 // END_PUNCTUATION = 29 [Pe]	Punctuation, Close
 
 
-  private def readDict(dictFile: FileInputStream): Map[String, Double] = {
+  private def readDict(dictFile: InputStream): Map[String, Double] = {
     try {  Json.parse(dictFile).as[Map[String, Double]] } finally { dictFile.close() }
   }
 
@@ -113,12 +113,13 @@ class TemporalCharbasedParser(modelFile: String) {
     this.network.init()
     val results = this.network.feedForward()
     //val nonOperators = results.get("timedistributed_1").map(p => p.max()).toArray
-    val nonOperators = (for(p <- 0 to results.get("timedistributed_1").length()) yield results.get("timedistributed_1").getRow(p).max()).toArray
-    println(nonOperators.toString)
-    val expOperators = (for(p <- 0 to results.get("timedistributed_2").length()) yield results.get("timedistributed_2").getRow(p).max()).toArray
-    println(expOperators.toString)
-    val impOperators = (for(p <- 0 to results.get("timedistributed_3").length()) yield results.get("timedistributed_3").getRow(p).max()).toArray
-    println(impOperators.toString)
+    val nonOperators = (for(p <- 0 to results.get("timedistributed_1").length() - 1) yield results.get("timedistributed_1").getRow(p).max()).toArray
+    println(results.get("timedistributed_1").getRow(0).max())
+    //println(nonOperators.toString)
+    //val expOperators = (for(p <- 0 to results.get("timedistributed_2").length() - 1) yield results.get("timedistributed_2").getRow(p).max()).toArray
+    //println(expOperators.toString)
+    //val impOperators = (for(p <- 0 to results.get("timedistributed_3").length() - 1) yield results.get("timedistributed_3").getRow(p).max()).toArray
+    //println(impOperators.toString)
   }
 
   def printModel(){
