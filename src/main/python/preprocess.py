@@ -179,7 +179,6 @@ def document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,x
         pos_sentences_character = process.word_pos_2_character_pos(sent_span_list_file, pos_sentences)
         unico_sentences_characte,unicode_vocab = process.get_unicode(sent_span_list_file,unicode_vocab)
 
-
         read.savein_json(preprocessed_file_path+"_sent",sent_span_list_file)
         read.savein_json(preprocessed_file_path + "_pos", pos_sentences_character)
         read.savein_json(preprocessed_file_path + "_unicodecategory", unico_sentences_characte)
@@ -201,9 +200,12 @@ def features_extraction(raw_data_dir,output_folder,data_folder = "",mode = "trai
     input_char = list()
     input_pos = list()
     input_unic = list()
-    char2int = read.readfrom_json("data/config_data/vocab/char2int")
-    pos2int = read.readfrom_json("data/config_data/vocab/pos2int")
-    unicode2int = read.readfrom_json("data/config_data/vocab/unicate2int")
+    #char2int = read.readfrom_json("data/config_data/vocab/char2int")
+    char2int = read.readfrom_json("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/vocab/char2int")
+    #pos2int = read.readfrom_json("data/config_data/vocab/pos2int")
+    pos2int = read.readfrom_json("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/vocab/pos2int")
+    #unicode2int = read.readfrom_json("data/config_data/vocab/unicate2int")
+    unicode2int = read.readfrom_json("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/vocab/unicate2int")
     total = 0
     for data_id in range(0, len(raw_data_dir)):
         preprocessed_file_path = os.path.join(preprocessed_path, file_dir[data_id], file_dir[data_id])
@@ -334,7 +336,7 @@ if __name__ == "__main__":
     parser.add_argument('--file',
                         help='files required to be processed',default="")
     parser.add_argument('--xml',
-                        help='specify anafora documents path if exist',default="")
+                        help='specify anafora documents path if exist',default=None)
 
     parser.add_argument('--out',
                         help='output path for all preprocessed files',required=True)
@@ -370,12 +372,14 @@ if __name__ == "__main__":
         file_dir = get_xml_dir(xml_path, file_filters= test_file,has_root_folder=False,file_format = output_format )
     else:
         file_dir = read.textfile2list(file_list_name)
-
+        
     #file_dir.remove("ID001_clinic_001")
     #file_dir = ["ID074_clinic_220"] # "ID010_clinic_030",
     if documents_preprocessed == "true":
         document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,xml_path,file_format = output_format )
-    main(file_dir[210:], preprocessed_path,mode = mode)
+    
+    #main(file_dir[210:], preprocessed_path,mode = mode)
+    main(file_dir, preprocessed_path,mode = mode)
 
 
 

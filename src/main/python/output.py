@@ -21,8 +21,8 @@ def span2xmlfiles(data_spans,file_name_simple):
     return data
 
 def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,output_pred_path,pred =True,data_folder = "",format_abbre = ".TimeNorm.system.completed.xml"):
-    non_operator = read.textfile2list("data/config_data/label/non-operator.txt")
-    operator = read.textfile2list("data/config_data/label/operator.txt")
+    non_operator = read.textfile2list("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/label/non-operator.txt")
+    operator = read.textfile2list("/home/egoitz/Tools/time/timenorm/src/main/resources/org/clulab/timenorm/label/operator.txt")
     labels_index = [non_operator,operator,operator]
 
     if pred == True:
@@ -77,14 +77,16 @@ def main(model_path,doc_list,raw_data_path, preocessed_path, output_pred_path,ou
             start = folder[version]
             end = folder[version + 1]
             doc_list_sub = doc_list[start:end]
-            input = read.load_hdf5(input_path+"/train_input"+str(version),["char","pos","unic"])
+            #input = read.load_hdf5(input_path+"/train_input"+str(version),["char","pos","unic"])
+            input = read.load_hdf5(input_path+"/train_input"+str(version),["char","unic"])
             gold = None
             generate_output_multiclass(model, input,gold, doc_list_sub, preocessed_path,output_pred_path,data_folder = str(version),format_abbre =output_format)
     else:
         start = 0
         end = file_n
         doc_list_sub = doc_list[start:end]
-        input = read.load_hdf5(input_path+"/train_input", ["char", "pos", "unic"])
+        #input = read.load_hdf5(input_path+"/train_input", ["char", "pos", "unic"])
+        input = read.load_hdf5(input_path+"/train_input", ["char", "unic"])
         gold = None
         generate_output_multiclass(model, input,gold,doc_list_sub,preocessed_path, output_pred_path,format_abbre =output_format)
 
@@ -116,7 +118,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     raw_data_path = args.raw
-    preprocessed_path = args.preocessed_path
+    preprocessed_path = args.preprocessed_path
     model_path = args.model
     output_pred_path = args.out
     output_format = args.format
@@ -133,6 +135,7 @@ if __name__ == "__main__":
     if __name__ == "__main__":
         doc_list = []
         for doc in os.listdir(preprocessed_path):
-            if not doc.endswith(".txt") and not doc.endswith(".npy"):
+            if not doc.endswith(".txt") and not doc.endswith(".npy") and not doc.endswith(".hdf5"):
                 doc_list.append(doc)
-        main(model_path,doc_list,raw_data_path, preprocessed_path, output_pred_path,output_format,pred = mode,evaluate = evaluate)
+        #main(model_path,doc_list,raw_data_path, preprocessed_path, output_pred_path,output_format,pred = mode,evaluate = evaluate)
+        main(model_path,doc_list,raw_data_path, preprocessed_path, output_pred_path,output_format,evaluate = evaluate)

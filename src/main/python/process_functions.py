@@ -19,7 +19,20 @@ def pro2classes_binaryclass(prediction):
         return (prediction > 0.5).astype('int32')
 
 def make_prediction_function_multiclass(x_data,model,output_path,version = ""):
+    print(x_data)
     y_predict = model.predict(x_data,batch_size=32)
+
+    model.summary()
+    from keras.models import Model
+    layer_name = "lstm_1"
+    intermediate_layer_model = Model(input=model.input,
+                                 output=model.get_layer(layer_name).output)
+    intermediate_output = intermediate_layer_model.predict(x_data)
+    np.set_printoptions(threshold=np.nan)
+    print(np.shape(intermediate_output))
+    for i in range(0,15):
+        print(intermediate_output[0][i])
+    
     if len(y_predict)>=2:
         classes = prob2classes_multiclasses_multioutput(y_predict)
     else:

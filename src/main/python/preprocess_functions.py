@@ -207,8 +207,10 @@ def get_pos_sentence(sentences_spans,pos_vocab):
 
     #raw_dir_simple = ["NYT19980206.0466"]
     english_postagger = StanfordPOSTagger(
-        'C:/Users/dongfangxu9/PycharmProjects/pos_tagger/models/english-left3words-distsim.tagger',    #### in folder data/
-        'C:/Users/dongfangxu9/PycharmProjects/pos_tagger/stanford-postagger.jar') #### in folder data/
+        # 'C:/Users/dongfangxu9/PycharmProjects/pos_tagger/models/english-left3words-distsim.tagger',    #### in folder data/
+        '/home/egoitz/Tools/postagging/stanford-postagger-2018-02-27/models/english-left3words-distsim.tagger',    #### in folder data/
+        #'C:/Users/dongfangxu9/PycharmProjects/pos_tagger/stanford-postagger.jar') #### in folder data/
+        '/home/egoitz/Tools/postagging/stanford-postagger-2018-02-27/stanford-postagger.jar') #### in folder data/
     english_postagger.java_options = '-mx8000m'
     pos_sentences = list()
 

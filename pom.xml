@@ -137,7 +137,7 @@
       </releases>
       <snapshots>
         <enabled>true</enabled>
-	<updatePolicy>daily</updatePolicy>
+	<updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
   </repositories>
@@ -152,7 +152,6 @@
   <!--     <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url> -->
   <!--   </repository> -->
   <!-- </distributionManagement> -->
->>>>>>> eca55f7b969f1e838c6656a1a35e2d7eee722b04
 
   
   <build>
