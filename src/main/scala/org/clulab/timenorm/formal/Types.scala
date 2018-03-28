@@ -563,6 +563,7 @@ case class NthRI(interval: Interval,
                  repeatingInterval: RepeatingInterval,
                  from: Interval.Point = Interval.Start)
   extends Interval with IRINP {
+  override lazy val isDefined = interval.isDefined && repeatingInterval.isDefined && number.isDefined && (interval contains intervalsFromPoint.drop(index - 1).next)
   val number = IntNumber(1)
   lazy val Interval(start, end) = intervalsFromPoint.drop(index - 1).next match {
     case result if interval contains result => result
