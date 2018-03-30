@@ -164,13 +164,6 @@ object TimeNormScorer {
       val outFilePath = outPath + "/" + outFile.getName
       val systemData = Data.fromPaths(outFilePath, None)
       val systemTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(systemData))(systemData)
-      // val systemTimexes: Seq[Timex] = fileName match {
-      //   case "ID125_clinic_366" => Seq.empty[Timex]
-      //   //case "ID117_clinic_342" => Seq.empty[Timex]
-      //   case _ => Timex.allIntervalsFrom(new AnaforaReader(dct)(systemData))(systemData)
-      // }
-      //Val systemTimexes: Seq[Timex] = Try(Timex.allIntervalsFrom(new AnaforaReader(dct)(systemData))(systemData)).getOrElse(Seq.empty[Timex])
-
       sum_sys += systemTimexes.size
 
       println("Intervals in Answer:")
