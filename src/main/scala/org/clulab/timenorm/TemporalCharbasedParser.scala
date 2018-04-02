@@ -29,6 +29,13 @@ object TemporalCharbasedParser {
 
   def main(args: Array[String]): Unit = {
 
+    println(System.getProperty("java.library.path"))
+    System.setProperty("java.library.path",
+			 System.getProperty("java.library.path") +
+			   java.io.File.pathSeparator +
+                           "/home/egoitz/Tools/deeplearning/nd4j/nd4j-backends/nd4j-backend-impls/nd4j-native/target/classes/")
+    println(System.getProperty("java.library.path"))
+
     val parser = args match {
       case Array(modelFile) =>
         new TemporalCharbasedParser(modelFile)
@@ -48,11 +55,10 @@ object TemporalCharbasedParser {
     // repeatedly prompt for a time expression and then try to parse it
     System.out.print(">>> ")
     for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
-      //parser.parse("\n\n\n" + line + "\n\n\n", anchor) // match {
-      parser.parse(line, anchor) // match {
-      //   case Failure(exception) =>
+      parser.parse("\n\n\n" + line + "\n\n\n", anchor) // match {
+      // case Failure(exception) =>
       //     System.out.printf("Error: %s\n", exception.getMessage)
-      //   case Success(temporal) =>
+      // case Success(temporal) =>
       //     System.out.println(temporal.timeMLValue)
       // }
       System.out.print(">>> ")
@@ -65,12 +71,9 @@ class TemporalCharbasedParser(modelFile: String) {
   private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
   private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
   private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
-  // private val operatorLabels = Source.fromResource("/org/clulab/timenorm/label/operator.txt").getLines.toList
-  // private val nonOperatorLabels = Source.fromResource("/org/clulab/timenorm/label/non-operator.txt").getLines.toList
   private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
 
-  //private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Co", "Cs", "Pd", "Pi", "Pf", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Ps", "Pe")
   private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Cn", "Co", "Cs", "Pd", "Ps", "Pe", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Pi", "Pf")
 
 
@@ -111,15 +114,13 @@ class TemporalCharbasedParser(modelFile: String) {
   }
 
 
-  def parse(sourceText: String, anchor: TimeSpan) { //: Try[Temporal] = {
+  def parse(sourceText: String, anchor: TimeSpan){ //: Try[Temporal] = {
 
-    val d = "\n\n\n2018-10-10\n\n\n"
-    val input0 = Nd4j.create(d.map(c => this.char2int.getOrElse(c.toString(), this.char2int("unknown"))).toArray, Array(1,1,16))
-    val input1 = Nd4j.create(d.map(c => this.unicode2int.getOrElse(unicodes(c.getType), this.unicode2int("unknown"))).toArray, Array(1,1,16))
+    val input0 = Nd4j.create(sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("unknown"))).toArray, Array(1,1,sourceText.length))
+    val input1 = Nd4j.create(sourceText.map(c => this.unicode2int.getOrElse(unicodes(c.getType), this.unicode2int("unknown"))).toArray, Array(1,1,sourceText.length))
 
     this.network.setInput(0, input0)
     this.network.setInput(1, input1)
-    //this.network.init()
     val results = this.network.feedForward()
 
     //this.printModel()
