@@ -564,7 +564,9 @@ case class NthRI(interval: Interval,
                  from: Interval.Point = Interval.Start)
   extends Interval with IRINP {
   val number = IntNumber(1)
-  lazy val Interval(start, end) = intervalsFromPoint.drop(index - 1).next match {
+  lazy val fromPoint = intervalsFromPoint.drop(index - 1).next
+  lazy override val isDefined = interval.isDefined && repeatingInterval.isDefined && number.isDefined & (interval contains fromPoint)
+  lazy val Interval(start, end) = fromPoint match {
     case result if interval contains result => result
     case result => throw new UnsupportedOperationException(s"${result.end} is outside of $interval")
   }

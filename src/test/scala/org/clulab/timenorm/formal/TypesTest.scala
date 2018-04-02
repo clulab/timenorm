@@ -504,6 +504,12 @@ class TypesTest extends FunSuite with TypesSuite {
 
     assert(NthRI(SimpleInterval.of(2017), 4, RepeatingUnit(IsoFields.QUARTER_YEARS))
       === SimpleInterval(LocalDateTime.of(2017, 10, 1, 0, 0), LocalDateTime.of(2018, 1, 1, 0, 0)))
+
+    val definedNthRI = NthRI(interval, 1, RepeatingField(ChronoField.MONTH_OF_YEAR, 6))
+    assert(definedNthRI.isDefined)
+
+    val undefinedNthRI = NthRI(interval, 2, RepeatingField(ChronoField.MONTH_OF_YEAR, 6))
+    assert(!undefinedNthRI.isDefined)
   }
 
   test("ThisRI") {
