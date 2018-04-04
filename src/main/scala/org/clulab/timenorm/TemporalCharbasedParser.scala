@@ -10,12 +10,14 @@ import org.deeplearning4j.nn.conf.ComputationGraphConfiguration
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
 import org.deeplearning4j.nn.conf.inputs.InputType
 
+import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.IndexedSeq
 import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import scala.xml.XML
+import scala.xml.{XML, Elem, Node}
+import scala.language.postfixOps
 
 import java.util.Arrays
 import java.io.{InputStream, FileInputStream}
@@ -115,7 +117,10 @@ class TemporalCharbasedParser(modelFile: String) {
   def parse(sourceText: String, anchor: TimeSpan){ //: Try[Temporal] = {
     val entities = identification(sourceText)
     println(entities.toString)
-    linking(entities)
+    val links = linking(entities)
+    println(links.toString)
+    val anafora: Elem = build(entities, links)
+    println(anafora)
   }
 
 
@@ -137,15 +142,51 @@ class TemporalCharbasedParser(modelFile: String) {
     (spans(nonOperators) ::: spans(expOperators) ::: spans(impOperators)).sorted
   }
 
-  def linking(entities: List[(Int, Int, String)]) = {
+
+  def relation(type1: String, type2: String): Option[String] = {
+    Try(Some((this.schema(type1) keys).filter(this.schema(type1)(_)._2 contains type2).iterator.next)).getOrElse(None)
+  }
+
+
+  def linking(entities: List[(Int, Int, String)]): List[(Int, Int, String)] = {
+    val links = ListBuffer.empty[(Int, Int, String)]
     var stack = Array(0, 0)
-    for (entity <- entities) {
+    for ((entity, i) <- entities.zipWithIndex) {
       if (stack(0) != stack(1) && entity._1 - entities(stack(1)-1)._2 > 10)
         stack(0) = stack(1)
       for (s <- (stack(0) to stack(1) - 1).toList.reverse) {
-        println(entity, entities(s))
+        relation(entity._3, entities(s)._3) match {
+          case Some(result) => links += ((i, s, result))
+          case None => relation(entities(s)._3, entity._3) match {
+            case Some(result) => links += ((s, i, result))
+            case None =>
+          }
+        }
       }
       stack(1) += 1
     }
+    links.groupBy(_._1).values.map(_.head).toList
+  }
+
+
+  def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)]): Elem = {
+    <data>
+    <annotations>
+    {
+      for ((entity, e) <- entities.zipWithIndex) yield {
+        <entity>
+        <id>{e}@id</id>
+        <span>{entity._1},{entity._2}</span>
+        <type>{entity._3}</type>
+        <properties>
+        {
+          links.filter(_._1 == e).map(link => <xml>{link._2}@id</xml>.copy(label = link._3))
+        }
+        </properties>
+        </entity>
+      }
+    }
+    </annotations>
+    </data>
   }
 }
