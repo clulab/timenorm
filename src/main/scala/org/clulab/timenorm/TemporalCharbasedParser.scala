@@ -16,7 +16,8 @@ import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import scala.xml.{XML, Elem, Node}
+//import scala.xml.{XML, Elem, Node}
+import com.codecommit.antixml._
 import scala.language.postfixOps
 
 import java.util.Arrays
@@ -26,6 +27,8 @@ import java.time.LocalDate
 import java.time.temporal.IsoFields.QUARTER_YEARS
 
 import play.api.libs.json._
+
+import org.clulab.anafora.Data
 
 object TemporalCharbasedParser {
   private val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
@@ -64,50 +67,18 @@ object TemporalCharbasedParser {
 
 class TemporalCharbasedParser(modelFile: String) {
   private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
-  private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
-  private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
-  private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
-  private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
-  private val schema = (for (es <- XML.loadFile(this.getClass.getResource("/org/clulab/timenorm/linking_configure/timenorm-schema.xml").getPath) \\ "entities") yield for (e <- es \ "entity") yield (for (p <- e \\ "property" ) yield ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))) :+  ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))).flatten.flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
+  lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
+  lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
+  lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
+  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines.map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  lazy private val schema = (for (es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities") yield for (e <- es \ "entity") yield (for (p <- e \\ "property" ) yield ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))) :+  ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))).flatten.flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
 
   private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Cn", "Co", "Cs", "Pd", "Ps", "Pe", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Pi", "Pf")
 
   private def printModel(){
     println(this.network.summary())
   }
-
-
-// UNASSIGNED = 0 [Cn]	Other, Not Assigned (no characters in the file have this property)
-// UPPERCASE_LETTER = 1 [Lu]	Letter, Uppercase
-// LOWERCASE_LETTER = 2 [Ll]	Letter, Lowercase
-// TITLECASE_LETTER = 3 [Lt]	Letter, Titlecase
-// MODIFIER_LETTER = 4 [Lm]	Letter, Modifier
-// OTHER_LETTER = 5 [Lo]	Letter, Other
-// NON_SPACING_MARK = 6 [Mn]	Mark, Nonspacing
-// ENCLOSING_MARK = 7 [Me]	Mark, Enclosing
-// COMBINING_SPACING_MARK = 8 [Mc]	Mark, Spacing Combining
-// DECIMAL_DIGIT_NUMBER = 9 [Nd]	Number, Decimal Digit
-// LETTER_NUMBER = 10 [Nl]	Number, Letter
-// OTHER_NUMBER = 11 [No]	Number, Other
-// SPACE_SEPARATOR = 12 [Zs]	Separator, Space
-// LINE_SEPARATOR = 13 [Zl]	Separator, Line
-// PARAGRAPH_SEPARATOR = 14 [Zp]	Separator, Paragraph
-// CONTROL = 15 [Cc]	Other, Control
-// FORMAT = 16 [Cf]	Other, Format
-// PRIVATE_USE = 17 [Co]	Other, Private Use
-// SURROGATE = 18 [Cs]	Other, Surrogate
-// DASH_PUNCTUATION = 19 [Pd]	Punctuation, Dash
-// INITIAL_PUNCTUATION = 20 [Pi]	Punctuation, Initial quote (may behave like Ps or Pe depending on usage)
-// FINAL_PUNCTUATION = 21 [Pf]	Punctuation, Final quote (may behave like Ps or Pe depending on usage)
-// CONNECTOR_PUNCTUATION = 22 [Pc]	Punctuation, Connector
-// OTHER_PUNCTUATION = 23 [Po]	Punctuation, Other
-// MATH_SYMBOL = 24 [Sm]	Symbol, Math
-// CURRENCY_SYMBOL = 25 [Sc]	Symbol, Currency
-// MODIFIER_SYMBOL = 26 [Sk]	Symbol, Modifier
-// OTHER_SYMBOL = 27 [So]	Symbol, Other
-// START_PUNCTUATION = 28 [Ps]	Punctuation, Open
-// END_PUNCTUATION = 29 [Pe]	Punctuation, Close
-
 
   private def readDict(dictFile: InputStream): Map[String, Double] = {
     try {  Json.parse(dictFile).as[Map[String, Double]] } finally { dictFile.close() }
@@ -119,8 +90,12 @@ class TemporalCharbasedParser(modelFile: String) {
     println(entities.toString)
     val links = linking(entities)
     println(links.toString)
-    val anafora: Elem = build(entities, links)
+    val properties = complete(entities, links, sourceText.slice(3, sourceText.length-3))
+    println(properties.toString)
+    val anafora: Elem = build(entities, links, properties)
     println(anafora)
+    val data = new Data(anafora, Some(sourceText.slice(3, sourceText.length-3)))
+    println(data.entities)
   }
 
 
@@ -133,7 +108,7 @@ class TemporalCharbasedParser(modelFile: String) {
     val results = this.network.feedForward()
 
     val labels = (x: Array[Array[Float]]) => (for (r <- x) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(nonOperatorLabels(o-1)).getOrElse("O")).drop(3).dropRight(3)
-    val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2-1, m(0)._1(1))).filter(_._3 != "O").toList
+    val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2, m(0)._1(1))).filter(_._3 != "O").toList
 
     val nonOperators = labels(results.get("timedistributed_1").toFloatMatrix())
     val expOperators = labels(results.get("timedistributed_2").toFloatMatrix())
@@ -168,8 +143,61 @@ class TemporalCharbasedParser(modelFile: String) {
     links.groupBy(_._1).values.map(_.head).toList
   }
 
+  def complete(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], sourceText: String): List[(Int, String, String)] = {
+    val properties = {
+    for ((entity, i) <- entities.zipWithIndex;
+      property <- this.schema(entity._3).keys) yield { property match {
+        case "Type" => {
+          val p = Try(this.types(entity._3)(sourceText.slice(entity._1, entity._2))).getOrElse(sourceText.slice(entity._1, entity._2)).toString
+          (entity._3, p.last.toString) match {
+            case ("Calendar-Interval", "s") => (i, property, p.dropRight(1))
+            case ("Period", l) if l != "Unknown" && l != "s" => (i, property, p + "s")
+            case _ => (i, property, p)
+          }
+        }
+        case "Value" => {
+          val rgx = """^0+(\d)""".r
+          (i, property, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1))))
+        }
+        // case t if t contains "Interval-Type" => {
+        // }
+        case "Semantics" => (i, property, "Interval-Not-Included")
+        case _ => (-1, "", "")
+      }}
+    }
+    properties
+  }
+    
+      //                   elif re.search('Interval-Type',relation):
+      //                       intervalemtpy = True
+      //                       if eid in links:
+      //                           if "Interval" in links[eid]:
+      //                               if links[eid]["Interval"] != "":
+      //                                   intervalemtpy = False
+      //                       if not intervalemtpy:
+      //                           itype = etree.Element(relation)
+      //                           itype.text = "Link"
+      //                           eproperties.append(itype)
+      //                       else:
+      //                           itype = etree.Element(relation)
+      //                           itype.text = "DocTime"
+      //                           eproperties.append(itype)
 
-  def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)]): Elem = {
+
+      // if etype == "Last":
+      //               semantics = eproperties.findall('./Semantics')[0]
+      //               interval_included = "Interval-Not-Included"
+      //               for repint in eproperties.findall('./Repeating-Interval'):
+      //                   if repint.text is not None:
+      //                       (rid, rstart, rend, rtype, rparentsType) = entities[repint.text]
+      //                       rspan = "".join(text[int(rstart):int(rend)])
+      //                       if rspan.title() == dctDayofWeek:
+      //                           interval_included = "Interval-Included"
+      //               semantics.text = interval_included
+
+
+
+  def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], properties: List[(Int, String, String)]): Elem = {
     <data>
     <annotations>
     {
@@ -182,11 +210,14 @@ class TemporalCharbasedParser(modelFile: String) {
         {
           links.filter(_._1 == e).map(link => <xml>{link._2}@id</xml>.copy(label = link._3))
         }
+        {
+          properties.filter(_._1 == e).map(property => <xml>{property._3}</xml>.copy(label = property._2))
+        }
         </properties>
         </entity>
       }
     }
     </annotations>
-    </data>
+    </data>.convert
   }
 }
