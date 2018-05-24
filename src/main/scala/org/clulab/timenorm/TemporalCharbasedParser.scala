@@ -16,19 +16,20 @@ import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-//import scala.xml.{XML, Elem, Node}
 import com.codecommit.antixml._
 import scala.language.postfixOps
 
 import java.util.Arrays
 import java.io.{InputStream, FileInputStream}
 import java.time.DateTimeException
-import java.time.LocalDate
 import java.time.temporal.IsoFields.QUARTER_YEARS
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 import play.api.libs.json._
 
-import org.clulab.anafora.Data
+import org.clulab.timenorm.formal._
+import org.clulab.anafora.{Data, Entity}
 
 object TemporalCharbasedParser {
   private val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
@@ -45,7 +46,7 @@ object TemporalCharbasedParser {
 
 
     // use the current date as an anchor
-    val now = LocalDate.now()
+    val now = LocalDateTime.now()
     val anchor = TimeSpan.of(now.getYear, now.getMonthValue, now.getDayOfMonth)
     System.out.printf("Assuming anchor: %s\n", anchor.timeMLValue)
     System.out.println("Type in a time expression (or :quit to exit)")
@@ -53,12 +54,8 @@ object TemporalCharbasedParser {
     // repeatedly prompt for a time expression and then try to parse it
     System.out.print(">>> ")
     for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
-      parser.parse("\n\n\n" + line + "\n\n\n", anchor) // match {
-      // case Failure(exception) =>
-      //     System.out.printf("Error: %s\n", exception.getMessage)
-      // case Success(temporal) =>
-      //     System.out.println(temporal.timeMLValue)
-      // }
+      val data: Data = parser.parse("\n\n\n" + line + "\n\n\n", anchor)
+      println(data.topEntities)
       System.out.print(">>> ")
     }
   }
@@ -85,17 +82,44 @@ class TemporalCharbasedParser(modelFile: String) {
   }
 
 
-  def parse(sourceText: String, anchor: TimeSpan){ //: Try[Temporal] = {
+  def parse(sourceText: String, anchor: TimeSpan): Data = {
     val entities = identification(sourceText)
-    println(entities.toString)
     val links = linking(entities)
-    println(links.toString)
     val properties = complete(entities, links, sourceText.slice(3, sourceText.length-3))
-    println(properties.toString)
     val anafora: Elem = build(entities, links, properties)
-    println(anafora)
     val data = new Data(anafora, Some(sourceText.slice(3, sourceText.length-3)))
-    println(data.entities)
+    data
+  }
+
+
+  def intervals(data: Data): List[((Int,Int), List[(LocalDateTime, Long)])] = {
+    val now = LocalDateTime.now.toString.split("T")(0).split("-").map(_.toInt) match {
+      case Array(y, m, d) => SimpleInterval.of(y, m , d)
+    }
+    val reader = new AnaforaReader(now)(data)
+    (for (e <- data.topEntities) yield {
+      val span = e.expandedSpan(data)
+      val time = Try(reader.temporal(e)(data)).getOrElse(null)
+      val timeIntervals: List[(LocalDateTime, Long)] = time match {
+        case interval: Interval => List((
+          interval.start,
+          interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)))
+        case intervals: Intervals => (for (interval <- intervals) yield {(
+          interval.start,
+          interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
+        )}).toList
+        case rInterval: RepeatingInterval => List((
+          null,
+          rInterval.preceding(LocalDateTime.now).next.end.toEpochSecond(ZoneOffset.UTC) - rInterval.preceding(LocalDateTime.now).next.start.toEpochSecond(ZoneOffset.UTC)
+        ))
+        case period: SimplePeriod => List((
+          null,
+          period.number * period.unit.getDuration.getSeconds
+        ))
+        case _ => List((null, 0))
+      }
+      (span, timeIntervals)
+    }).toList
   }
 
 
@@ -107,12 +131,12 @@ class TemporalCharbasedParser(modelFile: String) {
     this.network.setInput(1, input1)
     val results = this.network.feedForward()
 
-    val labels = (x: Array[Array[Float]]) => (for (r <- x) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(nonOperatorLabels(o-1)).getOrElse("O")).drop(3).dropRight(3)
+    val labels = (x: Array[Array[Float]], l: List[String]) => (for (r <- x) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O")).drop(3).dropRight(3)
     val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2, m(0)._1(1))).filter(_._3 != "O").toList
 
-    val nonOperators = labels(results.get("timedistributed_1").toFloatMatrix())
-    val expOperators = labels(results.get("timedistributed_2").toFloatMatrix())
-    val impOperators = labels(results.get("timedistributed_3").toFloatMatrix())
+    val nonOperators = labels(results.get("timedistributed_1").toFloatMatrix(), nonOperatorLabels)
+    val expOperators = labels(results.get("timedistributed_2").toFloatMatrix(), operatorLabels)
+    val impOperators = labels(results.get("timedistributed_3").toFloatMatrix(), operatorLabels)
 
     (spans(nonOperators) ::: spans(expOperators) ::: spans(impOperators)).sorted
   }
@@ -129,14 +153,20 @@ class TemporalCharbasedParser(modelFile: String) {
     for ((entity, i) <- entities.zipWithIndex) {
       if (stack(0) != stack(1) && entity._1 - entities(stack(1)-1)._2 > 10)
         stack(0) = stack(1)
+      var redays = 0
       for (s <- (stack(0) to stack(1) - 1).toList.reverse) {
-        relation(entity._3, entities(s)._3) match {
-          case Some(result) => links += ((i, s, result))
-          case None => relation(entities(s)._3, entity._3) match {
-            case Some(result) => links += ((s, i, result))
-            case None =>
+        redays += { entities(s)._3.startsWith("Day-Of") match {
+          case true => 1
+          case _ => 0
+        }}
+        if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
+          relation(entity._3, entities(s)._3) match {
+            case Some(result) => links += ((i, s, result))
+            case None => relation(entities(s)._3, entity._3) match {
+              case Some(result) => links += ((s, i, result))
+              case None =>
+            }
           }
-        }
       }
       stack(1) += 1
     }
@@ -159,56 +189,34 @@ class TemporalCharbasedParser(modelFile: String) {
           val rgx = """^0+(\d)""".r
           (i, property, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1))))
         }
-        // case t if t contains "Interval-Type" => {
-        // }
-        case "Semantics" => (i, property, "Interval-Not-Included")
+        case intervalttype if intervalttype contains "Interval-Type" => {
+          links.find(l => (l._1 == i || l._2 == i) && l._3 == "Interval").isDefined match {
+            case false => (i, property, "Link")
+            case _ => (i, property, "DocTime")
+          }
+        }
+        case "Semantics" => entity._3 match {
+          case "Last" => (i, property, "Interval-Not-Included") // TODO: Include journal Last?1
+          case _ => (i, property, "Interval-Not-Included")
+        }
         case _ => (-1, "", "")
       }}
     }
     properties
   }
     
-      //                   elif re.search('Interval-Type',relation):
-      //                       intervalemtpy = True
-      //                       if eid in links:
-      //                           if "Interval" in links[eid]:
-      //                               if links[eid]["Interval"] != "":
-      //                                   intervalemtpy = False
-      //                       if not intervalemtpy:
-      //                           itype = etree.Element(relation)
-      //                           itype.text = "Link"
-      //                           eproperties.append(itype)
-      //                       else:
-      //                           itype = etree.Element(relation)
-      //                           itype.text = "DocTime"
-      //                           eproperties.append(itype)
-
-
-      // if etype == "Last":
-      //               semantics = eproperties.findall('./Semantics')[0]
-      //               interval_included = "Interval-Not-Included"
-      //               for repint in eproperties.findall('./Repeating-Interval'):
-      //                   if repint.text is not None:
-      //                       (rid, rstart, rend, rtype, rparentsType) = entities[repint.text]
-      //                       rspan = "".join(text[int(rstart):int(rend)])
-      //                       if rspan.title() == dctDayofWeek:
-      //                           interval_included = "Interval-Included"
-      //               semantics.text = interval_included
-
-
-
   def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], properties: List[(Int, String, String)]): Elem = {
     <data>
     <annotations>
     {
       for ((entity, e) <- entities.zipWithIndex) yield {
         <entity>
-        <id>{e}@id</id>
-        <span>{entity._1},{entity._2}</span>
+        <id>{s"${e}@id"}</id>
+        <span>{s"${entity._1},${entity._2}"}</span>
         <type>{entity._3}</type>
         <properties>
         {
-          links.filter(_._1 == e).map(link => <xml>{link._2}@id</xml>.copy(label = link._3))
+          links.filter(_._1 == e).map(link => <xml>{s"${link._2}@id"}</xml>.copy(label = link._3))
         }
         {
           properties.filter(_._1 == e).map(property => <xml>{property._3}</xml>.copy(label = property._2))
