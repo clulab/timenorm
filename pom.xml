@@ -69,23 +69,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.deeplearning4j</groupId>
+      <groupId>com.github.EgoLaparra.deeplearning4j-eidos</groupId>
       <artifactId>deeplearning4j-modelimport</artifactId>
-      <!-- <version>0.9.2-LOCAL</version> -->
-      <version>1.0.0-LOCAL</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.deeplearning4j</groupId>
-      <artifactId>deeplearning4j-nn</artifactId>
-      <!-- <version>0.9.2-SNAPSHOT</version> -->
-      <version>1.0.0-alpha</version>
+      <version>1.0.1-eidos</version>
     </dependency>
 
     <dependency>
       <groupId>org.nd4j</groupId>
       <artifactId>nd4j-native-platform</artifactId>
-      <!-- <version>0.9.2-SNAPSHOT</version> -->
       <version>1.0.0-alpha</version>
     </dependency>
 
@@ -95,12 +86,6 @@
       <version>2.6.9</version>
     </dependency>
 
-    <!-- <dependency>     -->
-    <!--   <groupId>org.bytedeco.javacpp-presets</groupId> -->
-    <!--   <artifactId>hdf5-platform</artifactId> -->
-    <!--   <version>1.10.2-1.4.2-SNAPSHOT</version> -->
-    <!-- </dependency> -->
-    
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>
@@ -139,6 +124,10 @@
         <enabled>true</enabled>
 	<updatePolicy>never</updatePolicy>
       </snapshots>
+    </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
     </repository>
   </repositories>
   
