@@ -100,7 +100,7 @@ class TemporalCharbasedParser(modelFile: String) {
     (for (e <- data.topEntities) yield {
       val span = e.expandedSpan(data)
       val time = Try(reader.temporal(e)(data)).getOrElse(null)
-      val timeIntervals: List[(LocalDateTime, Long)] = time match {
+      val timeIntervals: List[(LocalDateTime, Long)] = Try(time match {
         case interval: Interval => List((
           interval.start,
           interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)))
@@ -116,8 +116,8 @@ class TemporalCharbasedParser(modelFile: String) {
           null,
           period.number * period.unit.getDuration.getSeconds
         ))
-        case _ => List((null, 0))
-      }
+        case _ => List((null, 0.toLong))
+      }).getOrElse(List((null, 0.toLong)))
       (span, timeIntervals)
     }).toList
   }
