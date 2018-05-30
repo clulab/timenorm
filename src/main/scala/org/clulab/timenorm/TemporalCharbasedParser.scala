@@ -62,7 +62,8 @@ object TemporalCharbasedParser {
 }
 
 
-class TemporalCharbasedParser(modelFile: String) {
+class TemporalCharbasedParser(modelFile: String = getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/lstm_models_2features.hdf5").getPath()) {
+
   private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
   lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
