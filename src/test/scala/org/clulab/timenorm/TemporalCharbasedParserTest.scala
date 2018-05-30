@@ -10,7 +10,8 @@ import java.time.LocalDate
 @RunWith(classOf[JUnitRunner])
 class TemporalCharbasedParserTest extends FunSuite {
 
-  val parser = new TemporalCharbasedParser()
+  val modelPath = this.getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/lstm_models_2features.hdf5").getPath()
+  val parser = new TemporalCharbasedParser(modelPath)
   val now = LocalDate.now()
   val anchor = TimeSpan.of(now.getYear, now.getMonthValue, now.getDayOfMonth)
 

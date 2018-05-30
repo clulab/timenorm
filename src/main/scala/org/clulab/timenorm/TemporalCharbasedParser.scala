@@ -36,10 +36,10 @@ object TemporalCharbasedParser {
 
   def main(args: Array[String]): Unit = {
     val parser = args match {
-      case Array() =>
-        new TemporalCharbasedParser()
+      case Array(modelPath) =>
+        new TemporalCharbasedParser(modelPath)
       case _ =>
-        System.err.printf("usage: %s\n", this.getClass.getSimpleName)
+        System.err.printf("usage: %s [model-path]\n", this.getClass.getSimpleName)
         System.exit(1)
         throw new IllegalArgumentException
     }
@@ -62,9 +62,8 @@ object TemporalCharbasedParser {
 }
 
 
-class TemporalCharbasedParser() {
+class TemporalCharbasedParser(modelPath: String) {
 
-  private val modelPath = this.getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/lstm_models_2features.hdf5").getPath()
   private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelPath, false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
   lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
