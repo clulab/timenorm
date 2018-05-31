@@ -41,8 +41,8 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <scala.version>2.12.2</scala.version>
-    <scala.version.short>2.12</scala.version.short>
+    <scala.version>2.11.8</scala.version>
+    <scala.version.short>2.11</scala.version.short>
   </properties>
 
   <dependencies>
@@ -88,7 +88,7 @@
 
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play-json_2.12</artifactId>
+      <artifactId>play-json_2.11</artifactId>
       <version>2.6.9</version>
     </dependency>
 
