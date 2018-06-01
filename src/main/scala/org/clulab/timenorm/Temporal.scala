@@ -380,10 +380,6 @@ object TimeSpan {
    * @return A time span lasting for exactly the given day.
    */
   def of(year: Int, month: Int, day: Int): TimeSpan = {
-    println(year)
-    println(month)
-    println(day)
-
     val start = ZonedDateTime.of(LocalDateTime.of(year, month, day, 0, 0), ZoneId.of("Z"))
     this.startingAt(start, Period(Map(DAYS -> 1)), Modifier.Exact)
   }
