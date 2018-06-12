@@ -54,7 +54,7 @@ object TemporalCharbasedParser {
     // repeatedly prompt for a time expression and then try to parse it
     System.out.print(">>> ")
     for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
-      val data: Data = parser.parse("\n\n\n" + line + "\n\n\n", anchor)
+      val data: Data = parser.parse(line, anchor)
       println(data.topEntities)
       System.out.print(">>> ")
     }
@@ -84,11 +84,11 @@ class TemporalCharbasedParser(modelPath: String) {
 
 
   def parse(sourceText: String, anchor: TimeSpan): Data = {
-    val entities = identification(sourceText)
+    val entities = identification("\n\n\n" + sourceText  + "\n\n\n")
     val links = linking(entities)
-    val properties = complete(entities, links, sourceText.slice(3, sourceText.length-3))
+    val properties = complete(entities, links, sourceText)
     val anafora: Elem = build(entities, links, properties)
-    val data = new Data(anafora, Some(sourceText.slice(3, sourceText.length-3)))
+    val data = new Data(anafora, Some(sourceText))
     data
   }
 
