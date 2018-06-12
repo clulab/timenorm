@@ -18,7 +18,7 @@ class TemporalCharbasedParserTest extends FunSuite {
 
   test("parse-interval") {
     val date = "2018-10-10"
-    val data = parser.parse("\n\n\n" + date + "\n\n\n", anchor)
+    val data = parser.parse(date, anchor)
 
     assert(parser.intervals(data)(0)._1 == (0, 10))
     assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2018, 10, 10, 0, 0))
@@ -27,7 +27,7 @@ class TemporalCharbasedParserTest extends FunSuite {
 
   test("parse-repeatingInterval") {
     val date = "January"
-    val data = parser.parse("\n\n\n" + date + "\n\n\n", anchor)
+    val data = parser.parse(date, anchor)
 
     assert(parser.intervals(data)(0)._1 == (0, 7))
     assert(parser.intervals(data)(0)._2(0)._1 === null)
@@ -36,7 +36,7 @@ class TemporalCharbasedParserTest extends FunSuite {
 
   test("parse-undef") {
     val date = "Friday."
-    val data = parser.parse("\n\n\n" + date + "\n\n\n", anchor)
+    val data = parser.parse(date, anchor)
 
     assert(parser.intervals(data)(0)._1 == (0, 6))
     assert(parser.intervals(data)(0)._2(0)._1 === null)
