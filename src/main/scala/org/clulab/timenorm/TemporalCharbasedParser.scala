@@ -133,13 +133,25 @@ class TemporalCharbasedParser(modelPath: String) {
     val results = this.network.feedForward()
 
     val labels = (x: Array[Array[Float]], l: List[String]) => (for (r <- x) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O")).drop(3).dropRight(3)
+
     val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2, m(0)._1(1))).filter(_._3 != "O").toList
+
+    val re = """[^a-zA-Z\d]""".r
+    val spaces = re.findAllMatchIn(sourceText.drop(3).dropRight(3)).map(_.start).toList
+    val fullSpans = (x: List[(Int,Int,String)]) => (for (s <- x) yield (
+      s._1 - Try(spaces.map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
+      s._2 - Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
+      s._3
+    )).toList
 
     val nonOperators = labels(results.get("timedistributed_1").toFloatMatrix(), nonOperatorLabels)
     val expOperators = labels(results.get("timedistributed_2").toFloatMatrix(), operatorLabels)
     val impOperators = labels(results.get("timedistributed_3").toFloatMatrix(), operatorLabels)
+    val nonOperatorsSpan = spans(nonOperators)
+    val expOperatorsSpan = spans(expOperators)
+    val impOperatorsSpan = spans(impOperators)
 
-    (spans(nonOperators) ::: spans(expOperators) ::: spans(impOperators)).sorted
+    (fullSpans(nonOperatorsSpan) ::: fullSpans(expOperatorsSpan) ::: fullSpans(impOperatorsSpan)).sorted
   }
 
 

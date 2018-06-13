@@ -42,4 +42,13 @@ class TemporalCharbasedParserTest extends FunSuite {
     assert(parser.intervals(data)(0)._2(0)._2 === 0)
   }
 
+  test("fill-not-complete-span") {
+    val date = "South Sudan receives a ranking of 186 out of 189 on ease of doing business in the World Bank 2015 Doing Business report -LRB- World Bank 2014 -RRB- ."
+    val data = parser.parse(date, anchor)
+
+    assert(parser.intervals(data)(0)._1 == (93, 97))
+    assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2015, 1, 1, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._2 === 31536000)
+  }
+
 }
