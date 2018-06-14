@@ -83,7 +83,7 @@ class TemporalCharbasedParser(modelPath: String) {
   }
 
 
-  def parse(sourceText: String, anchor: TimeSpan): Data = {
+  def parse(sourceText: String, anchor: TimeSpan): Data = synchronized {
     val entities = identification("\n\n\n" + sourceText + "\n\n\n")
     val links = linking(entities)
     val properties = complete(entities, links, sourceText)
@@ -93,7 +93,7 @@ class TemporalCharbasedParser(modelPath: String) {
   }
 
 
-  def intervals(data: Data): List[((Int,Int), List[(LocalDateTime, Long)])] = {
+  def intervals(data: Data): List[((Int,Int), List[(LocalDateTime, Long)])] = synchronized {
     val now = LocalDateTime.now.toString.split("T")(0).split("-").map(_.toInt) match {
       case Array(y, m, d) => SimpleInterval.of(y, m , d)
     }
@@ -140,7 +140,7 @@ class TemporalCharbasedParser(modelPath: String) {
     val spaces = re.findAllMatchIn(sourceText.drop(3).dropRight(3)).map(_.start).toList
     val fullSpans = (x: List[(Int,Int,String)]) => (for (s <- x) yield (
       s._1 - Try(spaces.map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
-      s._2 - Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
+      s._2 + Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
     )).toList
 
