@@ -62,7 +62,7 @@ class TemporalCharbasedParserTest extends FunSuite {
 
     assert(parser.intervals(data)(0)._1 == (37, 47))
     assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2014, 1, 1, 0, 0))
-    assert(parser.intervals(data)(0)._2(0)._2 === LocalDateTime.of(2018, 7, 6, 0, 0))
-    assert(parser.intervals(data)(0)._2(0)._3 === 142300800)
+    assert(parser.intervals(data)(0)._2(0)._2 === LocalDateTime.of(2018, 7, 7, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._3 === 142387200)
   }
 }
