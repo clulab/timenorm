@@ -93,7 +93,7 @@ class TemporalCharbasedParser(modelPath: String) {
   }
 
 
-  def intervals(data: Data): List[((Int,Int), List[(LocalDateTime, Long)])] = synchronized {
+  def intervals(data: Data): List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])] = synchronized {
     val now = LocalDateTime.now.toString.split("T")(0).split("-").map(_.toInt) match {
       case Array(y, m, d) => SimpleInterval.of(y, m , d)
     }
@@ -101,24 +101,28 @@ class TemporalCharbasedParser(modelPath: String) {
     (for (e <- data.topEntities) yield {
       val span = e.expandedSpan(data)
       val time = Try(reader.temporal(e)(data)).getOrElse(null)
-      val timeIntervals: List[(LocalDateTime, Long)] = Try(time match {
+      val timeIntervals: List[(LocalDateTime, LocalDateTime, Long)] = Try(time match {
         case interval: Interval => List((
           interval.start,
+          interval.end,
           interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)))
         case intervals: Intervals => (for (interval <- intervals) yield {(
           interval.start,
+          interval.end,
           interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
         )}).toList
         case rInterval: RepeatingInterval => List((
+          null,
           null,
           rInterval.preceding(LocalDateTime.now).next.end.toEpochSecond(ZoneOffset.UTC) - rInterval.preceding(LocalDateTime.now).next.start.toEpochSecond(ZoneOffset.UTC)
         ))
         case period: SimplePeriod => List((
           null,
+          null,
           period.number * period.unit.getDuration.getSeconds
         ))
-        case _ => List((null, 0.toLong))
-      }).getOrElse(List((null, 0.toLong)))
+        case _ => List((null, null, 0.toLong))
+      }).getOrElse(List((null, null, 0.toLong)))
       (span, timeIntervals)
     }).toList
   }
@@ -156,7 +160,7 @@ class TemporalCharbasedParser(modelPath: String) {
 
 
   def relation(type1: String, type2: String): Option[String] = {
-    Try(Some((this.schema(type1) keys).filter(this.schema(type1)(_)._2 contains type2).iterator.next)).getOrElse(None)
+    Try(Some((this.schema(type1) keys).toList.sorted.reverse.filter(this.schema(type1)(_)._2 contains type2).iterator.next)).getOrElse(None)
   }
 
 
@@ -203,14 +207,17 @@ class TemporalCharbasedParser(modelPath: String) {
           (i, property, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1))))
         }
         case intervalttype if intervalttype contains "Interval-Type" => {
-          links.find(l => (l._1 == i || l._2 == i) && l._3 == "Interval").isDefined match {
-            case false => (i, property, "Link")
+          links.find(l => (l._1 == i || l._2 == i) && (intervalttype contains l._3)).isDefined match {
+            case true => (i, property, "Link")
             case _ => (i, property, "DocTime")
           }
         }
         case "Semantics" => entity._3 match {
           case "Last" => (i, property, "Interval-Not-Included") // TODO: Include journal Last?1
           case _ => (i, property, "Interval-Not-Included")
+        }
+        case intervalttype if intervalttype contains "Included" => {
+          (i, property, "Included")
         }
         case _ => (-1, "", "")
       }}

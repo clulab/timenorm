@@ -6,14 +6,14 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import java.time.temporal.ChronoUnit._
 import java.time.LocalDateTime
+import com.codecommit.antixml._
 
 @RunWith(classOf[JUnitRunner])
 class TemporalCharbasedParserTest extends FunSuite {
 
   val modelPath = this.getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/lstm_models_2features.hdf5").getPath()
   val parser = new TemporalCharbasedParser(modelPath)
-  val now = LocalDateTime.now()
-  val anchor = TimeSpan.of(now.getYear, now.getMonthValue, now.getDayOfMonth)
+  val anchor = TimeSpan.of(2018, 7, 6)
 
   test("parse-interval") {
     val date = "2018-10-10"
@@ -21,7 +21,8 @@ class TemporalCharbasedParserTest extends FunSuite {
 
     assert(parser.intervals(data)(0)._1 == (0, 10))
     assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2018, 10, 10, 0, 0))
-    assert(parser.intervals(data)(0)._2(0)._2 === 86400)
+    assert(parser.intervals(data)(0)._2(0)._2 === LocalDateTime.of(2018, 10, 11, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._3 === 86400)
   }
 
   test("parse-repeatingInterval") {
@@ -30,7 +31,8 @@ class TemporalCharbasedParserTest extends FunSuite {
 
     assert(parser.intervals(data)(0)._1 == (0, 7))
     assert(parser.intervals(data)(0)._2(0)._1 === null)
-    assert(parser.intervals(data)(0)._2(0)._2 === 2678400)
+    assert(parser.intervals(data)(0)._2(0)._2 === null)
+    assert(parser.intervals(data)(0)._2(0)._3 === 2678400)
   }
 
   test("parse-undef") {
@@ -38,8 +40,9 @@ class TemporalCharbasedParserTest extends FunSuite {
     val data = parser.parse(date, anchor)
 
     assert(parser.intervals(data)(0)._1 == (0, 6))
-    assert(parser.intervals(data)(0)._2(0)._1 === null)
-    assert(parser.intervals(data)(0)._2(0)._2 === 0)
+    assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2018, 6, 29, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._2 === LocalDateTime.of(2018, 6, 30, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._3 === 86400)
   }
 
   test("fill-not-complete-span") {
@@ -48,7 +51,18 @@ class TemporalCharbasedParserTest extends FunSuite {
 
     assert(parser.intervals(data)(0)._1 == (93, 97))
     assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2015, 1, 1, 0, 0))
-    assert(parser.intervals(data)(0)._2(0)._2 === 31536000)
+    assert(parser.intervals(data)(0)._2(0)._2 === LocalDateTime.of(2016, 1, 1, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._3 === 31536000)
   }
 
+  test("since-year") {
+    val date = "A substantial decline in gas revenue since 2014 has contributed to a sharp drop in both foreign currency reserves and the value of the South Sudanese pound."
+
+    val data = parser.parse(date, anchor)
+
+    assert(parser.intervals(data)(0)._1 == (37, 47))
+    assert(parser.intervals(data)(0)._2(0)._1 === LocalDateTime.of(2014, 1, 1, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._2 === LocalDateTime.of(2018, 7, 6, 0, 0))
+    assert(parser.intervals(data)(0)._2(0)._3 === 142300800)
+  }
 }
