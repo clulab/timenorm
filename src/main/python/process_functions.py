@@ -27,8 +27,8 @@ def make_prediction_function_multiclass(x_data,model,output_path,version = ""):
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    np.save(output_path + "/y_predict_classes"+version, classes)
-    read.savein_pickle(output_path + "/y_predict_proba"+version, y_predict)
+    #np.save(output_path + "/y_predict_classes"+version, classes)
+    #read.savein_pickle(output_path + "/y_predict_proba"+version, y_predict)
 
     return classes,y_predict
 
@@ -110,7 +110,7 @@ def get_gold_dict(tag_file):
     tag_dict = {}
     for sent_tag in tag_file:
         for start, tag in sent_tag:
-            print start,tag
+            print(start,tag)
             tag_dict[start] =tag
     return tag_dict
 
