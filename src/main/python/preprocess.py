@@ -160,12 +160,12 @@ def create_class_weight(n_labels, labels, mu):
 
     labels_dict = read.counterList2Dict(list(enumerate(counts, 0)))
 
-    total = np.sum(labels_dict.values())
+    total = np.sum(list(labels_dict.values()))
     class_weight = dict()
 
-    for key, item in labels_dict.items():
-        if not item == 0:
-            score = mu * total / float(item)
+    for key, value in labels_dict.items():
+        if not value == 0:
+            score = mu * total / float(value)
             class_weight[key] = score if score > 1.0 else 1.0
         else:
             class_weight[key] = 10.0
@@ -226,7 +226,7 @@ def document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,x
     max_len_file_name = "/".join(preprocessed_path.split('/')[:-1])+"/max_len_sent"
     read.savein_json(max_len_file_name, max_len_all)
 
-def features_extraction(raw_data_dir,output_folder,data_folder = "",mode = "train"):
+def features_extraction(raw_data_dir,preprocessed_path,model_path,data_folder = "",mode = "train"):
     max_len = 350
     pad = 3
     input_char = list()
@@ -256,9 +256,12 @@ def features_extraction(raw_data_dir,output_folder,data_folder = "",mode = "trai
     input_char = np.asarray(input_char, dtype="int")
     input_pos = np.asarray(input_pos, dtype="int")
     input_unic = np.asarray(input_unic, dtype="int")
-    read.save_hdf5("/".join(output_folder.split('/')[:-1])+"/input"+data_folder, ["char","pos","unic"], [input_char,input_pos,input_unic], ['int8','int8','int8'])
 
-def output_encoding(raw_data_dir,output_folder,data_folder="",activation="softmax",type="interval"):   ###type in "[interval","operator","explicit_operator","implicit_operator"]
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+    read.save_hdf5(model_path+"/input"+data_folder, ["char","pos","unic"], [input_char,input_pos,input_unic], ['int8','int8','int8'])
+
+def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",activation="softmax",type="interval"):   ###type in "[interval","operator","explicit_operator","implicit_operator"]
     target_labels = defaultdict(float)
     if type not in ["interval","operator","explicit_operator","implicit_operator"]:
         return
@@ -281,7 +284,7 @@ def output_encoding(raw_data_dir,output_folder,data_folder="",activation="softma
         n_output = len(final_labels) +1
 
     one_hot = read.counterList2Dict(list(enumerate(final_labels, 1)))
-    output_one_hot = {y:x for x,y in one_hot.iteritems()}
+    output_one_hot = {y:x for x,y in one_hot.items()}
 
     sample_weights_output = []
     outputs = []
@@ -345,34 +348,42 @@ def output_encoding(raw_data_dir,output_folder,data_folder="",activation="softma
     sample_weights = np.asarray(sample_weights_output)
     sample_weights = get_sample_weights_multiclass(n_output, sample_weights, 0.05)
     #print target_labels
-    np.save("/".join(output_folder.split('/')[:-1])+"/sample_weights" +data_folder+ "_"+type+"_"+activation, sample_weights)
-    read.save_hdf5("/".join(output_folder.split('/')[:-1]) +"/output" + data_folder + "_"+type+"_"+activation,[type+"_"+activation] , [outputs], ['int8'])
+    np.save(model_path+"/sample_weights" +data_folder+ "_"+type+"_"+activation, sample_weights)
+    read.save_hdf5(model_path +"/output" + data_folder + "_"+type+"_"+activation,[type+"_"+activation] , [outputs], ['int8'])
 
-def main(file_dir,preprocessed_path,encode_output = True,split_output = True):
+def main(file_dir,preprocessed_path,model_path,encode_output = True,split_output = True):
     file_n = len(file_dir)
-    folder_n = int(np.ceil(np.divide(float(file_n),20.00)))
-    folder = map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1))
+    # if 25<file_n<=40:
+    folder_n = np.int(np.round(np.divide(float(file_n),20.00)))
+    folder = list(map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1)))
+    #################### for the amount of documents ranges from 40 -.. ########################
+    # else:
+    # folder_n = np.int(np.divide(file_n,20))
+    # folder = list(map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1)))
+
+
+
     if split_output == True:
         for version in range(folder_n):
             start = folder[version]
             end = folder[version + 1]
             raw_data_dir_sub = file_dir[start:end]
-            features_extraction(raw_data_dir_sub, preprocessed_path, data_folder=str(version),mode = mode)
+            features_extraction(raw_data_dir_sub, preprocessed_path,model_path, data_folder=str(version),mode = mode)
             if encode_output == True:
-                output_encoding(raw_data_dir_sub,preprocessed_path,data_folder = str(version),activation="softmax",type="interval")
-                output_encoding(raw_data_dir_sub, preprocessed_path, data_folder=str(version), activation="softmax",type="explicit_operator")
-                output_encoding(raw_data_dir_sub, preprocessed_path, data_folder=str(version),activation="softmax",type="implicit_operator")
+                output_encoding(raw_data_dir_sub,preprocessed_path,model_path,data_folder = str(version),activation="softmax",type="interval")
+                output_encoding(raw_data_dir_sub, preprocessed_path,model_path, data_folder=str(version), activation="softmax",type="explicit_operator")
+                output_encoding(raw_data_dir_sub, preprocessed_path,model_path, data_folder=str(version),activation="softmax",type="implicit_operator")
 
 
     else:
         start = 0
         end = file_n
         raw_data_dir_sub = file_dir[start:end]
-        features_extraction(raw_data_dir_sub, preprocessed_path,mode = mode)
+        features_extraction(raw_data_dir_sub, preprocessed_path,model_path,mode = mode)
         if encode_output == True :
-            output_encoding(raw_data_dir_sub, preprocessed_path,activation="softmax",type="interval")
-            output_encoding(raw_data_dir_sub, preprocessed_path, activation="softmax",type="explicit_operator")
-            output_encoding(raw_data_dir_sub, preprocessed_path,activation="softmax",type="implicit_operator")
+            output_encoding(raw_data_dir_sub, preprocessed_path,model_path,activation="softmax",type="interval")
+            output_encoding(raw_data_dir_sub, preprocessed_path,model_path, activation="softmax",type="explicit_operator")
+            output_encoding(raw_data_dir_sub, preprocessed_path,model_path,activation="softmax",type="implicit_operator")
 
 
 
@@ -380,49 +391,69 @@ def main(file_dir,preprocessed_path,encode_output = True,split_output = True):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process features and output encoding for time identification task.')
 
-    parser.add_argument('--raw',
+    parser.add_argument('-raw',
                         help='the direcotory of raw texts',default="")
 
-    parser.add_argument('--xml',
+    parser.add_argument('-xml',
                         help='the direcotory of annotation files',default="")
 
-    parser.add_argument('--out',
+    parser.add_argument('-processed_output',
                         help='output path for all preprocessed files',required=True)
 
-    parser.add_argument('--format',
+    parser.add_argument('-model_output',
+                        help='output path for all preprocessed files',required=True)
+
+    parser.add_argument('-format',
                         help='the format of annotation file',default=".TimeNorm.gold.completed.xml")
 
-    parser.add_argument('--processed',
+    parser.add_argument('-processed',
                         help='whether to process raw texts',default="true")
 
     parser.add_argument('--mode',
-                        help='Whether to split the raw files into different fractions in order to fit the memory',default="split")
+                        help='Whether to split the raw files into different fractions in order to fit the memory',default="no-split")
 
     args = parser.parse_args()
     raw_data_path = args.raw
     xml_path = args.xml
-    preprocessed_path = args.out
+    preprocessed_path = args.processed_output
+    model_path = args.model_output
 
     output_format = args.format
     documents_preprocessed = args.processed
     mode = args.mode
+
+# raw_data_path = "data/TempEval-2013/Test"
+#
+# xml_path ="data/TempEval-2013/Test"
+# preprocessed_path = "data/Processed_TempEval/Test_new"
+# model_path = "data/Processed_TempEval/new11/"
+# documents_preprocessed = "no"
+# mode = "no"
+# output_format = ".TimeNorm.gold.completed.xml"
 
     file_dir = []
     for doc in os.listdir(raw_data_path):
         if not doc.endswith(".txt") and not doc.endswith(".npy") and not doc.endswith(".xml") and not doc.endswith(".dct"):
             file_dir.append(doc)
 
-    if xml_path =="":
+    split_output = False
+    encode_output = False
+    preprocessed = False
+
+    if xml_path !="":
         encode_output = True
 
     if mode =="split":
         split_output = True
 
     if documents_preprocessed == "true":
+        preprocessed = True
+
+    if preprocessed == True:
       document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,xml_path,file_format = output_format )
 
 
-    main(file_dir, preprocessed_path,encode_output = True,split_output = True)
+    main(file_dir, preprocessed_path,model_path,encode_output = encode_output,split_output = split_output)
 
 
 

@@ -18,7 +18,7 @@ def pro2classes_binaryclass(prediction):
     if prediction.shape[-1] <= 1:
         return (prediction > 0.5).astype('int32')
 
-def make_prediction_function_multiclass(x_data,model,output_path,version = ""):
+def make_prediction_function_multiclass(x_data,model,output_path):
     y_predict = model.predict(x_data,batch_size=32)
     if len(y_predict)>=2:
         classes = prob2classes_multiclasses_multioutput(y_predict)
@@ -27,8 +27,6 @@ def make_prediction_function_multiclass(x_data,model,output_path,version = ""):
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    #np.save(output_path + "/y_predict_classes"+version, classes)
-    #read.savein_pickle(output_path + "/y_predict_proba"+version, y_predict)
 
     return classes,y_predict
 

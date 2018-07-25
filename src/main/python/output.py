@@ -29,12 +29,10 @@ def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,out
     non_operator = read.textfile2list(non_operator_path)
     operator = read.textfile2list(operator_path)
     labels_index = [non_operator,operator,operator]
-
-    if pred == "true":
-        classes,probs  = output.make_prediction_function_multiclass(input, model, output_pred_path, data_folder) #,,x_unic_onehot
-    else:
-        classes= np.load(output_pred_path+"/y_predict_classes"+data_folder+".npy")
-        probs = read.readfrom_pickle(output_pred_path + "/y_predict_proba"+data_folder)
+    classes, probs = output.make_prediction_function_multiclass(input, model, output_pred_path, data_folder)
+    if pred == True:
+        np.save(output_pred_path + "/y_predict_classes"+data_folder, classes)
+        read.savein_pickle(output_pred_path + "/y_predict_proba"+data_folder, probs)
 
     spans = list()
     int2labels = list()
@@ -45,7 +43,7 @@ def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,out
         spans.append(span)
 
         one_hot = read.counterList2Dict(list(enumerate(labels_index[index], 1)))
-        one_hot = {y: x for x, y in one_hot.iteritems()}
+        one_hot = {y: x for x, y in one_hot.items()}
         int2label = dict((int, char) for char, int in one_hot.items())
         int2labels.append(int2label)
 
@@ -71,25 +69,25 @@ def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,out
     del classes,probs,input
 
 
-def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_pred_path,output_format,pred="true",evaluate = "true"):
+def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_pred_path,output_format,pred=True, portion = 0,split_output = False):
     file_n = len(doc_list)
     #################### for the amount of documents ranges from 20-40 #########################
-    # folder_n = int(np.ceil(np.divide(float(file_n),20.00)))
-    # folder = map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1))
+    folder_n = int(np.ceil(np.round(float(file_n),20.00)))
+    folder = list(map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1)))
     #################### for the amount of documents ranges from 40 -.. ########################
-    folder_n = np.divide(file_n,20)
-    folder = map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1))
+    # folder_n = np.divide(file_n,20)
+    # folder = list(map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1)))
 
     model = load_model(model_path)
-    if file_n>20:
-        k=0
+    if split_output ==True :
+        k=portion
         for version in range(k,k+1):
             start = folder[version]
             end = folder[version + 1]
             doc_list_sub = doc_list[start:end]
             #input = read.load_hdf5(input_path+"/test_split_input"+str(version),["char","pos","unic"])
             #input = read.load_hdf5(input_path + "/split_input" + str(version), ["char", "pos", "unic"])
-            input = read.load_hdf5(input_path + "/input_" + str(version), ["char", "pos", "unic"])
+            input = read.load_hdf5(input_path + "/input" + str(version), ["char", "pos", "unic"])
             #input = read.load_hdf5(input_path + "/train_input" + str(version), ["char",  "unic"])
             gold = None
             generate_output_multiclass(model, input,gold, doc_list_sub, preocessed_path,output_pred_path,pred=pred,data_folder = str(version),format_abbre =output_format)
@@ -98,44 +96,61 @@ def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_p
         end = file_n
         doc_list_sub = doc_list[start:end]
         input = read.load_hdf5(input_path+"/input", ["char", "pos", "unic"])
-        #input = read.load_hdf5(input_path + "/train_input", ["char", "unic"])
         gold = None
-        generate_output_multiclass(model, input,gold,doc_list_sub,preocessed_path, output_pred_path,pred="true",data_folder = "",format_abbre =output_format)
+        generate_output_multiclass(model, input,gold,doc_list_sub,preocessed_path, output_pred_path,pred=pred,data_folder = "",format_abbre =output_format)
 
-    if evaluate=="true":
-        output.evaluate(preocessed_path,output_pred_path,raw_data_path,doc_list,output_format)
+    # if evaluate=="true":
+    #     output.evaluate(preocessed_path,output_pred_path,raw_data_path,doc_list,output_format)
 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Process features and output encoding for time identification task.')
-    parser.add_argument('--raw',
+    parser = argparse.ArgumentParser(description='Generate the SCATE annofora annotation for the documents.')
+    parser.add_argument('-raw',
                         help='raw data path',required=True)
-    parser.add_argument('--model',
+    parser.add_argument('-model',
                         help='specify the model path',default="")
-    parser.add_argument('--preprocessed_path',
+    parser.add_argument('-processed_path',
                         help='specify the preprocessed path',default="")
 
-    parser.add_argument('--input',
+    parser.add_argument('-input',
                         help='the path of the model input files',default="")
 
-    parser.add_argument('--out',
+    parser.add_argument('-out',
                         help='output path for all preprocessed files',required=True)
 
-    parser.add_argument('--format',
+    parser.add_argument('-format',
                         help='output path for all preprocessed files',default=".TimeNorm.gold.completed.xml")
 
-    parser.add_argument('--mode',
-                        help='Whether requried to calculate the scores',default="false")
+    parser.add_argument('-mode',
+                        help='Whether requried to save the output probability',default="no")
+
+    parser.add_argument('-portion',
+                        help='using portion of the data',default=0)
+
+    parser.add_argument('-split',
+                        help='Whether to split the raw files into different fractions in order to fit the memory',default="false")
 
     args = parser.parse_args()
     raw_data_path = args.raw
-    preprocessed_path = args.preocessed_path
+    preprocessed_path = args.processed_path
     input_path = args.input
     model_path = args.model
     output_pred_path = args.out
     output_format = args.format
     mode = args.mode
+    portion = int(args.portion)
+    split_the_output = args.split
+
+    pred = True
+    split = False
+
+    if mode =="false":
+        pred = False
+
+    if split_the_output =="true":
+        split =True
+
 
     doc_list = []
     for doc in os.listdir(raw_data_path):
@@ -144,4 +159,4 @@ if __name__ == "__main__":
 
 
 
-    main(model_path, input_path, doc_list, raw_data_path, preprocessed_path, output_pred_path, output_format, pred=mode)
+    main(model_path, input_path, doc_list, raw_data_path, preprocessed_path, output_pred_path, output_format,split_output=split,portion=portion, pred=pred)

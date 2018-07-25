@@ -44,7 +44,7 @@ def tokenize_span(txt):
     return token_spans
 
 def addannotation_to_dict(posi_info_dict,annotation,raw_text):
-    if posi_info_dict.has_key(annotation.spans[0][0]):
+    if annotation.spans[0][0] in posi_info_dict:
             posi_info_dict[annotation.spans[0][0]].append(annotation.type)
     else:
         anna_info = []
@@ -84,7 +84,7 @@ def extract_xmltag_anafora_pred(xml_file_dir,raw_text):
     posi_info_dict = dict()
     for annotation in data.annotations:
 
-            if posi_info_dict.has_key(annotation.spans[0][0]):
+            if annotation.spans[0][0] in posi_info_dict:
                 posi_info_dict[annotation.spans[0][0]].append([annotation.spans[0][1],annotation.type])
             else:
                 anna_info = []
@@ -341,7 +341,7 @@ def get_unicode(sentences_spans,unicode_vocab):
     for sent in sentences_spans:
         unicate_sentence = []
         for char in sent[0]:
-            char_unic  = unicodedata.category(char.decode("utf-8"))
+            char_unic  = unicodedata.category(char)
             unicate_sentence.append(char_unic)
             unicode_vocab[char_unic] +=1
         unicate_sentences.append(unicate_sentence)
