@@ -29,7 +29,7 @@ def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,out
     non_operator = read.textfile2list(non_operator_path)
     operator = read.textfile2list(operator_path)
     labels_index = [non_operator,operator,operator]
-    classes, probs = output.make_prediction_function_multiclass(input, model, output_pred_path, data_folder)
+    classes, probs = output.make_prediction_function_multiclass(input, model, output_pred_path)
     if pred == True:
         np.save(output_pred_path + "/y_predict_classes"+data_folder, classes)
         read.savein_pickle(output_pred_path + "/y_predict_proba"+data_folder, probs)
@@ -72,7 +72,7 @@ def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,out
 def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_pred_path,output_format,pred=True, portion = 0,split_output = False):
     file_n = len(doc_list)
     #################### for the amount of documents ranges from 20-40 #########################
-    folder_n = int(np.ceil(np.round(float(file_n),20.00)))
+    folder_n = int(np.round(np.divide(float(file_n),20.00)))
     folder = list(map(lambda x: int(x), np.linspace(0, file_n, folder_n + 1)))
     #################### for the amount of documents ranges from 40 -.. ########################
     # folder_n = np.divide(file_n,20)
