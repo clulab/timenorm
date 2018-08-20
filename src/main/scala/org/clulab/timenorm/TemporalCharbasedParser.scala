@@ -54,7 +54,7 @@ object TemporalCharbasedParser {
     // repeatedly prompt for a time expression and then try to parse it
     System.out.print(">>> ")
     for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
-      val data: Data = parser.parse(line, anchor)
+      val data: Data = parser.parse(line)
       println(data.topEntities)
       System.out.print(">>> ")
     }
@@ -83,21 +83,23 @@ class TemporalCharbasedParser(modelPath: String) {
   }
 
 
-  def parse(sourceText: String, anchor: TimeSpan): Data = synchronized {
+  def parse(sourceText: String): Data = synchronized {
     val entities = identification("\n\n\n" + sourceText  + "\n\n\n")
     val links = linking(entities)
-    val properties = complete(entities, links, sourceText)
+    val antixml_not_allowed = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r
+    val cleanSourceText = antixml_not_allowed.replaceAllIn(sourceText, " ")
+    val properties = complete(entities, links, cleanSourceText)
     val anafora: Elem = build(entities, links, properties)
-    val data = new Data(anafora, Some(sourceText))
+    val data = new Data(anafora, Some(cleanSourceText))
     data
   }
 
 
-  def intervals(data: Data): List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])] = synchronized {
-    val now = LocalDateTime.now.toString.split("T")(0).split("-").map(_.toInt) match {
+  def intervals(data: Data, dct: Option[LocalDateTime] = Some(LocalDateTime.now)): List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])] = synchronized {
+    val anchor = dct.get.toString.split("T")(0).split("-").map(_.toInt) match {
       case Array(y, m, d) => SimpleInterval.of(y, m , d)
     }
-    val reader = new AnaforaReader(now)(data)
+    val reader = new AnaforaReader(anchor)(data)
     (for (e <- data.topEntities) yield {
       val span = e.expandedSpan(data)
       val time = Try(reader.temporal(e)(data)).getOrElse(null)
