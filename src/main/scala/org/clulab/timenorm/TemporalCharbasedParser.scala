@@ -27,6 +27,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 import play.api.libs.json._
+import java.io.FileInputStream
 
 import org.clulab.timenorm.formal._
 import org.clulab.anafora.{Data, Entity}
@@ -37,8 +38,8 @@ object TemporalCharbasedParser {
 
   def main(args: Array[String]): Unit = {
     val parser = args match {
-      case Array(modelPath) =>
-        new TemporalCharbasedParser(modelPath)
+      case Array(modelFile) =>
+        new TemporalCharbasedParser(modelFile)
       case _ =>
         System.err.printf("usage: %s [model-path]\n", this.getClass.getSimpleName)
         System.exit(1)
@@ -62,9 +63,9 @@ object TemporalCharbasedParser {
 }
 
 
-class TemporalCharbasedParser(modelPath: String) {
+class TemporalCharbasedParser(modelFile: String) {
 
-  private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelPath, false)
+  private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
   lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
@@ -131,11 +132,14 @@ class TemporalCharbasedParser(modelPath: String) {
 
 
   def identification(sourceText: String): List[(Int, Int, String)] = {
-    val input0 = Nd4j.create(sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("unknown"))).toArray, Array(1,1,sourceText.length))
-    val input1 = Nd4j.create(sourceText.map(c => this.unicode2int.getOrElse(unicodes(c.getType), this.unicode2int("unknown"))).toArray, Array(1,1,sourceText.length))
+    val padd = Vector.fill(356 - sourceText.length)(0.0)
+    val input0 = Nd4j.create((sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("unknown"))) ++ padd).toArray, Array(1,1,356))
+    val input1 = Nd4j.create((sourceText.map(c => this.unicode2int.getOrElse(unicodes(c.getType), this.unicode2int("unknown"))) ++ padd).toArray, Array(1,1,356))
+    val mask = Nd4j.create((Vector.fill(sourceText.length)(1.0) ++ padd).toArray, Array(1,356))
 
     this.network.setInput(0, input0)
     this.network.setInput(1, input1)
+    this.network.setLayerMaskArrays(Array(mask, mask), null)
     val results = this.network.feedForward()
 
     val labels = (x: Array[Array[Float]], l: List[String]) => (for (r <- x) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O")).drop(3).dropRight(3)
