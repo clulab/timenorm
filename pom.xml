@@ -69,21 +69,21 @@
     </dependency>
 
     <dependency>
-      <groupId>com.github.EgoLaparra.deeplearning4j-eidos</groupId>
+      <groupId>org.deeplearning4j</groupId>
       <artifactId>deeplearning4j-modelimport</artifactId>
-      <version>1.0.4-eidos</version>
+      <version>1.0.0-beta2</version>
     </dependency>
 
     <dependency>
       <groupId>org.deeplearning4j</groupId>
       <artifactId>deeplearning4j-nn</artifactId>
-      <version>1.0.0-alpha</version>
+      <version>1.0.0-beta2</version>
     </dependency>
     
     <dependency>
       <groupId>org.nd4j</groupId>
       <artifactId>nd4j-native-platform</artifactId>
-      <version>1.0.0-alpha</version>
+      <version>1.0.0-beta2</version>
     </dependency>
 
     <dependency>
