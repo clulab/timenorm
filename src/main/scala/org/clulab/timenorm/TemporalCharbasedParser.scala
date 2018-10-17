@@ -93,21 +93,20 @@ class TemporalCharbasedParser(modelFile: String) {
     }
   }
 
+  def extract_interval(interval: Interval): (LocalDateTime, LocalDateTime, Long) = (
+      interval.start,
+      interval.end,
+      interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
+  )
+
   def intervals(data: Data, dct: Option[Interval] = Some(UnknownInterval)): List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])] = synchronized {
     val reader = new AnaforaReader(dct.get)(data)
     (for (e <- data.topEntities) yield {
       val span = e.expandedSpan(data)
       val time = Try(reader.temporal(e)(data)).getOrElse(null)
       val timeIntervals: List[(LocalDateTime, LocalDateTime, Long)] = Try(time match {
-        case interval: Interval => List((
-          interval.start,
-          interval.end,
-          interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)))
-        case intervals: Intervals => (for (interval <- intervals) yield {(
-          interval.start,
-          interval.end,
-          interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
-        )}).toList
+        case interval: Interval => List(extract_interval(interval))
+        case intervals: Intervals => (for (interval <- intervals) yield {extract_interval(interval)}).toList
         case rInterval: RepeatingInterval => List((
           null,
           null,
