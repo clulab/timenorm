@@ -5,21 +5,27 @@ import org.slf4j.LoggerFactory
 import org.nd4j.linalg.factory.Nd4j
 import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
 import org.deeplearning4j.nn.graph.ComputationGraph
+import org.deeplearning4j.nn.modelimport.keras.KerasLayer
+import org.deeplearning4j.nn.conf.inputs.InputType
+import org.deeplearning4j.nn.conf.layers.samediff.SameDiffLambdaLayer
+import org.nd4j.autodiff.samediff.{SDVariable, SameDiff}
+import org.nd4j.linalg.factory.Nd4j
+import org.deeplearning4j.util.ModelSerializer
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import scala.util.Try
 import com.codecommit.antixml._
-import scala.language.postfixOps
 
+import scala.language.postfixOps
 import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 import play.api.libs.json._
-
 import org.clulab.timenorm.formal._
 import org.clulab.anafora.Data
+import org.nd4j.linalg.api.ops.impl.transforms.Reverse
 
 object TemporalCharbasedParser {
   private val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
@@ -50,16 +56,32 @@ object TemporalCharbasedParser {
   }
 }
 
+class ReverseLambdaDim1 extends SameDiffLambdaLayer {
+
+  override def defineLayer(sd: SameDiff, x: SDVariable): SDVariable = sd.reverse("reversed", x, 1)
+
+  override def getOutputType(layerIndex: Int, inputType: InputType): InputType = inputType
+}
+
+class ReverseLambdaDim0 extends SameDiffLambdaLayer {
+
+  override def defineLayer(sd: SameDiff, x: SDVariable): SDVariable = sd.reverse("reversed", x, 0)
+
+  override def getOutputType(layerIndex: Int, inputType: InputType): InputType = inputType
+}
 
 class TemporalCharbasedParser(modelFile: String) {
 
-  private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
-  private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
-  private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
-  private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
-  private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
-  private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines.map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
-  private val schema = (for (es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities") yield for (e <- es \ "entity") yield (for (p <- e \\ "property" ) yield ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))) :+  ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))).flatten.flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  KerasLayer.registerLambdaLayer("lambda_1", new ReverseLambdaDim1())
+  KerasLayer.registerLambdaLayer("lambda_2", new ReverseLambdaDim0())
+  //lazy private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
+  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(modelFile)
+  lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
+  lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
+  lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
+  lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
+  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines.map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  lazy private val schema = (for (es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities") yield for (e <- es \ "entity") yield (for (p <- e \\ "property" ) yield ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))) :+  ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))).flatten.flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
 
   private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Cn", "Co", "Cs", "Pd", "Ps", "Pe", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Pi", "Pf")
 
@@ -126,31 +148,30 @@ class TemporalCharbasedParser(modelFile: String) {
 
   def identification(sourceText: String): List[(Int, Int, String)] = {
     val max_seq = 356
-    val padd = Vector.fill(max_seq - sourceText.length)(0.0)
-    val input0 = Nd4j.create((sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("unknown"))) ++ padd).toArray, Array(1,max_seq))
-    val input1 = Nd4j.create((sourceText.map(c => this.unicode2int.getOrElse(unicodes(c.getType), this.unicode2int("unknown"))) ++ padd).toArray, Array(1,max_seq))
-    val mask = Nd4j.create((Vector.fill(sourceText.length)(1.0) ++ padd).toArray, Array(1,max_seq))
+    val padd = Vector.fill(max_seq - sourceText.length)(4.0)
+    val input = Nd4j.create((sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("<unk>"))) ++ padd).toArray, Array(1,max_seq))
 
-    this.network.setInput(0, input0)
-    this.network.setInput(1, input1)
-    this.network.setLayerMaskArrays(Array(mask, mask), null)
+    this.network.setInput(0, input)
     val results = this.network.feedForward()
 
+    // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
     val labels = (x: Array[Array[Float]], l: List[String]) => (for (r <- x.slice(3, max_seq - (padd.size + 3))) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O"))
 
+    // Slide through label list and get position where the label type changes. Slide through the resulting list and build the spans as current_position(start), next_position(end), current_label. Remove the "O"s
     val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2, m(0)._1(1))).filter(_._3 != "O").toList
 
+    // Complete the annotation if the span does not cover the whole token
     val re = """[^a-zA-Z\d]""".r
-    val spaces = re.findAllMatchIn(sourceText.drop(3).dropRight(3)).map(_.start).toList
+    val spaces = re.findAllMatchIn(sourceText.drop(3).dropRight(3)).map(_.start).toList // get no-letter characters in sourceText
     val fullSpans = (x: List[(Int,Int,String)]) => (for (s <- x) yield (
       s._1 - Try(spaces.map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
       s._2 + Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
     ))
 
-    val nonOperators = labels(results.get("timedistributed_1").toFloatMatrix(), nonOperatorLabels)
-    val expOperators = labels(results.get("timedistributed_2").toFloatMatrix(), operatorLabels)
-    val impOperators = labels(results.get("timedistributed_3").toFloatMatrix(), operatorLabels)
+    val nonOperators = labels(results.get("dense_1").toFloatMatrix(), nonOperatorLabels)
+    val expOperators = labels(results.get("dense_2").toFloatMatrix(), operatorLabels)
+    val impOperators = labels(results.get("dense_3").toFloatMatrix(), operatorLabels)
     val nonOperatorsSpan = spans(nonOperators)
     val expOperatorsSpan = spans(expOperators)
     val impOperatorsSpan = spans(impOperators)
@@ -177,10 +198,10 @@ class TemporalCharbasedParser(modelFile: String) {
           case _ => 0
         }}
         if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
-          relation(entity._3, entities(s)._3) match {
-            case Some(result) => links += ((i, s, result))
-            case None => relation(entities(s)._3, entity._3) match {
-              case Some(result) => links += ((s, i, result))
+          relation(entities(s)._3, entity._3) match {
+            case Some(result) => links += ((s, i, result))
+            case None => relation(entity._3, entities(s)._3) match {
+              case Some(result) => links += ((i, s, result))
               case None =>
             }
           }
@@ -248,4 +269,9 @@ class TemporalCharbasedParser(modelFile: String) {
     </annotations>
     </data>.convert
   }
+
+  def saveModel(path: String): Unit = {
+    ModelSerializer.writeModel(this.network, path, false)
+  }
+
 }

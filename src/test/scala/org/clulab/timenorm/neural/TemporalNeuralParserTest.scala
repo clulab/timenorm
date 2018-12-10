@@ -10,7 +10,9 @@ import java.nio.file.Paths
 @RunWith(classOf[JUnitRunner])
 class TemporalCharbasedParserTest extends FunSuite {
 
-  val modelFile = this.getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/lstm_models_2features.hdf5")
+  Thread.sleep(10000)
+
+  val modelFile = this.getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/weights-improvement-22.v2.dl4j.zip")
   val parser = new TemporalCharbasedParser(Paths.get(modelFile.toURI).toFile().getAbsolutePath)
   val anchor = parser.dct(parser.parse("2018-07-06"))
 
@@ -36,12 +38,12 @@ class TemporalCharbasedParserTest extends FunSuite {
     assert(intervals(0)._2(0)._3 === 2678400)
   }
 
-  test("parse-undef") {
-    val date = "Friday."
+  test("parse-last") {
+    val date = "last Friday"
     val data = parser.parse(date)
     val intervals = parser.intervals(data, Some(anchor))
 
-    assert(intervals(0)._1 == (0, 6))
+    assert(intervals(0)._1 == (0, 11))
     assert(intervals(0)._2(0)._1 === LocalDateTime.of(2018, 6, 29, 0, 0))
     assert(intervals(0)._2(0)._2 === LocalDateTime.of(2018, 6, 30, 0, 0))
     assert(intervals(0)._2(0)._3 === 86400)
@@ -57,6 +59,18 @@ class TemporalCharbasedParserTest extends FunSuite {
     assert(intervals(0)._2(0)._2 === LocalDateTime.of(2016, 1, 1, 0, 0))
     assert(intervals(0)._2(0)._3 === 31536000)
   }
+
+  test("since-last") {
+    val date = """since last March""".stripMargin
+    val data = parser.parse(date)
+    val intervals = parser.intervals(data, Some(anchor))
+
+    assert(intervals(0)._1 == (0, 16))
+    assert(intervals(0)._2(0)._1 === LocalDateTime.of(2018, 3, 1, 0, 0))
+    assert(intervals(0)._2(0)._2 === LocalDateTime.of(2018, 7, 7, 0, 0))
+    assert(intervals(0)._2(0)._3 === 11059200)
+  }
+
 
   test("since-year") {
     val date =
