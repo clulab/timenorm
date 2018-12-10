@@ -1,81 +1,83 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.neural
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.nd4j.linalg.factory.Nd4j
-import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
+import java.io._
+import java.time.{LocalDateTime, ZoneOffset}
+
+import com.codecommit.antixml._
+import org.clulab.anafora.Data
+import org.clulab.timenorm._
+import org.clulab.timenorm.formal._
 import org.deeplearning4j.nn.graph.ComputationGraph
-import org.deeplearning4j.nn.modelimport.keras.KerasLayer
-import org.deeplearning4j.nn.conf.inputs.InputType
-import org.deeplearning4j.nn.conf.layers.samediff.SameDiffLambdaLayer
-import org.nd4j.autodiff.samediff.{SDVariable, SameDiff}
-import org.nd4j.linalg.factory.Nd4j
 import org.deeplearning4j.util.ModelSerializer
+import org.nd4j.linalg.factory.Nd4j
+import org.slf4j.{Logger, LoggerFactory}
+import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
-import scala.util.Try
-import com.codecommit.antixml._
-
 import scala.language.postfixOps
-import java.io.InputStream
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-
-import play.api.libs.json._
-import org.clulab.timenorm.formal._
-import org.clulab.anafora.Data
-import org.nd4j.linalg.api.ops.impl.transforms.Reverse
+import scala.util.Try
 
 object TemporalCharbasedParser {
-  private val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
+  val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
+  val usage =
+    """
+               Usage: TemporalCharbasedParser [options]
+
+                -i <file|directory> | --input <file|directory>
+                -o <file|directory> | --output <file|directory>
+
+                -h | --help
+                  prints this menu
+              """
 
   def main(args: Array[String]): Unit = {
-    val parser = args match {
-      case Array(modelFile) =>
-        new TemporalCharbasedParser(modelFile)
-      case _ =>
-        System.err.printf("usage: %s [model-path]\n", this.getClass.getSimpleName)
-        System.exit(1)
-        throw new IllegalArgumentException
+
+    def exit() = {
+      println(usage)
+      sys.exit(1)
     }
 
-    // use the current date as an anchor
-    val now = LocalDateTime.now()
-    val anchor = TimeSpan.of(now.getYear, now.getMonthValue, now.getDayOfMonth)
-    System.out.printf("Assuming anchor: %s\n", anchor.timeMLValue)
-    System.out.println("Type in a time expression (or :quit to exit)")
-
-    // repeatedly prompt for a time expression and then try to parse it
-    System.out.print(">>> ")
-    for (line <- Source.stdin.getLines.takeWhile(_ != ":quit")) {
-      val data: Data = parser.parse(line)
-      println(data.topEntities)
-      System.out.print(">>> ")
+    def parseOptions(argList: List[String]): Map[String, String] = {
+      if (args.length < 4 || args.length > 4 || args(0) == "-h" || args(0) == "--help") exit()
+      //argList.map()
+      argList.sliding(2, 2).map(s =>
+        s(0) match {
+          case "--input" | "-i" => ("input" -> s(1))
+          case "--output" | "-o" => ("output" -> s(1))
+          case _ => exit()
+        }
+      ).toMap
     }
+
+    val options = parseOptions(args.toList)
+    val parser = new TemporalCharbasedParser()
+    val file = new File(options("output"))
+    val bw = new BufferedWriter(new FileWriter(file))
+    for ((line, linen) <- Source.fromFile(options("input")).getLines.zipWithIndex) {
+      println("Line number " + linen + ": " + line)
+      bw.write("Line number: " + linen + "\n")
+      val data = parser.parse(line)
+      val timexes = parser.intervals(data)
+      for ((timex, index) <- timexes.zipWithIndex) {
+        bw.write("\tTimEx " + index + ":" + "\n")
+        bw.write("\t\tText: " + line.slice(timex._1._1, timex._1._2) + "\n")
+        bw.write("\t\tSpan: " + timex._1._1 + " - " + timex._1._2 + "\n")
+        bw.write("\t\tIntervals:" + "\n")
+        for (interval <- timex._2)
+          bw.write("\t\t\t" + interval._1 + "-" + interval._2 + " " + interval._3) + "\n"
+      }
+      bw.write("\n")
+    }
+    bw.close()
   }
 }
 
-class ReverseLambdaDim1 extends SameDiffLambdaLayer {
 
-  override def defineLayer(sd: SameDiff, x: SDVariable): SDVariable = sd.reverse("reversed", x, 1)
+class TemporalCharbasedParser(modelFile: InputStream =
+                              getClass.getResource("/org/clulab/timenorm/weights-improvement-22.v2.dl4j.zip").openStream()) {
 
-  override def getOutputType(layerIndex: Int, inputType: InputType): InputType = inputType
-}
-
-class ReverseLambdaDim0 extends SameDiffLambdaLayer {
-
-  override def defineLayer(sd: SameDiff, x: SDVariable): SDVariable = sd.reverse("reversed", x, 0)
-
-  override def getOutputType(layerIndex: Int, inputType: InputType): InputType = inputType
-}
-
-class TemporalCharbasedParser(modelFile: String) {
-
-  KerasLayer.registerLambdaLayer("lambda_1", new ReverseLambdaDim1())
-  KerasLayer.registerLambdaLayer("lambda_2", new ReverseLambdaDim0())
-  //lazy private val network: ComputationGraph = KerasModelImport.importKerasModelAndWeights(modelFile, false)
-  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(modelFile)
+  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(modelFile, false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
@@ -146,7 +148,7 @@ class TemporalCharbasedParser(modelFile: String) {
   }
 
 
-  def identification(sourceText: String): List[(Int, Int, String)] = {
+  private def identification(sourceText: String): List[(Int, Int, String)] = {
     val max_seq = 356
     val padd = Vector.fill(max_seq - sourceText.length)(4.0)
     val input = Nd4j.create((sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("<unk>"))) ++ padd).toArray, Array(1,max_seq))
@@ -179,13 +181,11 @@ class TemporalCharbasedParser(modelFile: String) {
     (fullSpans(nonOperatorsSpan) ::: fullSpans(expOperatorsSpan) ::: fullSpans(impOperatorsSpan)).sorted
   }
 
-
-  def relation(type1: String, type2: String): Option[String] = {
+  private def relation(type1: String, type2: String): Option[String] = {
     Try(Some((this.schema(type1) keys).toList.sorted.reverse.filter(this.schema(type1)(_)._2 contains type2).iterator.next)).getOrElse(None)
   }
 
-
-  def linking(entities: List[(Int, Int, String)]): List[(Int, Int, String)] = {
+  private def linking(entities: List[(Int, Int, String)]): List[(Int, Int, String)] = {
     val links = ListBuffer.empty[(Int, Int, String)]
     var stack = Array(0, 0)
     for ((entity, i) <- entities.zipWithIndex) {
@@ -211,7 +211,7 @@ class TemporalCharbasedParser(modelFile: String) {
     links.groupBy(_._1).values.map(_.head).toList
   }
 
-  def complete(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], sourceText: String): List[(Int, String, String)] = {
+  private def complete(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], sourceText: String): List[(Int, String, String)] = {
     val properties = {
     for ((entity, i) <- entities.zipWithIndex;
       property <- this.schema(entity._3).keys) yield { property match {
@@ -246,7 +246,7 @@ class TemporalCharbasedParser(modelFile: String) {
     properties
   }
     
-  def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], properties: List[(Int, String, String)]): Elem = {
+  private def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], properties: List[(Int, String, String)]): Elem = {
     <data>
     <annotations>
     {

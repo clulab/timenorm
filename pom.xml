@@ -92,6 +92,12 @@
       <version>2.6.9</version>
     </dependency>
 
+    <dependency>
+      <groupId>info.bethard</groupId>
+      <artifactId>timenorm-models</artifactId>
+      <version>0.9.0</version>
+    </dependency>
+
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>
@@ -131,6 +137,16 @@
 	<updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
+
+    <repository>
+        <id>infobethard-1004</id>
+        <url>https://oss.sonatype.org/content/repositories/infobethard-1004/</url>
+        <releases>
+            <enabled>true</enabled>
+        </releases>
+        <layout>default</layout>
+    </repository>
+
     <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>

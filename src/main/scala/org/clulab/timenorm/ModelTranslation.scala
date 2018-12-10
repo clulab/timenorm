@@ -1,4 +1,4 @@
-package org.clulab.timenorm.neural
+package org.clulab.timenorm
 
 import org.deeplearning4j.nn.conf.inputs.InputType
 import org.deeplearning4j.nn.conf.layers.samediff.SameDiffLambdaLayer

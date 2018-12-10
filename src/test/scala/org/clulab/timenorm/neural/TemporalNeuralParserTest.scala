@@ -1,19 +1,18 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.neural
+
+import java.time.LocalDateTime
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import java.time.LocalDateTime
-import java.nio.file.Paths
+import org.scalatest.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
-class TemporalCharbasedParserTest extends FunSuite {
+class TemporalNeuralParserTest extends FunSuite {
 
   Thread.sleep(10000)
 
-  val modelFile = this.getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/weights-improvement-22.v2.dl4j.zip")
-  val parser = new TemporalCharbasedParser(Paths.get(modelFile.toURI).toFile().getAbsolutePath)
+  val parser = new TemporalCharbasedParser()
   val anchor = parser.dct(parser.parse("2018-07-06"))
 
   test("parse-interval") {
