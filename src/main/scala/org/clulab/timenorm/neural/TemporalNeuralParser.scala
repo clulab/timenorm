@@ -97,12 +97,12 @@ class TemporalCharbasedParser(modelFile: InputStream =
 
 
   def parse(sourceText: String): Data = synchronized {
-    val entities = identification("\n\n\n" + sourceText  + "\n\n\n")
-    val links = linking(entities)
+    val entities = identification(List("\n\n\n" + sourceText  + "\n\n\n", "\n\n\n" + sourceText  + "\n\n\n"))
+    val links = linking(entities(0))
     val antixml_not_allowed = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r
     val cleanSourceText = antixml_not_allowed.replaceAllIn(sourceText, " ")
-    val properties = complete(entities, links, cleanSourceText)
-    val anafora: Elem = build(entities, links, properties)
+    val properties = complete(entities(0), links, cleanSourceText)
+    val anafora: Elem = build(entities(0), links, properties)
     val data = new Data(anafora, Some(cleanSourceText))
     data
   }
@@ -148,37 +148,41 @@ class TemporalCharbasedParser(modelFile: InputStream =
   }
 
 
-  private def identification(sourceText: String): List[(Int, Int, String)] = {
+  private def identification(sourceText: List[String]): List[List[(Int, Int, String)]] = {
     val max_seq = 356
-    val padd = Vector.fill(max_seq - sourceText.length)(4.0)
-    val input = Nd4j.create((sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("<unk>"))) ++ padd).toArray, Array(1,max_seq))
+    val padd =   sourceText.map(s => Vector.fill(max_seq - s.length)(4.0))
+    val input = Nd4j.create((sourceText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString(), this.char2int("<unk>"))).toArray ++ padd(s._2))).toArray)
 
     this.network.setInput(0, input)
     val results = this.network.feedForward()
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
-    val labels = (x: Array[Array[Float]], l: List[String]) => (for (r <- x.slice(3, max_seq - (padd.size + 3))) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O"))
+    val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => (for (r <- x.slice(3, max_seq - (p + 3))) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O"))
 
     // Slide through label list and get position where the label type changes. Slide through the resulting list and build the spans as current_position(start), next_position(end), current_label. Remove the "O"s
     val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2, m(0)._1(1))).filter(_._3 != "O").toList
 
     // Complete the annotation if the span does not cover the whole token
     val re = """[^a-zA-Z\d]""".r
-    val spaces = re.findAllMatchIn(sourceText.drop(3).dropRight(3)).map(_.start).toList // get no-letter characters in sourceText
+    val spaces = re.findAllMatchIn(sourceText(0).drop(3).dropRight(3)).map(_.start).toList // get no-letter characters in sourceText
     val fullSpans = (x: List[(Int,Int,String)]) => (for (s <- x) yield (
       s._1 - Try(spaces.map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
       s._2 + Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
     ))
 
-    val nonOperators = labels(results.get("dense_1").toFloatMatrix(), nonOperatorLabels)
-    val expOperators = labels(results.get("dense_2").toFloatMatrix(), operatorLabels)
-    val impOperators = labels(results.get("dense_3").toFloatMatrix(), operatorLabels)
-    val nonOperatorsSpan = spans(nonOperators)
-    val expOperatorsSpan = spans(expOperators)
-    val impOperatorsSpan = spans(impOperators)
+    val out_batch = (m: Array[Array[Float]], b: Int) => m.zipWithIndex.filter(_._2 % (b + 1) == 0).map(_._1)
 
-    (fullSpans(nonOperatorsSpan) ::: fullSpans(expOperatorsSpan) ::: fullSpans(impOperatorsSpan)).sorted
+    (0 to sourceText.size - 1).map(b => {
+      val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix(), b), padd(b).size, nonOperatorLabels)
+      val expOperators = labels(out_batch(results.get("dense_2").toFloatMatrix(), b), padd(b).size, operatorLabels)
+      val impOperators = labels(out_batch(results.get("dense_3").toFloatMatrix(), b), padd(b).size, operatorLabels)
+      val nonOperatorsSpan = spans(nonOperators)
+      val expOperatorsSpan = spans(expOperators)
+      val impOperatorsSpan = spans(impOperators)
+
+      (fullSpans(nonOperatorsSpan) ::: fullSpans(expOperatorsSpan) ::: fullSpans(impOperatorsSpan)).sorted
+    }).toList
   }
 
   private def relation(type1: String, type2: String): Option[String] = {
