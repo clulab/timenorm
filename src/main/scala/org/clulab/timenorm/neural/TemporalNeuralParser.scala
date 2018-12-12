@@ -5,12 +5,10 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import com.codecommit.antixml._
 import org.clulab.anafora.Data
-import org.clulab.timenorm._
 import org.clulab.timenorm.formal._
 import org.deeplearning4j.nn.graph.ComputationGraph
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.factory.Nd4j
-import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
@@ -19,7 +17,6 @@ import scala.language.postfixOps
 import scala.util.Try
 
 object TemporalCharbasedParser {
-  val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
   val usage =
     """
                Usage: TemporalCharbasedParser [options]
@@ -40,7 +37,6 @@ object TemporalCharbasedParser {
 
     def parseOptions(argList: List[String]): Map[String, String] = {
       if (args.length < 4 || args.length > 4 || args(0) == "-h" || args(0) == "--help") exit()
-      //argList.map()
       argList.sliding(2, 2).map(s =>
         s(0) match {
           case "--input" | "-i" => ("input" -> s(1))
