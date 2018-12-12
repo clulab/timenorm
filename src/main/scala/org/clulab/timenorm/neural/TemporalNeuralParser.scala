@@ -73,19 +73,33 @@ object TemporalCharbasedParser {
 class TemporalCharbasedParser(modelFile: InputStream =
                               getClass.getResource("/org/clulab/timenorm/weights-improvement-22.v2.dl4j.zip").openStream()) {
 
+  private type Entities = List[(Int, Int, String)]
+  private type Properties = List[(Int, String, String)]
+
   lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(modelFile, false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
-  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines.map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
-  lazy private val schema = (for (es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities") yield for (e <- es \ "entity") yield (for (p <- e \\ "property" ) yield ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))) :+  ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))).flatten.flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  lazy private val unicodes = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicodes.txt")).getLines.toList
+  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines
+                            .map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  lazy private val schema = (for {
+      es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities"
+      e <- es \ "entity"
+    } yield (
+      (e \\ "property" ).map(p =>
+        ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))
+      )
+      :+
+      ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))
+  )).flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
 
-  private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Cn", "Co", "Cs", "Pd", "Ps", "Pe", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Pi", "Pf")
 
-  private def printModel(){
+  def printModel(){
     println(this.network.summary())
   }
+
 
   private def readDict(dictFile: InputStream): Map[String, Double] = {
     try {  Json.parse(dictFile).as[Map[String, Double]] } finally { dictFile.close() }
@@ -103,6 +117,7 @@ class TemporalCharbasedParser(modelFile: InputStream =
     data
   }
 
+
   def dct(data: Data): Interval = {
     val reader = new AnaforaReader(UnknownInterval)(data)
     val time = Try(reader.temporal(data.topEntities(0))(data)).getOrElse(null)
@@ -113,11 +128,13 @@ class TemporalCharbasedParser(modelFile: InputStream =
     }
   }
 
+
   def extract_interval(interval: Interval): (LocalDateTime, LocalDateTime, Long) = (
       interval.start,
       interval.end,
       interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
   )
+
 
   def intervals(data: Data, dct: Option[Interval] = Some(UnknownInterval)): List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])] = synchronized {
     val reader = new AnaforaReader(dct.get)(data)
@@ -144,7 +161,7 @@ class TemporalCharbasedParser(modelFile: InputStream =
   }
 
 
-  private def identification(sourceText: String): List[(Int, Int, String)] = {
+  private def identification(sourceText: String): Entities = {
     val max_seq = 356
     val padd = Vector.fill(max_seq - sourceText.length)(4.0)
     val input = Nd4j.create((sourceText.map(c => this.char2int.getOrElse(c.toString(), this.char2int("<unk>"))) ++ padd).toArray, Array(1,max_seq))
@@ -177,11 +194,13 @@ class TemporalCharbasedParser(modelFile: InputStream =
     (fullSpans(nonOperatorsSpan) ::: fullSpans(expOperatorsSpan) ::: fullSpans(impOperatorsSpan)).sorted
   }
 
+
   private def relation(type1: String, type2: String): Option[String] = {
-    Try(Some((this.schema(type1) keys).toList.sorted.reverse.filter(this.schema(type1)(_)._2 contains type2).iterator.next)).getOrElse(None)
+    Try(Some(this.schema(type1).toList.filter(_._2._2 contains type2).map(_._1).sorted.reverse.head)).getOrElse(None)
   }
 
-  private def linking(entities: List[(Int, Int, String)]): List[(Int, Int, String)] = {
+
+  private def linking(entities: Entities): Entities = {
     val links = ListBuffer.empty[(Int, Int, String)]
     var stack = Array(0, 0)
     for ((entity, i) <- entities.zipWithIndex) {
@@ -207,8 +226,8 @@ class TemporalCharbasedParser(modelFile: InputStream =
     links.groupBy(_._1).values.map(_.head).toList
   }
 
-  private def complete(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], sourceText: String): List[(Int, String, String)] = {
-    val properties = {
+
+  private def complete(entities: Entities, links: Entities, sourceText: String): Properties = {
     for ((entity, i) <- entities.zipWithIndex;
       property <- this.schema(entity._3).keys) yield { property match {
         case "Type" => {
@@ -237,12 +256,12 @@ class TemporalCharbasedParser(modelFile: InputStream =
           (i, property, "Included")
         }
         case _ => (-1, "", "")
-      }}
+      }
     }
-    properties
   }
-    
-  private def build(entities: List[(Int, Int, String)], links: List[(Int, Int, String)], properties: List[(Int, String, String)]): Elem = {
+
+
+  private def build(entities: Entities, links: Entities, properties: Properties): Elem = {
     <data>
     <annotations>
     {
@@ -265,9 +284,4 @@ class TemporalCharbasedParser(modelFile: InputStream =
     </annotations>
     </data>.convert
   }
-
-  def saveModel(path: String): Unit = {
-    ModelSerializer.writeModel(this.network, path, false)
-  }
-
 }
