@@ -12,7 +12,7 @@ class TemporalNeuralParserTest extends FunSuite {
 
   Thread.sleep(10000)
 
-  val parser = new TemporalCharbasedParser()
+  val parser = new TemporalNeuralParser()
   val anchor = parser.dct(parser.parse(List("2018-07-06"))(0))
   val test1 = "2018-10-10"
   val test2 = "January"

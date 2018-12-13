@@ -9,7 +9,6 @@ import org.clulab.timenorm.formal._
 import org.deeplearning4j.nn.graph.ComputationGraph
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.factory.Nd4j
-import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
@@ -18,7 +17,6 @@ import scala.language.postfixOps
 import scala.util.Try
 
 object TemporalCharbasedParser {
-  val log: Logger = LoggerFactory.getLogger(TemporalCharbasedParser.getClass)
   val usage =
     """
                Usage: TemporalCharbasedParser [options]
@@ -39,18 +37,17 @@ object TemporalCharbasedParser {
 
     def parseOptions(argList: List[String]): Map[String, String] = {
       if (args.length < 4 || args.length > 4 || args(0) == "-h" || args(0) == "--help") exit()
-      //argList.map()
       argList.sliding(2, 2).map(s =>
-        s(0) match {
-          case "--input" | "-i" => ("input" -> s(1))
-          case "--output" | "-o" => ("output" -> s(1))
+        s.head match {
+          case "--input" | "-i" => "input" -> s(1)
+          case "--output" | "-o" => "output" -> s(1)
           case _ => exit()
         }
       ).toMap
     }
 
     val options = parseOptions(args.toList)
-    val parser = new TemporalCharbasedParser()
+    val parser = new TemporalNeuralParser()
     val file = new File(options("output"))
     val bw = new BufferedWriter(new FileWriter(file))
     for ((line, linen) <- Source.fromFile(options("input")).getLines.zipWithIndex) {
@@ -73,20 +70,28 @@ object TemporalCharbasedParser {
 }
 
 
-class TemporalCharbasedParser(modelFile: InputStream =
+class TemporalNeuralParser(modelFile: InputStream =
                               getClass.getResource("/org/clulab/timenorm/weights-improvement-22.v2.dl4j.zip").openStream()) {
 
-  type TimeAnnotations =  List[List[(Int, Int, String)]]
+  private type Entities = List[List[(Int, Int, String)]]
+  private type Properties = List[List[(Int, String, String)]]
 
   lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(modelFile, false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
-  lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
-  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines.map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
-  lazy private val schema = (for (es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities") yield for (e <- es \ "entity") yield (for (p <- e \\ "property" ) yield ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))) :+  ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))).flatten.flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
-
-  private val unicodes = Array("Cn", "Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Me", "Mc", "Nd", "Nl", "No", "Zs", "Zl", "Zp", "Cc", "Cf", "Cn", "Co", "Cs", "Pd", "Ps", "Pe", "Pc", "Po", "Sm", "Sc", "Sk", "So", "Pi", "Pf")
+  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines
+                            .map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  lazy private val schema = (for {
+      es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities"
+      e <- es \ "entity"
+    } yield (
+      (e \\ "property" ).map(p =>
+        ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))
+      )
+      :+
+      ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))
+  )).flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
 
 
   def printModel(){
@@ -116,7 +121,7 @@ class TemporalCharbasedParser(modelFile: InputStream =
     val time = Try(reader.temporal(data.topEntities(0))(data)).getOrElse(null)
     time match {
       case interval: Interval => interval
-      case intervals: Intervals => intervals(0)
+      case intervals: Intervals => intervals.head
       case _ => UnknownInterval
     }
   }
@@ -157,63 +162,66 @@ class TemporalCharbasedParser(modelFile: InputStream =
   }
 
 
-  private def identification(sourceText: List[String]): TimeAnnotations = {
+  private def identification(sourceText: List[String]): Entities = {
     val max_seq = 356
     val padd =   sourceText.map(s => Vector.fill(max_seq - s.length)(4.0))
-    val input = Nd4j.create((sourceText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString(), this.char2int("<unk>"))).toArray ++ padd(s._2))).toArray)
+    val input = Nd4j.create(sourceText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
 
     this.network.setInput(0, input)
     val results = this.network.feedForward()
 
     // Gets the matrix from the output layer for batch = b (the batch outputs are inter)
-    val out_batch = (m: Array[Array[Float]], b: Int) => (0 to m.size - 1 by sourceText.size).map(_ + b) collect m toArray
+    val out_batch = (m: Array[Array[Float]], b: Int) => m.indices.by(sourceText.size).map(_ + b) collect m toArray
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
-    val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => (for (r <- x.slice(3, max_seq - (p + 3))) yield r.indexWhere(i => (i == r.max))).toList.map(o => Try(l(o-1)).getOrElse("O"))
+    val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => (for (r <- x.slice(3, max_seq - (p + 3))) yield r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
 
     // Slide through label list and get position where the label type changes. Slide through the resulting list and build the spans as current_position(start), next_position(end), current_label. Remove the "O"s
-    val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1(0) != f._1(1)).sliding(2).map(m =>(m(0)._2, m(1)._2, m(0)._1(1))).filter(_._3 != "O").toList
+    val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1.head != f._1(1)).sliding(2).map(m =>(m.head._2, m(1)._2, m.head._1(1))).filter(_._3 != "O").toList
 
     // Complete the annotation if the span does not cover the whole token
     val re = """[^a-zA-Z\d]""".r
-    val spaces = re.findAllMatchIn(sourceText(0).drop(3).dropRight(3)).map(_.start).toList // get no-letter characters in sourceText
-    val fullSpans = (x: List[(Int,Int,String)]) => (for (s <- x) yield (
-      s._1 - Try(spaces.map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
-      s._2 + Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
+    val spaces = sourceText.map(s => re.findAllMatchIn(s.drop(3).dropRight(3)).map(_.start).toList) // get no-letter characters in sourceText
+    val fullSpans = (x: List[(Int,Int,String)], b: Int) => for (s <- x) yield (
+      s._1 - Try(spaces(b).map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
+      s._2 + Try(spaces(b).map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
-    ))
+    )
 
-    (0 to sourceText.size - 1).map(b => {
-      val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix(), b), padd(b).size, nonOperatorLabels)
-      val expOperators = labels(out_batch(results.get("dense_2").toFloatMatrix(), b), padd(b).size, operatorLabels)
-      val impOperators = labels(out_batch(results.get("dense_3").toFloatMatrix(), b), padd(b).size, operatorLabels)
+    sourceText.indices.map(b => {
+      val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix, b), padd(b).size, nonOperatorLabels)
+      val expOperators = labels(out_batch(results.get("dense_2").toFloatMatrix, b), padd(b).size, operatorLabels)
+      val impOperators = labels(out_batch(results.get("dense_3").toFloatMatrix, b), padd(b).size, operatorLabels)
       val nonOperatorsSpan = spans(nonOperators)
       val expOperatorsSpan = spans(expOperators)
       val impOperatorsSpan = spans(impOperators)
 
-      (fullSpans(nonOperatorsSpan) ::: fullSpans(expOperatorsSpan) ::: fullSpans(impOperatorsSpan)).sorted
+      (fullSpans(nonOperatorsSpan, b) ::: fullSpans(expOperatorsSpan, b) ::: fullSpans(impOperatorsSpan, b)).sorted
     }).toList
   }
 
 
   private def relation(type1: String, type2: String): Option[String] = {
-    Try(Some((this.schema(type1) keys).toList.sorted.reverse.filter(this.schema(type1)(_)._2 contains type2).iterator.next)).getOrElse(None)
+    Try(Some(this.schema(type1).toList.filter(_._2._2 contains type2).map(_._1).sorted.reverse.head)).getOrElse(None)
   }
 
 
-  private def linking(entitiy_batches: TimeAnnotations): TimeAnnotations = {
+  private def linking(entitiy_batches: Entities): Entities = {
     entitiy_batches.map(entities => {
-      val links = ListBuffer.empty[(Int, Int, String)]
-      var stack = Array(0, 0)
-      for ((entity, i) <- entities.zipWithIndex) {
-        if (stack(0) != stack(1) && entity._1 - entities(stack(1) - 1)._2 > 10)
-          stack(0) = stack(1)
-        var redays = 0
-        for (s <- (stack(0) to stack(1) - 1).toList.reverse) {
-          redays += {
-            entities(s)._3.startsWith("Day-Of") match {
-              case true => 1
-              case _ => 0
+    val links = ListBuffer.empty[(Int, Int, String)]
+    val stack = Array(0, 0)
+    for ((entity, i) <- entities.zipWithIndex) {
+      if (stack(0) != stack(1) && entity._1 - entities(stack(1)-1)._2 > 10)
+        stack(0) = stack(1)
+      var redays = 0
+      for (s <- (stack(0) until stack(1)).toList.reverse) {
+        redays += {if (entities(s)._3.startsWith("Day-Of")) 1 else 0}
+        if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
+          relation(entities(s)._3, entity._3) match {
+            case Some(result) => links += ((s, i, result))
+            case None => relation(entity._3, entities(s)._3) match {
+              case Some(result) => links += ((i, s, result))
+              case None =>
             }
           }
           if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
@@ -232,37 +240,32 @@ class TemporalCharbasedParser(modelFile: InputStream =
   }
 
 
-  private def complete(entitiy_batches: TimeAnnotations, link_batches: TimeAnnotations, sourceText_batches: List[String]): List[List[(Int, String, String)]] = {
+  private def complete(entitiy_batches: Entities, link_batches: Entities, sourceText_batches: List[String]): Properties = {
     (entitiy_batches zip link_batches zip sourceText_batches).map({ case ((entities, links), sourceText) =>
       val properties = {
         for ((entity, i) <- entities.zipWithIndex;
-             property <- this.schema(entity._3).keys) yield {
-          property match {
-            case "Type" => {
+          property <- this.schema(entity._3).keys) yield { property match {
+            case "Type" =>
               val p = Try(this.types(entity._3)(sourceText.slice(entity._1, entity._2))).getOrElse(sourceText.slice(entity._1, entity._2)).toString
               (entity._3, p.last.toString) match {
                 case ("Calendar-Interval", "s") => (i, property, p.dropRight(1))
                 case ("Period", l) if l != "Unknown" && l != "s" => (i, property, p + "s")
                 case _ => (i, property, p)
               }
-            }
-            case "Value" => {
+            case "Value" =>
               val rgx = """^0+(\d)""".r
               (i, property, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1))))
-            }
-            case intervalttype if intervalttype contains "Interval-Type" => {
-              links.find(l => (l._1 == i || l._2 == i) && (intervalttype contains l._3)).isDefined match {
-                case true => (i, property, "Link")
-                case _ => (i, property, "DocTime")
-              }
-            }
+            case intervalttype if intervalttype contains "Interval-Type" =>
+               if (links.exists(l => (l._1 == i || l._2 == i) && (intervalttype contains l._3)))
+                (i, property, "Link")
+              else
+                (i, property, "DocTime")
             case "Semantics" => entity._3 match {
               case "Last" => (i, property, "Interval-Not-Included") // TODO: Include journal Last?1
               case _ => (i, property, "Interval-Not-Included")
             }
-            case intervalttype if intervalttype contains "Included" => {
+            case intervalttype if intervalttype contains "Included" =>
               (i, property, "Included")
-            }
             case _ => (-1, "", "")
           }
         }
@@ -272,13 +275,13 @@ class TemporalCharbasedParser(modelFile: InputStream =
   }
 
 
-  private def build(entitiy_batches: TimeAnnotations, link_batches: TimeAnnotations, property_batches: List[List[(Int, String, String)]]): List[Elem] = {
+  private def build(entitiy_batches: Entities, link_batches: Entities, property_batches: Properties): List[Elem] = {
     (entitiy_batches zip link_batches zip property_batches).map({ case ((entities, links), properties) =>
       <data>
         <annotations>
           {for ((entity, e) <- entities.zipWithIndex) yield {
           <entity>
-            <id>{s"${e}@id"}</id>
+            <id>{s"$e@id"}</id>
             <span>{s"${entity._1},${entity._2}"}</span>
             <type>{entity._3}</type>
             <properties>
