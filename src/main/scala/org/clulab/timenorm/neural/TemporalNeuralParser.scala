@@ -136,12 +136,12 @@ class TemporalNeuralParser(modelFile: InputStream =
 
   def intervals(data: Data, dct: Option[Interval] = Some(UnknownInterval)): List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])] = synchronized {
     val reader = new AnaforaReader(dct.get)(data)
-    (for (e <- data.topEntities) yield {
+    data.topEntities.map(e => {
       val span = e.expandedSpan(data)
       val time = Try(reader.temporal(e)(data)).getOrElse(null)
       val timeIntervals: List[(LocalDateTime, LocalDateTime, Long)] = Try(time match {
         case interval: Interval => List(extract_interval(interval))
-        case intervals: Intervals => (for (interval <- intervals) yield {extract_interval(interval)}).toList
+        case intervals: Intervals => intervals.map(extract_interval).toList
         case rInterval: RepeatingInterval => List((
           null,
           null,
@@ -168,7 +168,7 @@ class TemporalNeuralParser(modelFile: InputStream =
     val results = this.network.feedForward()
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
-    val labels = (x: Array[Array[Float]], l: List[String]) => (for (r <- x.slice(3, max_seq - (padd.size + 3))) yield r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
+    val labels = (x: Array[Array[Float]], l: List[String]) => x.slice(3, max_seq - (padd.size + 3)).map(r => r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
 
     // Slide through label list and get position where the label type changes. Slide through the resulting list and build the spans as current_position(start), next_position(end), current_label. Remove the "O"s
     val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1.head != f._1(1)).sliding(2).map(m =>(m.head._2, m(1)._2, m.head._1(1))).filter(_._3 != "O").toList
@@ -176,11 +176,11 @@ class TemporalNeuralParser(modelFile: InputStream =
     // Complete the annotation if the span does not cover the whole token
     val re = """[^a-zA-Z\d]""".r
     val spaces = re.findAllMatchIn(sourceText.drop(3).dropRight(3)).map(_.start).toList // get no-letter characters in sourceText
-    val fullSpans = (x: List[(Int,Int,String)]) => for (s <- x) yield (
+    val fullSpans = (x: List[(Int,Int,String)]) => x.map(s => (
       s._1 - Try(spaces.map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
       s._2 + Try(spaces.map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
-    )
+    ))
 
     val nonOperators = labels(results.get("dense_1").toFloatMatrix, nonOperatorLabels)
     val expOperators = labels(results.get("dense_2").toFloatMatrix, operatorLabels)
@@ -224,7 +224,7 @@ class TemporalNeuralParser(modelFile: InputStream =
 
   private def complete(entities: Entities, links: Entities, sourceText: String): Properties = {
     for ((entity, i) <- entities.zipWithIndex;
-      property <- this.schema(entity._3).keys) yield { property match {
+         property <- this.schema(entity._3).keys) yield { property match {
         case "Type" =>
           val p = Try(this.types(entity._3)(sourceText.slice(entity._1, entity._2))).getOrElse(sourceText.slice(entity._1, entity._2)).toString
           (entity._3, p.last.toString) match {
