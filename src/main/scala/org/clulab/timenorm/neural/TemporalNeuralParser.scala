@@ -137,14 +137,12 @@ class TemporalNeuralParser(modelFile: InputStream =
   def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval)): List[List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])]] = synchronized {
     data_batch.map(data => {
       val reader = new AnaforaReader(dct.get)(data)
-      (for (e <- data.topEntities) yield {
+      data.topEntities.map(e => {
         val span = e.expandedSpan(data)
         val time = Try(reader.temporal(e)(data)).getOrElse(null)
         val timeIntervals: List[(LocalDateTime, LocalDateTime, Long)] = Try(time match {
           case interval: Interval => List(extract_interval(interval))
-          case intervals: Intervals => (for (interval <- intervals) yield {
-            extract_interval(interval)
-          }).toList
+          case intervals: Intervals => intervals.map(extract_interval).toList
           case rInterval: RepeatingInterval => List((
             null,
             null,
@@ -158,7 +156,8 @@ class TemporalNeuralParser(modelFile: InputStream =
           case _ => List((null, null, 0.toLong))
         }).getOrElse(List((null, null, 0.toLong)))
         (span, timeIntervals)
-      }).toList})
+      }).toList
+    })
   }
 
 
@@ -174,7 +173,7 @@ class TemporalNeuralParser(modelFile: InputStream =
     val out_batch = (m: Array[Array[Float]], b: Int) => m.indices.by(sourceText.size).map(_ + b) collect m toArray
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
-    val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => (for (r <- x.slice(3, max_seq - (p + 3))) yield r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
+    val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => x.slice(3, max_seq - (p + 3)).map(r => r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
 
     // Slide through label list and get position where the label type changes. Slide through the resulting list and build the spans as current_position(start), next_position(end), current_label. Remove the "O"s
     val spans = (x: List[String]) => ("" +: x :+ "").sliding(2).zipWithIndex.filter(f => f._1.head != f._1(1)).sliding(2).map(m =>(m.head._2, m(1)._2, m.head._1(1))).filter(_._3 != "O").toList
@@ -182,11 +181,11 @@ class TemporalNeuralParser(modelFile: InputStream =
     // Complete the annotation if the span does not cover the whole token
     val re = """[^a-zA-Z\d]""".r
     val spaces = sourceText.map(s => re.findAllMatchIn(s.drop(3).dropRight(3)).map(_.start).toList) // get no-letter characters in sourceText
-    val fullSpans = (x: List[(Int,Int,String)], b: Int) => for (s <- x) yield (
+    val fullSpans = (x: List[(Int,Int,String)], b: Int) => x.map(s => (
       s._1 - Try(spaces(b).map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
       s._2 + Try(spaces(b).map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
-    )
+    ))
 
     sourceText.indices.map(b => {
       val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix, b), padd(b).size, nonOperatorLabels)
