@@ -50,14 +50,15 @@ object TemporalCharbasedParser {
     val parser = new TemporalNeuralParser()
     val file = new File(options("output"))
     val bw = new BufferedWriter(new FileWriter(file))
-    for ((line, linen) <- Source.fromFile(options("input")).getLines.zipWithIndex) {
-      println("Line number " + linen + ": " + line)
+    val inputlines = Source.fromFile(options("input")).getLines.toList
+    val data = parser.parse(inputlines)
+    val lines = parser.intervals(data)
+    for ((line, linen) <- lines.zipWithIndex) {
+      println("Line number " + linen + ": " + inputlines(linen))
       bw.write("Line number: " + linen + "\n")
-      val data = parser.parse(List(line))
-      val timexes = parser.intervals(data)
-      for ((timex, index) <- timexes(0).zipWithIndex) {
+      for ((timex, index) <- line.zipWithIndex) {
         bw.write("\tTimEx " + index + ":" + "\n")
-        bw.write("\t\tText: " + line.slice(timex._1._1, timex._1._2) + "\n")
+        bw.write("\t\tText: " + inputlines(linen).slice(timex._1._1, timex._1._2) + "\n")
         bw.write("\t\tSpan: " + timex._1._1 + " - " + timex._1._2 + "\n")
         bw.write("\t\tIntervals:" + "\n")
         for (interval <- timex._2)
