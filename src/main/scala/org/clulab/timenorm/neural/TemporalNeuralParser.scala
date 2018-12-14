@@ -16,10 +16,10 @@ import scala.io.Source
 import scala.language.postfixOps
 import scala.util.Try
 
-object TemporalCharbasedParser {
+object TemporalNeuralParser {
   val usage =
     """
-               Usage: TemporalCharbasedParser [options]
+               Usage: TemporalNeuralParser [options]
 
                 -i <file|directory> | --input <file|directory>
                 -o <file|directory> | --output <file|directory>
