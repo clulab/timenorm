@@ -36,11 +36,12 @@ object TemporalCharbasedParser {
     }
 
     def parseOptions(argList: List[String]): Map[String, String] = {
-      if (args.length < 4 || args.length > 4 || args(0) == "-h" || args(0) == "--help") exit()
+      if (args(0) == "-h" || args(0) == "--help") exit()
       argList.sliding(2, 2).map(s =>
         s.head match {
           case "--input" | "-i" => "input" -> s(1)
           case "--output" | "-o" => "output" -> s(1)
+          case "--batch_size" | "-bs" => "batch_size" -> s(1)
           case _ => exit()
         }
       ).toMap
@@ -50,21 +51,25 @@ object TemporalCharbasedParser {
     val parser = new TemporalNeuralParser()
     val file = new File(options("output"))
     val bw = new BufferedWriter(new FileWriter(file))
-    val inputlines = Source.fromFile(options("input")).getLines.toList
-    val data = parser.parse(inputlines)
-    val lines = parser.intervals(data)
-    for ((line, linen) <- lines.zipWithIndex) {
-      println("Line number " + linen + ": " + inputlines(linen))
-      bw.write("Line number: " + linen + "\n")
-      for ((timex, index) <- line.zipWithIndex) {
-        bw.write("\tTimEx " + index + ":" + "\n")
-        bw.write("\t\tText: " + inputlines(linen).slice(timex._1._1, timex._1._2) + "\n")
-        bw.write("\t\tSpan: " + timex._1._1 + " - " + timex._1._2 + "\n")
-        bw.write("\t\tIntervals:" + "\n")
-        for (interval <- timex._2)
-          bw.write("\t\t\t" + interval._1 + "-" + interval._2 + " " + interval._3) + "\n"
+    val batch_size = options.getOrElse("batch_size", "40").toInt
+    val batches = Source.fromFile(options("input")).getLines.toList.sliding(batch_size, batch_size).toList
+    for ((batch, batchn) <- batches.zipWithIndex) {
+      println("Batch " + (batchn + 1) + "/" + batches.size + " with " + batch.size + " lines")
+      val data = parser.parse(batch)
+      val lines = parser.intervals(data)
+      for ((line, linen) <- lines.zipWithIndex) {
+        println("\tLine number " + (batchn * batch_size + linen) + ": " + batch(linen))
+        bw.write("Line number: " + (batchn * batch_size + linen) + "\n")
+        for ((timex, index) <- line.zipWithIndex) {
+          bw.write("\tTimEx " + index + ":" + "\n")
+          bw.write("\t\tText: " + batch(linen).slice(timex._1._1, timex._1._2) + "\n")
+          bw.write("\t\tSpan: " + timex._1._1 + " - " + timex._1._2 + "\n")
+          bw.write("\t\tIntervals:" + "\n")
+          for (interval <- timex._2)
+            bw.write("\t\t\t" + interval._1 + "-" + interval._2 + " " + interval._3) + "\n"
+        }
+        bw.write("\n")
       }
-      bw.write("\n")
     }
     bw.close()
   }
@@ -72,8 +77,7 @@ object TemporalCharbasedParser {
 
 
 class TemporalNeuralParser(modelFile: InputStream =
-                              getClass.getResource("/org/clulab/timenorm/weights-improvement-22.v2.dl4j.zip").openStream()) {
-
+                           getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/weights-improvement-22.v3.dl4j.zip").openStream()) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
@@ -167,6 +171,7 @@ class TemporalNeuralParser(modelFile: InputStream =
     val padd =   sourceText.map(s => Vector.fill(max_seq - s.length)(4.0))
     val input = Nd4j.create(sourceText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
 
+
     this.network.setInput(0, input)
     val results = this.network.feedForward()
 
@@ -208,22 +213,14 @@ class TemporalNeuralParser(modelFile: InputStream =
 
   private def linking(entitiy_batches: Entities): Entities = {
     entitiy_batches.map(entities => {
-    val links = ListBuffer.empty[(Int, Int, String)]
-    val stack = Array(0, 0)
-    for ((entity, i) <- entities.zipWithIndex) {
-      if (stack(0) != stack(1) && entity._1 - entities(stack(1)-1)._2 > 10)
-        stack(0) = stack(1)
-      var redays = 0
-      for (s <- (stack(0) until stack(1)).toList.reverse) {
-        redays += {if (entities(s)._3.startsWith("Day-Of")) 1 else 0}
-        if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
-          relation(entities(s)._3, entity._3) match {
-            case Some(result) => links += ((s, i, result))
-            case None => relation(entity._3, entities(s)._3) match {
-              case Some(result) => links += ((i, s, result))
-              case None =>
-            }
-          }
+      val links = ListBuffer.empty[(Int, Int, String)]
+      val stack = Array(0, 0)
+      for ((entity, i) <- entities.zipWithIndex) {
+        if (stack(0) != stack(1) && entity._1 - entities(stack(1)-1)._2 > 10)
+          stack(0) = stack(1)
+        var redays = 0
+        for (s <- (stack(0) until stack(1)).toList.reverse) {
+          redays += {if (entities(s)._3.startsWith("Day-Of")) 1 else 0}
           if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
             relation(entities(s)._3, entity._3) match {
               case Some(result) => links += ((s, i, result))
@@ -232,11 +229,19 @@ class TemporalNeuralParser(modelFile: InputStream =
                 case None =>
               }
             }
+            if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
+              relation(entities(s)._3, entity._3) match {
+                case Some(result) => links += ((s, i, result))
+                case None => relation(entity._3, entities(s)._3) match {
+                  case Some(result) => links += ((i, s, result))
+                  case None =>
+                }
+              }
+          }
+          stack(1) += 1
         }
-        stack(1) += 1
-      }
-      links.groupBy(_._1).values.map(_.head).toList
-    })
+        links.groupBy(_._1).values.map(_.head).toList
+      })
   }
 
 
