@@ -13,7 +13,7 @@ class TemporalNeuralParserTest extends FunSuite {
   Thread.sleep(10000)
 
   private val parser = new TemporalNeuralParser()
-  private val anchor = parser.dct(parser.parse(List("2018-07-06"))(0))
+  private val anchor = parser.dct(parser.parse(List("2018-07-06")).head)
   private val test1 = "2018-10-10"
   private val test2 = "January"
   private val test3 = "last Friday"
@@ -27,6 +27,7 @@ class TemporalNeuralParserTest extends FunSuite {
   private val dates = List(test1, test2, test3, test4, test5, test6)
   private val data = parser.parse(dates)
   private val intervals = parser.intervals(data, Some(anchor))
+
 
   test("interval") {
     assert(intervals.head.head._1 == (0, 10))

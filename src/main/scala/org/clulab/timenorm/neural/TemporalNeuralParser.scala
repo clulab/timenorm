@@ -23,6 +23,7 @@ object TemporalNeuralParser {
 
                 -i <file|directory> | --input <file|directory>
                 -o <file|directory> | --output <file|directory>
+                -b <number>         | --batch_size <number>
 
                 -h | --help
                   prints this menu
@@ -36,7 +37,7 @@ object TemporalNeuralParser {
     }
 
     def parseOptions(argList: List[String]): Map[String, String] = {
-      if (args(0) == "-h" || args(0) == "--help") exit()
+      if (args.length == 0 || args(0) == "-h" || args(0) == "--help") exit()
       argList.sliding(2, 2).map(s =>
         s.head match {
           case "--input" | "-i" => "input" -> s(1)
@@ -66,18 +67,19 @@ object TemporalNeuralParser {
           bw.write("\t\tSpan: " + timex._1._1 + " - " + timex._1._2 + "\n")
           bw.write("\t\tIntervals:" + "\n")
           for (interval <- timex._2)
-            bw.write("\t\t\t" + interval._1 + "-" + interval._2 + " " + interval._3) + "\n"
+            bw.write("\t\t\t" + interval._1 + "-" + interval._2 + " " + interval._3 + "\n")
         }
         bw.write("\n")
       }
     }
+    println("Finished!")
     bw.close()
   }
 }
 
 
 class TemporalNeuralParser(modelFile: InputStream =
-                           getClass.getResource("/org/clulab/timenorm/model/char-3softmax-extra/weights-improvement-22.v3.dl4j.zip").openStream()) {
+                           getClass.getResourceAsStream("/org/clulab/timenorm/model/char-3softmax-extra/weights-improvement-22.v3.dl4j.zip")) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
@@ -110,7 +112,7 @@ class TemporalNeuralParser(modelFile: InputStream =
 
 
   def parse(sourceText: List[String]): List[Data] = synchronized {
-    val entities = identification(sourceText.map("\n\n\n" + _ + "\n\n\n"))
+    val entities = identification(sourceText)
     val links = linking(entities)
     val antixml_not_allowed = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r
     val cleanSourceText = sourceText.map(antixml_not_allowed.replaceAllIn(_, " "))
@@ -168,15 +170,17 @@ class TemporalNeuralParser(modelFile: InputStream =
 
   private def identification(sourceText: List[String]): Entities = {
     val max_seq = 356
-    val padd =   sourceText.map(s => Vector.fill(max_seq - s.length)(4.0))
-    val input = Nd4j.create(sourceText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
-
+    // Trim text to max_seq - 6(3 newline padding before and after). Add newline paddings.
+    val formatText = sourceText.map(s => "\n\n\n" + s.dropRight(s.length - max_seq + 6) + "\n\n\n")
+    val padd =   formatText.map(s => Vector.fill(max_seq - s.length)(4.0))
+    // Convert the sentences into character code Nd4j matrix.
+    val input = Nd4j.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
 
     this.network.setInput(0, input)
     val results = this.network.feedForward()
 
     // Gets the matrix from the output layer for batch = b (the batch outputs are inter)
-    val out_batch = (m: Array[Array[Float]], b: Int) => m.indices.by(sourceText.size).map(_ + b) collect m toArray
+    val out_batch = (m: Array[Array[Float]], b: Int) => m.indices.by(formatText.size).map(_ + b) collect m toArray
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
     val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => x.slice(3, max_seq - (p + 3)).map(r => r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
@@ -186,14 +190,14 @@ class TemporalNeuralParser(modelFile: InputStream =
 
     // Complete the annotation if the span does not cover the whole token
     val re = """[^a-zA-Z\d]""".r
-    val spaces = sourceText.map(s => re.findAllMatchIn(s.drop(3).dropRight(3)).map(_.start).toList) // get no-letter characters in sourceText
+    val spaces = formatText.map(s => re.findAllMatchIn(s.drop(3).dropRight(3)).map(_.start).toList) // get no-letter characters in sourceText
     val fullSpans = (x: List[(Int,Int,String)], b: Int) => x.map(s => (
       s._1 - Try(spaces(b).map((s._1 - 1) - _).filter(_ >= 0).min).getOrElse(0),
       s._2 + Try(spaces(b).map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
     ))
 
-    sourceText.indices.map(b => {
+    formatText.indices.map(b => {
       val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix, b), padd(b).size, nonOperatorLabels)
       val expOperators = labels(out_batch(results.get("dense_2").toFloatMatrix, b), padd(b).size, operatorLabels)
       val impOperators = labels(out_batch(results.get("dense_3").toFloatMatrix, b), padd(b).size, operatorLabels)
