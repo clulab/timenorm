@@ -1,6 +1,7 @@
 package org.clulab.timenorm.neural
 
 import java.io._
+import java.nio.file.{Files, Paths}
 import java.time.{LocalDateTime, ZoneOffset}
 
 import com.codecommit.antixml._
@@ -19,19 +20,20 @@ import scala.util.Try
 object TemporalNeuralParser {
   val usage =
     """
-               Usage: TemporalNeuralParser [options]
+          Usage: TemporalNeuralParser -i FILE -o FILE [-b NUMBER]
 
-                -i <file|directory> | --input <file|directory>
-                -o <file|directory> | --output <file|directory>
-                -b <number>         | --batch_size <number>
+          Arguments:
+            -i FILE, --input FILE
+            -o FILE, --output FILE
+            -b NUMBER, --batch_size NUMBER    Default: 40
 
-                -h | --help
-                  prints this menu
-              """
+            -h, --help                        prints this menu
+    """
 
   def main(args: Array[String]): Unit = {
 
-    def exit() = {
+    def exit(message: Option[String] = None) = {
+      if (message.isDefined) println(message.get)
       println(usage)
       sys.exit(1)
     }
@@ -40,15 +42,29 @@ object TemporalNeuralParser {
       if (args.length == 0 || args(0) == "-h" || args(0) == "--help") exit()
       argList.sliding(2, 2).map(s =>
         s.head match {
-          case "--input" | "-i" => "input" -> s(1)
-          case "--output" | "-o" => "output" -> s(1)
-          case "--batch_size" | "-bs" => "batch_size" -> s(1)
-          case _ => exit()
+          case "--input" | "-i" =>
+            if (Files.exists(Paths.get(s(1))))
+              "input" -> s(1)
+            else
+              exit(Some("Input file does not exist."))
+          case "--output" | "-o" =>
+            if (Files.exists(Paths.get(s(1))))
+              "output" -> s(1)
+            else
+              exit(Some("Output file does not exist."))
+          case "--batch_size" | "-b" =>
+            if (s(1).forall(_.isDigit))
+              "batch_size" -> s(1)
+            else
+              exit(Some("Batch size is not a number."))
+          case _ => exit(Some("Bad usage."))
         }
       ).toMap
     }
-
     val options = parseOptions(args.toList)
+    if (!(options.contains("input") && options.contains("output")))
+      exit(Some("Bad usage."))
+
     val parser = new TemporalNeuralParser()
     val file = new File(options("output"))
     val bw = new BufferedWriter(new FileWriter(file))
@@ -79,7 +95,7 @@ object TemporalNeuralParser {
 
 
 class TemporalNeuralParser(modelFile: InputStream =
-                           getClass.getResourceAsStream("/org/clulab/timenorm/model/char-3softmax-extra/weights-improvement-22.v3.dl4j.zip")) {
+                           getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.dl4j.zip")) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
@@ -169,9 +185,8 @@ class TemporalNeuralParser(modelFile: InputStream =
 
 
   private def identification(sourceText: List[String]): Entities = {
-    val max_seq = 356
-    // Trim text to max_seq - 6(3 newline padding before and after). Add newline paddings.
-    val formatText = sourceText.map(s => "\n\n\n" + s.dropRight(s.length - max_seq + 6) + "\n\n\n")
+    val formatText = sourceText.map(s => "\n\n\n" + s + "\n\n\n")
+    val max_seq = formatText.map(_.length).max
     val padd =   formatText.map(s => Vector.fill(max_seq - s.length)(4.0))
     // Convert the sentences into character code Nd4j matrix.
     val input = Nd4j.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
