@@ -79,7 +79,7 @@
       <artifactId>deeplearning4j-nn</artifactId>
       <version>1.0.0-beta2</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.nd4j</groupId>
       <artifactId>nd4j-native-platform</artifactId>
@@ -90,6 +90,12 @@
       <groupId>com.typesafe.play</groupId>
       <artifactId>play-json_2.11</artifactId>
       <version>2.6.9</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.clulab</groupId>
+      <artifactId>timenorm-models</artifactId>
+      <version>0.9.1</version>
     </dependency>
 
     <!-- Test -->
@@ -131,6 +137,16 @@
 	<updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
+
+    <repository>
+        <id>orgclulab-1121</id>
+        <url>https://oss.sonatype.org/content/repositories/orgclulab-1121/</url>
+        <releases>
+            <enabled>true</enabled>
+        </releases>
+        <layout>default</layout>
+    </repository>
+
     <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
