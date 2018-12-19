@@ -93,9 +93,9 @@
     </dependency>
 
     <dependency>
-      <groupId>info.bethard</groupId>
+      <groupId>org.clulab</groupId>
       <artifactId>timenorm-models</artifactId>
-      <version>0.9.0</version>
+      <version>0.9.1</version>
     </dependency>
 
     <!-- Test -->
@@ -139,8 +139,8 @@
     </repository>
 
     <repository>
-        <id>infobethard-1004</id>
-        <url>https://oss.sonatype.org/content/repositories/infobethard-1004/</url>
+        <id>orgclulab-1121</id>
+        <url>https://oss.sonatype.org/content/repositories/orgclulab-1121/</url>
         <releases>
             <enabled>true</enabled>
         </releases>
