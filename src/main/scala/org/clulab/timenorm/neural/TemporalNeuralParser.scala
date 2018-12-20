@@ -248,14 +248,6 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
                 case None =>
               }
             }
-            if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
-              relation(entities(s)._3, entity._3) match {
-                case Some(result) => links += ((s, i, result))
-                case None => relation(entity._3, entities(s)._3) match {
-                  case Some(result) => links += ((i, s, result))
-                  case None =>
-                }
-              }
           }
           stack(1) += 1
         }
@@ -267,32 +259,34 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private def complete(entitiy_batches: Entities, link_batches: Entities, sourceText_batches: List[String]): Properties = {
     (entitiy_batches zip link_batches zip sourceText_batches).map({ case ((entities, links), sourceText) =>
       val properties = {
-        for ((entity, i) <- entities.zipWithIndex;
-          property <- this.schema(entity._3).keys) yield { property match {
-            case "Type" =>
-              val p = Try(this.types(entity._3)(sourceText.slice(entity._1, entity._2))).getOrElse(sourceText.slice(entity._1, entity._2)).toString
-              (entity._3, p.last.toString) match {
-                case ("Calendar-Interval", "s") => (i, property, p.dropRight(1))
-                case ("Period", l) if l != "Unknown" && l != "s" => (i, property, p + "s")
-                case _ => (i, property, p)
+        for {(entity, i) <- entities.zipWithIndex
+             propertyType <- this.schema(entity._3).keys
+             property = propertyType match {
+                case "Type" =>
+                  val p = Try(this.types(entity._3)(sourceText.slice(entity._1, entity._2))).getOrElse(sourceText.slice(entity._1, entity._2)).toString
+                  (entity._3, p.last.toString) match {
+                    case ("Calendar-Interval", "s") => Some((i, propertyType, p.dropRight(1)))
+                    case ("Period", l) if l != "Unknown" && l != "s" => Some((i, propertyType, p + "s"))
+                    case _ => Some((i, propertyType, p))
+                  }
+                case "Value" =>
+                  val rgx = """^0+(\d)""".r
+                  Some((i, propertyType, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1)))))
+                case intervalttype if intervalttype contains "Interval-Type" =>
+                   if (links.exists(l => (l._1 == i || l._2 == i) && (intervalttype contains l._3)))
+                     Some((i, propertyType, "Link"))
+                  else
+                     Some((i, propertyType, "DocTime"))
+                case "Semantics" => entity._3 match {
+                  case "Last" => Some((i, propertyType, "Interval-Not-Included")) // TODO: Include journal Last
+                  case _ => Some((i, propertyType, "Interval-Not-Included"))
+                }
+                case intervalttype if intervalttype contains "Included" =>
+                  Some((i, propertyType, "Included"))
+                case _ => None
               }
-            case "Value" =>
-              val rgx = """^0+(\d)""".r
-              (i, property, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1))))
-            case intervalttype if intervalttype contains "Interval-Type" =>
-               if (links.exists(l => (l._1 == i || l._2 == i) && (intervalttype contains l._3)))
-                (i, property, "Link")
-              else
-                (i, property, "DocTime")
-            case "Semantics" => entity._3 match {
-              case "Last" => (i, property, "Interval-Not-Included") // TODO: Include journal Last?1
-              case _ => (i, property, "Interval-Not-Included")
-            }
-            case intervalttype if intervalttype contains "Included" =>
-              (i, property, "Included")
-            case _ => (-1, "", "")
-          }
-        }
+             if property.isDefined
+        } yield property.get
       }
       properties
     })
