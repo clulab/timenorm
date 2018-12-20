@@ -267,7 +267,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
                     case _ => Some((i, propertyType, p))
                   }
                 case "Value" =>
-                  val rgx = """^0+(\d)""".r
+                  val rgx = """^0*(\d+)[^\d]*$""".r
                   Some((i, propertyType, WordToNumber.convert(rgx.replaceAllIn(sourceText.slice(entity._1, entity._2), _.group(1)))))
                 case intervalttype if intervalttype contains "Interval-Type" =>
                    if (links.exists(l => (l._1 == i || l._2 == i) && (intervalttype contains l._3)))
