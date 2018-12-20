@@ -94,12 +94,12 @@ object TemporalNeuralParser {
 }
 
 
-class TemporalNeuralParser(modelFile: InputStream =
-                           getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.dl4j.zip")) {
+class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
-  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(modelFile, false)
+  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(
+    modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.dl4j.zip")), false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList

@@ -55,7 +55,7 @@ object WordToNumber {
         try {
           g += Small(w)
         } catch {
-          case e: NoSuchElementException => {
+          case e: NoSuchElementException =>
             if (w == "hundred" && g!=0)
               g *= 100L
             else {
@@ -63,7 +63,6 @@ object WordToNumber {
               g = 0L
             }
           }
-        }
         (n + g).toString
       }
     } catch {
