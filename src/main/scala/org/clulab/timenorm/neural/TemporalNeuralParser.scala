@@ -237,10 +237,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
       for ((entity, i) <- entities.zipWithIndex) {
         if (stack(0) != stack(1) && entity._1 - entities(stack(1)-1)._2 > 10)
           stack(0) = stack(1)
-        var redays = 0
         for (s <- (stack(0) until stack(1)).toList.reverse) {
-          redays += {if (entities(s)._3.startsWith("Day-Of")) 1 else 0}
-          if (!(entities(s)._3.startsWith("Day-Of") && redays > 1))
             relation(entities(s)._3, entity._3) match {
               case Some(result) => links += ((s, i, result))
               case None => relation(entity._3, entities(s)._3) match {
