@@ -92,12 +92,6 @@
       <version>2.6.9</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.clulab</groupId>
-      <artifactId>timenorm-models</artifactId>
-      <version>0.9.1</version>
-    </dependency>
-
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>

@@ -8,6 +8,7 @@ import com.codecommit.antixml._
 import org.clulab.anafora.Data
 import org.clulab.timenorm.formal._
 import org.deeplearning4j.nn.graph.ComputationGraph
+import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.factory.Nd4j
 import play.api.libs.json._
@@ -99,10 +100,12 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Properties = List[List[(Int, String, String)]]
 
   lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(
-    modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.dl4j.zip")), false)
-  lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
+    modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/lstm_models_2features.dl4j.zip")), false)
+  lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
+  lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
+  lazy private val unicodes = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicodes.txt")).getLines.toList
   lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines
                             .map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toList.groupBy(_._1).mapValues(_.map(_._2).toMap)
   lazy private val schema = (for {
@@ -187,11 +190,13 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private def identification(sourceText: List[String]): Entities = {
     val formatText = sourceText.map(s => "\n\n\n" + s + "\n\n\n")
     val max_seq = formatText.map(_.length).max
-    val padd =   formatText.map(s => Vector.fill(max_seq - s.length)(4.0))
+    val padd =   formatText.map(s => Vector.fill(max_seq - s.length)(0.0))
     // Convert the sentences into character code Nd4j matrix.
-    val input = Nd4j.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
+    val input0 = Nd4j.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("unknown"))).toArray ++ padd(s._2)).toArray)
+    val input1 = Nd4j.create(formatText.zipWithIndex.map(s => s._1.map(c => this.unicode2int.getOrElse(unicodes(c.getType), this.unicode2int("unknown"))).toArray ++ padd(s._2)).toArray)
 
-    this.network.setInput(0, input)
+    this.network.setInput(0, input0)
+    this.network.setInput(1, input1)
     val results = this.network.feedForward()
 
     // Gets the matrix from the output layer for batch = b (the batch outputs are inter)
@@ -213,9 +218,9 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
     ))
 
     formatText.indices.map(b => {
-      val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix, b), padd(b).size, nonOperatorLabels)
-      val expOperators = labels(out_batch(results.get("dense_2").toFloatMatrix, b), padd(b).size, operatorLabels)
-      val impOperators = labels(out_batch(results.get("dense_3").toFloatMatrix, b), padd(b).size, operatorLabels)
+      val nonOperators = labels(out_batch(results.get("timedistributed_1").toFloatMatrix, b), padd(b).size, nonOperatorLabels)
+      val expOperators = labels(out_batch(results.get("timedistributed_2").toFloatMatrix, b), padd(b).size, operatorLabels)
+      val impOperators = labels(out_batch(results.get("timedistributed_3").toFloatMatrix, b), padd(b).size, operatorLabels)
       val nonOperatorsSpan = spans(nonOperators)
       val expOperatorsSpan = spans(expOperators)
       val impOperatorsSpan = spans(impOperators)
