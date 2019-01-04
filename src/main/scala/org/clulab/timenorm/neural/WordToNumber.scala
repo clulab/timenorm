@@ -39,7 +39,7 @@ object WordToNumber {
     "billion" -> 1000000000L,
     "trillion" -> 1000000000000L,
     "quadrillion" -> 1000000000000000L,
-    "quintillion" -> 1000000000000000000L,
+    "quintillion" -> 1000000000000000000L
     // "sextillion" ->    1000000000000000000000L,
     // "septillion" -> 1000000000000000000000000L,
     // "octillion" -> 1000000000000000000000000000L,
