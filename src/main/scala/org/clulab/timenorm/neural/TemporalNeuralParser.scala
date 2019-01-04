@@ -8,7 +8,6 @@ import com.codecommit.antixml._
 import org.clulab.anafora.Data
 import org.clulab.timenorm.formal._
 import org.deeplearning4j.nn.graph.ComputationGraph
-import org.deeplearning4j.nn.modelimport.keras.KerasModelImport
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.factory.Nd4j
 import play.api.libs.json._
@@ -99,7 +98,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
-  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(
+  lazy val network: ComputationGraph = ModelSerializer.restoreComputationGraph(
     modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/lstm_models_2features.dl4j.zip")), false)
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/char2int.txt"))
   lazy private val unicode2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/unicate2int.txt"))
@@ -130,7 +129,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   }
 
 
-  def parse(sourceText: List[String]): List[Data] = synchronized {
+  def parse(sourceText: List[String]): List[Data] = {
     val entities = identification(sourceText)
     val links = linking(entities)
     val antixml_not_allowed = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r
@@ -160,7 +159,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   )
 
 
-  def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval)): List[List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])]] = synchronized {
+  def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval)): List[List[((Int,Int), List[(LocalDateTime, LocalDateTime, Long)])]] = {
     data_batch.map(data => {
       val reader = new AnaforaReader(dct.get)(data)
       data.topEntities.map(e => {
