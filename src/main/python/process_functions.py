@@ -43,7 +43,7 @@ def hot_vectors2class_index (labels):
         examples.append(label_index)
     return examples
 
-def found_location_with_constraint(output):
+def found_location_with_constraint(output,sent_len):
     """
     :param output: the prediction sequences
     :return: a list of sentences with the span and tag identified
@@ -53,8 +53,9 @@ def found_location_with_constraint(output):
     for instan in output:
         loc = list()
         for iter in range(len(instan)):
+            if not instan[iter] == 0 and iter <= sent_len[instan_index] and iter >= 3:  #### with instance_length set
             #if not instan[iter] ==0 and iter <= instance_length[instan_index]-1:   #### with instance_length set
-            if not instan[iter] == 0 :  #### without instance_length set
+            #if not instan[iter] == 0 :  #### without instance_length set
                 loc.append([iter,instan[iter]])
         instance.append(loc)
         instan_index +=1

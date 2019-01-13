@@ -10,27 +10,14 @@ from random import randint
 import argparse
 import configparser
 
-#############################processing time-ml file into raw data and anofora format ############################################
-# import anafora.timeml as timeml
- # timeml._timeml_dir_to_anafora_dir("data/TBAQ-cleaned/","data/Processed",schema_name="TimeML")
-#################################################################################################################################
 
-############################  read xml from file  #########################################
-# data = anafora.AnaforaData.from_file("ABC19980108.1830.0711/ABC19980108.1830.0711.TimeNorm.gold.completed.xml")
-# for annotation in data.annotations:
-#     annotation.spans
-#     annotation.type
-###########################################################################################
 
 config = configparser.ConfigParser()
 config.read('ident.conf')
 char2int_path = config['Encoding_Vocabulary']['Char2Int']
-pos2int_path = config['Encoding_Vocabulary']['Pos2Int']
-unicode2int_path = config['Encoding_Vocabulary']['Unicode2Int']
 non_operator_path = config['Label_Vocabulary']['Non_operator']
 operator_path = config['Label_Vocabulary']['Operator']
-# raw_data_path = config['Data']['raw']
-# xml_path = config['Data']['xml']
+
 
 
 
@@ -46,37 +33,6 @@ def get_train():
     train = [train_file for train_file in train_all_simple if train_file not in file_dev]
     read.savein_json("data/train_simple",train)
 
-#get_train()
-
-# def get_xml_dir(read_dirname,file_filters=[],file_format=".TimeNorm.gold.completed.xml",has_root_folder=True):
-#     '''
-#     get the directory for whole raw data and xml data, using the same root dir raw_text_dir
-#     :return:  a list of xml_data directory folder
-#     '''
-#     file_dir = list()
-#     root_folders = list()
-#     if has_root_folder ==True:
-#         roots = os.listdir(read_dirname)
-#         for root in roots:
-#             root_com =os.path.join(read_dirname,root)
-#             root_folders += [os.path.join(root_com,f) for f in os.listdir(root_com) if os.path.isdir(os.path.join(root_com, f))]
-#     else:
-#         root_folders = [os.path.join(read_dirname, f) for f in os.listdir(read_dirname)]
-#
-#     file_filters = [file_filter.split('/')[-1] for file_filter in file_filters ]
-#
-#
-#     for root_folder in root_folders:
-#         for file in os.listdir(root_folder):
-#                 if file_format in file:
-#                     file_id = file.replace(file_format,"")
-#                     if len(file_filters)>0 and file_id in file_filters:
-#                         file_dir.append(file_id)
-#                     elif len(file_filters)==0:
-#                         file_dir.append(file_id)
-#                     else:
-#                         pass
-#     return file_dir
 
 def split_by_sentence(raw_text,char_vocab):
     sent_tokenize_list = sent_tokenize(raw_text)
@@ -142,16 +98,15 @@ def get_idx_from_sent(padding_char,sent, word_idx_map, max_l,pad):
         if word in word_idx_map.keys():
             x.append(word_idx_map[word])
         else:
-            x.append(word_idx_map["unknown"])
+            x.append(0)
     for i in range(pad):
         x.append(word_idx_map[padding_char])
     while len(x) < max_l+ 2 *pad:
-        x.append(0)
+        x.append(4)
     return x
 
 def create_class_weight(n_labels, labels, mu):
     n_softmax = n_labels
-    # class_index = hot_vectors2class_index_forweights(labels)
     counts = np.zeros(n_softmax, dtype='int32')
     for softmax_index in labels:
         softmax_index = np.asarray(softmax_index)
@@ -175,7 +130,6 @@ def create_class_weight(n_labels, labels, mu):
 
 def get_sample_weights_multiclass(n_labels, labels, mu1):
     class_weight = create_class_weight(n_labels, labels, mu=mu1)
-    # class_index = np.asarray(hot_vectors2class_index_forweights(labels))
     samples_weights = list()
     for instance in labels:
         sample_weights = [class_weight[category] for category in instance]
@@ -187,10 +141,6 @@ def document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,x
 
     max_len_all=list()
 
-    char_vocab = defaultdict(float)
-    pos_vocab = defaultdict(float)
-    unicode_vocab = defaultdict(float)
-    word_vocab = defaultdict(float)
 
     for data_id in range(0, len(file_dir)):
         raw_text_path = os.path.join(raw_data_path,file_dir[data_id],file_dir[data_id])
@@ -202,26 +152,13 @@ def document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,x
         sent_span_list_file, max_len_file,char_vocab = split_by_sentence(raw_text,char_vocab)
 
         max_len_all +=max_len_file
-
-        pos_sentences, pos_vocab = process.get_pos_sentence(sent_span_list_file, pos_vocab)
-        #pos_sentences = read.readfrom_json("data/pos_sentences")#read.savein_json("data/pos_sentences",pos_sentences)
-        word_sentences, word_vocab = process.get_words(sent_span_list_file,word_vocab)
-        pos_sentences_character = process.word_pos_2_character_pos(sent_span_list_file, pos_sentences)
-        unico_sentences_characte,unicode_vocab = process.get_unicode(sent_span_list_file,unicode_vocab)
-
-
-
         read.savein_json(preprocessed_file_path+"_sent",sent_span_list_file)
-        read.savein_json(preprocessed_file_path + "_pos", pos_sentences_character)
-        read.savein_json(preprocessed_file_path + "_unicodecategory", unico_sentences_characte)
-        read.savein_json(preprocessed_file_path + "_words", word_sentences)
         if xml_path != "":
             xml_file_path = os.path.join(xml_path, file_dir[data_id], file_dir[data_id] + file_format)
             posi_info_dict = process.extract_xmltag_anafora(xml_file_path, raw_text)
             sent_tag_list_file = xml_tag_in_sentence(sent_span_list_file, posi_info_dict)
             read.savein_json(preprocessed_file_path + "_tag", sent_tag_list_file)
 
-    #read.savein_json("data/word_vocab", word_vocab)
     max_len_all.sort(reverse=True)
     max_len_file_name = "/".join(preprocessed_path.split('/')[:-1])+"/max_len_sent"
     read.savein_json(max_len_file_name, max_len_all)
@@ -230,36 +167,27 @@ def features_extraction(raw_data_dir,preprocessed_path,model_path,data_folder = 
     max_len = 350
     pad = 3
     input_char = list()
-    input_pos = list()
-    input_unic = list()
     char2int = read.readfrom_json(char2int_path)
-    pos2int = read.readfrom_json(pos2int_path)
-    unicode2int = read.readfrom_json(unicode2int_path)
+
     total = 0
     for data_id in range(0, len(raw_data_dir)):
         print(raw_data_dir[data_id])
         preprocessed_file_path = os.path.join(preprocessed_path, raw_data_dir[data_id], raw_data_dir[data_id])
         sent_span_list_file = read.readfrom_json(preprocessed_file_path+ "_sent")
         print(len(sent_span_list_file))
-        pos_sentences_character = read.readfrom_json(preprocessed_file_path + "_pos")
-        print(len(pos_sentences_character))
-        unico_sentences_characte = read.readfrom_json(preprocessed_file_path + "_unicodecategory")
-        print(len(unico_sentences_characte))
+
         n_sent = len(sent_span_list_file)
         for index in range(n_sent):
             total +=1
             input_char.append(get_idx_from_sent("\n",sent_span_list_file[index][0], char2int, max_len,pad))
-            input_pos.append(get_idx_from_sent("\n",pos_sentences_character[index], pos2int, max_len,pad))
-            input_unic.append(get_idx_from_sent("Cc",unico_sentences_characte[index], unicode2int, max_len,pad))
+
         print("Finished processing file: ",raw_data_dir[data_id] )
     print(total)
-    input_char = np.asarray(input_char, dtype="int")
-    input_pos = np.asarray(input_pos, dtype="int")
-    input_unic = np.asarray(input_unic, dtype="int")
+    input_char = np.asarray(input_char, dtype="int16")
 
     if not os.path.exists(model_path):
         os.makedirs(model_path)
-    read.save_hdf5(model_path+"/input"+data_folder, ["char","pos","unic"], [input_char,input_pos,input_unic], ['int8','int8','int8'])
+    read.save_hdf5(model_path+"/input"+data_folder, ["char"], [input_char], ['int16'])
 
 def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",activation="softmax",type="interval"):   ###type in "[interval","operator","explicit_operator","implicit_operator"]
     target_labels = defaultdict(float)
@@ -269,7 +197,7 @@ def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",act
     operator = read.textfile2list(operator_path)
     max_len = 350
     n_marks = 3
-    max_len_text = 350+2*3
+    max_len_text = max_len+2*n_marks
     n_output = 0
     final_labels = 0
 
@@ -294,8 +222,6 @@ def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",act
         preprocessed_file_path = os.path.join(preprocessed_path, raw_data_dir[data_id], raw_data_dir[data_id])
         sent_span_list_file = read.readfrom_json(preprocessed_file_path+ "_sent")
         tag_span_list_file = read.readfrom_json(preprocessed_file_path + "_tag")
-        # if len(sent_span_list_file) != len(tag_span_list_file):
-        #     print preprocessed_file_path
         n_sent = len(tag_span_list_file)
         n_sent_total +=n_sent
         for index in range(n_sent):
@@ -307,7 +233,7 @@ def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",act
             if activation == "softmax":
                 label_encoding_sent[:, 0] = 1
             sample_weights_sent = np.zeros(max_len_text)
-            #print tag_info
+
             for label in tag_info:
                 posi, info = label
                 position = int(posi) - sentence_start
@@ -329,8 +255,6 @@ def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",act
                         target_label = process.get_implict_label(info_new, interval, operator)
                     for token_tag in target_label:
                         if token_tag in final_labels:
-                            #print sent_info
-                            #print label
                             target_labels[token_tag]+=1.0
 
                     label_indices = [output_one_hot[token_tag] for token_tag in target_label if token_tag in final_labels]

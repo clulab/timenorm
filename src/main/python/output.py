@@ -25,7 +25,16 @@ def span2xmlfiles(data_spans,file_name_simple):
     data.indent()
     return data
 
-def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,output_pred_path,pred =True,data_folder = "",format_abbre = ".TimeNorm.system.completed.xml"):
+def sentence_length(texts):
+   sent_len = []
+   for text in texts:
+      for i in range(1,356):
+        if text[-i] !=4:
+           sent_len.append(357-i)
+           break
+   return sent_len
+
+def generate_output_multiclass(sent_len,model,input,doc_list_sub, processed_path,output_pred_path,pred =True,data_folder = "",format_abbre = ".TimeNorm.system.completed.xml"):
     non_operator = read.textfile2list(non_operator_path)
     operator = read.textfile2list(operator_path)
     labels_index = [non_operator,operator,operator]
@@ -37,8 +46,7 @@ def generate_output_multiclass(model,input,gold,doc_list_sub, processed_path,out
     spans = list()
     int2labels = list()
     for index in range(len(classes)):
-
-        class_loc = output.found_location_with_constraint(classes[index])
+        class_loc = output.found_location_with_constraint(classes[index], sent_len)
         span = output.loc2span(class_loc, probs[index],post_process = False)
         spans.append(span)
 
@@ -85,19 +93,16 @@ def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_p
             start = folder[version]
             end = folder[version + 1]
             doc_list_sub = doc_list[start:end]
-            #input = read.load_hdf5(input_path+"/test_split_input"+str(version),["char","pos","unic"])
-            #input = read.load_hdf5(input_path + "/split_input" + str(version), ["char", "pos", "unic"])
-            input = read.load_hdf5(input_path + "/input" + str(version), ["char", "pos", "unic"])
-            #input = read.load_hdf5(input_path + "/train_input" + str(version), ["char",  "unic"])
-            gold = None
-            generate_output_multiclass(model, input,gold, doc_list_sub, preocessed_path,output_pred_path,pred=pred,data_folder = str(version),format_abbre =output_format)
+            input = read.load_hdf5(input_path + "/input" + str(version), ["char"])[0]
+            sent_len = sentence_length(input)
+            generate_output_multiclass(sent_len, model, input, doc_list_sub, preocessed_path,output_pred_path,pred=pred,data_folder = str(version),format_abbre =output_format)
     else:
         start = 0
         end = file_n
         doc_list_sub = doc_list[start:end]
-        input = read.load_hdf5(input_path+"/input", ["char", "pos", "unic"])
-        gold = None
-        generate_output_multiclass(model, input,gold,doc_list_sub,preocessed_path, output_pred_path,pred=pred,data_folder = "",format_abbre =output_format)
+        input = read.load_hdf5(input_path+"/input", ["char"])[0]
+        sent_len = sentence_length(input)
+        generate_output_multiclass(sent_len, model, input,doc_list_sub,preocessed_path, output_pred_path,pred=pred,data_folder = "",format_abbre =output_format)
 
     # if evaluate=="true":
     #     output.evaluate(preocessed_path,output_pred_path,raw_data_path,doc_list,output_format)
@@ -123,7 +128,7 @@ if __name__ == "__main__":
                         help='output path for all preprocessed files',default=".TimeNorm.gold.completed.xml")
 
     parser.add_argument('-mode',
-                        help='Whether requried to save the output probability',default="no")
+                        help='Whether requried to save the output probability',default="false")
 
     parser.add_argument('-portion',
                         help='using portion of the data',default=0)
