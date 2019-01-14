@@ -140,7 +140,7 @@ def get_sample_weights_multiclass(n_labels, labels, mu1):
 def document_level_2_sentence_level(file_dir, raw_data_path, preprocessed_path,xml_path,file_format):
 
     max_len_all=list()
-
+    char_vocab = defaultdict(float)
 
     for data_id in range(0, len(file_dir)):
         raw_text_path = os.path.join(raw_data_path,file_dir[data_id],file_dir[data_id])
