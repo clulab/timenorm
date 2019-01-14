@@ -108,10 +108,15 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     csv_logger = CSVLogger(storage+ '/training_log.csv')
     callbacks_list = [checkpoint,csv_logger]
 
-    hist = model.fit(x ={'character': char_x},
-                     y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
-                     batch_size=batchsize, callbacks=callbacks_list, validation_data =({'character': char_x_cv},{'dense_1': cv_y_interval,
-                    'dense_2': cv_y_operator_ex, 'dense_3': cv_y_operator_im}),sample_weight=sampleweights)
+    if char_x_cv != None:
+        hist = model.fit(x ={'character': char_x},
+                         y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
+                         batch_size=batchsize, callbacks=callbacks_list, validation_data =({'character': char_x_cv},{'dense_1': cv_y_interval,
+                        'dense_2': cv_y_operator_ex, 'dense_3': cv_y_operator_im}),sample_weight=sampleweights)
+    else:
+        hist = model.fit(x ={'character': char_x},
+                         y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
+                         batch_size=batchsize, callbacks=callbacks_list,sample_weight=sampleweights)
     model.save(storage + '/model/model_result.hdf5')
     np.save(storage + '/model/epoch_history.npy', hist.history)
 
@@ -128,23 +133,32 @@ if __name__ == "__main__":
     parser.add_argument('-input',
                         help='the direcotory of inputs', default="")
 
+    parser.add_argument('-dev_input',
+                        help='the direcotory of the development inputs', default="")
+
     parser.add_argument('-output',
                         help='the direcotory of outputs', default="")
 
     args = parser.parse_args()
     input_path = args.input
+    dev_input_path = args.dev_input
     output_path = args.output
 
     char_x = load_hdf5(input_path + "/input", ["char"])[0]
-    char_x_cv = load_hdf5(input_path + "/cvinput", ["char"])[0]
+    trainy_interval = load_hdf5(input_path + "/output_interval_softmax", ["interval_softmax"])[0]
+    trainy_operator_ex = load_hdf5(input_path + "/output_explicit_operator_softmax", ["explicit_operator"])[0]
+    trainy_operator_im = load_hdf5(input_path + "/output_implicit_operator_softmax", ["implicit_operator"])[0]
 
-    trainy_interval = load_hdf5(input_path + "/cvoutput_interval_softmax", ["interval_softmax"])[0]
-    trainy_operator_ex = load_hdf5(input_path + "/cvoutput_explicit_operator_softmax", ["explicit_operator"])[0]
-    trainy_operator_im = load_hdf5(input_path + "/cvoutput_implicit_operator_softmax", ["implicit_operator"])[0]
-
-    cv_y_interval = load_hdf5(input_path + "/cvoutput_interval_softmax", ["interval_softmax"])[0]
-    cv_y_operator_ex = load_hdf5(input_path + "/cvoutput_explicit_operator_softmax", ["explicit_operator"])[0]
-    cv_y_operator_im = load_hdf5(input_path + "/cvoutput_implicit_operator_softmax", ["implicit_operator"])[0]
+    if dev_input_path !="":
+        char_x_cv = load_hdf5(dev_input_path + "/input", ["char"])[0]
+        cv_y_interval = load_hdf5(dev_input_path + "/output_interval_softmax", ["interval_softmax"])[0]
+        cv_y_operator_ex = load_hdf5(dev_input_path + "/output_explicit_operator_softmax", ["explicit_operator"])[0]
+        cv_y_operator_im = load_hdf5(dev_input_path + "/output_implicit_operator_softmax", ["implicit_operator"])[0]
+    else:
+        char_x_cv = None
+        cv_y_interval = None
+        cv_y_operator_ex = None
+        cv_y_operator_im = None
 
     sampleweights_interval = np.load(input_path+"/sample_weights_interval_softmax.npy")
     sampleweights_explicit_operator = np.load(input_path + "/sample_weights_explicit_operator_softmax.npy")
