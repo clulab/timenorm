@@ -146,14 +146,14 @@ if __name__ == "__main__":
 
     char_x = load_hdf5(input_path + "/input", ["char"])[0]
     trainy_interval = load_hdf5(input_path + "/output_interval_softmax", ["interval_softmax"])[0]
-    trainy_operator_ex = load_hdf5(input_path + "/output_explicit_operator_softmax", ["explicit_operator"])[0]
-    trainy_operator_im = load_hdf5(input_path + "/output_implicit_operator_softmax", ["implicit_operator"])[0]
+    trainy_operator_ex = load_hdf5(input_path + "/output_explicit_operator_softmax", ["explicit_operator_softmax"])[0]
+    trainy_operator_im = load_hdf5(input_path + "/output_implicit_operator_softmax", ["implicit_operator_softmax"])[0]
 
     if dev_input_path !="":
         char_x_cv = load_hdf5(dev_input_path + "/input", ["char"])[0]
         cv_y_interval = load_hdf5(dev_input_path + "/output_interval_softmax", ["interval_softmax"])[0]
-        cv_y_operator_ex = load_hdf5(dev_input_path + "/output_explicit_operator_softmax", ["explicit_operator"])[0]
-        cv_y_operator_im = load_hdf5(dev_input_path + "/output_implicit_operator_softmax", ["implicit_operator"])[0]
+        cv_y_operator_ex = load_hdf5(dev_input_path + "/output_explicit_operator_softmax", ["explicit_operator_softmax"])[0]
+        cv_y_operator_im = load_hdf5(dev_input_path + "/output_implicit_operator_softmax", ["implicit_operator_softmax"])[0]
     else:
         char_x_cv = None
         cv_y_interval = None
