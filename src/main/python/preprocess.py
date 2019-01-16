@@ -9,7 +9,7 @@ from collections import defaultdict
 from random import randint
 import argparse
 import configparser
-
+import warnings
 
 
 config = configparser.ConfigParser()
@@ -82,6 +82,8 @@ def xml_tag_in_sentence(sentences,posi_info_dict):
                     else:
                         tag_list.append(tag)
                         break
+            elif sent[2] == int(tag_span[i]):
+                None
         else:
             tag_list.append(tag)
         #print tag_list
@@ -223,6 +225,8 @@ def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",act
         sent_span_list_file = read.readfrom_json(preprocessed_file_path+ "_sent")
         tag_span_list_file = read.readfrom_json(preprocessed_file_path + "_tag")
         n_sent = len(tag_span_list_file)
+        if n_sent != len(sent_span_list_file) :
+            raise Exception('The number of the sentences should match in sent_span_list_file and tag_span_list_file')
         n_sent_total +=n_sent
         for index in range(n_sent):
             sent_info = sent_span_list_file[index]
