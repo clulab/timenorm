@@ -108,7 +108,7 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     csv_logger = CSVLogger(storage+ '/training_log.csv')
     callbacks_list = [checkpoint,csv_logger]
 
-    if char_x_cv != None:
+    if char_x_cv is not None:
         hist = model.fit(x ={'character': char_x},
                          y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
                          batch_size=batchsize, callbacks=callbacks_list, validation_data =({'character': char_x_cv},{'dense_1': cv_y_interval,
