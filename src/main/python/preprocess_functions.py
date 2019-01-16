@@ -172,32 +172,32 @@ def split_sentence_based_on_rules(sent):
         sentences = re.split(r' \.+ ', sent)
     elif re.search(r'@ ---- @', sent):
         sentences = re.split(r'@ ---- @', sent)
-    elif re.search(r'\.\w+\:', sent):
-        sent = re.sub(r'\.(\w+)\:', r'. \1:', sent)
-        sentences = sent_tokenize(sent)
-    elif re.search(r'\, as well as', sent):
-        sent = sent.replace(', as well as', '. As well as')
-        sentences = sent_tokenize(sent)
-    elif re.search(r'[a-z\.]+[A-Z][a-z]+:', sent):
-        k = re.findall(r' [a-z\.]+([A-Z][a-z]+:)', sent)
-        p = chr(ord(max(sent)) + 1)
-        sentences = sent.replace(k[0], p + k[0]).split(p)
+    # elif re.search(r'\.\w+\:', sent):
+    #     sent = re.sub(r'\.(\w+)\:', r'. \1:', sent)
+    #     sentences = sent_tokenize(sent)
+    # elif re.search(r'\, as well as', sent):
+    #     sent = sent.replace(', as well as', '. As well as')
+    #     sentences = sent_tokenize(sent)
+    # elif re.search(r'[a-z\.]+[A-Z][a-z]+:', sent):
+    #     k = re.findall(r' [a-z\.]+([A-Z][a-z]+:)', sent)
+    #     p = chr(ord(max(sent)) + 1)
+    #     sentences = sent.replace(k[0], p + k[0]).split(p)
     elif re.search(r'\; ', sent):
-        sent = re.sub(r'\; ', r'. ', sent)
-        sentences = sent_tokenize(sent)
-    elif re.search(r', and, ', sent):
-        sent = sent.replace(', and, ', '. And, ')
-        sentences = sent_tokenize(sent)
-    elif re.search(r'president\: Wechsler', sent):
-        sent = sent.replace(': ', '. ')
-        sentences = sent_tokenize(sent)
+        #sent = re.sub(r'\; ', r'. ', sent)
+        sentences = re.split(r'\; ', sent)
+    # elif re.search(r', and, ', sent):
+    #     sent = sent.replace(', and, ', '. And, ')
+    #     sentences = sent_tokenize(sent)
+    # elif re.search(r'president\: Wechsler', sent):
+    #     sent = sent.replace(': ', '. ')
+    #     sentences = sent_tokenize(sent)
     elif re.search(r'\, ', sent):
         sentences = re.split(r'\, ', sent)
     else:
         sentences = [sent[:349],sent[350:]]
         print("Using greedy sentence tokenization")
 
-    text_len = [len(sentence) for sentence in sentences]
+    #text_len = [len(sentence) for sentence in sentences]
     return sentences
 
 

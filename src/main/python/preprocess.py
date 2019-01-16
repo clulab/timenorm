@@ -87,6 +87,8 @@ def xml_tag_in_sentence(sentences,posi_info_dict):
         else:
             tag_list.append(tag)
         #print tag_list
+    if len(sentences) != len(tag_list):
+        raise Exception('The number of the sentences for tag_list and sentence_list should match.')
     return tag_list
 
 def get_idx_from_sent(padding_char,sent, word_idx_map, max_l,pad):
@@ -225,8 +227,6 @@ def output_encoding(raw_data_dir,preprocessed_path,model_path,data_folder="",act
         sent_span_list_file = read.readfrom_json(preprocessed_file_path+ "_sent")
         tag_span_list_file = read.readfrom_json(preprocessed_file_path + "_tag")
         n_sent = len(tag_span_list_file)
-        if n_sent != len(sent_span_list_file) :
-            raise Exception('The number of the sentences should match in sent_span_list_file and tag_span_list_file')
         n_sent_total +=n_sent
         for index in range(n_sent):
             sent_info = sent_span_list_file[index]
