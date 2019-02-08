@@ -1,6 +1,8 @@
-import numpy as np
 import h5py
+import numpy as np
 np.random.seed(20181117)
+from tensorflow import set_random_seed
+set_random_seed(20181117)
 from keras.layers.wrappers import Bidirectional
 from keras.layers import Dense
 import argparse
@@ -74,10 +76,14 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     gru_out3 = Gru_out_3(merged_lstm_layers)
     gru_out4 = Gru_out_4(gru_out3)
     explicit_operator = Explicit_operator(gru_out4)
+    # gru_out4 = Gru_out_4(gru_out1)
+    # explicit_operator = Explicit_operator(gru_out4)
 
     gru_out5 = Gru_out_5(merged_lstm_layers)
     gru_out6 = Gru_out_6(gru_out5)
     implicit_operator = Implicit_operator(gru_out6)
+    # gru_out6 = Gru_out_6(gru_out1)
+    # implicit_operator = Implicit_operator(gru_out2)
 
     model = Model(inputs=char_input,
                   outputs=[interval_output, explicit_operator, implicit_operator])
@@ -108,7 +114,7 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     csv_logger = CSVLogger(storage+ '/training_log.csv')
     callbacks_list = [checkpoint,csv_logger]
 
-    if char_x_cv != None:
+    if char_x_cv is not None:
         hist = model.fit(x ={'character': char_x},
                          y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
                          batch_size=batchsize, callbacks=callbacks_list, validation_data =({'character': char_x_cv},{'dense_1': cv_y_interval,
