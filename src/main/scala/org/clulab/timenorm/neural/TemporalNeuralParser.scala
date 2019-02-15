@@ -7,15 +7,19 @@ import java.time.{LocalDateTime, ZoneOffset}
 import com.codecommit.antixml._
 import org.clulab.anafora.Data
 import org.clulab.timenorm.formal._
-import org.deeplearning4j.nn.graph.ComputationGraph
-import org.deeplearning4j.util.ModelSerializer
-import org.nd4j.linalg.factory.Nd4j
+import org.tensorflow.Graph
+import org.tensorflow.Session
+import org.tensorflow.Tensor
+import org.tensorflow.TensorFlow
+import org.apache.commons.io.FileUtils
+import org.tensorflow.SavedModelBundle
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import scala.language.postfixOps
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 object TemporalNeuralParser {
   val usage =
@@ -98,8 +102,14 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
-  lazy private val network: ComputationGraph = ModelSerializer.restoreComputationGraph(
-    modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.dl4j.zip")), false)
+//  lazy private val network: SavedModelBundle = SavedModelBundle.load(
+//    Paths.get(this.getClass.getResource("/org/clulab/timenorm/model/weights-improvement-22/").toURI).toAbsolutePath.toString)
+
+  lazy val graph = new Graph()
+  graph.importGraphDef(FileUtils.readFileToByteArray(
+    new File("C:/Users/born_/Home/Tools/time/timenorm/target/classes/org/clulab/timenorm/model/weights-improvement-22/weights-improvement-22.pb")))
+  lazy val network = new Session(graph)
+
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
@@ -117,13 +127,13 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   )).flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
 
 
-  def printModel(){
-    println(this.network.summary())
-  }
+//  def printModel(){
+//    println(this.network.summary())
+//  }
 
 
-  private def readDict(dictFile: InputStream): Map[String, Double] = {
-    try {  Json.parse(dictFile).as[Map[String, Double]] } finally { dictFile.close() }
+  private def readDict(dictFile: InputStream): Map[String, Float] = {
+    try {  Json.parse(dictFile).as[Map[String, Float]] } finally { dictFile.close() }
   }
 
 
@@ -187,15 +197,14 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private def identification(sourceText: List[String]): Entities = {
     val formatText = sourceText.map(s => "\n\n\n" + s + "\n\n\n")
     val max_seq = formatText.map(_.length).max
-    val padd =   formatText.map(s => Vector.fill(max_seq - s.length)(4.0))
-    // Convert the sentences into character code Nd4j matrix.
-    val input = Nd4j.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
+    val padd =   formatText.map(s => Vector.fill(max_seq - s.length)(4.0.toFloat))
+    // Convert the sentences into character code TF Tensor.
+    val input = Tensor.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
 
-    this.network.setInput(0, input)
-    val results = this.network.feedForward()
-
-    // Gets the matrix from the output layer for batch = b (the batch outputs are inter)
-    val out_batch = (m: Array[Array[Float]], b: Int) => m.indices.by(formatText.size).map(_ + b) collect m toArray
+    val results = this.network.runner()
+      .feed("character",input)
+      .fetch("dense_1/truediv").fetch("dense_2/truediv").fetch("dense_3/truediv")
+      .run()
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
     val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => x.slice(3, max_seq - (p + 3)).map(r => r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
@@ -213,9 +222,9 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
     ))
 
     formatText.indices.map(b => {
-      val nonOperators = labels(out_batch(results.get("dense_1").toFloatMatrix, b), padd(b).size, nonOperatorLabels)
-      val expOperators = labels(out_batch(results.get("dense_2").toFloatMatrix, b), padd(b).size, operatorLabels)
-      val impOperators = labels(out_batch(results.get("dense_3").toFloatMatrix, b), padd(b).size, operatorLabels)
+      val nonOperators = labels(results.get(0).copyTo(Array.ofDim[Float](results.get(0).shape()(0).toInt, results.get(0).shape()(1).toInt, results.get(0).shape()(2).toInt))(b), padd(b).size, nonOperatorLabels)
+      val expOperators = labels(results.get(1).copyTo(Array.ofDim[Float](results.get(1).shape()(0).toInt, results.get(1).shape()(1).toInt, results.get(1).shape()(2).toInt))(b), padd(b).size, operatorLabels)
+      val impOperators = labels(results.get(2).copyTo(Array.ofDim[Float](results.get(2).shape()(0).toInt, results.get(2).shape()(1).toInt, results.get(2).shape()(2).toInt))(b), padd(b).size, operatorLabels)
       val nonOperatorsSpan = spans(nonOperators)
       val expOperatorsSpan = spans(expOperators)
       val impOperatorsSpan = spans(impOperators)
