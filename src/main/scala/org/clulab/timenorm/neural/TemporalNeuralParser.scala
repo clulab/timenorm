@@ -102,12 +102,11 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
-//  lazy private val network: SavedModelBundle = SavedModelBundle.load(
-//    Paths.get(this.getClass.getResource("/org/clulab/timenorm/model/weights-improvement-22/").toURI).toAbsolutePath.toString)
+ val filepath = Paths.get(this.getClass.getResource("/org/clulab/timenorm/model/weights-improvement-22.pb").toURI).toAbsolutePath.toString
 
   lazy val graph = new Graph()
   graph.importGraphDef(FileUtils.readFileToByteArray(
-    new File("C:/Users/born_/Home/Tools/time/timenorm/target/classes/org/clulab/timenorm/model/weights-improvement-22/weights-improvement-22.pb")))
+    new File(filepath)))
   lazy val network = new Session(graph)
 
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
