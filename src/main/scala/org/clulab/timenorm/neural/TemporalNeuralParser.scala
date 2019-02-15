@@ -104,10 +104,10 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
 
  val filepath = Paths.get(this.getClass.getResource("/org/clulab/timenorm/model/weights-improvement-22.pb").toURI).toAbsolutePath.toString
 
-  lazy val graph = new Graph()
+  val graph = new Graph()
   graph.importGraphDef(FileUtils.readFileToByteArray(
     new File(filepath)))
-  lazy val network = new Session(graph)
+  val network = new Session(graph)
 
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
@@ -200,10 +200,12 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
     // Convert the sentences into character code TF Tensor.
     val input = Tensor.create(formatText.zipWithIndex.map(s => s._1.map(c => this.char2int.getOrElse(c.toString, this.char2int("<unk>"))).toArray ++ padd(s._2)).toArray)
 
+    val t3 = System.nanoTime
     val results = this.network.runner()
       .feed("character",input)
       .fetch("dense_1/truediv").fetch("dense_2/truediv").fetch("dense_3/truediv")
       .run()
+    println("Run duration: " + ((System.nanoTime - t3) / 1e9d))
 
     // Take the slice of output removing the \n characters and the padding. For each position take the index of the max output. Get the label of that index.
     val labels = (x: Array[Array[Float]], p: Int, l: List[String]) => x.slice(3, max_seq - (p + 3)).map(r => r.indexWhere(i => i == r.max)).toList.map(o => Try(l(o-1)).getOrElse("O"))
@@ -219,7 +221,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
       s._2 + Try(spaces(b).map(_ - s._2).filter(_ >= 0).min).getOrElse(0),
       s._3
     ))
-
+    
     formatText.indices.map(b => {
       val nonOperators = labels(results.get(0).copyTo(Array.ofDim[Float](results.get(0).shape()(0).toInt, results.get(0).shape()(1).toInt, results.get(0).shape()(2).toInt))(b), padd(b).size, nonOperatorLabels)
       val expOperators = labels(results.get(1).copyTo(Array.ofDim[Float](results.get(1).shape()(0).toInt, results.get(1).shape()(1).toInt, results.get(1).shape()(2).toInt))(b), padd(b).size, operatorLabels)
@@ -227,7 +229,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
       val nonOperatorsSpan = spans(nonOperators)
       val expOperatorsSpan = spans(expOperators)
       val impOperatorsSpan = spans(impOperators)
-
+      
       (fullSpans(nonOperatorsSpan, b) ::: fullSpans(expOperatorsSpan, b) ::: fullSpans(impOperatorsSpan, b)).sorted
     }).toList
   }
