@@ -12,6 +12,7 @@ from keras.models import Model,load_model
 import keras.backend as K
 from keras.callbacks import ModelCheckpoint
 import os
+from validation import Validation
 
 
 
@@ -87,6 +88,7 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     model.layers[4].trainable = False
     model.layers[3].trainable = False
 
+
     model.compile(optimizer='rmsprop',
                   loss={'dense_1': 'categorical_crossentropy',
                         'dense_2': 'categorical_crossentropy',
@@ -102,17 +104,16 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     model.layers[3].set_weights(model_flair.layers[3].get_weights())
 
     print(model.summary())
-    filepath = storage + "model/weights-improvement-{epoch:02d}.hdf5"
-    checkpoint = ModelCheckpoint(filepath, verbose=0, save_best_only=False)
-
-    csv_logger = CSVLogger(storage+ '/training_log.csv')
-    callbacks_list = [checkpoint,csv_logger]
+    y_labels = [cv_y_interval, cv_y_operator_ex, cv_y_operator_im]
+    filepath = storage + "model/best-model.hdf5"
+    csv_logger = storage + '/training_log.csv'
+    validation = Validation(char_x_cv, y_labels, filepath, csv_logger)
+    callbacks_list = [validation]
 
     if char_x_cv is not None:
         hist = model.fit(x ={'character': char_x},
                          y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
-                         batch_size=batchsize, callbacks=callbacks_list, validation_data =({'character': char_x_cv},{'dense_1': cv_y_interval,
-                        'dense_2': cv_y_operator_ex, 'dense_3': cv_y_operator_im}),sample_weight=sampleweights)
+                         batch_size=batchsize, callbacks=callbacks_list,sample_weight=sampleweights)
     else:
         hist = model.fit(x ={'character': char_x},
                          y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
