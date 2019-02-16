@@ -13,6 +13,7 @@ from keras.regularizers import l2
 from keras.models import Model,load_model
 import keras.backend as K
 from keras.callbacks import ModelCheckpoint
+from keras.optimizers import RMSprop
 import os
 
 
@@ -31,7 +32,7 @@ def load_hdf5(filename,labels):
 
 
 def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_operator_ex,trainy_operator_im,
-            char_x_cv, cv_y_interval, cv_y_operator_ex, cv_y_operator_im,batchsize,epoch_size,
+            char_x_cv, cv_y_interval, cv_y_operator_ex, cv_y_operator_im, batchsize, learning_rate, epoch_size,
               gru_size1 =256,gru_size2 = 150):
 
     seq_length = char_x.shape[1]
@@ -93,7 +94,8 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     model.layers[4].trainable = False
     model.layers[3].trainable = False
 
-    model.compile(optimizer='rmsprop',
+    rmsprop = RMSprop(lr=learning_rate, rho=0.9, epsilon=None, decay=0.0)
+    model.compile(optimizer=rmsprop,
                   loss={'dense_1': 'categorical_crossentropy',
                         'dense_2': 'categorical_crossentropy',
                         'dense_3': 'categorical_crossentropy'},
@@ -145,10 +147,19 @@ if __name__ == "__main__":
     parser.add_argument('-output',
                         help='the direcotory of outputs', default="")
 
+    parser.add_argument('-lr', type=float, 
+                        help='learning rate', default=0.001)
+
+    parser.add_argument('-bs', type=int, 
+                        help='batch size', default=128)
+ 
     args = parser.parse_args()
     input_path = args.input
     dev_input_path = args.dev_input
     output_path = args.output
+    batchsize = args.bs
+    learning_rate = args.lr
+
 
     char_x = load_hdf5(input_path + "/input", ["char"])[0]
     trainy_interval = load_hdf5(input_path + "/output_interval_softmax", ["interval_softmax"])[0]
@@ -173,10 +184,7 @@ if __name__ == "__main__":
 
 
     epoch_size = 400
-    batchsize = 128
-
-
-
+ 
     trainging(output_path,flair_path,sampleweights,char_x,trainy_interval,trainy_operator_ex,trainy_operator_im,
-              char_x_cv, cv_y_interval, cv_y_operator_ex, cv_y_operator_im,batchsize,epoch_size,
-              gru_size1 =256,gru_size2 = 150)
+              char_x_cv, cv_y_interval, cv_y_operator_ex, cv_y_operator_im, batchsize, learning_rate, epoch_size,
+              gru_size1 =256, gru_size2 = 150)
