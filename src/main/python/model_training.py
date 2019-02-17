@@ -78,14 +78,10 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     gru_out3 = Gru_out_3(merged_lstm_layers)
     gru_out4 = Gru_out_4(gru_out3)
     explicit_operator = Explicit_operator(gru_out4)
-    # gru_out4 = Gru_out_4(gru_out1)
-    # explicit_operator = Explicit_operator(gru_out4)
 
     gru_out5 = Gru_out_5(merged_lstm_layers)
     gru_out6 = Gru_out_6(gru_out5)
     implicit_operator = Implicit_operator(gru_out6)
-    # gru_out6 = Gru_out_6(gru_out1)
-    # implicit_operator = Implicit_operator(gru_out2)
 
     model = Model(inputs=char_input,
                   outputs=[interval_output, explicit_operator, implicit_operator])
