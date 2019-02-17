@@ -112,9 +112,9 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
 
     print(model.summary())
     y_labels = [cv_y_interval, cv_y_operator_ex, cv_y_operator_im]
-    filepath = storage + "model/best-model.hdf5"
-    csv_logger = storage + '/training_log.csv'
-    validation = Validation(char_x_cv, y_labels, filepath, csv_logger)
+    filepath = storage + "/model/best-model.hdf5"
+    tsv_logger = storage + '/training_log.tsv'
+    validation = Validation(char_x_cv, y_labels, filepath, tsv_logger)
     callbacks_list = [validation]
 
     if char_x_cv is not None:
@@ -125,7 +125,6 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
         hist = model.fit(x ={'character': char_x},
                          y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
                          batch_size=batchsize, callbacks=callbacks_list,sample_weight=sampleweights)
-    model.save(storage + '/model/model_result.hdf5')
     np.save(storage + '/model/epoch_history.npy', hist.history)
 
 if __name__ == "__main__":

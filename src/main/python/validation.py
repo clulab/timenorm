@@ -1,9 +1,10 @@
+import performance
 from keras.callbacks import Callback
 import numpy as np
-import performance
+from os import fsync
 
 class Validation(Callback):
-    def __init__(self, x, labels, filepath, csv_logger):
+    def __init__(self, x, labels, filepath, tsv_logger):
         super().__init__()
         self.x = x
         self.gold_locs = list()
@@ -11,7 +12,7 @@ class Validation(Callback):
             gold = performance.hot_vectors2class_index(labels[index])
             gold_loc = performance.found_location_with_constraint(gold)
             self.gold_locs.append(gold_loc)
-        self.csv_log = open(csv_logger, 'w')
+        self.tsv_log = open(tsv_logger, 'w')
         self.best_model = filepath
         self.best_f1 = -1.0
 
@@ -36,7 +37,9 @@ class Validation(Callback):
             golds.append(n_gold)
         precision_overall, recall_overall, f1_overall = performance.socres(sum(matches), sum(tagged), sum(golds))
 
-        self.csv_log.write("Epoch: %s\tP: %s\tR: %s\tF1: %s\n" % (epoch, precision_overall, recall_overall, f1_overall))
+        self.tsv_log.write("Epoch: %s\tref: %s\tpred: %s\corr: %s\tP: %s\tR: %s\tF1: %s\n" % (epoch, sum(golds), sum(tagged), sum(matches), precision_overall, recall_overall, f1_overall))
+        self.tsv_log.flush()
+        fsync(self.tsv_log.fileno())
 
         if f1_overall > self.best_f1:
             self.best_f1 = f1_overall
@@ -44,4 +47,4 @@ class Validation(Callback):
 
 
     def on_train_end(self, logs=None):
-        self.csv_log.close()
+        self.tsv_log.close()
