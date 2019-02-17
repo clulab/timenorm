@@ -37,7 +37,7 @@ class Validation(Callback):
             golds.append(n_gold)
         precision_overall, recall_overall, f1_overall = performance.socres(sum(matches), sum(tagged), sum(golds))
 
-        self.tsv_log.write("Epoch: %s\tref: %s\tpred: %s\corr: %s\tP: %s\tR: %s\tF1: %s\n" % (epoch, sum(golds), sum(tagged), sum(matches), precision_overall, recall_overall, f1_overall))
+        self.tsv_log.write("Epoch: %s\tref: %s\tpred: %s\tcorr: %s\tP: %s\tR: %s\tF1: %s\n" % (epoch, sum(golds), sum(tagged), sum(matches), precision_overall, recall_overall, f1_overall))
         self.tsv_log.flush()
         fsync(self.tsv_log.fileno())
 
