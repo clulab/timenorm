@@ -107,20 +107,21 @@ def trainging(storage, flair_path, sampleweights,char_x,trainy_interval,trainy_o
     model.layers[3].set_weights(model_flair.layers[3].get_weights())
 
     print(model.summary())
-    y_labels = [cv_y_interval, cv_y_operator_ex, cv_y_operator_im]
-    filepath = storage + "/model/best-model.hdf5"
     tsv_logger = storage + '/training_log.tsv'
-    validation = Validation(char_x_cv, y_labels, filepath, tsv_logger)
+    y_labels = None
+    validate = False
+    if char_x_cv is not None:
+        y_labels = [cv_y_interval, cv_y_operator_ex, cv_y_operator_im]
+        filepath = storage + "/model/best-model.hdf5"
+        validate = True
+    else:
+        filepath = storage + "/model/last-model.hdf5"
+    validation = Validation(char_x_cv, y_labels, filepath, tsv_logger, validate)
     callbacks_list = [validation]
 
-    if char_x_cv is not None:
-        hist = model.fit(x ={'character': char_x},
-                         y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
-                         batch_size=batchsize, callbacks=callbacks_list,sample_weight=sampleweights)
-    else:
-        hist = model.fit(x ={'character': char_x},
-                         y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
-                         batch_size=batchsize, callbacks=callbacks_list,sample_weight=sampleweights)
+    hist = model.fit(x ={'character': char_x},
+                     y={'dense_1': trainy_interval, 'dense_2': trainy_operator_ex,'dense_3': trainy_operator_im}, epochs=epoch_size,
+                     batch_size=batchsize, callbacks=callbacks_list,sample_weight=sampleweights)
     np.save(storage + '/model/epoch_history.npy', hist.history)
 
 if __name__ == "__main__":
@@ -141,6 +142,9 @@ if __name__ == "__main__":
 
     parser.add_argument('-output',
                         help='the direcotory of outputs', default="")
+    
+    parser.add_argument('-epochs', type=int,
+                        help='number of epochs', default=400)
 
     parser.add_argument('-lr', type=float, 
                         help='learning rate', default=0.001)
@@ -152,6 +156,7 @@ if __name__ == "__main__":
     input_path = args.input
     dev_input_path = args.dev_input
     output_path = args.output
+    epoch_size = args.epochs
     batchsize = args.bs
     learning_rate = args.lr
 
@@ -176,9 +181,6 @@ if __name__ == "__main__":
     sampleweights_explicit_operator = np.load(input_path + "/sample_weights_explicit_operator_softmax.npy")
     sampleweights_implicit_operator = np.load(input_path + "/sample_weights_implicit_operator_softmax.npy")
     sampleweights = [sampleweights_interval,sampleweights_explicit_operator,sampleweights_implicit_operator]
-
-
-    epoch_size = 400
  
     trainging(output_path,flair_path,sampleweights,char_x,trainy_interval,trainy_operator_ex,trainy_operator_im,
               char_x_cv, cv_y_interval, cv_y_operator_ex, cv_y_operator_im, batchsize, learning_rate, epoch_size,
