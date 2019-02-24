@@ -10,16 +10,14 @@ import org.clulab.timenorm.formal._
 import org.tensorflow.Graph
 import org.tensorflow.Session
 import org.tensorflow.Tensor
-import org.tensorflow.TensorFlow
-import org.apache.commons.io.FileUtils
-import org.tensorflow.SavedModelBundle
+import org.apache.commons.io.IOUtils
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import scala.language.postfixOps
 import scala.util.Try
-import scala.collection.JavaConverters._
+
 
 object TemporalNeuralParser {
   val usage =
@@ -102,13 +100,12 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
- val filepath = Paths.get(this.getClass.getResource("/org/clulab/timenorm/model/weights-improvement-22.pb").toURI).toAbsolutePath.toString
-
-  lazy val graph = new Graph()
-  graph.importGraphDef(FileUtils.readFileToByteArray(
-    new File(filepath)))
-  lazy val network = new Session(graph)
-
+  lazy val network = {
+    val graph = new Graph()
+    graph.importGraphDef(IOUtils.toByteArray(
+      this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.pb")))
+    new Session(graph)
+  }
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
@@ -124,11 +121,6 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
       :+
       ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))
   )).flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
-
-
-//  def printModel(){
-//    println(this.network.summary())
-//  }
 
 
   private def readDict(dictFile: InputStream): Map[String, Float] = {
