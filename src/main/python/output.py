@@ -77,7 +77,7 @@ def generate_output_multiclass(sent_len,model,input,doc_list_sub, processed_path
     del classes,probs,input
 
 
-def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_pred_path,output_format,pred=True, portion = 0,split_output = False):
+def main(model_path, input_path, doc_list, raw_data_path, preocessed_path, output_pred_path, output_format, pred=True, portion=0, split_output=False):
     file_n = len(doc_list)
     #################### for the amount of documents ranges from 20-40 #########################
     folder_n = int(np.round(np.divide(float(file_n),20.00)))
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         help='output path for all preprocessed files',default=".TimeNorm.gold.completed.xml")
 
     parser.add_argument('-mode',
-                        help='Whether requried to save the output probability',default="false")
+                        help='Whether requried to save the output probability', action="store_true")
 
     parser.add_argument('-portion',
                         help='using portion of the data',default=0)
@@ -143,15 +143,11 @@ if __name__ == "__main__":
     model_path = args.model
     output_pred_path = args.out
     output_format = args.format
-    mode = args.mode
+    pred = args.mode
     portion = int(args.portion)
     split_the_output = args.split
 
-    pred = True
     split = False
-
-    if mode =="false":
-        pred = False
 
     if split_the_output =="true":
         split =True
