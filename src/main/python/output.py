@@ -133,7 +133,7 @@ if __name__ == "__main__":
                         help='output path for all preprocessed files',default=".TimeNorm.gold.completed.xml")
 
     parser.add_argument('-mode',
-                        help='Whether requried to save the output probability',default="false")
+                        help='Whether requried to save the output probability', action="store_true")
 
     parser.add_argument('-portion',
                         help='using portion of the data',default=0)
@@ -151,16 +151,12 @@ if __name__ == "__main__":
     model_path = args.model
     output_pred_path = args.out
     output_format = args.format
-    mode = args.mode
+    pred = args.mode
     portion = int(args.portion)
     split_the_output = args.split
     probability_threshold = args.prob_threshold
 
-    pred = True
     split = False
-
-    if mode =="false":
-        pred = False
 
     if split_the_output =="true":
         split =True
