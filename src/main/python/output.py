@@ -34,11 +34,13 @@ def sentence_length(texts):
            break
    return sent_len
 
-def generate_output_multiclass(sent_len,model,input,doc_list_sub, processed_path,output_pred_path,pred =True,data_folder = "",format_abbre = ".TimeNorm.system.completed.xml"):
+def generate_output_multiclass(sent_len, model, input, doc_list_sub, processed_path, output_pred_path,
+                               pred =True, data_folder = "", format_abbre = ".TimeNorm.system.completed.xml",
+                               threshold=0):
     non_operator = read.textfile2list(non_operator_path)
     operator = read.textfile2list(operator_path)
     labels_index = [non_operator,operator,operator]
-    classes, probs = output.make_prediction_function_multiclass(input, model, output_pred_path)
+    classes, probs = output.make_prediction_function_multiclass(input, model, output_pred_path, threshold)
     if pred == True:
         np.save(output_pred_path + "/y_predict_classes"+data_folder, classes)
         read.savein_pickle(output_pred_path + "/y_predict_proba"+data_folder, probs)
@@ -77,7 +79,8 @@ def generate_output_multiclass(sent_len,model,input,doc_list_sub, processed_path
     del classes,probs,input
 
 
-def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_pred_path,output_format,pred=True, portion = 0,split_output = False):
+def main(model_path, input_path, doc_list, raw_data_path, preocessed_path, output_pred_path, output_format,
+         pred=True, portion=0, split_output=False, probability_threshold=0):
     file_n = len(doc_list)
     #################### for the amount of documents ranges from 20-40 #########################
     folder_n = int(np.round(np.divide(float(file_n),20.00)))
@@ -102,7 +105,9 @@ def main(model_path,input_path,doc_list,raw_data_path, preocessed_path, output_p
         doc_list_sub = doc_list[start:end]
         input = read.load_hdf5(input_path+"/input", ["char"])[0]
         sent_len = sentence_length(input)
-        generate_output_multiclass(sent_len, model, input,doc_list_sub,preocessed_path, output_pred_path,pred=pred,data_folder = "",format_abbre =output_format)
+        generate_output_multiclass(sent_len, model, input, doc_list_sub, preocessed_path, output_pred_path,
+                                   pred=pred, data_folder="", format_abbre=output_format,
+                                   threshold=probability_threshold)
 
     # if evaluate=="true":
     #     output.evaluate(preocessed_path,output_pred_path,raw_data_path,doc_list,output_format)
@@ -136,6 +141,9 @@ if __name__ == "__main__":
     parser.add_argument('-split',
                         help='Whether to split the raw files into different fractions in order to fit the memory',default="false")
 
+    parser.add_argument('-prob_threshold', type=float,
+                        help='output annotation if predicted probability is higher than this value', default=0)
+
     args = parser.parse_args()
     raw_data_path = args.raw
     preprocessed_path = args.processed_path
@@ -146,6 +154,7 @@ if __name__ == "__main__":
     mode = args.mode
     portion = int(args.portion)
     split_the_output = args.split
+    probability_threshold = args.prob_threshold
 
     pred = True
     split = False
@@ -164,4 +173,5 @@ if __name__ == "__main__":
 
 
 
-    main(model_path, input_path, doc_list, raw_data_path, preprocessed_path, output_pred_path, output_format,split_output=split,portion=portion, pred=pred)
+    main(model_path, input_path, doc_list, raw_data_path, preprocessed_path, output_pred_path, output_format,
+         split_output=split, portion=portion, pred=pred, probability_threshold=probability_threshold)

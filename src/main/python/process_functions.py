@@ -3,14 +3,16 @@ import read_files as read
 import numpy as np
 import preprocess_functions as process
 
-def prob2classes_multiclasses( prediction):
+def prob2classes_multiclasses(prediction, threshold=0):
     if prediction.shape[-1] > 1:
-        return prediction.argmax(axis=-1)
+        prediction[prediction < threshold] = 0.
+        return prediction.argmax(axis=-1) if prediction.max(axis=-1) > threshold else 0
 
-def prob2classes_multiclasses_multioutput( prediction):
+def prob2classes_multiclasses_multioutput(prediction, threshold=0):
     output = list()
     for single_predic in prediction:
         if single_predic.shape[-1] > 1:
+            single_predic[single_predic < threshold] = 0.
             output.append(single_predic.argmax(axis=-1))
     return output
 
@@ -18,12 +20,12 @@ def pro2classes_binaryclass(prediction):
     if prediction.shape[-1] <= 1:
         return (prediction > 0.5).astype('int32')
 
-def make_prediction_function_multiclass(x_data,model,output_path):
+def make_prediction_function_multiclass(x_data,model,output_path, threshold=0):
     y_predict = model.predict(x_data,batch_size=32)
     if len(y_predict)>=2:
-        classes = prob2classes_multiclasses_multioutput(y_predict)
+        classes = prob2classes_multiclasses_multioutput(y_predict, threshold)
     else:
-        classes = prob2classes_multiclasses(y_predict)
+        classes = prob2classes_multiclasses(y_predict, threshold)
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
