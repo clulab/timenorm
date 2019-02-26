@@ -50,10 +50,7 @@ object TemporalNeuralParser {
             else
               exit(Some("Input file does not exist."))
           case "--output" | "-o" =>
-            if (Files.exists(Paths.get(s(1))))
               "output" -> s(1)
-            else
-              exit(Some("Output file does not exist."))
           case "--batch_size" | "-b" =>
             if (s(1).forall(_.isDigit))
               "batch_size" -> s(1)
@@ -100,7 +97,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[(Int, Int, String)]]
   private type Properties = List[List[(Int, String, String)]]
 
-  lazy val network = {
+  lazy private val network = {
     val graph = new Graph()
     graph.importGraphDef(IOUtils.toByteArray(
       this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.pb")))
