@@ -100,7 +100,7 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   lazy private val network = {
     val graph = new Graph()
     graph.importGraphDef(IOUtils.toByteArray(
-      this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.pb")))
+      modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.pb"))))
     new Session(graph)
   }
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
