@@ -30,45 +30,45 @@ class TemporalNeuralParserTest extends FunSuite {
 
 
   test("interval") {
-    assert(intervals.head.head._1 == (0, 10))
-    assert(intervals.head.head._2.head._1 === LocalDateTime.of(2018, 10, 10, 0, 0))
-    assert(intervals.head.head._2.head._2 === LocalDateTime.of(2018, 10, 11, 0, 0))
-    assert(intervals.head.head._2.head._3 === 86400)
+    assert(intervals.head.head.span === Span(0, 10))
+    assert(intervals.head.head.intervals.head.start === LocalDateTime.of(2018, 10, 10, 0, 0))
+    assert(intervals.head.head.intervals.head.end === LocalDateTime.of(2018, 10, 11, 0, 0))
+    assert(intervals.head.head.intervals.head.duration === 86400)
   }
 
   test("repeatingInterval") {
-    assert(intervals(1).head._1 == (0, 7))
-    assert(intervals(1).head._2.head._1 === null)
-    assert(intervals(1).head._2.head._2 === null)
-    assert(intervals(1).head._2.head._3 === 2678400)
+    assert(intervals(1).head.span === Span(0, 7))
+    assert(intervals(1).head.intervals.head.start === null)
+    assert(intervals(1).head.intervals.head.end === null)
+    assert(intervals(1).head.intervals.head.duration === 2678400)
 
   }
 
   test("last") {
-    assert(intervals(2).head._1 == (0, 11))
-    assert(intervals(2).head._2.head._1 === LocalDateTime.of(2018, 6, 29, 0, 0))
-    assert(intervals(2).head._2.head._2 === LocalDateTime.of(2018, 6, 30, 0, 0))
-    assert(intervals(2).head._2.head._3 === 86400)
+    assert(intervals(2).head.span === Span(0, 11))
+    assert(intervals(2).head.intervals.head.start === LocalDateTime.of(2018, 6, 29, 0, 0))
+    assert(intervals(2).head.intervals.head.end === LocalDateTime.of(2018, 6, 30, 0, 0))
+    assert(intervals(2).head.intervals.head.duration === 86400)
   }
 
   test("fill-incomplete-span") {
-    assert(intervals(3).head._1 == (93, 97))
-    assert(intervals(3).head._2.head._1 === LocalDateTime.of(2015, 1, 1, 0, 0))
-    assert(intervals(3).head._2.head._2 === LocalDateTime.of(2016, 1, 1, 0, 0))
-    assert(intervals(3).head._2.head._3 === 31536000)
+    assert(intervals(3).head.span === Span(93, 97))
+    assert(intervals(3).head.intervals.head.start === LocalDateTime.of(2015, 1, 1, 0, 0))
+    assert(intervals(3).head.intervals.head.end === LocalDateTime.of(2016, 1, 1, 0, 0))
+    assert(intervals(3).head.intervals.head.duration === 31536000)
   }
 
   test("since-last") {
-    assert(intervals(4).head._1 == (0, 16))
-    assert(intervals(4).head._2.head._1 === LocalDateTime.of(2018, 3, 1, 0, 0))
-    assert(intervals(4).head._2.head._2 === LocalDateTime.of(2018, 7, 7, 0, 0))
-    assert(intervals(4).head._2.head._3 === 11059200)
+    assert(intervals(4).head.span === Span(0, 16))
+    assert(intervals(4).head.intervals.head.start === LocalDateTime.of(2018, 3, 1, 0, 0))
+    assert(intervals(4).head.intervals.head.end === LocalDateTime.of(2018, 7, 7, 0, 0))
+    assert(intervals(4).head.intervals.head.duration === 11059200)
   }
 
   test("since-year") {
-    assert(intervals(5).head._1 == (37, 47))
-    assert(intervals(5).head._2.head._1 === LocalDateTime.of(2014, 1, 1, 0, 0))
-    assert(intervals(5).head._2.head._2 === LocalDateTime.of(2018, 7, 7, 0, 0))
-    assert(intervals(5).head._2.head._3 === 142387200)
+    assert(intervals(5).head.span === Span(37, 47))
+    assert(intervals(5).head.intervals.head.start === LocalDateTime.of(2014, 1, 1, 0, 0))
+    assert(intervals(5).head.intervals.head.end === LocalDateTime.of(2018, 7, 7, 0, 0))
+    assert(intervals(5).head.intervals.head.duration === 142387200)
   }
 }
