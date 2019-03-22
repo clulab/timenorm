@@ -133,15 +133,6 @@
     </repository>
 
     <repository>
-        <id>orgclulab-1121</id>
-        <url>https://oss.sonatype.org/content/repositories/orgclulab-1121/</url>
-        <releases>
-            <enabled>true</enabled>
-        </releases>
-        <layout>default</layout>
-    </repository>
-
-    <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
