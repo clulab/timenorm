@@ -27,7 +27,6 @@ object TemporalNeuralParser {
           Arguments:
             -i FILE, --input FILE
             -o FILE, --output FILE
-            -b NUMBER, --batch_size NUMBER    Default: 40
 
             -h, --help                        prints this menu
     """
@@ -51,11 +50,6 @@ object TemporalNeuralParser {
               exit(Some("Input file does not exist."))
           case "--output" | "-o" =>
               "output" -> s(1)
-          case "--batch_size" | "-b" =>
-            if (s(1).forall(_.isDigit))
-              "batch_size" -> s(1)
-            else
-              exit(Some("Batch size is not a number."))
           case _ => exit(Some("Bad usage."))
         }
       ).toMap
@@ -67,26 +61,10 @@ object TemporalNeuralParser {
     val parser = new TemporalNeuralParser()
     val file = new File(options("output"))
     val bw = new BufferedWriter(new FileWriter(file))
-    val batch_size = options.getOrElse("batch_size", "40").toInt
-    val batches = Source.fromFile(options("input")).getLines.toList.sliding(batch_size, batch_size).toList
-    for ((batch, batchn) <- batches.zipWithIndex) {
-      println("Batch " + (batchn + 1) + "/" + batches.size + " with " + batch.size + " lines")
-      val data = parser.parse(batch)
-      val lines = parser.intervals(data)
-      for ((line, linen) <- lines.zipWithIndex) {
-        println("\tLine number " + (batchn * batch_size + linen) + ": " + batch(linen))
-        bw.write("Line number: " + (batchn * batch_size + linen) + "\n")
-        for ((timex, index) <- line.zipWithIndex) {
-          bw.write("\tTimEx " + index + ":" + "\n")
-          bw.write("\t\tText: " + batch(linen).slice(timex.span.start,  timex.span.end) + "\n")
-          bw.write("\t\tSpan: " + timex.span.start + " - " + timex.span.end + "\n")
-          bw.write("\t\tIntervals:" + "\n")
-          for (interval <- timex.intervals)
-            bw.write("\t\t\t" + interval.start + "-" + interval.end + " " + interval.duration + "\n")
-        }
-        bw.write("\n")
-      }
-    }
+    val sourceText = Source.fromFile(options("input")).getLines.toList
+    val annotation = parser.merge(parser.extract(sourceText), sourceText)
+    val xml = parser.build(annotation)
+    xml.head.writeTo(bw)
     println("Finished!")
     bw.close()
   }
@@ -99,6 +77,7 @@ case class Link(parent: Int, child: Int, relation: String)
 case class Property(entity: Int, property: String, value: String)
 case class TimeInterval(start: LocalDateTime, end: LocalDateTime, duration: Long)
 case class TimeExpression(span: Span, intervals: List[TimeInterval])
+case class Annotation(entities: List[List[Entity]], links: List[List[Link]], properties: List[List[Property]])
 
 class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   private type Entities = List[List[Entity]]
@@ -111,7 +90,6 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
       modelFile.getOrElse(this.getClass.getResourceAsStream("/org/clulab/timenorm/model/weights-improvement-22.pb"))))
     new Session(graph)
   }
-
   lazy private val char2int = readDict(this.getClass.getResourceAsStream("/org/clulab/timenorm/vocab/dictionary.json"))
   lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toList
   lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toList
@@ -133,63 +111,16 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
     try {  Json.parse(dictFile).as[Map[String, Float]] } finally { dictFile.close() }
   }
 
-
-  def parse(sourceText: List[String]): List[Data] = synchronized {
-    val entities = identification(sourceText)
-    val links = linking(entities)
-    val antixml_not_allowed = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r
-    val cleanSourceText = sourceText.map(antixml_not_allowed.replaceAllIn(_, " "))
-    val properties = complete(entities, links, cleanSourceText)
-    val anafora: List[Elem] = build(entities, links, properties)
-    val data = (anafora zip cleanSourceText).map(b => new Data(b._1, Some(b._2)))
-    data
-  }
-
-
-  def dct(data: Data): Interval = {
-    val reader = new AnaforaReader(UnknownInterval)(data)
-    val time = Try(reader.temporal(data.topEntities(0))(data)).getOrElse(null)
-    time match {
-      case interval: Interval => interval
-      case intervals: Intervals => intervals.head
-      case _ => UnknownInterval
-    }
-  }
-
-
-  def extract_interval(interval: Interval): TimeInterval = TimeInterval(
-      interval.start,
-      interval.end,
-      interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
+  private def extract_interval(interval: Interval): TimeInterval = TimeInterval(
+    interval.start,
+    interval.end,
+    interval.end.toEpochSecond(ZoneOffset.UTC) - interval.start.toEpochSecond(ZoneOffset.UTC)
   )
 
-
-  def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval)): List[List[TimeExpression]] = synchronized {
-    data_batch.map(data => {
-      val reader = new AnaforaReader(dct.get)(data)
-      data.topEntities.map(e => {
-        val span = e.expandedSpan(data)
-        val time = Try(reader.temporal(e)(data)).getOrElse(null)
-        val timeIntervals: List[TimeInterval] = Try(time match {
-          case interval: Interval => List(extract_interval(interval))
-          case intervals: Intervals => intervals.map(extract_interval).toList
-          case rInterval: RepeatingInterval => List(TimeInterval(
-            null,
-            null,
-            rInterval.preceding(LocalDateTime.now).next.end.toEpochSecond(ZoneOffset.UTC) - rInterval.preceding(LocalDateTime.now).next.start.toEpochSecond(ZoneOffset.UTC)
-          ))
-          case period: SimplePeriod => List(TimeInterval(
-            null,
-            null,
-            period.number * period.unit.getDuration.getSeconds
-          ))
-          case _ => List(TimeInterval(null, null, 0.toLong))
-        }).getOrElse(List(TimeInterval(null, null, 0.toLong)))
-        TimeExpression(Span(span._1, span._2), timeIntervals)
-      }).toList
-    })
+  private def cleanText(text: List[String]): List[String] = {
+    val antixml_not_allowed = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r
+    text.map(antixml_not_allowed.replaceAllIn(_, " "))
   }
-
 
   private def identification(sourceText: List[String]): Entities = {
     val formatText = sourceText.map(s => "\n\n\n" + s + "\n\n\n")
@@ -231,14 +162,12 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
     }).toList
   }
 
-
   private def relation(type1: String, type2: String): Option[String] = {
     Try(Some(this.schema(type1).toList.filter(_._2._2 contains type2).map(_._1).sorted.reverse.head)).getOrElse(None)
   }
 
-
-  private def linking(entitiy_batches: Entities): Links = {
-    entitiy_batches.map(entities => {
+  private def linking(entitiy_batch: Entities): Links = {
+    entitiy_batch.map(entities => {
       val links = ListBuffer.empty[Link]
       val stack = Array(0, 0)
       for ((entity, i) <- entities.zipWithIndex) {
@@ -259,9 +188,8 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
       })
   }
 
-
-  private def complete(entitiy_batches: Entities, link_batches: Links, sourceText_batches: List[String]): Properties = {
-    (entitiy_batches zip link_batches zip sourceText_batches).map({ case ((entities, links), sourceText) =>
+  private def complete(entitiy_batch: Entities, link_batch: Links, sourceText_batch: List[String]): Properties = {
+    (entitiy_batch zip link_batch zip sourceText_batch).map({ case ((entities, links), sourceText) =>
       val properties = {
         for {(entity, i) <- entities.zipWithIndex
              propertyType <- this.schema(entity.label).keys
@@ -296,9 +224,8 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
     })
   }
 
-
-  private def build(entitiy_batches: Entities, link_batches: Links, property_batches: Properties): List[Elem] = {
-    (entitiy_batches zip link_batches zip property_batches).map({ case ((entities, links), properties) =>
+  private def build(annotations: Annotation): List[Elem] = {
+    (annotations.entities zip annotations.links zip annotations.properties).map({ case ((entities, links), properties) =>
       <data>
         <annotations>
           {for ((entity, e) <- entities.zipWithIndex) yield {
@@ -315,5 +242,63 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
         </annotations>
       </data>.convert
     })
+  }
+
+
+  def extract(sourceText: List[String]): Annotation = {
+    val entities = identification(sourceText)
+    val links = linking(entities)
+    val properties = complete(entities, links, cleanText(sourceText))
+    Annotation(entities, links, properties)
+  }
+
+  def parse(sourceText: List[String]): List[Data] =  {
+    val annotations = extract(sourceText)
+    val xml: List[Elem] = build(annotations)
+    val data = (xml zip cleanText(sourceText)).map(b => new Data(b._1, Some(b._2)))
+    data
+  }
+
+  def dct(data: Data): Interval = {
+    val reader = new AnaforaReader(UnknownInterval)(data)
+    val time = Try(reader.temporal(data.topEntities(0))(data)).getOrElse(null)
+    time match {
+      case interval: Interval => interval
+      case intervals: Intervals => intervals.head
+      case _ => UnknownInterval
+    }
+  }
+
+  def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval)): List[List[TimeExpression]] = synchronized {
+    data_batch.map(data => {
+      val reader = new AnaforaReader(dct.get)(data)
+      data.topEntities.map(e => {
+        val span = e.expandedSpan(data)
+        val time = Try(reader.temporal(e)(data)).getOrElse(null)
+        val timeIntervals: List[TimeInterval] = Try(time match {
+          case interval: Interval => List(extract_interval(interval))
+          case intervals: Intervals => intervals.map(extract_interval).toList
+          case rInterval: RepeatingInterval => List(TimeInterval(
+            null,
+            null,
+            rInterval.preceding(LocalDateTime.now).next.end.toEpochSecond(ZoneOffset.UTC) - rInterval.preceding(LocalDateTime.now).next.start.toEpochSecond(ZoneOffset.UTC)
+          ))
+          case period: SimplePeriod => List(TimeInterval(
+            null,
+            null,
+            period.number * period.unit.getDuration.getSeconds
+          ))
+          case _ => List(TimeInterval(null, null, 0.toLong))
+        }).getOrElse(List(TimeInterval(null, null, 0.toLong)))
+        TimeExpression(Span(span._1, span._2), timeIntervals)
+      }).toList
+    })
+  }
+
+  def merge(annotation: Annotation, sourceText: List[String]): Annotation = {
+    val startOffsets = sourceText.dropRight(1).foldLeft(List(0))({ case (l, s) => s.length + l.head + 1 :: l }).reverse
+    Annotation(List((annotation.entities zip startOffsets).flatMap { case (b, o) => b.map(e => Entity(Span(e.span.start + o, e.span.end + o), e.label)) }),
+              List(annotation.links.flatten),
+              List(annotation.properties.flatten))
   }
 }
