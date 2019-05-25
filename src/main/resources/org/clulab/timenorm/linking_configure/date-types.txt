@@ -106,7 +106,8 @@ Period Unknown some_time
 Period Unknown time
 Period Weeks week
 Period Weeks weeks
-Period Years months
+Period Months month
+Period Months months
 Period Years year
 Period Years years
 Season-Of-Year Fall fall

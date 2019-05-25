@@ -2,7 +2,7 @@ package org.clulab.timenorm.neural
 
 object WordToNumber {
 
-  private val Small = Map(
+  private val Small: Map[String, Long] = Map(
     "zero" -> 0L,
     "one" -> 1L,
     "two" -> 2L,
@@ -33,13 +33,13 @@ object WordToNumber {
     "ninety" -> 90L
   )
 
-  private val Magnitude = Map(
+  private val Magnitude: Map[String, Long] = Map(
     "thousand" -> 1000L,
     "million" -> 1000000L,
     "billion" -> 1000000000L,
     "trillion" -> 1000000000000L,
     "quadrillion" -> 1000000000000000L,
-    "quintillion" -> 1000000000000000000L
+    "quintillion" -> 1000000000000000000L,
     // "sextillion" ->    1000000000000000000000L,
     // "septillion" -> 1000000000000000000000000L,
     // "octillion" -> 1000000000000000000000000000L,
@@ -63,11 +63,10 @@ object WordToNumber {
               g = 0L
             }
           }
-        (n + g).toString
       }
+      (n + g).toString
     } catch {
       case e: Exception => string
     }
-    string
   }
 }
