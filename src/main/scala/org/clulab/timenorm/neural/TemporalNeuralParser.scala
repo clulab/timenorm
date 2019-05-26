@@ -297,8 +297,9 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
 
   def merge(annotation: Annotation, sourceText: List[String]): Annotation = {
     val startOffsets = sourceText.dropRight(1).foldLeft(List(0))({ case (l, s) => s.length + l.head + 1 :: l }).reverse
+    val prevNumEntities = annotation.entities.dropRight(1).foldLeft(List(0))({ case (l, e) => e.size + l.head :: l }).reverse
     Annotation(List((annotation.entities zip startOffsets).flatMap { case (b, o) => b.map(e => Entity(Span(e.span.start + o, e.span.end + o), e.label)) }),
-              List(annotation.links.flatten),
-              List(annotation.properties.flatten))
+              List((annotation.links zip prevNumEntities).flatMap { case (b, n) => b.map{l => Link(l.parent + n, l.child + n, l.relation)}}),
+              List((annotation.properties zip prevNumEntities).flatMap { case (b, n) => b.map{p => Property(p.entity + n, p.property, p.value)}}))
   }
 }
