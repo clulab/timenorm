@@ -6,14 +6,48 @@ import nltk
 import anafora
 from collections import OrderedDict
 from collections import deque
+import read_files as read
+import configparser
 
+
+
+
+config = configparser.ConfigParser()
+config.read('ident.conf')
+StandforParser = config['Tool']['StandforParser']
+StandforParser_jar = config['Tool']['StandforParser_jar']
+
+def tokenize_span(txt):
+    #english_tokenizer = StanfordTokenizer('C:/Users/dongfangxu9/PycharmProjects/pos_tagger/stanford-postagger.jar',
+    #                                   options={"americanize": True, }, java_options='-mx1000m')
+    #tokens=english_tokenizer.tokenize(txt)
+    # ll = [[nltk.word_tokenize(w), ' '] for w in txt.split()]
+    # tokens = list(itertools.chain(*list(itertools.chain(*ll))))
+    # tokens.pop()
+    tokens = nltk.word_tokenize(txt)
+    tokens_new = list()
+    for token in tokens:
+        if (token== u'``' or token == u'\'\'') and token not in txt:
+            token = "\""
+        tokens_new.append(token)
+
+    #### remove for time ml ####
+    #tokens_new = normalize_digits(tokens)
+    ############################
+    # tokens_new = tokens
+    offset = 0
+    token_spans = list()
+    for token in tokens_new:
+        offset = txt.find(token, offset)
+        token_spans.append([token, offset, offset+len(token)])
+        offset += len(token)
+    return token_spans
 
 def addannotation_to_dict(posi_info_dict,annotation,raw_text):
-    if posi_info_dict.has_key(annotation.spans[0][0]):
+    if annotation.spans[0][0] in posi_info_dict:
             posi_info_dict[annotation.spans[0][0]].append(annotation.type)
     else:
         anna_info = []
-        #print annotation.spans[0][0], annotation.spans[0][1]
         terms = raw_text[annotation.spans[0][0]:annotation.spans[0][1]]
         anna_info.append(annotation.spans[0][1])
         anna_info.append(terms)
@@ -50,11 +84,11 @@ def extract_xmltag_anafora_pred(xml_file_dir,raw_text):
     posi_info_dict = dict()
     for annotation in data.annotations:
 
-            if posi_info_dict.has_key(annotation.spans[0][0]):
+            if annotation.spans[0][0] in posi_info_dict:
                 posi_info_dict[annotation.spans[0][0]].append([annotation.spans[0][1],annotation.type])
             else:
                 anna_info = []
-                print annotation.spans[0][0], annotation.spans[0][1]
+                print(annotation.spans[0][0], annotation.spans[0][1])
                 terms = raw_text[annotation.spans[0][0]:annotation.spans[0][1]]
                 anna_info.append(terms)
                 anna_info.append([annotation.spans[0][1],annotation.type])
@@ -207,17 +241,15 @@ def get_pos_sentence(sentences_spans,pos_vocab):
 
     #raw_dir_simple = ["NYT19980206.0466"]
     english_postagger = StanfordPOSTagger(
-        # 'C:/Users/dongfangxu9/PycharmProjects/pos_tagger/models/english-left3words-distsim.tagger',    #### in folder data/
-        '/home/egoitz/Tools/postagging/stanford-postagger-2018-02-27/models/english-left3words-distsim.tagger',    #### in folder data/
-        #'C:/Users/dongfangxu9/PycharmProjects/pos_tagger/stanford-postagger.jar') #### in folder data/
-        '/home/egoitz/Tools/postagging/stanford-postagger-2018-02-27/stanford-postagger.jar') #### in folder data/
+        StandforParser,    #### in folder data/
+        StandforParser_jar) #### in folder data/
     english_postagger.java_options = '-mx8000m'
     pos_sentences = list()
 
     for sent_span in sentences_spans:
-        print sent_span[0]
+        print(sent_span[0])
         text = nltk.word_tokenize(sent_span[0])
-        text_pos = english_postagger.tag(text)   #####StanfordPnOSTagger failed to tag the underscore, see ttps://github.com/nltk/nltk/issues/1632  if use nltk 3.2.2, please change the code "word_tags = tagged_word.strip().split(self._SEPARATOR)" in function "parse_outputcode" of nltk.standford.py to "word_tags = tagged_word.strip().rsplit(self._SEPARATOR,1)" to handle undersocre issues
+        text_pos = english_postagger.tag(text)   #####StanfordPnOSTagger failed to tag the underscore, see https://github.com/nltk/nltk/issues/1632  if use nltk 3.2.2, please change the code "word_tags = tagged_word.strip().split(self._SEPARATOR)" in function "parse_outputcode" of nltk.standford.py to "word_tags = tagged_word.strip().rsplit(self._SEPARATOR,1)" to handle undersocre issues
 
         index = 0
         for token in text_pos:
@@ -236,15 +268,47 @@ def get_pos_sentence(sentences_spans,pos_vocab):
         pos_sentences.append(text_pos)
     return pos_sentences,pos_vocab
 
+def get_words(sentences_spans,word_vocab):
+    word_sentences = list()
+    for sent_span in sentences_spans:
+        tokens = list()
+        spans = list()
+        tokens_span = tokenize_span(sent_span[0])
+        i = 0
+        for token_span in tokens_span:
+            word_vocab[token_span[0]] += 1
+            tokens.append(token_span[0])
+            spans.append((sent_span[1] + token_span[1], sent_span[1] + token_span[2]))
+            if sent_span[1] + token_span[2] <= sent_span[1] + token_span[1]:
+                print("wrong split", sent_span[0])
+            if len(spans) > 1:
+                if spans[i][0] < spans[i - 1][1]:
+                    print("wrong tokenize")
+            i += 1
+        word_sentences.append([tokens, spans])
+    return word_sentences,word_vocab
+
+
 def word_pos_2_character_pos(sentences_spans,pos_sentences):
     pos_sentences_character = list()
+    #char2int = read.readfrom_json("data/config_data/vocab/char2int")
+    #print char2int.keys()
     for sent_index in range(len(sentences_spans)):
+        #if sent_index == 31: #len(pos_sentences_character): #len(pos_sentences_character):#len(pos_sentences_character):
+        #    print sent_index
         post_sentence_character = list()
         token_index = 0
         term = ""
+
+        #print sentences_spans[sent_index][0]
+        #print pos_sentences[sent_index]
+
         for char in sentences_spans[sent_index][0]:
             if char == ' ' or char == '\t':
                 term = ""
+                post_sentence_character.append("null")
+            elif token_index < len(pos_sentences[sent_index][token_index]) and char not in pos_sentences[sent_index][token_index][0]:
+                term =""
                 post_sentence_character.append("null")
             else:
                 term += char
@@ -264,10 +328,11 @@ def word_pos_2_character_pos(sentences_spans,pos_sentences):
                     token_index += 1
                     term = ""
                     if token_index == len(pos_sentences[sent_index]):
-                        print post_sentence_character
+                        #print post_sentence_character
+                        #print "\n"
                         pos_sentences_character.append(post_sentence_character)
     if len(pos_sentences_character) != len(sentences_spans):
-        print "Transformation from word_pos to character_pos failed."
+        print("Transformation from word_pos to character_pos failed.")
     return pos_sentences_character
 
 def get_unicode(sentences_spans,unicode_vocab):
@@ -276,7 +341,7 @@ def get_unicode(sentences_spans,unicode_vocab):
     for sent in sentences_spans:
         unicate_sentence = []
         for char in sent[0]:
-            char_unic  = unicodedata.category(char.decode("utf-8"))
+            char_unic  = unicodedata.category(char)
             unicate_sentence.append(char_unic)
             unicode_vocab[char_unic] +=1
         unicate_sentences.append(unicate_sentence)

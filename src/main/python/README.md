@@ -1,15 +1,40 @@
 # timeident
 
 ## Requirements
-Python version: 2.7.13
-Python Package: h5py, nltk 3.2.4, anaforatools, keras 1.2.1 , theano 0.9.0rc2
-Addition resources: text2num.py (Please download this file from https://github.com/ghewgill/text2num/blob/master/text2num.py)
+Python version: 3.6.2
+Python Package: h5py, nltk 3.2.4, anaforatools, keras 2.2.0 , theano 1.0.2,regex 2.4.144
+
+## Package issue
+* StanfordPnOSTagger failed to tag the underscore, see https://github.com/nltk/nltk/issues/1632
+* Please change the code #1 to #2 in nltk.standford.py:
+```
+#1 word_tags = tagged_word.strip().split(self._SEPARATOR)
+#2 word_tags = tagged_word.strip().rsplit(self._SEPARATOR,1)
+```
+
+
 
 ## Usages
+* `preprocess.py` - Extract features from documents and generate the model input files.
+* `output.py` - Generate the SCATE annofora annotation for the documents.
+* `model_training.py` - Train a time entity identification models.
+
+
+
+
 To processe the documents, please run:
-python preprocess.py --raw "data/THYMEColonFinal/Dev" --out "data/dev/Dev1" --processed "true" --file "file_name.txt"
+```
+$ python preprocess.py -raw "raw_documents" -xml "xml_path" -processed_output "the path for storing the processing files" -model_output "the_model_input_files"
+```
 
-To postprocess keras outputs into anafora format:
-python output.py --raw "data/THYMEColonFinal/Dev" --preocessed_path "data/dev/Dev1" --model "weights-improvement-685.hdf5" --out "output_pred_path"
 
+To generate the SCATE anafora outputfiles:
+```
+$ python output.py python output.py -model "the_model_files" -raw "raw_documents" -processed_path "the path for storing the processing files" -input "model_inputs" -out "annonation outputs"
+```
+
+To train a time entity identification model:
+```
+$ python model_training.py es" -input "model_inputs" -out "model_outputs"
+```
 
