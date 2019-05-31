@@ -35,6 +35,6 @@ $ python output.py python output.py -model "the_model_files" -raw "raw_documents
 
 To train a time entity identification model:
 ```
-$ python model_training.py es" -input "model_inputs" -out "model_outputs"
+$ python model_training.py -input "model_inputs" -out "model_outputs"
 ```
 
