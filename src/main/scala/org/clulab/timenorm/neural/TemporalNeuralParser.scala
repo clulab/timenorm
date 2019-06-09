@@ -245,15 +245,15 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   }
 
 
-  def extract(sourceText: List[String]): Annotation = {
-    val entities = identification(sourceText)
+  def extract(sourceText: List[String], givenEntities: Option[Entities] = None): Annotation = {
+    val entities = givenEntities.getOrElse(identification(sourceText))
     val links = linking(entities)
     val properties = complete(entities, links, cleanText(sourceText))
     Annotation(entities, links, properties)
   }
 
-  def parse(sourceText: List[String]): List[Data] =  {
-    val annotations = extract(sourceText)
+  def parse(sourceText: List[String], givenEntities: Option[Entities] = None): List[Data] =  {
+    val annotations = extract(sourceText, givenEntities)
     val xml: List[Elem] = build(annotations)
     val data = (xml zip cleanText(sourceText)).map(b => new Data(b._1, Some(b._2)))
     data
