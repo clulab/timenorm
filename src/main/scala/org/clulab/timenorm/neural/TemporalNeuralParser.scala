@@ -1,9 +1,10 @@
 package org.clulab.timenorm.neural
 
 import java.io._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{FileSystems, Files, Path, PathMatcher, Paths}
 import java.time.{LocalDateTime, ZoneOffset}
 
+import scala.collection.JavaConverters._
 import com.codecommit.antixml._
 import org.clulab.anafora.Data
 import org.clulab.timenorm.formal._
@@ -20,53 +21,58 @@ import scala.util.Try
 
 
 object TemporalNeuralParser {
+  val timeNormExt = ".TimeNorm.system.completed.xml"
   val usage =
-    """
-          Usage: TemporalNeuralParser -i FILE -o FILE [-b NUMBER]
+    s"""
+       |usage: ${this.getClass.getSimpleName} INPUT [OUTPUT]
+       |
+       |Parses the input text file(s) for time expressions and writes them out as
+       |Anafora XML. Output files will match the name (and subdirectory structure)
+       |of the input files, adding an $timeNormExt extension.
+       |
+       |arguments:
+       |  INPUT    Either a single text file, or a directory. INPUT should be text;
+       |           XML files will be silenty ignored.
+       |  OUTPUT   Either a single output file prefix (if INPUT was a single file) or
+       |           a directory (if INPUT was a directory).
+     """.stripMargin
 
-          Arguments:
-            -i FILE, --input FILE
-            -o FILE, --output FILE
-
-            -h, --help                        prints this menu
-    """
-
-  def main(args: Array[String]): Unit = {
-
-    def exit(message: Option[String] = None) = {
-      if (message.isDefined) println(message.get)
+  def main(args: Array[String]): Unit = args match {
+    case Array(inputDir, outputDir) =>
+      parseAll(Paths.get(inputDir), Paths.get(outputDir))
+    case Array(dir) =>
+      val path = Paths.get(dir)
+      parseAll(path, path)
+    case _ =>
       println(usage)
       sys.exit(1)
-    }
+  }
 
-    def parseOptions(argList: List[String]): Map[String, String] = {
-      if (args.length == 0 || args(0) == "-h" || args(0) == "--help") exit()
-      argList.sliding(2, 2).map(s =>
-        s.head match {
-          case "--input" | "-i" =>
-            if (Files.exists(Paths.get(s(1))))
-              "input" -> s(1)
-            else
-              exit(Some("Input file does not exist."))
-          case "--output" | "-o" =>
-              "output" -> s(1)
-          case _ => exit(Some("Bad usage."))
-        }
-      ).toMap
-    }
-    val options = parseOptions(args.toList)
-    if (!(options.contains("input") && options.contains("output")))
-      exit(Some("Bad usage."))
-
+  def parseAll(inRoot: Path, outRoot: Path): Unit = {
     val parser = new TemporalNeuralParser()
-    val file = new File(options("output"))
-    val bw = new BufferedWriter(new FileWriter(file))
-    val sourceText = Source.fromFile(options("input")).getLines.toList
-    val annotation = parser.merge(parser.extract(sourceText), sourceText)
-    val xml = parser.build(annotation)
-    xml.head.writeTo(bw)
-    println("Finished!")
-    bw.close()
+    val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**.xml")
+    for ((inPath, outPath) <- parallelPaths(inRoot, outRoot, endsWithXML, timeNormExt)) {
+      val sourceText = List(new String(Files.readAllBytes(inPath)))
+      val annotation = parser.merge(parser.extract(sourceText), sourceText)
+      val xml = parser.build(annotation)
+      Files.createDirectories(outPath.getParent)
+      val writer = Files.newBufferedWriter(outPath)
+      xml.head.writeTo(writer)
+      writer.close()
+      println(s"$inPath\n$outPath\n")
+    }
+  }
+
+  def parallelPaths(inRoot: Path, outRoot: Path, inExclude: PathMatcher, outExt: String): Iterator[(Path, Path)] = {
+    for {
+      inPath <- Files.walk(inRoot).iterator.asScala
+      if Files.isRegularFile(inPath) && !inExclude.matches(inPath)
+    } yield {
+      val subPath = inRoot.relativize(inPath)
+      val outPathNoExt = outRoot.resolve(subPath)
+      val outPath = outPathNoExt.resolveSibling(outPathNoExt.getFileName + outExt)
+      (inPath, outPath)
+    }
   }
 }
 
