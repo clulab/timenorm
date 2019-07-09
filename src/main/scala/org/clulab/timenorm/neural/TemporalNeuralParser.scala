@@ -266,16 +266,16 @@ class TemporalNeuralParser(modelFile: Option[InputStream] = None) {
   }
 
   def dct(data: Data): Interval = {
-    val reader = new AnaforaReader(UnknownInterval)(data)
+    val reader = new AnaforaReader(UnknownInterval())(data)
     val time = Try(reader.temporal(data.topEntities(0))(data)).getOrElse(null)
     time match {
       case interval: Interval => interval
       case intervals: Intervals => intervals.head
-      case _ => UnknownInterval
+      case _ => UnknownInterval()
     }
   }
 
-  def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval)): List[List[TimeExpression]] = synchronized {
+  def intervals(data_batch: List[Data], dct: Option[Interval] = Some(UnknownInterval())): List[List[TimeExpression]] = synchronized {
     data_batch.map(data => {
       val reader = new AnaforaReader(dct.get)(data)
       data.topEntities.map(e => {
