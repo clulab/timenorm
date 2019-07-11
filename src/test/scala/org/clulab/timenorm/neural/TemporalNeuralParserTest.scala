@@ -1,75 +1,81 @@
 package org.clulab.timenorm.neural
 
-import java.time.LocalDateTime
+import java.time.temporal.ChronoField
 
+import org.clulab.timenorm.formal.{Interval, RepeatingField, SimpleInterval, TypesSuite}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
-class TemporalNeuralParserTest extends FunSuite {
-
-  Thread.sleep(10000)
+class TemporalNeuralParserTest extends FunSuite with TypesSuite {
 
   private val parser = new TemporalNeuralParser()
-  private val dct = List("2018-07-06")
-  private val anchor = parser.dct(parser.parse(dct).head)
-  private val test1 = "2018-10-10"
-  private val test2 = "January"
-  private val test3 = "last Friday"
-  private val test4 = """South Sudan receives a ranking of 186 out of 189 on
-                |ease of doing business in the World Bank 2015 Doing
-                |Business report -LRB- World Bank 2014 -RRB- .""".stripMargin
-  private val test5 = "since last March"
-  private val test6 = """A substantial decline in gas revenue since 2014 has
-                |contributed to a sharp drop in both foreign currency
-                |reserves and the value of the South Sudanese pound.""".stripMargin
-  private val dates = List(test1, test2, test3, test4, test5, test6)
-  private val data = parser.parse(dates)
-  private val intervals = parser.intervals(data, Some(anchor))
+  private val Array(dct: Interval) = parser.parse("2018-07-06")
+  private val batch = parser.parseBatch(
+    """
+      |2018-10-10
+      |January
+      |last Friday
+      |South Sudan receives a ranking of 186 out of 189 on
+      |ease of doing business in the World Bank 2015 Doing
+      |Business report -LRB- World Bank 2014 -RRB- .
+      |since last March
+      |A substantial decline in gas revenue since 2014 has
+      |contributed to a sharp drop in both foreign currency
+      |reserves and the value of the South Sudanese pound.
+    """.stripMargin.trim,
+    Array(
+      (0, 10),    // 2018-10-10
+      (11, 18),   // January
+      (19, 30),   // last Friday
+      (31, 180),  // South Sudan ... -RRB- .
+      (181, 197), // since last March
+      (198, 354), // A substantial ... pound.
+    ),
+    // use a SimpleInterval here so that there's no associated character span
+    SimpleInterval(dct.start, dct.end),
+  )
 
 
   test("interval") {
-    assert(intervals.head.head.span === Span(0, 10))
-    assert(intervals.head.head.intervals.head.start === LocalDateTime.of(2018, 10, 10, 0, 0))
-    assert(intervals.head.head.intervals.head.end === LocalDateTime.of(2018, 10, 11, 0, 0))
-    assert(intervals.head.head.intervals.head.duration === 86400)
+    val Array(year: Interval) = batch(0)
+    assert(year.charSpan === Some((0, 10)))
+    assert(year === SimpleInterval.of(2018, 10, 10))
   }
 
   test("repeatingInterval") {
-    assert(intervals(1).head.span === Span(0, 7))
-    assert(intervals(1).head.intervals.head.start === null)
-    assert(intervals(1).head.intervals.head.end === null)
-    assert(intervals(1).head.intervals.head.duration === 2678400)
-
+    val Array(january: RepeatingField) = batch(1)
+    assert(january.charSpan === Some((11, 18)))
+    assert(january.field === ChronoField.MONTH_OF_YEAR)
+    assert(january.value === 1)
   }
 
   test("last") {
-    assert(intervals(2).head.span === Span(0, 11))
-    assert(intervals(2).head.intervals.head.start === LocalDateTime.of(2018, 6, 29, 0, 0))
-    assert(intervals(2).head.intervals.head.end === LocalDateTime.of(2018, 6, 30, 0, 0))
-    assert(intervals(2).head.intervals.head.duration === 86400)
+    val Array(friday: Interval) = batch(2)
+    assert(friday.charSpan === Some((19, 30)))
+    assert(friday === SimpleInterval.of(2018, 6, 29))
   }
 
   test("fill-incomplete-span") {
-    assert(intervals(3).head.span === Span(93, 97))
-    assert(intervals(3).head.intervals.head.start === LocalDateTime.of(2015, 1, 1, 0, 0))
-    assert(intervals(3).head.intervals.head.end === LocalDateTime.of(2016, 1, 1, 0, 0))
-    assert(intervals(3).head.intervals.head.duration === 31536000)
+    // 2014 is not found (probably because of the -RRB-), so don't test for that
+    val Some(year2015: Interval) = batch(3).headOption
+    assert(year2015.charSpan === Some((124, 128)))
+    assert(year2015 === SimpleInterval.of(2015))
   }
 
   test("since-last") {
-    assert(intervals(4).head.span === Span(0, 16))
-    assert(intervals(4).head.intervals.head.start === LocalDateTime.of(2018, 3, 1, 0, 0))
-    assert(intervals(4).head.intervals.head.end === LocalDateTime.of(2018, 7, 7, 0, 0))
-    assert(intervals(4).head.intervals.head.duration === 11059200)
+    val Array(march: Interval) = batch(4)
+    assert(march.charSpan === Some((181, 197)))
+    assert(march.start === SimpleInterval.of(2018, 3, 1).start)
+    assert(march.end === dct.end)
   }
 
   test("since-year") {
-    assert(intervals(5).head.span === Span(37, 47))
-    assert(intervals(5).head.intervals.head.start === LocalDateTime.of(2014, 1, 1, 0, 0))
-    assert(intervals(5).head.intervals.head.end === LocalDateTime.of(2018, 7, 7, 0, 0))
-    assert(intervals(5).head.intervals.head.duration === 142387200)
+    val Array(since2014: Interval) = batch(5)
+    assert(since2014.charSpan === Some((235, 245)))
+    assert(since2014.start === SimpleInterval.of(2014).start)
+    assert(since2014.end === dct.end)
   }
 }
