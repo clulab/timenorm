@@ -234,17 +234,31 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
 
   private def inferLinks(timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
     val links = Array.fill(timeSpans.length)(mutable.ArrayBuffer.empty[(String, Int)])
-    val stack = Array(0, 0)
+    var start = 0
     for ((timeSpan, i) <- timeSpans.zipWithIndex) {
-      if (stack(0) != stack(1) && timeSpan._1 - timeSpans(stack(1)-1)._2 > 10)
-        stack(0) = stack(1)
-      for {
-        s <- (stack(0) until stack(1)).toList.reverse
-        label <- relation(timeSpans(s)._3, timeSpan._3).orElse(relation(timeSpan._3, timeSpans(s)._3))
-      } {
-        links(s) += label -> i
+
+      // if we're more than 10 characters away, discard previous history
+      if (start != i && timeSpan._1 - timeSpans(i-1)._2 > 10)
+        start = i
+
+      // find relations between the current and any previous time spans
+      for (s <- (start until i).toList.reverse) {
+
+        // find relations that are valid according to the schema
+        val relations = for {
+          (source, target) <- Seq((s, i), (i, s))
+          sourceType = timeSpans(source)._3
+          targetType = timeSpans(target)._3
+          label <- this.schema.get(sourceType).flatMap(_.filter {
+            case (_, (_, allowedTypes)) => allowedTypes contains targetType
+          }.keys.toSeq.sorted.reverse.headOption)
+        } yield (source, target, label)
+
+        // pick only the first allowable relation
+        for ((source, target, label) <- relations.headOption) {
+          links(source) += label -> target
+        }
       }
-      stack(1) += 1
     }
     links.map(_.toArray)
   }
@@ -275,10 +289,5 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
        case _ => None
      }
     propertyOptions.flatten.toArray
-  }
-
-  private def relation(type1: String, type2: String): Option[String] = {
-    // TODO: this is ugly
-    Try(Some(this.schema(type1).toList.filter(_._2._2 contains type2).map(_._1).sorted.reverse.head)).getOrElse(None)
   }
 }
