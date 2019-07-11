@@ -71,7 +71,6 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
   }
 
   test("since-last") {
-    batch(4).foreach(println)
     val Array(march: Interval) = batch(4)
     assert(march.charSpan === Some((181, 197)))
     assert(march.start === SimpleInterval.of(2018, 3, 1).start)

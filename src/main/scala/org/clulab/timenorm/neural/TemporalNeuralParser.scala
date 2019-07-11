@@ -13,6 +13,7 @@ import org.tensorflow.Tensor
 import org.apache.commons.io.IOUtils
 import play.api.libs.json._
 
+import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
@@ -77,6 +78,11 @@ object TemporalNeuralParser {
 
 class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
 
+  private def resourceLines(path: String): Iterator[String] = {
+    Source.fromInputStream(this.getClass.getResourceAsStream(path)).getLines()
+  }
+
+  // the neural network that reads characters and predicts operators
   lazy private val network = {
     val graph = new Graph()
     graph.importGraphDef(IOUtils.toByteArray(
@@ -96,22 +102,36 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
     }
   }
 
-  lazy private val operatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/operator.txt")).getLines.toIndexedSeq
-  lazy private val nonOperatorLabels = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/label/non-operator.txt")).getLines.toIndexedSeq
-  lazy private val types = Source.fromInputStream(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/date-types.txt")).getLines
-                            .map(_.split(' ')).map(a => (a(0), (a(2), a(1)))).toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  // map from indices to operator names
+  lazy private val operatorLabels: IndexedSeq[String] = {
+    resourceLines("/org/clulab/timenorm/label/operator.txt").toIndexedSeq
+  }
 
-  // TODO: this is ugly
-  lazy private val schema = (for {
-    es <- scala.xml.XML.load(this.getClass.getResourceAsStream("/org/clulab/timenorm/linking_configure/timenorm-schema.xml")) \\ "entities"
-    e <- es \ "entity"
-  } yield (
-    (e \\ "property").map(p =>
-      ((e \ "@type" head).toString, ((p \ "@type" head).toString, (Try((p \ "@required" head).toString.toBoolean).getOrElse(true), Try((p \ "@instanceOf" head).toString.split(",")).getOrElse(Array()))))
-    )
-      :+
-      ((e \ "@type" head).toString, ("parentType", (true, Array((es \ "@type" head).toString))))
-    )).flatten.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  // map from indices to non-operator names
+  lazy private val nonOperatorLabels: IndexedSeq[String] = {
+    resourceLines("/org/clulab/timenorm/label/non-operator.txt").toIndexedSeq
+  }
+
+  // lookup table from operator name to text expression to normalized value for operator's type
+  lazy private val operatorToTextToType: Map[String, Map[String, String]] = {
+    resourceLines("/org/clulab/timenorm/linking_configure/date-types.txt").map(_.split(' ')).map{
+      case Array(operator, property, string) => (operator, (string, property))
+    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2).toMap)
+  }
+
+  lazy private val operatorToPropertyToTypes: Map[String, Map[String, Set[String]]] = {
+    val path = "/org/clulab/timenorm/linking_configure/timenorm-schema.xml"
+    val xml = XML.fromInputStream(this.getClass.getResourceAsStream(path))
+    val entityInfos = for (entity <- xml \\ "entity") yield {
+      // sort so that required properties are first
+      val properties = (entity \\ "property").sortBy(_.attrs.getOrElse("required", "True") == "False")
+      // match each operator type with an insertion-ordered map of its property names and their allowable types
+      (entity.attrs("type"), ListMap.empty ++ properties.map{
+        p => (p.attrs("type"), p.attrs.get("instanceOf").map(_.split(",").toSet).getOrElse(Set.empty))
+      })
+    }
+    entityInfos.toMap
+  }
 
   def parse(text: String, textCreationTime: Interval = UnknownInterval()): Array[TimeExpression] = {
     parseBatch(text, Array((0, text.length)), textCreationTime) match {
@@ -249,14 +269,14 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
           (source, target) <- Seq((s, i), (i, s))
           sourceType = timeSpans(source)._3
           targetType = timeSpans(target)._3
-          label <- this.schema.get(sourceType).flatMap(_.filter {
-            case (_, (_, allowedTypes)) => allowedTypes contains targetType
-          }.keys.toSeq.sorted.reverse.headOption)
-        } yield (source, target, label)
+          propertyAllowedValues <- this.operatorToPropertyToTypes.get(sourceType).toSeq
+          (propertyName, allowedValues) <- propertyAllowedValues
+          if allowedValues contains targetType
+        } yield (source, target, propertyName)
 
         // pick only the first allowable relation
-        for ((source, target, label) <- relations.headOption) {
-          links(source) += label -> target
+        for ((source, target, propertyName) <- relations.headOption) {
+          links(source) += propertyName -> target
         }
       }
     }
@@ -264,9 +284,9 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
   }
 
   private def inferProperties(timeText: String, timeType: String, links: Array[(String, Int)]): Array[(String, String)] = {
-    val propertyOptions = for (propertyType <- this.schema(timeType).keys) yield propertyType match {
+    val propertyOptions = for (propertyType <- this.operatorToPropertyToTypes(timeType).keys) yield propertyType match {
        case "Type" =>
-         val p = Try(this.types(timeType)(timeText)).getOrElse(timeText).toString
+         val p = this.operatorToTextToType.get(timeType).flatMap(_.get(timeText)).getOrElse(timeText)
          (timeType, p.last) match {
            case ("Calendar-Interval", 's') => Some((propertyType, p.dropRight(1)))
            case ("Period", l) if p != "Unknown" && l != 's' => Some((propertyType, p + "s"))
