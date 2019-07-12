@@ -17,7 +17,6 @@ import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
-import scala.util.Try
 
 
 object TemporalNeuralParser {
@@ -188,19 +187,12 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
 
 
   private def identifyBatch(text: String, spans: Array[(Int, Int)]): Array[Array[(Int, Int, String)]] = {
-    val expandedTexts = spans.map {
-      case (start, end) => "\n\n\n" + text.substring(start, end) + "\n\n\n"
-    }
+    val wordCharIndices = """\w""".r.findAllMatchIn(text).map(_.start).toSet
+    val snippetStarts = spans.map { case (start, end) => (text.substring(start, end), start) }
+    val expandedTexts = spans.map { case (start, end) => "\n\n\n" + text.substring(start, end) + "\n\n\n" }
     val maxLen = expandedTexts.map(_.length).max
     val inputArray = expandedTexts.map(_.map(char2Index).padTo(maxLen, 4f).toArray)
     val input = Tensor.create(inputArray)
-
-    val re = """[^a-zA-Z\d]""".r
-    val textInfos = spans.map {
-      case (start, end) =>
-        val snippet = text.substring(start, end)
-        (start, snippet, re.findAllMatchIn(snippet).map(start + _.start).toSeq)
-    }
 
     // Run forward pass
     val tensors = this.network.runner()
@@ -210,24 +202,24 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
       .run().asScala
 
     val Seq(nonOperators, expOperators, impOperators) = for {
-      (labels, tensor) <- Seq(nonOperatorLabels, operatorLabels, operatorLabels) zip tensors
+      (labelVocabulary, tensor) <- Seq(nonOperatorLabels, operatorLabels, operatorLabels) zip tensors
     } yield {
       val Array(nBatches, nChars, nCategories) = tensor.shape.map(_.toInt)
       val allPredictions = tensor.copyTo(Array.ofDim[Float](nBatches, nChars, nCategories))
-      for (((textStart, snippet, spaceIndices), predictions) <- textInfos zip allPredictions) yield {
+      for (((snippet, snippetStart), predictions) <- snippetStarts zip allPredictions) yield {
 
         // select the most probable label for each character
         val predictedLabels = for (categoryScores <- predictions.slice(3, 3 + snippet.length)) yield {
           val maxScore = categoryScores.max
           val maxIndex = categoryScores.indexWhere(_ == maxScore)
-          labels.lift(maxIndex - 1).getOrElse("O")
+          labelVocabulary.lift(maxIndex - 1).getOrElse("O")
         }
 
         // Slide through label list and get position where the label type changes.
         val changesWithIndex = for {
-          (Array(label1, label2), index) <- ("" +: predictedLabels :+ "").sliding(2).zipWithIndex
+          (Array(label1, label2), index) <- ("O" +: predictedLabels :+ "O").sliding(2).zipWithIndex
           if label1 != label2
-        } yield (label2, textStart + index)
+        } yield (label2, snippetStart + index)
 
         // build the spans as current_position(start), next_position(end), current_label. Remove the "O"s
         val labeledSpans = for {
@@ -235,10 +227,11 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
           if label != "O"
         } yield {
 
-          // Complete the annotation if the span does not cover the whole token
-          val startAdjustment = Try(spaceIndices.map((start - 1) - _).filter(_ >= 0).min).getOrElse(0)
-          val endAdjustment = Try(spaceIndices.map(_ - end).filter(_ >= 0).min).getOrElse(0)
-          (start - startAdjustment, end + endAdjustment, label)
+          // Complete the annotation if the span does not cover the whole token (but only expand over "O" labels)
+          val doExpand = (i: Int) => wordCharIndices.contains(i) && predictedLabels.lift(i - snippetStart).contains("O")
+          val wordStart = Iterator.from(start, -1).takeWhile(doExpand).toSeq.lastOption.getOrElse(start)
+          val wordEnd = Iterator.from(end, +1).takeWhile(doExpand).toSeq.lastOption.map(_ + 1).getOrElse(end)
+          (wordStart, wordEnd, label)
         }
 
         labeledSpans.toArray

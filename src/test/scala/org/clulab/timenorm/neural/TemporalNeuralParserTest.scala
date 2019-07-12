@@ -7,6 +7,8 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import com.codecommit.antixml.text
+
 
 @RunWith(classOf[JUnitRunner])
 class TemporalNeuralParserTest extends FunSuite with TypesSuite {
@@ -90,5 +92,18 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
     assert(sinceSep2016.charSpan === Some((488, 508)))
     assert(sinceSep2016.start === SimpleInterval.of(2016, 9).start)
     assert(sinceSep2016.end === dct.end)
+  }
+
+  test("no-duplicate-ids") {
+    // in July 2019, for the text below, the parser generated [After even][Next tual][After ly] and the code for
+    // expanding to word boundaries expanded these all to have the span, resulting in <entity> nodes with identical IDs
+    val xml = parser.parseToXML(
+      """
+        |Although BP's involvement in the Russian joint venture has been lucrative, relations with its partners have often been fraught with disagreement. In 2011, the AAR consortium attempted to block a drilling joint venture in the Arctic between BP and Rosneft through the courts and the plan was eventually dropped.
+        |
+        |As well as internal wrangles, BP employees at TNK-BP have fallen foul of Russian authorities.
+      """.stripMargin)
+    val ids = xml \\ "id" \ text
+    assert(ids === ids.distinct)
   }
 }
