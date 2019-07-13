@@ -245,8 +245,10 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
     }
   }
 
-  private def inferLinks(timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
+   def inferLinks(timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
     val links = Array.fill(timeSpans.length)(mutable.ArrayBuffer.empty[(String, Int)])
+    val ancestors = Array.fill(timeSpans.length)(mutable.Set.empty[Int])
+    val descendants = Array.fill(timeSpans.length)(mutable.Set.empty[Int])
     var start = 0
     for ((timeSpan, i) <- timeSpans.zipWithIndex) {
 
@@ -255,21 +257,34 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
         start = i
 
       // find relations between the current and any previous time spans
-      for (s <- (start until i).toList.reverse) {
+      for (s <- (start until i).reverse) {
 
-        // find relations that are valid according to the schema
+        // find relations that are valid
         val relations = for {
           (source, target) <- Seq((s, i), (i, s))
           sourceType = timeSpans(source)._3
           targetType = timeSpans(target)._3
           propertyAllowedValues <- this.operatorToPropertyToTypes.get(sourceType).toSeq
           (propertyName, allowedValues) <- propertyAllowedValues
+          // the slot should be valid according to the schema
           if allowedValues contains targetType
+          // the slot should not already be full
+          if !links(source).map(_._1).contains(propertyName)
+          // the target should not already be filling someone else's slot
+          if ancestors(target).isEmpty
+          // don't create cyclic links
+          if !ancestors(source).contains(target) && !descendants(target).contains(source)
         } yield (source, target, propertyName)
 
-        // pick only the first allowable relation
+        // pick only the first valid relation
         for ((source, target, propertyName) <- relations.headOption) {
           links(source) += propertyName -> target
+
+          // update data structures for avoiding cyclic links
+          ancestors(target) += source
+          ancestors(target) ++= ancestors(source)
+          descendants(source) += target
+          descendants(source) ++= descendants(target)
         }
       }
     }
