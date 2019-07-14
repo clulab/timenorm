@@ -260,7 +260,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
       for (s <- (start until i).reverse) {
 
         // find relations that are valid
-        val relations = for {
+        for {
           (source, target) <- Seq((s, i), (i, s))
           sourceType = timeSpans(source)._3
           targetType = timeSpans(target)._3
@@ -274,10 +274,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
           if ancestors(target).isEmpty
           // don't create cyclic links
           if !ancestors(source).contains(target) && !descendants(target).contains(source)
-        } yield (source, target, propertyName)
-
-        // pick only the first valid relation
-        for ((source, target, propertyName) <- relations.headOption) {
+        } {
           links(source) += propertyName -> target
 
           // update data structures for avoiding cyclic links
