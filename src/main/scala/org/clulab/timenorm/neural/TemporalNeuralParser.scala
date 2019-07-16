@@ -245,7 +245,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
     }
   }
 
-   def inferLinks(timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
+  def inferLinks(timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
     val links = Array.fill(timeSpans.length)(mutable.ArrayBuffer.empty[(String, Int)])
     val ancestors = Array.fill(timeSpans.length)(mutable.Set.empty[Int])
     val descendants = Array.fill(timeSpans.length)(mutable.Set.empty[Int])
