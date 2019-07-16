@@ -74,7 +74,9 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(year: Interval, _: RepeatingInterval, _: RepeatingInterval, noon: RepeatingField) =>
         assert(year === SimpleInterval.of(2000, 10, 25, 12, 0))
+        assert(year.charSpan === Some((0, 15)))
         assert(noon.field === ChronoField.MINUTE_OF_DAY)
+        assert(noon.charSpan === Some((11, 15)))
       case _ => fail("expected Seq(year: I, month: RI, day: RI, noon: RI), found " + temporals)
     }
   }
@@ -139,6 +141,11 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(nth: NthRIs, number: Number, month: RepeatingInterval, year: Year) =>
         assert(nth === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
+        assert(nth.charSpan === Some((0, 25)))
+        assert(number.charSpan === Some((6, 10)))
+        // we currently don't attach Numbers to RepeatingIntervals
+        // assert(month.charSpan === Some((6, 17)))
+        assert(year.charSpan === Some((21, 25)))
       case _ => fail("expected Seq(nth: NRIs, number: N, month: RI, year: Y), found " + temporals)
     }
   }
@@ -188,7 +195,9 @@ class ReadersTest extends FunSuite with TypesSuite {
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(last: Last, _: Number, _: RepeatingInterval) => assert(!last.isDefined)
+      case Seq(last: Last, _: Number, _: RepeatingInterval) =>
+        assert(!last.isDefined)
+        assert(last.charSpan === Some((0, 15)))
       case _ => fail("expected Seq(last: Last, number: N, month: RI), found " + temporals)
     }
   }
@@ -242,6 +251,7 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(year: Interval, _: RepeatingInterval, _: RepeatingInterval) =>
         assert(year === SimpleInterval.of(1998, 3, 31))
+        assert(year.charSpan === Some((0, 8)))
       case _ => fail("expected Seq(year: Y, month: RI, day: RI), found " + temporals)
     }
   }
@@ -283,7 +293,10 @@ class ReadersTest extends FunSuite with TypesSuite {
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(friday: RepeatingInterval, last: LastRI) => assert(last === SimpleInterval(start, start.plusDays(1)))
+      case Seq(friday: RepeatingInterval, last: LastRI) =>
+        assert(last === SimpleInterval(start, start.plusDays(1)))
+        assert(friday.charSpan === Some((0, 6)))
+        assert(last.charSpan === Some((0, 6)))
       case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
     }
   }
@@ -358,6 +371,8 @@ class ReadersTest extends FunSuite with TypesSuite {
       case Seq(_: RepeatingInterval, last: LastRI, _: BeforeP, _: Event, intersection: IntersectionI) =>
         assert(last === SimpleInterval.of(1998, 3, 22))
         assert(!intersection.isDefined)
+        assert(last.charSpan === Some((3926,3932)))
+        assert(intersection.charSpan === Some((3750, 3932)))
       case _ => fail("expected Seq(sunday: RI, last: I, before: I, event: I, intersection: I), found " + temporals)
     }
   }
@@ -419,6 +434,7 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(_: RepeatingInterval, _: RepeatingInterval, _: ThisRI, intersection: Intervals) =>
         assert(intersection === SimpleIntervals(Seq(SimpleInterval.of(1998, 1))))
+        assert(intersection.charSpan === Some((1164, 1181)))
       case _ => fail("expected Seq(january: RI, year: RI, this: I, intersection: Is), found " + temporals)
     }
   }
@@ -448,6 +464,7 @@ class ReadersTest extends FunSuite with TypesSuite {
       case Seq(quarterCentury: RepeatingInterval) =>
         assert(ThisRI(dct, quarterCentury)
           === SimpleInterval(LocalDateTime.of(1975, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 1, 0, 0)))
+        assert(quarterCentury.charSpan === Some((1095, 1110)))
       case _ => fail("expected Seq(quarter-century: RI), found " + temporals)
     }
   }
@@ -489,6 +506,7 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(_: RepeatingInterval, nth: NthRI) =>
         assert(nth === SimpleInterval(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 1, 0, 0)))
+        assert(nth.charSpan === Some((484, 496)))
       case _ => fail("expected Seq(century: RI, 20th: I), found " + temporals)
     }
   }
@@ -530,6 +548,7 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(_: RepeatingInterval, nth: NthRI) =>
         assert(nth === SimpleInterval(LocalDateTime.of(1989, 7, 1, 0, 0), LocalDateTime.of(1989, 10, 1, 0, 0)))
+        assert(nth.charSpan === Some((287, 300)))
       case _ => fail("expected Seq(quarter: RI, 3rd: I), found " + temporals)
     }
   }
@@ -558,8 +577,8 @@ class ReadersTest extends FunSuite with TypesSuite {
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
       case Seq(year: YearSuffix) =>
-        assert(year
-          === SimpleInterval.of(2000))
+        assert(year === SimpleInterval.of(2000))
+        assert(year.charSpan === Some((6422,6424)))
       case _ => fail("expected Seq(year: YearSuffix), found " + temporals)
     }
   }
