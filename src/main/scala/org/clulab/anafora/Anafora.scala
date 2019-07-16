@@ -14,8 +14,9 @@ class Data(xml: Elem, val text: Option[String]) {
   lazy val entities: IndexedSeq[Entity] = xml \ "annotations" \ "entity" map Entity.apply
   lazy val relations: IndexedSeq[Relation] = xml \ "annotations" \ "relation" map Relation.apply
   lazy val topEntities : IndexedSeq[Entity] = this.entities.filter(x => !(xml \\ "properties" \ * \ ElemText contains(x.id)))
-  private[anafora] lazy val idToEntity: Map[String, Entity] = this.entities.map(e => e.id -> e)(scala.collection.breakOut)
-  private[anafora] lazy val idToRelation: Map[String, Relation] = this.relations.map(r => r.id -> r)(scala.collection.breakOut)
+  private[anafora] lazy val idToEntity: Map[String, Entity] = this.entities.map(e => e.id -> e).toMap
+  private[anafora] lazy val idToRelation: Map[String, Relation] = this.relations.map(r => r.id -> r).toMap
+  private[anafora] lazy val idToAnnotation: Map[String, Annotation] = this.idToEntity ++ this.idToRelation
 }
 
 
@@ -27,6 +28,15 @@ abstract class Annotation(val xml: Elem) {
   }
   lazy val properties: Properties = xml \ "properties" match {
     case Seq(elem) => Properties(elem)
+  }
+  private def childTexts: IndexedSeq[String] = this.properties.xml.children \ ElemText
+
+  def entityChildren(implicit data: Data): IndexedSeq[Entity] = this.childTexts.flatMap(data.idToEntity.get)
+
+  def relationChildren(implicit data: Data): IndexedSeq[Relation] = this.childTexts.flatMap(data.idToRelation.get)
+
+  def descendants(implicit data: Data): IndexedSeq[Annotation] = {
+    this +: this.childTexts.flatMap(data.idToAnnotation.get).flatMap(_.descendants)
   }
 }
 
@@ -43,13 +53,8 @@ class Entity(xml: Elem) extends Annotation(xml) {
     case (start, end) => text.substring(start, end)
   }.mkString("..."))
   def expandedSpan(implicit data: Data): (Int, Int) = {
-    val allSpans = entityDescendants.flatMap(_.spans)
+    val allSpans = this.descendants.collect{ case e: Entity => e }.flatMap(_.spans)
     (allSpans.map(_._1).min, allSpans.map(_._2).max)
-  }
-  def entityDescendants(implicit data: Data): IndexedSeq[Entity] = {
-    val childTexts = this.properties.xml.children \ ElemText
-    val childEntities = childTexts.filter(data.idToEntity.contains).map(data.idToEntity)
-    IndexedSeq(this) ++ childEntities.flatMap(_.entityDescendants)
   }
 }
 
@@ -66,7 +71,7 @@ object Properties {
 class Properties(xml: Elem) extends Annotation(xml) {
   private def textFor(name: String): IndexedSeq[String] = xml \ name \ ElemText
 
-  def has(name: String): Boolean = !this.textFor(name).isEmpty
+  def has(name: String): Boolean = this.textFor(name).nonEmpty
 
   def get(name: String): Option[String] = this.textFor(name) match {
     case Seq() => None

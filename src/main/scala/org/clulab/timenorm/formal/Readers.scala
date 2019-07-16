@@ -66,7 +66,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     case Some(entity) => number(entity) match {
       case IntNumber(number, _) => number
       case _ => throw new AnaforaReader.Exception(
-        s"""cannot parse integer from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
+        s"""cannot parse integer from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }
   }
 
@@ -175,7 +175,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthRI(interval(properties), value.toInt, rInterval, triggerCharSpan = charSpan)
       case ("Intersection", None, N, N, N, None) => IntersectionI(entity.properties.getEntities("Intervals").map(interval), charSpan)
       case _ => throw new AnaforaReader.Exception(
-        s"""cannot parse Interval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
+        s"""cannot parse Interval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }
     properties.getEntity("Sub-Interval") match {
       case None => result
@@ -205,7 +205,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("NthFromStart", Some(value), N, Seq(rInterval), Seq(number), N) =>
         NthRIs(interval(entity.properties), value.toInt, rInterval, number, triggerCharSpan = charSpan)
       case _ => throw new AnaforaReader.Exception(
-        s"""cannot parse Intervals from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
+        s"""cannot parse Intervals from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }
   }
 
@@ -219,7 +219,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Intersection", None) =>
         val repeatingIntervals = entity.properties.getEntities("Repeating-Intervals").map(repeatingInterval)
         if (entity.properties.has("Intervals")) throw new AnaforaReader.Exception(
-          s"""cannot parse Intersection from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
+          s"""cannot parse Intersection from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
         IntersectionRI(repeatingIntervals.toSet, charSpan)
       case ("Calendar-Interval" , Some("Century")) => RepeatingUnit(ChronoUnit.CENTURIES, mod, charSpan)
       case ("Calendar-Interval" , Some("Quarter-Century")) => RepeatingUnit(QUARTER_CENTURIES, mod, charSpan)
@@ -260,11 +260,11 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
           case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE =>
             entity.properties("Value").toLong
           case _ => throw new AnaforaReader.Exception(
-            s"""cannot parse ChronoField value from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
+            s"""cannot parse ChronoField value from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
         }
         RepeatingField(field, value, mod, charSpan)
       case _ => throw new AnaforaReader.Exception(
-        s"""cannot parse RepeatingInterval from "${entity.text}" and ${entity.entityDescendants.map(_.xml)}""")
+        s"""cannot parse RepeatingInterval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
