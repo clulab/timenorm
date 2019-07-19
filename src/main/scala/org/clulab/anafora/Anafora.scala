@@ -1,9 +1,6 @@
 package org.clulab.anafora
 
-import com.codecommit.antixml.Elem
-import com.codecommit.antixml.{text => ElemText}
-import com.codecommit.antixml.XML
-import com.codecommit.antixml.*
+import com.codecommit.antixml.{*, Elem, Selector, XML, text => ElemText}
 
 object Data {
   def fromPaths(xmlPath: String, textPath: Option[String]) = apply(
@@ -71,6 +68,10 @@ object Properties {
 class Properties(xml: Elem) extends Annotation(xml) {
   private def textFor(name: String): IndexedSeq[String] = xml \ name \ ElemText
 
+  def names: IndexedSeq[String] = xml.children.collect {
+    case e: Elem => e.name
+  }
+
   def has(name: String): Boolean = this.textFor(name).nonEmpty
 
   def get(name: String): Option[String] = this.textFor(name) match {
@@ -86,9 +87,9 @@ class Properties(xml: Elem) extends Annotation(xml) {
 
   def entity(name: String)(implicit data: Data): Entity = data.idToEntity(this.apply(name))
 
-  def getEntity(name: String)(implicit data: Data): Option[Entity] = this.get(name).map(data.idToEntity)
+  def getEntity(name: String)(implicit data: Data): Option[Entity] = this.get(name).flatMap(data.idToEntity.get)
 
-  def getEntities(name: String)(implicit data: Data): IndexedSeq[Entity] = this.textFor(name).map(data.idToEntity)
+  def getEntities(name: String)(implicit data: Data): IndexedSeq[Entity] = this.textFor(name).flatMap(data.idToEntity.get)
 
   def relation(name: String)(implicit data: Data): Relation = data.idToRelation(this.apply(name))
 }

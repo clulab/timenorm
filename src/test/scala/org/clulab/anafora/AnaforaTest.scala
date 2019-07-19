@@ -73,6 +73,8 @@ class AnaforaTest extends FunSuite {
     assert(time.entityChildren === IndexedSeq.empty)
     assert(time.relationChildren === IndexedSeq.empty)
     assert(time.descendants === IndexedSeq(time))
+    assert(time.properties.names === IndexedSeq("functionInDocument", "type", "temporalFunction", "value"))
+    assert(time.properties.getEntity("type") === None)
 
     assert(event.id === "4@e@wsj_1073@gold")
     assert(event.`type` === "EVENT")
