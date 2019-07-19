@@ -3,29 +3,40 @@ package org.clulab.timenorm.neural
 import java.nio.file.{FileSystems, Files, Path, Paths}
 
 import scala.collection.JavaConverters._
-
 import com.codecommit.antixml.{Elem, text}
-import org.clulab.anafora.Data
+import org.clulab.anafora.{Data, Entity}
 
 object EvaluateLinker {
 
-  def entityDistanceHistogram(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[Int, Int] = {
+  private def linkedEntityInfo(inRoots: Array[Path], exclude: Set[String]): Array[(Entity, String, Entity, Int)] = {
     val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**TimeNorm.gold.completed.xml")
-    val distances = for {
+    for {
       inRoot <- inRoots
       xmlPath <- Files.walk(inRoot).iterator.asScala
       if Files.isRegularFile(xmlPath) && endsWithXML.matches(xmlPath)
       data = Data.fromPaths(xmlPath.toString, None)
       entity1 <- data.entities
       if !exclude.contains(entity1.`type`)
-      entity2 <- entity1.entityChildren(data)
+      propertyName <- entity1.properties.names
+      entity2 <- entity1.properties.getEntities(propertyName)(data)
       if !exclude.contains(entity2.`type`)
       (start1, end1) = entity1.fullSpan
       (start2, end2) = entity2.fullSpan
     } yield {
-      Seq(start2 - end1, start1 - end2, start1 - start2, end1 - end2).map(math.abs).min
+      val dist = Seq(start1 - start2, start1 - end2, end1 - start2, end1 - end2).minBy(math.abs)
+      (entity1, propertyName, entity2, dist)
     }
-    distances.toSeq.groupBy(identity).mapValues(_.size)
+  }
+
+  def entityDistanceHistogram(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[Int, Int] = {
+      linkedEntityInfo(inRoots, exclude).map(_._4).groupBy(identity).mapValues(_.size)
+  }
+
+  def distancesByTypes(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[String, Map[Int, Int]] = {
+    val distances = for ((entity1, propertyName, _, dist) <- linkedEntityInfo(inRoots, exclude)) yield {
+      (s"${entity1.`type`}:$propertyName", dist)
+    }
+    distances.toSeq.groupBy(_._1).mapValues(_.map(_._2).groupBy(identity).mapValues(_.size))
   }
 
   def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {
@@ -58,13 +69,26 @@ object EvaluateLinker {
     (correctCounts.sum, goldCounts.sum, systemCounts.sum)
   }
 
-  def main(args: Array[String]): Unit = {
-    val paths = args.map(Paths.get(_))
-    println("## Histogram of distances between linked entities ##")
-    for ((distance, count) <- entityDistanceHistogram(paths, exclude = Set("Event")).toSeq.sortBy(_._1)) {
+  private def printHistogram(histogram: Map[Int, Int]): Unit = {
+    for ((distance, count) <- histogram.toSeq.sortBy(_._1)) {
       println(f"$distance%4d $count%4d")
     }
+  }
+
+  def main(args: Array[String]): Unit = {
+    val paths = args.map(Paths.get(_))
+
+    println("## Histogram of distances between linked entities ##")
+    printHistogram(entityDistanceHistogram(paths, exclude = Set("Event")))
     println()
+
+    println("## Histogram of distances by link type ##")
+    for ((name, distances) <- distancesByTypes(paths).toSeq.sortBy(_._1)) {
+      println(name)
+      printHistogram(distances)
+    }
+    println()
+
     val (nCorrect, nGold, nSystem) = evaluateLinker(paths, verbose = true)
     val nCorrectF = nCorrect.toFloat
     println(
