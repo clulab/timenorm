@@ -1,0 +1,80 @@
+package org.clulab.timenorm.neural
+
+import java.nio.file.{FileSystems, Files, Path, Paths}
+
+import scala.collection.JavaConverters._
+
+import com.codecommit.antixml.{Elem, text}
+import org.clulab.anafora.Data
+
+object EvaluateLinker {
+
+  def entityDistanceHistogram(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[Int, Int] = {
+    val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**TimeNorm.gold.completed.xml")
+    val distances = for {
+      inRoot <- inRoots
+      xmlPath <- Files.walk(inRoot).iterator.asScala
+      if Files.isRegularFile(xmlPath) && endsWithXML.matches(xmlPath)
+      data = Data.fromPaths(xmlPath.toString, None)
+      entity1 <- data.entities
+      if !exclude.contains(entity1.`type`)
+      entity2 <- entity1.entityChildren(data)
+      if !exclude.contains(entity2.`type`)
+      (start1, end1) = entity1.fullSpan
+      (start2, end2) = entity2.fullSpan
+    } yield {
+      Seq(start2 - end1, start1 - end2, start1 - start2, end1 - end2).map(math.abs).min
+    }
+    distances.toSeq.groupBy(identity).mapValues(_.size)
+  }
+
+  def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {
+    val parser = new TemporalNeuralParser()
+    val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**TimeNorm.gold.completed.xml")
+    val results = for {
+      inRoot <- inRoots
+      xmlPath <- Files.walk(inRoot).iterator.asScala
+      if Files.isRegularFile(xmlPath) && endsWithXML.matches(xmlPath)
+      data = Data.fromPaths(xmlPath.toString, None)
+      entities = data.entities.sortBy(_.fullSpan._1)
+      timeSpans = entities.map(e => (e.fullSpan._1, e.fullSpan._2, e.`type`))
+      (i, links) <- entities.indices zip parser.inferLinks(timeSpans.toArray)
+    } yield {
+      val goldProperties = entities(i).properties.xml.children.collect{
+        case elem: Elem if (elem \ text).mkString.contains("@") => (elem.name, (elem \ text).mkString)
+      }.toSet
+      val systemProperties = links.map{ case (name, j) => (name, entities(j).id)}.toSet
+      val correct = goldProperties.intersect(systemProperties).size
+      if (verbose && (correct != goldProperties.size || correct != systemProperties.size)) {
+        val additions = systemProperties.diff(goldProperties)
+        val deletions = goldProperties.diff(systemProperties)
+        for ((items, flag) <- Seq((additions, "+"), (deletions, "-")); (name, id) <- items) {
+          println(f"$flag ${entities(i).`type` + ":" + name}%-35s ${entities(i).id}%35s -> $id%35s at ${entities(i).fullSpan}%15s in $xmlPath")
+        }
+      }
+      (correct, goldProperties.size, systemProperties.size)
+    }
+    val (correctCounts, goldCounts, systemCounts) = results.toSeq.unzip3
+    (correctCounts.sum, goldCounts.sum, systemCounts.sum)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val paths = args.map(Paths.get(_))
+    println("## Histogram of distances between linked entities ##")
+    for ((distance, count) <- entityDistanceHistogram(paths, exclude = Set("Event")).toSeq.sortBy(_._1)) {
+      println(f"$distance%4d $count%4d")
+    }
+    println()
+    val (nCorrect, nGold, nSystem) = evaluateLinker(paths, verbose = true)
+    val nCorrectF = nCorrect.toFloat
+    println(
+      f"""
+        |## Linking performance ##
+        |Correct:   $nCorrect
+        |Gold:      $nGold
+        |System:    $nSystem
+        |Precision: ${nCorrectF / nSystem}%.3f
+        |Recall:    ${nCorrectF / nGold}%.3f
+        |""".stripMargin)
+  }
+}
