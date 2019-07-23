@@ -1,0 +1,63 @@
+ROOTS [Int:UpTo15Digit]
+
+[Nil] ||| a ||| ||| 1.0
+[Nil] ||| and ||| ||| 1.0
+[Int:1Digit] ||| one ||| 1 ||| 1.0
+[Int:1Digit] ||| two ||| 2 ||| 1.0
+[Int:1Digit] ||| three ||| 3 ||| 1.0
+[Int:1Digit] ||| four ||| 4 ||| 1.0
+[Int:1Digit] ||| five ||| 5 ||| 1.0
+[Int:1Digit] ||| six ||| 6 ||| 1.0
+[Int:1Digit] ||| seven ||| 7 ||| 1.0
+[Int:1Digit] ||| eight ||| 8 ||| 1.0
+[Int:1Digit] ||| nine ||| 9 ||| 1.0
+[Int:Teens] ||| ten ||| 1 0 ||| 1.0
+[Int:Teens] ||| eleven ||| 1 1 ||| 1.0
+[Int:Teens] ||| twelve ||| 1 2 ||| 1.0
+[Int:Teens] ||| thirteen ||| 1 3 ||| 1.0
+[Int:Teens] ||| fourteen ||| 1 4 ||| 1.0
+[Int:Teens] ||| fifteen ||| 1 5 ||| 1.0
+[Int:Teens] ||| sixteen ||| 1 6 ||| 1.0
+[Int:Teens] ||| seventeen ||| 1 7 ||| 1.0
+[Int:Teens] ||| eighteen ||| 1 8 ||| 1.0
+[Int:Teens] ||| nineteen ||| 1 9 ||| 1.0
+[Int:Tens] ||| twenty ||| 2 ||| 1.0
+[Int:Tens] ||| thirty ||| 3 ||| 1.0
+[Int:Tens] ||| forty ||| 4 ||| 1.0
+[Int:Tens] ||| fifty ||| 5 ||| 1.0
+[Int:Tens] ||| sixty ||| 6 ||| 1.0
+[Int:Tens] ||| seventy ||| 7 ||| 1.0
+[Int:Tens] ||| eighty ||| 8 ||| 1.0
+[Int:Tens] ||| ninety ||| 9 ||| 1.0
+[Int:2Digit] ||| [Int:Teens] ||| [Int:Teens] ||| 1.0
+[Int:2Digit] ||| [Int:Tens] ||| [Int:Tens] 0 ||| 1.0
+[Int:2Digit] ||| [Int:Tens] [Int:1Digit] ||| [Int:Tens] [Int:1Digit] ||| 1.0
+[Int:UpTo2Digit] ||| [Int:2Digit] ||| [Int:2Digit] ||| 1.0
+[Int:UpTo2Digit] ||| [Int:1Digit] ||| 0 [Int:1Digit] ||| 1.0
+[Int:Hundred] ||| hundred ||| 0 0 ||| 1.0
+[Int:Hundred] ||| hundred [Int:UpTo2Digit] ||| [Int:UpTo2Digit] ||| 1.0
+[Int:UpTo3Digit] ||| [Int:Hundred] ||| 1 [Int:Hundred] ||| 1.0
+[Int:UpTo3Digit] ||| [Int:1Digit] [Int:Hundred] ||| [Int:1Digit] [Int:Hundred] ||| 1.0
+[Int:UpTo3Digit] ||| [Int:UpTo2Digit] ||| 0 [Int:UpTo2Digit] ||| 1.0
+[Int:Thousand] ||| thousand ||| 0 0 0 ||| 1.0
+[Int:Thousand] ||| thousand [Int:UpTo3Digit] ||| [Int:UpTo3Digit] ||| 1.0
+[Int:UpTo6Digit] ||| [Int:UpTo3Digit] ||| 0 0 0 [Int:UpTo3Digit] ||| 1.0
+[Int:UpTo6Digit] ||| [Int:Thousand] ||| 0 0 1 [Int:Thousand] ||| 1.0
+[Int:UpTo6Digit] ||| [Int:2Digit] [Int:Hundred] ||| 0 0 [Int:2Digit] [Int:Hundred] ||| 1.0
+[Int:UpTo6Digit] ||| [Int:2Digit,1] [Int:2Digit,2] ||| 0 0 [Int:2Digit,1] [Int:2Digit,2] ||| 1.0
+[Int:UpTo6Digit] ||| [Int:UpTo3Digit] [Int:Thousand] ||| [Int:UpTo3Digit] [Int:Thousand] ||| 1.0
+[Int:Million] ||| million ||| 0 0 0 0 0 0 ||| 1.0
+[Int:Million] ||| million [Int:UpTo6Digit] ||| [Int:UpTo6Digit] ||| 1.0
+[Int:UpTo9Digit] ||| [Int:Million] ||| 0 0 1 [Int:Million] ||| 1.0
+[Int:UpTo9Digit] ||| [Int:UpTo3Digit] [Int:Million] ||| [Int:UpTo3Digit] [Int:Million] ||| 1.0
+[Int:UpTo9Digit] ||| [Int:UpTo6Digit] ||| 0 0 0 [Int:UpTo6Digit] ||| 1.0
+[Int:Billion] ||| billion ||| 0 0 0 0 0 0 0 0 0 ||| 1.0
+[Int:Billion] ||| billion [Int:UpTo9Digit] ||| [Int:UpTo9Digit] ||| 1.0
+[Int:UpTo12Digit] ||| [Int:Billion] ||| 0 0 1 [Int:Billion] ||| 1.0
+[Int:UpTo12Digit] ||| [Int:UpTo3Digit] [Int:Billion] ||| [Int:UpTo3Digit] [Int:Billion] ||| 1.0
+[Int:UpTo12Digit] ||| [Int:UpTo9Digit] ||| [Int:UpTo9Digit] ||| 1.0
+[Int:Trillion] ||| trillion ||| 0 0 0 0 0 0 0 0 0 0 0 0 ||| 1.0
+[Int:Trillion] ||| trillion [Int:UpTo12Digit] ||| 0 0 0 [Int:UpTo12Digit] ||| 1.0
+[Int:UpTo15Digit] ||| [Int:Trillion] ||| 0 0 1 [Int:Trillion] ||| 1.0
+[Int:UpTo15Digit] ||| [Int:UpTo3Digit] [Int:Trillion] ||| [Int:UpTo3Digit] [Int:Trillion] ||| 1.0
+[Int:UpTo15Digit] ||| [Int:UpTo12Digit] ||| [Int:UpTo12Digit] ||| 1.0
