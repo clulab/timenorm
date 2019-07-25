@@ -31,6 +31,7 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
       |refugees arrived in Gambella, Ethiopia, bringing the
       |total number of new arrivals since September 2016
       |to 77,874.
+      |FOOD PROGRAMME Rome, 2016   The designations employed and the presentation of material in this
     """.stripMargin.trim,
     Array(
       (0, 10),    // 2018-10-10
@@ -40,6 +41,7 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
       (181, 197), // since last March
       (198, 354), // A substantial ... pound.
       (355, 519), // Between 1 ... 77,874
+      (520, 614), // FOOD PROGRAMME ... in this
     ),
     // use a SimpleInterval here so that there's no associated character span
     SimpleInterval(dct.start, dct.end),
@@ -92,6 +94,12 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
     assert(sinceSep2016.charSpan === Some((488, 508)))
     assert(sinceSep2016.start === SimpleInterval.of(2016, 9).start)
     assert(sinceSep2016.end === dct.end)
+  }
+
+  test("fill-incomplete-span-backwards") {
+    val Some(year2016: Interval) = batch(7).headOption
+    assert(year2016.charSpan === Some((541, 545)))
+    assert(year2016 === SimpleInterval.of(2016))
   }
 
   test("no-duplicate-ids") {
