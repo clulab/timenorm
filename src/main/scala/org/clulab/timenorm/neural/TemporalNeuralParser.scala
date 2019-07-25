@@ -229,7 +229,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
 
           // Complete the annotation if the span does not cover the whole token (but only expand over "O" labels)
           val doExpand = (i: Int) => wordCharIndices.contains(i) && predictedLabels.lift(i - snippetStart).contains("O")
-          val wordStart = Iterator.from(start, -1).takeWhile(doExpand).toSeq.lastOption.getOrElse(start)
+          val wordStart = Iterator.from(start - 1, -1).takeWhile(doExpand).toSeq.lastOption.getOrElse(start)
           val wordEnd = Iterator.from(end, +1).takeWhile(doExpand).toSeq.lastOption.map(_ + 1).getOrElse(end)
           (wordStart, wordEnd, label)
         }
