@@ -32,6 +32,8 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
       |total number of new arrivals since September 2016
       |to 77,874.
       |FOOD PROGRAMME Rome, 2016   The designations employed and the presentation of material in this
+      |the past several months
+      |nineteen ninety nine
     """.stripMargin.trim,
     Array(
       (0, 10),    // 2018-10-10
@@ -42,6 +44,8 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
       (198, 354), // A substantial ... pound.
       (355, 519), // Between 1 ... 77,874
       (520, 614), // FOOD PROGRAMME ... in this
+      (615, 638), // the past several months
+      (639, 659), // nineteen ninety nine
     ),
     // use a SimpleInterval here so that there's no associated character span
     SimpleInterval(dct.start, dct.end),
@@ -100,6 +104,18 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
     val Some(year2016: Interval) = batch(7).headOption
     assert(year2016.charSpan === Some((541, 545)))
     assert(year2016 === SimpleInterval.of(2016))
+  }
+
+  test("vague-number") {
+    val Array(pastSeveralMonths: Interval) = batch(8)
+    assert(pastSeveralMonths.charSpan === Some((619, 638)))
+    println(pastSeveralMonths)
+  }
+
+  test("English-number") {
+    val Array(year1999: Interval) = batch(9)
+    assert(year1999.charSpan === Some((639, 659)))
+    assert(year1999 === SimpleInterval.of(1999))
   }
 
   test("no-duplicate-ids") {

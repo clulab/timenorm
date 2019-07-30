@@ -132,6 +132,9 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
     entityInfos.toMap
   }
 
+  // TODO: should be a constructor parameter
+  lazy private val textToNumber: WordsToNumber = WordsToNumber("en")
+
   def parse(text: String, textCreationTime: Interval = UnknownInterval()): Array[TimeExpression] = {
     parseBatch(text, Array((0, text.length)), textCreationTime) match {
       case Array(timeExpressions) => timeExpressions
@@ -298,8 +301,14 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
            case _ => Some((propertyType, p))
          }
        case "Value" =>
-         val rgx = """^0*(\d+)[^\d]*$""".r
-         Some((propertyType, WordToNumber.convert(rgx.replaceAllIn(timeText, _.group(1)))))
+         val cleanedText = """^0*(\d+)[^\d]*$""".r.replaceAllIn(timeText, _.group(1))
+         val valueOption =
+           try {
+             Some(cleanedText.toLong)
+           } catch {
+             case _: NumberFormatException => textToNumber(cleanedText.split("""[\s-]+"""))
+           }
+         Some((propertyType, valueOption.map(_.toString).getOrElse(timeText)))
        case intervalType if intervalType contains "Interval-Type" =>
          if (links.exists{ case (relationType, _) => intervalType contains relationType})
            Some((propertyType, "Link"))
