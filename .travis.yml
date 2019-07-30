@@ -1,2 +1,4 @@
 language: scala
+scala:
+  - 2.12.8
 install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dgpg.skip
