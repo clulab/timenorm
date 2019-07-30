@@ -14,17 +14,18 @@ object WordsToNumber {
   }
 }
 
-class WordsToNumber(grammarStream: InputStream) extends Function[Array[String], Long] {
+class WordsToNumber(grammarStream: InputStream) extends Function[Array[String], Option[Long]] {
 
   private val grammar = SynchronousGrammar.fromString(IOUtils.toString(grammarStream, Charset.forName("ascii")))
+  private val sourceWords = grammar.sourceSymbols()
   private val parser = new SynchronousParser(grammar)
 
-  override def apply(words: Array[String]): Long = parser.parseAll(words) match {
-    case Array(tree) => this.toDigits(tree).reverse.zipWithIndex.foldLeft(0L){
-      case (sum, (digit, index)) => sum + digit * Array.fill(index)(10L).product
-    }
-    case trees => throw new UnsupportedOperationException(
+  override def apply(words: Array[String]): Option[Long] = {
+    if (!words.forall(sourceWords)) None else parser.parseAll(words) match {
+      case Array(tree) => Some(this.toDigits(tree).foldLeft(0L) { case (sum, digit) => 10L * sum + digit })
+      case trees => throw new UnsupportedOperationException(
         s"Ambiguous grammar for ${words.toList}. Parses:\n${trees.mkString("\n")}")
+    }
   }
 
   private def toDigits(tree: Tree): List[Long] = tree match {

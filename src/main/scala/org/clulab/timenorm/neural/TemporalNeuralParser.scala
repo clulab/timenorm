@@ -302,13 +302,13 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
          }
        case "Value" =>
          val cleanedText = """^0*(\d+)[^\d]*$""".r.replaceAllIn(timeText, _.group(1))
-         val value =
+         val valueOption =
            try {
-             cleanedText.toLong
+             Some(cleanedText.toLong)
            } catch {
              case _: NumberFormatException => textToNumber(cleanedText.split("""[\s-]+"""))
            }
-         Some((propertyType, value.toString))
+         Some((propertyType, valueOption.map(_.toString).getOrElse(timeText)))
        case intervalType if intervalType contains "Interval-Type" =>
          if (links.exists{ case (relationType, _) => intervalType contains relationType})
            Some((propertyType, "Link"))
