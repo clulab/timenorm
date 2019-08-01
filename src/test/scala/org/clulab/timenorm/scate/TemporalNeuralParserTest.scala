@@ -1,13 +1,11 @@
-package org.clulab.timenorm.neural
+package org.clulab.timenorm.scate
 
 import java.time.temporal.ChronoField
 
-import org.clulab.timenorm.formal.{Interval, RepeatingField, SimpleInterval, TypesSuite}
+import com.codecommit.antixml.text
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-
-import com.codecommit.antixml.text
 
 
 @RunWith(classOf[JUnitRunner])
@@ -109,7 +107,6 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
   test("vague-number") {
     val Array(pastSeveralMonths: Interval) = batch(8)
     assert(pastSeveralMonths.charSpan === Some((619, 638)))
-    println(pastSeveralMonths)
   }
 
   test("English-number") {

@@ -1,4 +1,4 @@
-package org.clulab.timenorm.neural
+package org.clulab.timenorm.scate
 
 import java.io.InputStream
 import java.nio.charset.Charset

@@ -1,4 +1,4 @@
-package org.clulab.timenorm.formal
+package org.clulab.timenorm.scate
 
 import java.time.temporal._
 

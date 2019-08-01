@@ -6,19 +6,19 @@ import java.time.format.DateTimeParseException
 import com.codecommit.antixml._
 import com.codecommit.antixml.{text => ElemText}
 import org.clulab.timeml.TimeMLanaforaDocument._
-import org.clulab.timenorm.TemporalExpressionParser
-import org.clulab.timenorm.TimeSpan
-import org.clulab.timenorm.formal.{Interval, Intervals, ThisRIs, TimeExpression, _}
+import org.clulab.timenorm.scate.{Interval, Intervals, ThisRIs, TimeExpression, _}
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
 import org.clulab.anafora.{Annotation, Data, Entity, Properties}
-import org.clulab.timenorm.TimeNormScorer.{intervals => get_intervals_timex, parseDCT, score}
+import TimeNormScorer.{parseDCT, score, intervals => get_intervals_timex}
 import java.io.File
 import java.time.ZoneId
 import java.time.temporal.TemporalUnit
 import java.time.LocalDateTime
 import java.time.Instant
+
+import org.clulab.timenorm.scfg.{TemporalExpressionParser, TimeSpan}
 
 object TimeMLScorer {
 

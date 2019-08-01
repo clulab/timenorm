@@ -1,14 +1,11 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scate
 
-import org.clulab.timenorm.formal.{Interval, TimeExpression}
-import org.clulab.timenorm.formal._
-
-import org.clulab.anafora.Data
 import java.io.File
 import java.time.{Instant, LocalDateTime, ZoneId}
 
-import scala.util.Try
+import org.clulab.anafora.Data
 
+import scala.util.Try
 
 object TimeNormScorer {
 

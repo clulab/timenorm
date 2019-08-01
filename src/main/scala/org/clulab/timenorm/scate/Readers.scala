@@ -1,4 +1,4 @@
-package org.clulab.timenorm.formal
+package org.clulab.timenorm.scate
 
 import java.time.{DayOfWeek, Month, LocalDateTime}
 import java.time.temporal.{IsoFields, WeekFields, ChronoField, ChronoUnit}

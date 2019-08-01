@@ -1,18 +1,15 @@
-package org.clulab.timenorm.neural
+package org.clulab.timenorm.scate
 
 import java.io._
-import java.nio.file.{FileSystems, Files, Path, PathMatcher, Paths}
+import java.nio.file._
 
-import scala.collection.JavaConverters._
 import com.codecommit.antixml._
-import org.clulab.anafora.Data
-import org.clulab.timenorm.formal._
-import org.tensorflow.Graph
-import org.tensorflow.Session
-import org.tensorflow.Tensor
 import org.apache.commons.io.IOUtils
+import org.clulab.anafora.Data
+import org.tensorflow.{Graph, Session, Tensor}
 import play.api.libs.json._
 
+import scala.collection.JavaConverters._
 import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source

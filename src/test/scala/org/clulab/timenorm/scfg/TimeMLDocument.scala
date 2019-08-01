@@ -1,15 +1,12 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
 import java.io.File
-import scala.io.Source
-import com.codecommit.antixml.XML
-import com.codecommit.antixml.{text => nodeText }
-import java.time.ZonedDateTime
-import java.time.LocalDateTime
-import java.time.LocalDate
-import java.time.ZoneId
+import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeParseException
-import com.codecommit.antixml.Elem
+
+import com.codecommit.antixml.{Elem, XML, text => nodeText}
+
+import scala.io.Source
 
 object TimeMLDocument {
   def toZonedDateTimeOption(value: String): Option[ZonedDateTime] = {
@@ -29,7 +26,6 @@ object TimeMLDocument {
 }
 
 class TimeMLDocument(val file: File) {
-  import TimeMLDocument._
 
   // a class providing basic TIMEX attributes
   case class TimeExpression(elem: Elem) {

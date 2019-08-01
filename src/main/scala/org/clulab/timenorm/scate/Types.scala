@@ -1,4 +1,4 @@
-package org.clulab.timenorm.formal
+package org.clulab.timenorm.scate
 
 import java.time.temporal._
 import java.time.{Duration, LocalDateTime}
@@ -12,7 +12,7 @@ trait TimeExpression {
   def isDefined: Boolean
   def charSpan: Option[(Int, Int)]
 
-  private[formal] def maxSpan(spanOptions: Seq[Option[(Int, Int)]]): Option[(Int, Int)] =
+  private[scate] def maxSpan(spanOptions: Seq[Option[(Int, Int)]]): Option[(Int, Int)] =
     spanOptions.flatten.sorted match {
       case Seq() => None
       case spans => Some((spans.head._1, spans.last._2))
@@ -666,7 +666,7 @@ trait RepeatingInterval extends TimeExpression {
   val range: TemporalUnit
 }
 
-private[formal] object RepeatingInterval {
+private[scate] object RepeatingInterval {
   def truncate(ldt: LocalDateTime, tUnit: TemporalUnit): LocalDateTime = tUnit match {
     case ChronoUnit.CENTURIES => LocalDateTime.of(ldt.getYear / 100 * 100, 1, 1, 0, 0)
     case QUARTER_CENTURIES => LocalDateTime.of(ldt.getYear / 25 * 25, 1, 1, 0, 0)

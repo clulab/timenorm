@@ -238,7 +238,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.clulab.timenorm.TemporalExpressionParser</mainClass>
+              <mainClass>org.clulab.timenorm.scate.TemporalNeuralParser</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

@@ -1,15 +1,14 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
-import java.time.ZonedDateTime
-import java.time.temporal.TemporalUnit
-import java.time.temporal.TemporalField
-import java.time.temporal.ChronoUnit._
 import java.time.temporal.ChronoField._
+import java.time.temporal.ChronoUnit._
 import java.time.temporal.IsoFields._
-import scala.collection.immutable.ListMap
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.temporal.{TemporalField, TemporalUnit}
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+
 import org.clulab.timenorm.field._
+
+import scala.collection.immutable.ListMap
 
 /**
  * A temporal object, such as a time span or a period.

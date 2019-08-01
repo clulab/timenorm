@@ -1,12 +1,12 @@
-package org.clulab.timenorm.formal
+package org.clulab.timenorm.scate
 
 import java.time.temporal.{ChronoField, ChronoUnit}
 
+import org.clulab.timenorm.field.NIGHT_OF_DAY
+import org.clulab.timenorm.scate.TimeNormScorer.{Timex, intervalPrecision, intervalScores, parseDCT, score}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import org.clulab.timenorm.TimeNormScorer.{parseDCT, score, intervalPrecision, intervalScores, Timex}
-import org.clulab.timenorm.field.NIGHT_OF_DAY
 
 
 @RunWith(classOf[JUnitRunner])

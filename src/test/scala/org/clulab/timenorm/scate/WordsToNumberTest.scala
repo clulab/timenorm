@@ -1,6 +1,5 @@
-package org.clulab.timenorm.neural
+package org.clulab.timenorm.scate
 
-import org.clulab.timenorm.formal.TypesSuite
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
