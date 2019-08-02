@@ -6,7 +6,7 @@ import java.time.temporal.IsoFields._
 import java.time.temporal.{TemporalField, TemporalUnit}
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 
-import org.clulab.timenorm.field._
+import org.clulab.time._
 
 import scala.collection.immutable.ListMap
 

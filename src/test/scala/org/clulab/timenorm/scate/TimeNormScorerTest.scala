@@ -2,7 +2,7 @@ package org.clulab.timenorm.scate
 
 import java.time.temporal.{ChronoField, ChronoUnit}
 
-import org.clulab.timenorm.field.NIGHT_OF_DAY
+import org.clulab.time._
 import org.clulab.timenorm.scate.TimeNormScorer.{Timex, intervalPrecision, intervalScores, parseDCT, score}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

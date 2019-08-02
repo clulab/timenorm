@@ -1,4 +1,4 @@
-package org.clulab.timenorm.field
+package org.clulab.time
 
 import java.time.temporal.TemporalField
 import java.time.temporal.TemporalUnit
@@ -6,7 +6,7 @@ import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 import java.time.temporal.ValueRange
 import java.time.temporal.TemporalAccessor
-import java.time.temporal.{ Temporal => JTemporal }
+import java.time.temporal.Temporal
 import java.time.Duration
 import java.time.LocalDate
 import java.time.MonthDay
@@ -19,20 +19,20 @@ extends TemporalUnit {
   def first(temporal: TemporalAccessor): Long
   def last(temporal: TemporalAccessor): Long
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange
-  def addToSize(dateTime: JTemporal, periodToAdd: Long): Long
+  def addToSize(dateTime: Temporal, periodToAdd: Long): Long
   def range: ValueRange
   def getDuration: Duration
   def isDurationEstimated: Boolean
   
   def isDateBased: Boolean = this.field.isDateBased
   def isTimeBased: Boolean = this.field.isTimeBased
-  override def isSupportedBy(temporal: JTemporal): Boolean = this.field.isSupportedBy(temporal)
-  def addTo[R <: JTemporal](temporal: R, amount: Long): R = {
+  override def isSupportedBy(temporal: Temporal): Boolean = this.field.isSupportedBy(temporal)
+  def addTo[R <: Temporal](temporal: R, amount: Long): R = {
     val size = this.addToSize(temporal, amount)
     this.field.getBaseUnit().addTo(temporal, amount * size)
   }
 
-  def between(temporal1Inclusive: JTemporal, temporal2Exclusive: JTemporal): Long = ???
+  def between(temporal1Inclusive: Temporal, temporal2Exclusive: Temporal): Long = ???
 
   protected def size(first: Long, last: Long, rangeMinimum: Long, rangeMaximum: Long): Long = {
     if (first < last) {
@@ -56,7 +56,7 @@ abstract class ConstantPartialRange(
   def first(temporal: TemporalAccessor): Long = this.first
   def last(temporal: TemporalAccessor): Long = this.last
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def addToSize(dateTime: JTemporal, periodToAdd: Long): Long = this.fixedSize
+  def addToSize(dateTime: Temporal, periodToAdd: Long): Long = this.fixedSize
   private val rangeMin = this.field.range().getMinimum()
   val range: ValueRange = ValueRange.of(this.rangeMin, this.rangeMin + this.fixedSize - 1)
   val getDuration: Duration = Duration.of(this.fixedSize, this.field.getBaseUnit())
@@ -74,7 +74,7 @@ abstract class MonthDayPartialRange(
     this.last.atYear(YEAR.checkValidIntValue(YEAR.getFrom(temporal))).get(DAY_OF_YEAR)
   }
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def addToSize(dateTime: JTemporal, periodToAdd: Long): Long = {
+  def addToSize(dateTime: Temporal, periodToAdd: Long): Long = {
     val first = this.first(dateTime)
     val last = this.last(dateTime)
     // partial range does not stretch across range boundaries
@@ -127,7 +127,7 @@ extends TemporalField {
   }
   def isSupportedBy(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.partialRange.rangeRefinedBy(temporal)
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = {
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = {
     val range = this.partialRange.field.rangeRefinedBy(temporal)
     val rangeMin = range.getMinimum()
     val rangeMax = range.getMaximum()
@@ -150,7 +150,7 @@ extends TemporalField {
   }
   def isSupportedBy(temporal: TemporalAccessor): Boolean = HOUR_OF_DAY.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = newValue match {
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = newValue match {
     case 1 =>
       if (this.contains(temporal)) temporal
       else this.partialRange.field.adjustInto(temporal, this.partialRange.first(temporal))
@@ -217,7 +217,7 @@ object EASTER_DAY_OF_YEAR extends TemporalField {
   }
   def isSupportedBy(temporal: TemporalAccessor): Boolean = DAY_OF_WEEK.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = {
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = {
     val (easterMonth, easterDay, isEaster) = this.getFromEasterMonthDayIsEaster(temporal) 
     newValue match {
       case 0 => if (isEaster) DAYS.addTo(temporal, 1) else temporal
@@ -257,7 +257,7 @@ object DECADE extends TemporalField {
   def getFrom(temporal: TemporalAccessor): Long = YEAR.getFrom(temporal) / 10
   def isSupportedBy(temporal: TemporalAccessor): Boolean = YEAR.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = YEAR.adjustInto(temporal, newValue * 10)
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = YEAR.adjustInto(temporal, newValue * 10)
 }
 
 object YEAR_OF_DECADE extends TemporalField {
@@ -269,7 +269,7 @@ object YEAR_OF_DECADE extends TemporalField {
   def getFrom(temporal: TemporalAccessor): Long = YEAR.getFrom(temporal) % 10
   def isSupportedBy(temporal: TemporalAccessor): Boolean = YEAR.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = {
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = {
     val oldYear = YEAR.getFrom(temporal)
     YEAR.adjustInto(temporal, oldYear - oldYear % 10L + newValue)
   }
@@ -284,7 +284,7 @@ object CENTURY extends TemporalField {
   def getFrom(temporal: TemporalAccessor): Long = YEAR.getFrom(temporal) / 100
   def isSupportedBy(temporal: TemporalAccessor): Boolean = YEAR.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = YEAR.adjustInto(temporal, newValue * 100)
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = YEAR.adjustInto(temporal, newValue * 100)
 }
 
 object DECADE_OF_CENTURY extends TemporalField {
@@ -296,7 +296,7 @@ object DECADE_OF_CENTURY extends TemporalField {
   def getFrom(temporal: TemporalAccessor): Long = DECADE.getFrom(temporal) % 10L
   def isSupportedBy(temporal: TemporalAccessor): Boolean = DECADE.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = {
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = {
     val oldDecade = DECADE.getFrom(temporal)
     DECADE.adjustInto(temporal, oldDecade - oldDecade % 10L + newValue)
   }
@@ -307,8 +307,8 @@ object QUARTER_CENTURIES extends TemporalUnit {
   override def isTimeBased: Boolean = false
   override def getDuration: Duration = YEARS.getDuration.multipliedBy(25L)
   override def isDurationEstimated: Boolean =  YEARS.isDurationEstimated
-  override def addTo[R <: JTemporal](temporal: R, amount: Long): R = YEARS.addTo(temporal, amount * 25)
-  override def between(temporal1Inclusive: JTemporal, temporal2Exclusive: JTemporal): Long =
+  override def addTo[R <: Temporal](temporal: R, amount: Long): R = YEARS.addTo(temporal, amount * 25)
+  override def between(temporal1Inclusive: Temporal, temporal2Exclusive: Temporal): Long =
     YEARS.between(temporal1Inclusive, temporal2Exclusive) / 25
 }
 
@@ -321,7 +321,7 @@ object YEAR_OF_CENTURY extends TemporalField {
   def getFrom(temporal: TemporalAccessor): Long = YEAR.getFrom(temporal) % 100
   def isSupportedBy(temporal: TemporalAccessor): Boolean = YEAR.isSupportedBy(temporal)
   def rangeRefinedBy(temporal: TemporalAccessor): ValueRange = this.range
-  def adjustInto[R <: JTemporal](temporal: R, newValue: Long): R = {
+  def adjustInto[R <: Temporal](temporal: R, newValue: Long): R = {
     val oldYear = YEAR.getFrom(temporal)
     YEAR.adjustInto(temporal, oldYear - oldYear % 100L + newValue)
   }
@@ -332,7 +332,7 @@ object UNSPECIFIED extends TemporalUnit {
   def isTimeBased: Boolean = false
   def getDuration: Duration = FOREVER.getDuration()
   def isDurationEstimated: Boolean = true
-  override def isSupportedBy(temporal: JTemporal): Boolean = false
-  def addTo[R <: JTemporal](temporal: R, amount: Long): R = ???
-  def between(temporal1Inclusive: JTemporal, temporal2Exclusive: JTemporal): Long = ???
+  override def isSupportedBy(temporal: Temporal): Boolean = false
+  def addTo[R <: Temporal](temporal: R, amount: Long): R = ???
+  def between(temporal1Inclusive: Temporal, temporal2Exclusive: Temporal): Long = ???
 }

@@ -3,7 +3,7 @@ package org.clulab.timenorm.scfg
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
-import org.clulab.timenorm.field._
+import org.clulab.time._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

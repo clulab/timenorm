@@ -8,7 +8,7 @@ import org.scalatest.FunSuite
 import java.time.{DateTimeException, DayOfWeek, LocalDateTime}
 import java.util.Collections.singletonList
 
-import org.clulab.timenorm.field.{NIGHT_OF_DAY, SUMMER_OF_YEAR, WINTER_OF_YEAR}
+import org.clulab.time._
 import org.scalactic.Prettifier
 
 trait TypesSuite {

@@ -1,10 +1,10 @@
 package org.clulab.timenorm.scate
 
-import java.time.{DayOfWeek, Month, LocalDateTime}
-import java.time.temporal.{IsoFields, WeekFields, ChronoField, ChronoUnit}
+import java.time.{DayOfWeek, LocalDateTime, Month}
+import java.time.temporal.{ChronoField, ChronoUnit, IsoFields, WeekFields}
 
-import org.clulab.anafora.{Properties, Data, Entity}
-import org.clulab.timenorm.field._
+import org.clulab.anafora.{Data, Entity, Properties}
+import org.clulab.time._
 
 object AnaforaReader {
 

@@ -3,7 +3,7 @@ package org.clulab.timenorm.scate
 import java.time.temporal._
 import java.time.{Duration, LocalDateTime}
 
-import org.clulab.timenorm.field.{ConstantPartialRange, MonthDayPartialRange, QUARTER_CENTURIES}
+import org.clulab.time._
 
 import scala.collection.JavaConverters._
 import scala.util.{Success, Try}
