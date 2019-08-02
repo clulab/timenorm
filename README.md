@@ -27,7 +27,7 @@ import org.clulab.timenorm.scate._
 scala> val parser = new TemporalNeuralParser
 parser: org.clulab.timenorm.scate.TemporalNeuralParser = org.clulab.timenorm.scate.TemporalNeuralParser@44c2e8a8
 
-scala> val anchor = org.clulab.timenorm.scate.SimpleInterval.of(2019, 5, 30)
+scala> val anchor = SimpleInterval.of(2019, 5, 30)
 anchor: org.clulab.timenorm.scate.SimpleInterval = SimpleInterval(2019-05-30T00:00,2019-05-31T00:00)
 ```
 
