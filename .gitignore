@@ -1,4 +1,5 @@
 target/
+project/
 .cache
 .idea
 .settings/
