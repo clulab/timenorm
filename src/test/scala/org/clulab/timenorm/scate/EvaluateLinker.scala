@@ -1,20 +1,17 @@
 package org.clulab.timenorm.scate
 
-import java.nio.file.{FileSystems, Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 
-import scala.collection.JavaConverters._
 import scala.xml.Elem
-import org.clulab.anafora.{Data, Entity}
+import org.clulab.anafora.{Anafora, Data, Entity}
 
 object EvaluateLinker {
 
   private def linkedEntityInfo(inRoots: Array[Path], exclude: Set[String]): Array[(Entity, String, Entity, Int)] = {
-    val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**TimeNorm.gold.completed.xml")
     for {
       inRoot <- inRoots
-      xmlPath <- Files.walk(inRoot).iterator.asScala
-      if Files.isRegularFile(xmlPath) && endsWithXML.matches(xmlPath)
-      data = Data.fromPaths(xmlPath.toString, None)
+      xmlPath <- Anafora.xmlPaths(inRoot, "glob:**TimeNorm.gold.completed.xml")
+      data = Data.fromPaths(xmlPath)
       entity1 <- data.entities
       if !exclude.contains(entity1.`type`)
       propertyName <- entity1.properties.names
@@ -41,12 +38,10 @@ object EvaluateLinker {
 
   def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {
     val parser = new TemporalNeuralParser()
-    val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**TimeNorm.gold.completed.xml")
     val results = for {
       inRoot <- inRoots
-      xmlPath <- Files.walk(inRoot).iterator.asScala
-      if Files.isRegularFile(xmlPath) && endsWithXML.matches(xmlPath)
-      data = Data.fromPaths(xmlPath.toString, None)
+      xmlPath <- Anafora.xmlPaths(inRoot, "glob:**TimeNorm.gold.completed.xml")
+      data = Data.fromPaths(xmlPath)
       entities = data.entities.sortBy(_.fullSpan._1)
       timeSpans = entities.map(e => (e.fullSpan._1, e.fullSpan._2, e.`type`))
       (i, links) <- entities.indices zip parser.inferLinks(timeSpans.toArray)

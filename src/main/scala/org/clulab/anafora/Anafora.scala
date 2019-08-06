@@ -1,15 +1,21 @@
 package org.clulab.anafora
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{FileSystems, Files, Path}
 
+import scala.collection.JavaConverters._
 import scala.xml.{Elem, XML}
+
+object Anafora {
+  def xmlPaths(root: Path, syntaxAndPattern: String = "glob:**.completed.xml"): Iterator[Path] = {
+    val pathMatcher = FileSystems.getDefault.getPathMatcher(syntaxAndPattern)
+    Files.walk(root).iterator.asScala.filter(pathMatcher.matches).filter(Files.isRegularFile(_))
+  }
+  class Exception(message: String) extends java.lang.Exception(message)
+}
 
 object Data {
   def fromPaths(xmlPath: Path, textPath: Option[Path] = None): Data = {
     apply(XML.loadFile(xmlPath.toFile), textPath.map(p => new String(Files.readAllBytes(p))))
-  }
-  def fromPaths(xmlPath: String, textPath: Option[String]): Data = {
-    fromPaths(Paths.get(xmlPath), textPath.map(Paths.get(_)))
   }
   def apply(xml: Elem, text: Option[String]) = new Data(xml, text)
 }
@@ -39,6 +45,7 @@ abstract class Annotation(val xml: Elem) {
   }
   lazy val properties: Properties = xml \ "properties" match {
     case Seq(elem: Elem) => Properties(elem)
+    case Seq() => Properties(<properties/>)
   }
   private def childTexts: IndexedSeq[String] = IndexedSeq.empty ++ this.properties.xml.child.collect {
     case elem: Elem => elem.text
@@ -99,15 +106,21 @@ class Properties(xml: Elem) extends Annotation(xml) {
   def get(name: String): Option[String] = this.textFor(name) match {
     case Seq() => None
     case Seq(value) => Some(value)
-    case _ => throw new RuntimeException(s"expected 0 or 1 $name value, found $xml")
+    case _ => throw new Anafora.Exception(s"expected 0 or 1 $name value, found $xml")
   }
 
   def apply(name: String): String = this.textFor(name) match {
     case Seq(value) => value
-    case _ => throw new RuntimeException(s"expected single $name value, found $xml")
+    case _ => throw new Anafora.Exception(s"expected single $name value, found $xml")
   }
 
-  def entity(name: String)(implicit data: Data): Entity = data.idToEntity(this.apply(name))
+  def entity(name: String)(implicit data: Data): Entity = {
+    val value = this.apply(name)
+    data.idToEntity.get(value) match {
+      case Some(entity) => entity
+      case None => throw new Anafora.Exception(s"no entity $value exists")
+    }
+  }
 
   def getEntity(name: String)(implicit data: Data): Option[Entity] = this.get(name).flatMap(data.idToEntity.get)
 

@@ -40,11 +40,17 @@ object AnaforaReader {
 
 class AnaforaReader(val DCT: Interval)(implicit data: Data) {
 
+  private def longValue(entity: Entity): Long = {
+    entity.properties.get("Value").filter(_.nonEmpty).filter(_.forall(_.isDigit)).map(_.toLong).getOrElse {
+      throw new AnaforaReader.Exception(s"expected numeric Value, found ${entity.xml}")
+    }
+  }
 
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text.getOrElse(""), Some(entity.fullSpan))
+    case "" => throw new AnaforaReader.Exception(s"""cannot parse number from "${entity.text} and ${entity.xml}""")
     case value =>
-      if (value.contains(".")) {
+      if (value.matches("""\d*[.]\d+""")) {
         val (beforeDot, dotAndAfter) = value.span(_ != '.')
         val number = if (beforeDot.isEmpty) 0 else beforeDot.toInt
         val numerator = dotAndAfter.tail.toInt
@@ -87,8 +93,12 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     entity.`type` match {
       case "Period" => entity.properties("Type") match {
         case "Unknown" =>
-          assert(!entity.properties.get("Number").exists(_.nonEmpty), s"expected empty Number, found ${entity.xml}")
-          assert(!entity.properties.get("Modifier").exists(_.nonEmpty), s"expected empty Modifier, found ${entity.xml}")
+          if (entity.properties.get("Number").exists(_.nonEmpty)) {
+            throw new AnaforaReader.Exception(s"expected empty Number, found ${entity.xml}")
+          }
+          if (entity.properties.get("Modifier").exists(_.nonEmpty)) {
+            throw new AnaforaReader.Exception(s"expected empty Modifier, found ${entity.xml}")
+          }
           UnknownPeriod(Some(entity.fullSpan))
         case AnaforaReader.SomeChronoUnit(unit) =>
           val n: Number = entity.properties.getEntity("Number") match {
@@ -115,6 +125,8 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case "DocTime-Year" => SimpleInterval.of(DCT.start.getYear)
       case "DocTime-Era" => SimpleInterval(LocalDateTime.of(0, 1, 1, 0, 0), LocalDateTime.MAX)
       case "Unknown" => UnknownInterval()
+      case _ => throw new AnaforaReader.Exception(
+        s"""cannot parse ${prefix}Interval-Type from ${properties.xml}""")
     }
 
   def interval(entity: Entity)(implicit data: Data): Interval = {
@@ -213,6 +225,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     val mod = modifier(entity.properties)
     val charSpan = Some(entity.fullSpan)
     val result = (entity.`type`, entity.properties.get("Type")) match {
+      case (_, Some("Unknown")) => UnknownRepeatingInterval(charSpan)
       case ("Union", None) =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
         UnionRI(repeatingIntervalEntities.map(repeatingInterval).toSet, charSpan)
@@ -225,12 +238,11 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Calendar-Interval" , Some("Quarter-Century")) => RepeatingUnit(QUARTER_CENTURIES, mod, charSpan)
       case ("Calendar-Interval" , Some("Quarter-Year")) => RepeatingUnit(IsoFields.QUARTER_YEARS, mod, charSpan)
       case ("Calendar-Interval" , Some(AnaforaReader.SomePluralChronoUnit(unit))) => RepeatingUnit(unit, mod, charSpan)
-      case ("Week-Of-Year", None) => RepeatingField(WeekFields.ISO.weekOfYear(), entity.properties("Value").toLong, mod, charSpan)
+      case ("Week-Of-Year", None) => RepeatingField(WeekFields.ISO.weekOfYear(), longValue(entity), mod, charSpan)
       case ("Season-Of-Year", Some("Spring")) => RepeatingField(SPRING_OF_YEAR, 1L, mod, charSpan)
       case ("Season-Of-Year", Some("Summer")) => RepeatingField(SUMMER_OF_YEAR, 1L, mod, charSpan)
       case ("Season-Of-Year", Some("Fall")) => RepeatingField(FALL_OF_YEAR, 1L, mod, charSpan)
       case ("Season-Of-Year", Some("Winter")) => RepeatingField(WINTER_OF_YEAR, 1L, mod, charSpan)
-      case ("Season-Of-Year", Some("Unknown")) => UnknownRepeatingInterval(charSpan)
       case ("Part-Of-Week", Some("Weekend")) => RepeatingField(WEEKEND_OF_WEEK, 1, mod, charSpan)
       case ("Part-Of-Week", Some("Weekdays")) => RepeatingField(WEEKEND_OF_WEEK, 0, mod, charSpan)
       case ("Part-Of-Day", Some("Dawn")) => RepeatingField(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Some(Modifier.Approx()), charSpan)
@@ -243,7 +255,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Part-Of-Day", Some("Midnight")) => RepeatingField(ChronoField.SECOND_OF_DAY, 0L, mod, charSpan)
       case ("Hour-Of-Day", None) =>
         // TODO: handle time zone
-        val value = entity.properties("Value").toLong
+        val value = longValue(entity)
         entity.properties.getEntity("AMPM-Of-Day") match {
           case Some(ampmEntity) => IntersectionRI(Set(
             RepeatingField(ChronoField.CLOCK_HOUR_OF_AMPM, value, mod, charSpan),
@@ -258,8 +270,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
             case "AM" => 0L
             case "PM" => 1L
           }
-          case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE =>
-            entity.properties("Value").toLong
+          case ChronoField.DAY_OF_MONTH | ChronoField.MINUTE_OF_HOUR | ChronoField.SECOND_OF_MINUTE => longValue(entity)
           case _ => throw new AnaforaReader.Exception(
             s"""cannot parse ChronoField value from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
         }

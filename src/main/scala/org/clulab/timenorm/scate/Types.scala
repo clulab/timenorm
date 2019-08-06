@@ -83,7 +83,11 @@ case class SimplePeriod(unit: TemporalUnit,
   val isDefined: Boolean = n.isDefined && modifier.forall(_.isInstanceOf[Modifier.Exact])
   val charSpan: Option[(Int, Int)] = maxSpan(Seq(n.charSpan, modifier.flatMap(_.charSpan), targetCharSpan))
 
-  lazy val IntNumber(number, _) = n
+  lazy val number = n match {
+    case IntNumber(i, _) => i
+    case _ => throw new UnsupportedOperationException(
+      s"${this.getClass.getSimpleName} does not yet support ${n.getClass.getSimpleName}")
+  }
 
   override def addTo(temporal: Temporal): Temporal = temporal.plus(number, unit)
 
@@ -376,7 +380,11 @@ trait IRIN extends TimeExpression {
   lazy val isDefined: Boolean = interval.isDefined && repeatingInterval.isDefined && number.isDefined
   lazy val charSpan: Option[(Int, Int)] = maxSpan(
     Seq(interval.charSpan, repeatingInterval.charSpan, number.charSpan, triggerCharSpan))
-  lazy val IntNumber(integer, _) = number
+  lazy val integer = number match {
+    case IntNumber(i, _) => i
+    case _ => throw new UnsupportedOperationException(
+      s"${this.getClass.getSimpleName} does not yet support ${number.getClass.getSimpleName}")
+  }
 }
 
 trait Last extends IRIN {

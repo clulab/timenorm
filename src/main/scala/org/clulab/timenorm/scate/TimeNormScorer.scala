@@ -1,6 +1,7 @@
 package org.clulab.timenorm.scate
 
 import java.io.File
+import java.nio.file.Paths
 import java.time.{Instant, LocalDateTime, ZoneId}
 
 import org.clulab.anafora.Data
@@ -148,7 +149,7 @@ object TimeNormScorer {
       val dct: Interval = parseDCT(dctString)
       printf("DCT: %s\n\n",dctString)
 
-      val goldData = Data.fromPaths(xmlFile.getPath, None)
+      val goldData = Data.fromPaths(xmlFile.toPath, None)
       val goldTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(goldData))(goldData)
       sum_gs += goldTimexes.size
 
@@ -159,7 +160,7 @@ object TimeNormScorer {
 
       val outFile = allTimeNormFiles(new File(outPath))(0)
       val outFilePath = outPath + "/" + outFile.getName
-      val systemData = Data.fromPaths(outFilePath, None)
+      val systemData = Data.fromPaths(Paths.get(outFilePath), None)
       val systemTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(systemData))(systemData)
       sum_sys += systemTimexes.size
 

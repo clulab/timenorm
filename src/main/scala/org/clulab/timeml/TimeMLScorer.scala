@@ -2,7 +2,7 @@ package org.clulab.timeml
 
 import scala.collection.JavaConverters._
 import org.clulab.timenorm.scate.{AnaforaReader, Interval, Intervals, SimpleInterval, TimeExpression, TimeNormScorer}
-import org.clulab.anafora.{Data, Entity}
+import org.clulab.anafora.{Anafora, Data, Entity}
 import java.nio.file.{FileSystems, Files, Path, Paths}
 
 import org.clulab.timenorm.scfg.TimeSpan
@@ -11,11 +11,6 @@ object TimeMLScorer {
 
 
   private val skip = Set("NotNormalizable", "Frequency", "PreAnnotation")
-  private val completedXmlMatcher = FileSystems.getDefault.getPathMatcher("glob:**.completed.xml")
-
-  def anaforaXMLPaths(path: Path): Iterator[Path] = {
-    Files.walk(path).iterator.asScala.filter(completedXmlMatcher.matches).filter(Files.isRegularFile(_))
-  }
 
   def main(args: Array[String]): Unit = args.map(Paths.get(_)) match {
     case Array(dctDir, systemDir, goldDir) =>
@@ -24,10 +19,10 @@ object TimeMLScorer {
       var sumIntersection = 0
       var sumGold = 0
       var sumSystem = 0
-      for (xmlPath <- anaforaXMLPaths(goldDir)) {
+      for (xmlPath <- Anafora.xmlPaths(goldDir)) {
         val subDir = goldDir.relativize(xmlPath.getParent)
         val dctPath = dctDir.resolve(subDir).resolve(subDir.getFileName.toString +".dct")
-        val List(systemPath) = anaforaXMLPaths(systemDir.resolve(subDir)).toList
+        val List(systemPath) = Anafora.xmlPaths(systemDir.resolve(subDir)).toList
         println(s"Document: $subDir")
 
         val dctString = new String(Files.readAllBytes(dctPath)).trim
