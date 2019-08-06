@@ -2,7 +2,6 @@ package org.clulab.timenorm.scate
 
 import java.time.temporal.ChronoField
 
-import com.codecommit.antixml.text
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -124,7 +123,7 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
         |
         |As well as internal wrangles, BP employees at TNK-BP have fallen foul of Russian authorities.
       """.stripMargin)
-    val ids = xml \\ "id" \ text
+    val ids = (xml \\ "id").map(_.text)
     assert(ids === ids.distinct)
   }
 }

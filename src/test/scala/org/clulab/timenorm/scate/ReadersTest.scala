@@ -2,9 +2,8 @@ package org.clulab.timenorm.scate
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoField
-import java.time.temporal.ChronoUnit.{DAYS}
+import java.time.temporal.ChronoUnit.DAYS
 
-import com.codecommit.antixml._
 import org.clulab.anafora.Data
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -64,8 +63,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = new Data(elem, Some("2000-10-25 noon"))
+      </data>
+    implicit val data: Data = new Data(elem, Some("2000-10-25 noon"))
 
     val dct = SimpleInterval.of(1998, 2, 13, 15, 44)
     var aReader = new AnaforaReader(dct)
@@ -130,9 +129,9 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
+      </data>
 
-    implicit val data = Data(xml, Some("first nine months of 1997"))
+    implicit val data: Data = Data(xml, Some("first nine months of 1997"))
 
     val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
     var aReader = new AnaforaReader(dct)
@@ -188,8 +187,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, Some("last few months"))
+      </data>
+    implicit val data: Data = Data(xml, Some("last few months"))
     val start = LocalDateTime.now().truncatedTo(DAYS)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
@@ -242,8 +241,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, Some("19980331"))
+      </data>
+    implicit val data: Data = Data(xml, Some("19980331"))
     val start = LocalDateTime.of(1998, 3, 31, 0, 0)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
@@ -286,8 +285,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, Some("Friday"))
+      </data>
+    implicit val data: Data = Data(xml, Some("Friday"))
     val start = LocalDateTime.of(1998, 3, 6, 0, 0)
     val dct = SimpleInterval(start, start.plusDays(1))
     val aReader = new AnaforaReader(dct)
@@ -363,8 +362,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, None)
+      </data>
+    implicit val data: Data = Data(xml, None)
     val aReader = new AnaforaReader(SimpleInterval.of(1998, 3, 22))
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
@@ -427,8 +426,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, None)
+      </data>
+    implicit val data: Data = Data(xml, None)
     val aReader = new AnaforaReader(SimpleInterval.of(1998, 2, 19))
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
@@ -455,8 +454,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, None)
+      </data>
+    implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(1998, 2, 6)
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
@@ -498,8 +497,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, None)
+      </data>
+    implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(1989, 11, 1)
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
@@ -540,8 +539,8 @@ class ReadersTest extends FunSuite with TypesSuite {
             </properties>
           </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, None)
+      </data>
+    implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(1989, 11, 1)
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
@@ -557,21 +556,21 @@ class ReadersTest extends FunSuite with TypesSuite {
     val xml =
       <data>
         <annotations>
-         <entity>
-          <id>899@e@ID036_clinic_108@gold</id>
-          <span>6422,6424</span>
-	  <type>Two-Digit-Year</type>
-	  <parentsType>Operator</parentsType>
-	  <properties>
-	   <Interval-Type>DocTime</Interval-Type>
-	   <Interval></Interval>
-	   <Value>00</Value>
-	   <Sub-Interval></Sub-Interval>
-	  </properties>
-	</entity>
+          <entity>
+            <id>899@e@ID036_clinic_108@gold</id>
+            <span>6422,6424</span>
+            <type>Two-Digit-Year</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Value>00</Value>
+              <Sub-Interval></Sub-Interval>
+            </properties>
+          </entity>
         </annotations>
-      </data>.convert
-    implicit val data = Data(xml, None)
+      </data>
+    implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(2010, 8, 5)
     val aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)

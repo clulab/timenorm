@@ -4,9 +4,7 @@ import java.io.File
 import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeParseException
 
-import com.codecommit.antixml.{Elem, XML, text => nodeText}
-
-import scala.io.Source
+import scala.xml.{Elem, XML}
 
 object TimeMLDocument {
   def toZonedDateTimeOption(value: String): Option[ZonedDateTime] = {
@@ -29,23 +27,25 @@ class TimeMLDocument(val file: File) {
 
   // a class providing basic TIMEX attributes
   case class TimeExpression(elem: Elem) {
-    val id = elem.attrs("tid")
-    val text = (elem \\ nodeText).mkString
-    val value = elem.attrs("value")
-    val functionInDocumentOption = elem.attrs.get("functionInDocument")
-    val anchorIDOption = elem.attrs.get("anchorTimeID")
-    def anchor = anchorIDOption.map(idToTime)
+    val Some(id: String) = elem.attributes.get("tid").map(_.text)
+    val text: String = elem.text
+    val Some(value: String) = elem.attributes.get("value").map(_.text)
+    val functionInDocumentOption: Option[String] = elem.attributes.get("functionInDocument").map(_.text)
+    val anchorIDOption: Option[String] = elem.attributes.get("anchorTimeID").map(_.text)
+    def anchor: Option[TimeExpression] = anchorIDOption.map(idToTime)
   }
 
   // parse XML, find timex, index times by IDs, and locate the document creation time
-  private val root = XML.fromSource(Source.fromFile(file, "US-ASCII"))
+  private val root = XML.loadFile(file)
   
   // provide the parsed time expressions
-  val timeExpressions = root \\ "TIMEX3" map TimeExpression
+  val timeExpressions: Seq[TimeExpression] = root \\ "TIMEX3" map {
+    case elem: Elem => TimeExpression(elem)
+  }
   
   // map ids to time expressions to allow lookup of anchors 
   private val idToTime = timeExpressions.map(e => e.id -> e).toMap
 
   // provide the parsed document creation time
-  val Seq(creationTime) = timeExpressions.filter(_.functionInDocumentOption == Some("CREATION_TIME"))
+  val Seq(creationTime: TimeExpression) = timeExpressions.filter(_.functionInDocumentOption.contains("CREATION_TIME"))
 }

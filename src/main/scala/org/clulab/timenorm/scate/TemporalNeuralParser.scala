@@ -3,7 +3,6 @@ package org.clulab.timenorm.scate
 import java.io._
 import java.nio.file._
 
-import com.codecommit.antixml._
 import org.apache.commons.io.IOUtils
 import org.clulab.anafora.Data
 import org.tensorflow.{Graph, Session, Tensor}
@@ -14,6 +13,7 @@ import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
+import scala.xml.{XML, Elem}
 
 
 object TemporalNeuralParser {
@@ -49,11 +49,9 @@ object TemporalNeuralParser {
     val endsWithXML = FileSystems.getDefault.getPathMatcher("glob:**.xml")
     for ((inPath, outPath) <- parallelPaths(inRoot, outRoot, endsWithXML, timeNormExt)) {
       val text = new String(Files.readAllBytes(inPath))
-      val xml: Elem = parser.parseToXML(text)
+      val xml = parser.parseToXML(text)
       Files.createDirectories(outPath.getParent)
-      val writer = Files.newBufferedWriter(outPath)
-      xml.writeTo(writer)
-      writer.close()
+      XML.save(outPath.toString, xml)
       println(s"$inPath\n$outPath\n")
     }
   }
@@ -117,13 +115,16 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
 
   lazy private val operatorToPropertyToTypes: Map[String, Map[String, Set[String]]] = {
     val path = "/org/clulab/timenorm/linking_configure/timenorm-schema.xml"
-    val xml = XML.fromInputStream(this.getClass.getResourceAsStream(path))
+    val xml = XML.load(this.getClass.getResourceAsStream(path))
     val entityInfos = for (entity <- xml \\ "entity") yield {
       // sort so that required properties are first
-      val properties = (entity \\ "property").sortBy(_.attrs.getOrElse("required", "True") == "False")
+      val properties = (entity \\ "property").sortBy(_.attributes.get("required").map(_.text).getOrElse("True") == "False")
       // match each operator type with an insertion-ordered map of its property names and their allowable types
-      (entity.attrs("type"), ListMap.empty ++ properties.map{
-        p => (p.attrs("type"), p.attrs.get("instanceOf").map(_.split(",").toSet).getOrElse(Set.empty))
+      val Some(entityType) = entity.attributes.get("type").map(_.text)
+      (entityType, ListMap.empty ++ properties.map{ p =>
+        val Some(propertyType) = p.attributes.get("type").map(_.text)
+        val instanceOfOption = p.attributes.get("instanceOf").map(_.text)
+        (propertyType, instanceOfOption.map(_.split(",").toSet).getOrElse(Set.empty))
       })
     }
     entityInfos.toMap
@@ -181,7 +182,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
         <annotations>
           {entityElems}
         </annotations>
-      </data>.convert
+      </data>
     }
   }
 

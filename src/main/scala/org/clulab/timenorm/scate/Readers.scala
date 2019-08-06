@@ -87,8 +87,8 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     entity.`type` match {
       case "Period" => entity.properties("Type") match {
         case "Unknown" =>
-          assert(!entity.properties.has("Number"), s"expected empty Number, found ${entity.xml}")
-          assert(!entity.properties.has("Modifier"), s"expected empty Modifier, found ${entity.xml}")
+          assert(!entity.properties.get("Number").exists(_.nonEmpty), s"expected empty Number, found ${entity.xml}")
+          assert(!entity.properties.get("Modifier").exists(_.nonEmpty), s"expected empty Modifier, found ${entity.xml}")
           UnknownPeriod(Some(entity.fullSpan))
         case AnaforaReader.SomeChronoUnit(unit) =>
           val n: Number = entity.properties.getEntity("Number") match {
@@ -230,6 +230,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Season-Of-Year", Some("Summer")) => RepeatingField(SUMMER_OF_YEAR, 1L, mod, charSpan)
       case ("Season-Of-Year", Some("Fall")) => RepeatingField(FALL_OF_YEAR, 1L, mod, charSpan)
       case ("Season-Of-Year", Some("Winter")) => RepeatingField(WINTER_OF_YEAR, 1L, mod, charSpan)
+      case ("Season-Of-Year", Some("Unknown")) => UnknownRepeatingInterval(charSpan)
       case ("Part-Of-Week", Some("Weekend")) => RepeatingField(WEEKEND_OF_WEEK, 1, mod, charSpan)
       case ("Part-Of-Week", Some("Weekdays")) => RepeatingField(WEEKEND_OF_WEEK, 0, mod, charSpan)
       case ("Part-Of-Day", Some("Dawn")) => RepeatingField(ChronoField.SECOND_OF_DAY, 5L * 60L * 60L, Some(Modifier.Approx()), charSpan)

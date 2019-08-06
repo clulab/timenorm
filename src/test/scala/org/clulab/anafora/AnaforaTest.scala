@@ -1,6 +1,5 @@
 package org.clulab.anafora
 
-import com.codecommit.antixml._
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -53,9 +52,9 @@ class AnaforaTest extends FunSuite {
           </properties>
         </relation>
       </annotations>
-    </data>.convert
+    </data>
 
-    implicit val data = Data(xml, Some("abcdefghijklmnopqrstuvwxyz0123456789"))
+    implicit val data: Data = Data(xml, Some("abcdefghijklmnopqrstuvwxyz0123456789"))
     assert(data.entities.size === 2)
     assert(data.relations.size === 2)
     val Seq(time, event) = data.entities

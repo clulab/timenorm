@@ -11,7 +11,7 @@ libraryDependencies ++= {
     "org.tensorflow"             % "tensorflow"      % "1.12.0",
     "org.clulab"                 % "timenorm-models" % "0.9.2",
     "commons-io"                 % "commons-io"      % "2.6",
-    "com.al333z"                %% "anti-xml"        % "0.7.11",
+    "org.scala-lang.modules"    %% "scala-xml"       % "1.2.0",
     "com.typesafe.play"         %% "play-json"       % "2.6.9",
     "junit"                      % "junit"           % "4.12"  % Test,
     "org.scalatest"             %% "scalatest"       % "3.0.8" % Test,

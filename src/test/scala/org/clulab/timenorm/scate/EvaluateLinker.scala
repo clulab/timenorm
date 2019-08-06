@@ -3,7 +3,7 @@ package org.clulab.timenorm.scate
 import java.nio.file.{FileSystems, Files, Path, Paths}
 
 import scala.collection.JavaConverters._
-import com.codecommit.antixml.{Elem, text}
+import scala.xml.Elem
 import org.clulab.anafora.{Data, Entity}
 
 object EvaluateLinker {
@@ -29,14 +29,14 @@ object EvaluateLinker {
   }
 
   def entityDistanceHistogram(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[Int, Int] = {
-      linkedEntityInfo(inRoots, exclude).map(_._4).groupBy(identity).mapValues(_.size)
+      linkedEntityInfo(inRoots, exclude).map(_._4).groupBy(identity).mapValues(_.length)
   }
 
   def distancesByTypes(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[String, Map[Int, Int]] = {
     val distances = for ((entity1, propertyName, _, dist) <- linkedEntityInfo(inRoots, exclude)) yield {
       (s"${entity1.`type`}:$propertyName", dist)
     }
-    distances.toSeq.groupBy(_._1).mapValues(_.map(_._2).groupBy(identity).mapValues(_.size))
+    distances.toSeq.groupBy(_._1).mapValues(_.map(_._2).groupBy(identity).mapValues(_.length))
   }
 
   def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {
@@ -51,8 +51,8 @@ object EvaluateLinker {
       timeSpans = entities.map(e => (e.fullSpan._1, e.fullSpan._2, e.`type`))
       (i, links) <- entities.indices zip parser.inferLinks(timeSpans.toArray)
     } yield {
-      val goldProperties = entities(i).properties.xml.children.collect{
-        case elem: Elem if (elem \ text).mkString.contains("@") => (elem.name, (elem \ text).mkString)
+      val goldProperties = entities(i).properties.xml.child.collect{
+        case elem: Elem if elem.text.contains("@") => (elem.label, elem.text)
       }.toSet
       val systemProperties = links.map{ case (name, j) => (name, entities(j).id)}.toSet
       val correct = goldProperties.intersect(systemProperties).size

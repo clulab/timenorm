@@ -1,16 +1,29 @@
 package org.clulab.anafora
 
-import com.codecommit.antixml.{*, Elem, Selector, XML, text => ElemText}
+import java.nio.file.{Files, Path, Paths}
+
+import scala.xml.{Elem, XML}
 
 object Data {
-  def fromPaths(xmlPath: String, textPath: Option[String]) = apply(
-    XML.fromSource(io.Source.fromFile(xmlPath)), textPath.map(p => io.Source.fromFile(p).mkString))
+  def fromPaths(xmlPath: Path, textPath: Option[Path] = None): Data = {
+    apply(XML.loadFile(xmlPath.toFile), textPath.map(p => new String(Files.readAllBytes(p))))
+  }
+  def fromPaths(xmlPath: String, textPath: Option[String]): Data = {
+    fromPaths(Paths.get(xmlPath), textPath.map(Paths.get(_)))
+  }
   def apply(xml: Elem, text: Option[String]) = new Data(xml, text)
 }
 class Data(xml: Elem, val text: Option[String]) {
-  lazy val entities: IndexedSeq[Entity] = xml \ "annotations" \ "entity" map Entity.apply
-  lazy val relations: IndexedSeq[Relation] = xml \ "annotations" \ "relation" map Relation.apply
-  lazy val topEntities : IndexedSeq[Entity] = this.entities.filter(x => !(xml \\ "properties" \ * \ ElemText contains(x.id)))
+  lazy val entities: IndexedSeq[Entity] = (xml \ "annotations" \ "entity" map {
+    case e: Elem => Entity(e)
+  }).toIndexedSeq
+  lazy val relations: IndexedSeq[Relation] = (xml \ "annotations" \ "relation" map {
+    case e: Elem => Relation(e)
+  }).toIndexedSeq
+  lazy val topEntities : IndexedSeq[Entity] = {
+    val allPropertyTexts = (xml \\ "properties" flatMap { case e: Elem => e.child }).map(_.text).toSet
+    this.entities.filter(x => !allPropertyTexts.contains(x.id))
+  }
   private[anafora] lazy val idToEntity: Map[String, Entity] = this.entities.map(e => e.id -> e).toMap
   private[anafora] lazy val idToRelation: Map[String, Relation] = this.relations.map(r => r.id -> r).toMap
   private[anafora] lazy val idToAnnotation: Map[String, Annotation] = this.idToEntity ++ this.idToRelation
@@ -18,15 +31,18 @@ class Data(xml: Elem, val text: Option[String]) {
 
 
 abstract class Annotation(val xml: Elem) {
-  lazy val Seq(id: String) = xml \ "id" \ ElemText
-  lazy val `type`: String = {
-    val Seq(tpe) = xml \ "type" \ ElemText
-    tpe
+  lazy val id: String = xml \ "id" match {
+    case Seq(elem: Elem) => elem.text
+  }
+  lazy val `type`: String = xml \ "type" match {
+    case Seq(elem: Elem) => elem.text
   }
   lazy val properties: Properties = xml \ "properties" match {
-    case Seq(elem) => Properties(elem)
+    case Seq(elem: Elem) => Properties(elem)
   }
-  private def childTexts: IndexedSeq[String] = this.properties.xml.children \ ElemText
+  private def childTexts: IndexedSeq[String] = IndexedSeq.empty ++ this.properties.xml.child.collect {
+    case elem: Elem => elem.text
+  }
 
   def entityChildren(implicit data: Data): IndexedSeq[Entity] = this.childTexts.flatMap(data.idToEntity.get)
 
@@ -41,10 +57,14 @@ object Entity {
   def apply(xml: Elem) = new Entity(xml)
 }
 class Entity(xml: Elem) extends Annotation(xml) {
-  lazy val spans: IndexedSeq[(Int, Int)] =
-    (xml \ "span" \ ElemText).flatMap(_.split(";")).map(_.split(",").map(_.toInt) match {
-      case Array(start, end) => (start, end)
-    }).sorted
+  lazy val spans: IndexedSeq[(Int, Int)] = {
+    val spans = xml \ "span" flatMap {
+      case elem: Elem => elem.text.split(";").map(_.split(",").map(_.toInt) match {
+        case Array(start, end) => (start, end)
+      })
+    }
+    spans.toIndexedSeq.sorted
+  }
   lazy val fullSpan: (Int, Int) = (spans.map(_._1).min, spans.map(_._2).max)
   def text(implicit data: Data): Option[String] = data.text.map(text => spans.map {
     case (start, end) => text.substring(start, end)
@@ -66,11 +86,13 @@ object Properties {
 }
 
 class Properties(xml: Elem) extends Annotation(xml) {
-  private def textFor(name: String): IndexedSeq[String] = xml \ name \ ElemText
+  private def textFor(name: String): IndexedSeq[String] = (xml \ name map {
+    case elem: Elem => elem.text
+  }).toIndexedSeq
 
-  def names: IndexedSeq[String] = xml.children.collect {
-    case e: Elem => e.name
-  }
+  def names: IndexedSeq[String] = xml.child.collect {
+    case e: Elem => e.label
+  }.toIndexedSeq
 
   def has(name: String): Boolean = this.textFor(name).nonEmpty
 

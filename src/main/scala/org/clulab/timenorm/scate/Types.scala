@@ -618,7 +618,7 @@ case class NthRI(interval: Interval,
                  triggerCharSpan: Option[(Int, Int)] = None) extends Interval with IRINP {
   val number = IntNumber(1)
   lazy val fromPoint = intervalsFromPoint.drop(index - 1).next
-  lazy override val isDefined = interval.isDefined && repeatingInterval.isDefined && number.isDefined & (interval contains fromPoint)
+  lazy override val isDefined = interval.isDefined && repeatingInterval.isDefined && number.isDefined && (interval contains fromPoint)
   lazy val Interval(start, end) = fromPoint match {
     case result if interval contains result => result
     case result => throw new UnsupportedOperationException(s"${result.end} is outside of $interval")
@@ -662,8 +662,8 @@ trait RepeatingInterval extends TimeExpression {
 
   def following(ldt: LocalDateTime): Iterator[Interval]
 
-  val base: TemporalUnit
-  val range: TemporalUnit
+  def base: TemporalUnit
+  def range: TemporalUnit
 }
 
 private[scate] object RepeatingInterval {
@@ -680,6 +680,16 @@ private[scate] object RepeatingInterval {
     case range: ConstantPartialRange => ldt.`with`(range.field, range.first).truncatedTo(range.field.getBaseUnit)
     case _ => ldt.truncatedTo(tUnit)
   }
+}
+
+case class UnknownRepeatingInterval(charSpan: Option[(Int, Int)] = None) extends RepeatingInterval {
+
+  val isDefined = false
+
+  override def preceding(ldt: LocalDateTime): Iterator[Interval] = throw new UnsupportedOperationException
+  override def following(ldt: LocalDateTime): Iterator[Interval] = throw new UnsupportedOperationException
+  override def base: TemporalUnit = throw new UnsupportedOperationException
+  override def range: TemporalUnit = throw new UnsupportedOperationException
 }
 
 case class RepeatingUnit(unit: TemporalUnit,
