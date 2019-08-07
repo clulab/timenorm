@@ -1,14 +1,9 @@
 package org.clulab.time
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
-import java.time.ZoneId
+import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 
-@RunWith(classOf[JUnitRunner])
+import org.scalatest.FunSuite
+
 class TemporalTest extends FunSuite {
   
   test("getting parts of day") {

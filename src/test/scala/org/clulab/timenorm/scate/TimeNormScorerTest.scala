@@ -4,12 +4,8 @@ import java.time.temporal.{ChronoField, ChronoUnit}
 
 import org.clulab.time._
 import org.clulab.timenorm.scate.TimeNormScorer.{Timex, intervalPrecision, intervalScores, parseDCT, score}
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
-
-@RunWith(classOf[JUnitRunner])
 class TimeNormScorerTest extends FunSuite with TypesSuite {
 
   def assertScore(timex1: TimeExpression,

@@ -1,11 +1,7 @@
 package org.clulab.anafora
 
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
-
-@RunWith(classOf[JUnitRunner])
 class AnaforaTest extends FunSuite {
   test("TimeML example") {
     val xml = <data>

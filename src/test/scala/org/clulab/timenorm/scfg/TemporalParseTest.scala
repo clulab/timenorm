@@ -7,13 +7,10 @@ import java.time.temporal.IsoFields._
 import java.time.temporal.TemporalUnit
 
 import org.clulab.time._
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
 import scala.collection.immutable.Seq
 
-@RunWith(classOf[JUnitRunner])
 class TemporalParseTest extends FunSuite {
 
   test("resolves simple periods") {

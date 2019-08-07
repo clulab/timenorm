@@ -2,12 +2,8 @@ package org.clulab.timenorm.scate
 
 import java.time.temporal.ChronoField
 
-import org.junit.runner.RunWith
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import org.scalatest.junit.JUnitRunner
 
-
-@RunWith(classOf[JUnitRunner])
 class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with TypesSuite {
 
   override def afterAll(): Unit = {

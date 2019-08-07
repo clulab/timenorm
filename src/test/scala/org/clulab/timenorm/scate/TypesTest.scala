@@ -1,25 +1,22 @@
 package org.clulab.timenorm.scate
 
 import java.time.temporal._
-
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
 import java.time.{DateTimeException, DayOfWeek, LocalDateTime}
 import java.util.Collections.singletonList
 
 import org.clulab.time._
-import org.scalactic.Prettifier
+import org.scalactic.{Equality, Prettifier}
+import org.scalatest.FunSuite
 
 trait TypesSuite {
-  implicit def intervalEquality[T <: Interval] = new org.scalactic.Equality[T] {
+  implicit def intervalEquality[T <: Interval]: Equality[T] = new Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
       case Interval(bStart, bEnd) => a.start == bStart && a.end == bEnd
       case _ => false
     }
   }
 
-  implicit def intervalsEquality[T <: Seq[_ <: Interval]] = new org.scalactic.Equality[T] {
+  implicit def intervalsEquality[T <: Seq[_ <: Interval]]: Equality[T] = new Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
       case c: Seq[_] =>
         a.size == c.size &&
@@ -43,7 +40,6 @@ trait TypesSuite {
   }
 }
 
-@RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite with TypesSuite {
 
   test("SimpleInterval") {

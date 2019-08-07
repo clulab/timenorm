@@ -15,7 +15,6 @@ libraryDependencies ++= {
     "commons-io"                 % "commons-io"      % "2.6",
     "org.scala-lang.modules"    %% "scala-xml"       % "1.2.0",
     "com.typesafe.play"         %% "play-json"       % "2.7.4",
-    "junit"                      % "junit"           % "4.12"  % Test,
     "org.scalatest"             %% "scalatest"       % "3.0.8" % Test,
     "com.lexicalscope.jewelcli"  % "jewelcli"        % "0.8.9" % Test,
     "org.timen"                  % "timen"           % "1.0.8" % Test,

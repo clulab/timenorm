@@ -5,11 +5,8 @@ import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit.DAYS
 
 import org.clulab.anafora.Data
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class ReadersTest extends FunSuite with TypesSuite {
 
   test("Noon") {

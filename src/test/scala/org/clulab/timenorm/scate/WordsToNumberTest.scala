@@ -1,11 +1,7 @@
 package org.clulab.timenorm.scate
 
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
-
-@RunWith(classOf[JUnitRunner])
 class WordsToNumberTest extends FunSuite with TypesSuite {
 
   val enTextToNumber = WordsToNumber("en")
