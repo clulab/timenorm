@@ -3,12 +3,16 @@ package org.clulab.timenorm.scate
 import java.time.temporal.ChronoField
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import org.scalatest.junit.JUnitRunner
 
 
 @RunWith(classOf[JUnitRunner])
-class TemporalNeuralParserTest extends FunSuite with TypesSuite {
+class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with TypesSuite {
+
+  override def afterAll(): Unit = {
+    parser.close()
+  }
 
   private val parser = new TemporalNeuralParser()
   private val Array(dct: Interval) = parser.parse("2018-07-06")
@@ -42,10 +46,10 @@ class TemporalNeuralParserTest extends FunSuite with TypesSuite {
       (355, 519), // Between 1 ... 77,874
       (520, 614), // FOOD PROGRAMME ... in this
       (615, 638), // the past several months
-      (639, 659), // nineteen ninety nine
+      (639, 659)  // nineteen ninety nine
     ),
     // use a SimpleInterval here so that there's no associated character span
-    SimpleInterval(dct.start, dct.end),
+    SimpleInterval(dct.start, dct.end)
   )
 
 

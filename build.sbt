@@ -3,6 +3,8 @@ name := "timenorm"
 version := "1.0.1"
 
 scalaVersion := "2.12.8"
+crossScalaVersions := List("2.11.12", "2.12.8", "2.13.0")
+scalacOptions := Seq("-unchecked", "-deprecation")
 
 libraryDependencies ++= {
   val luceneVer = "6.6.6"
@@ -12,7 +14,7 @@ libraryDependencies ++= {
     "org.clulab"                 % "timenorm-models" % "0.9.2",
     "commons-io"                 % "commons-io"      % "2.6",
     "org.scala-lang.modules"    %% "scala-xml"       % "1.2.0",
-    "com.typesafe.play"         %% "play-json"       % "2.6.9",
+    "com.typesafe.play"         %% "play-json"       % "2.7.4",
     "junit"                      % "junit"           % "4.12"  % Test,
     "org.scalatest"             %% "scalatest"       % "3.0.8" % Test,
     "com.lexicalscope.jewelcli"  % "jewelcli"        % "0.8.9" % Test,
@@ -21,6 +23,9 @@ libraryDependencies ++= {
 }
 
 mainClass in (Compile, packageBin) := Some("org.clulab.timenorm.scate.TemporalNeuralParser")
+
+// needed or tensorflow fails with "Cannot register 2 metrics with the same name"
+Test / fork := true
 
 // Additional metadata required by Sonatype OSS
 // https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html

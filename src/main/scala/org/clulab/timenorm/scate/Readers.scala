@@ -111,11 +111,13 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     }
   }
 
-  def included(property: Option[String]): Boolean =
-    property match {
+  def included(properties: Properties, prefix: String = ""): Boolean =
+    properties.get(prefix + "Included") match {
       case Some("Included") => true
       case Some("Not-Included") => false
       case None => false
+      case _ => throw new AnaforaReader.Exception(
+        s"""cannot parse ${prefix}Included from ${properties.xml}""")
     }
 
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
@@ -156,8 +158,8 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Between", None, N, N, N, None) => Between(
         interval(properties, "Start-"),
         interval(properties, "End-"),
-        included(properties.get("Start-Included")),
-        included(properties.get("End-Included")),
+        included(properties, "Start-"),
+        included(properties, "End-"),
         charSpan)
       case ("This", None, N, N, N, None) => ThisP(interval(properties), UnknownPeriod(), charSpan)
       case ("This", None, Seq(period), N, N, None) => ThisP(interval(properties), period, charSpan)

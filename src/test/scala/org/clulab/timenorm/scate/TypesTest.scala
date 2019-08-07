@@ -21,7 +21,11 @@ trait TypesSuite {
 
   implicit def intervalsEquality[T <: Seq[_ <: Interval]] = new org.scalactic.Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
-      case i: Seq[_] => a.size == i.size && (a zip i).forall{ case (x, y) => intervalEquality.areEqual(x, y) }
+      case c: Seq[_] =>
+        a.size == c.size &&
+        // use .indices instead of .zip here, because type inference in scala 2.11 can't figure out the zip
+        // (a zip c).forall{ case (x, y) => intervalEquality.areEqual(x, y) }
+        a.indices.forall(i => intervalEquality.areEqual(a(i), c(i)))
       case _ => false
     }
   }

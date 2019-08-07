@@ -63,14 +63,14 @@ object TemporalNeuralParser {
     } yield {
       val subPath = inRoot.relativize(inPath)
       val outPathNoExt = outRoot.resolve(subPath)
-      val outPath = outPathNoExt.resolveSibling(outPathNoExt.getFileName + outExt)
+      val outPath = outPathNoExt.resolveSibling(outPathNoExt.getFileName.toString + outExt)
       (inPath, outPath)
     }
   }
 }
 
 
-class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
+class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends AutoCloseable {
 
   private def resourceLines(path: String): Iterator[String] = {
     Source.fromInputStream(this.getClass.getResourceAsStream(path)).getLines()
@@ -110,7 +110,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
   lazy private val operatorToTextToType: Map[String, Map[String, String]] = {
     resourceLines("/org/clulab/timenorm/linking_configure/date-types.txt").map(_.split(' ')).map{
       case Array(operator, property, string) => (operator, (string, property))
-    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2).toMap)
+    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2).toMap).toMap
   }
 
   lazy private val operatorToPropertyToTypes: Map[String, Map[String, Set[String]]] = {
@@ -322,4 +322,6 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) {
      }
     propertyOptions.flatten.toArray
   }
+
+  override def close(): Unit = network.close()
 }

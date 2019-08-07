@@ -26,14 +26,14 @@ object EvaluateLinker {
   }
 
   def entityDistanceHistogram(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[Int, Int] = {
-      linkedEntityInfo(inRoots, exclude).map(_._4).groupBy(identity).mapValues(_.length)
+      linkedEntityInfo(inRoots, exclude).map(_._4).groupBy(identity).mapValues(_.length).toMap
   }
 
   def distancesByTypes(inRoots: Array[Path], exclude: Set[String] = Set.empty): Map[String, Map[Int, Int]] = {
     val distances = for ((entity1, propertyName, _, dist) <- linkedEntityInfo(inRoots, exclude)) yield {
       (s"${entity1.`type`}:$propertyName", dist)
     }
-    distances.toSeq.groupBy(_._1).mapValues(_.map(_._2).groupBy(identity).mapValues(_.length))
+    distances.toSeq.groupBy(_._1).mapValues(_.map(_._2).groupBy(identity).mapValues(_.length).toMap).toMap
   }
 
   def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {

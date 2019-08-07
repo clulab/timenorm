@@ -173,7 +173,7 @@ trait Intervals extends TimeExpression with Seq[Interval] {
 
   override def length: Int = intervals.size
 
-  override def iterator: Iterator[Interval] = intervals.toIterator
+  override def iterator: Iterator[Interval] = intervals.iterator
 
   override def apply(idx: Int): Interval = intervals(idx)
 }
