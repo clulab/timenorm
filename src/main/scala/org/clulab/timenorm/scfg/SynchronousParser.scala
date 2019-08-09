@@ -3,6 +3,7 @@ package org.clulab.timenorm.scfg
 import scala.collection.immutable.IndexedSeq
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.util.{Try, control}
 
 /**
  * A parser for synchronous grammars.
@@ -52,6 +53,16 @@ class SynchronousParser(grammar: SynchronousGrammar) {
       throw new UnsupportedOperationException(message.format(sourceTokens, completes.mkString("\n")))
     }
     trees
+  }
+
+  /**
+    * Attempt to parse the source tokens into a tree of non-terminals and target tokens.
+    *
+    * @param sourceTokens The source tokens to be parsed.
+    * @return Success(trees) if the source tokens could be parsed, Failure otherwise.
+    */
+  def tryParseAll(sourceTokens: IndexedSeq[String]): Try[IndexedSeq[Tree.NonTerminal]] = {
+    control.Exception.catching(classOf[UnsupportedOperationException]).withTry(parseAll(sourceTokens))
   }
 
   private def parseChart(sourceTokens: IndexedSeq[String]): Array[Array[ChartEntry]] = {

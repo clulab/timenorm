@@ -36,5 +36,7 @@ class WordsToNumberTest extends FunSuite with TypesSuite {
 
   test("English invalid numbers") {
     assert(enTextToNumber(Array("several")) === None)
+    assert(enTextToNumber(Array("and")) === None)
+    assert(enTextToNumber(Array.empty) === None)
   }
 }

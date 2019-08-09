@@ -7,6 +7,8 @@ import org.apache.commons.io.IOUtils
 import org.clulab.timenorm.scfg.SynchronousParser.Tree
 import org.clulab.timenorm.scfg.{SynchronousGrammar, SynchronousParser}
 
+import scala.util.{Failure, Success}
+
 
 object WordsToNumber {
   def apply(languageCode: String): WordsToNumber = languageCode match {
@@ -16,14 +18,14 @@ object WordsToNumber {
 
 class WordsToNumber(grammarStream: InputStream) extends Function[Array[String], Option[Long]] {
 
-  private val grammar = SynchronousGrammar.fromString(IOUtils.toString(grammarStream, Charset.forName("ascii")))
-  private val sourceWords = grammar.sourceSymbols()
-  private val parser = new SynchronousParser(grammar)
+  private val parser = new SynchronousParser(SynchronousGrammar.fromString(
+    IOUtils.toString(grammarStream, Charset.forName("ascii"))))
 
   override def apply(words: Array[String]): Option[Long] = {
-    if (!words.forall(sourceWords)) None else parser.parseAll(words) match {
-      case Array(tree) => Some(this.toDigits(tree).foldLeft(0L) { case (sum, digit) => 10L * sum + digit })
-      case trees => throw new UnsupportedOperationException(
+    parser.tryParseAll(words.toIndexedSeq) match {
+      case Failure(_) => None
+      case Success(IndexedSeq(tree)) => Some(this.toDigits(tree).foldLeft(0L) { case (sum, digit) => 10L * sum + digit })
+      case Success(trees) => throw new UnsupportedOperationException(
         s"Ambiguous grammar for ${words.toList}. Parses:\n${trees.mkString("\n")}")
     }
   }
