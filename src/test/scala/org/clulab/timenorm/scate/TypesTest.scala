@@ -917,6 +917,15 @@ class TypesTest extends FunSuite with TypesSuite {
     val mar31 = IntersectionRI(Set(march, day31))
     val startOf1980 = LocalDateTime.of(1980, 1, 1, 0, 0)
     assert(mar31.following(startOf1980).next === SimpleInterval.of(1980, 3, 31))
+
+    // RI: April 31st
+    intercept[java.time.DateTimeException] {
+      IntersectionRI(Set(
+        RepeatingField(ChronoField.MONTH_OF_YEAR, 4),
+        RepeatingField(ChronoField.DAY_OF_MONTH, 31)
+      ))
+      fail("April 31st should throw an exception")
+    }
   }
 
   test("IntersectionI") {
