@@ -253,7 +253,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(between.start === LocalDateTime.of(2000, 1, 1, 0, 0, 0, 0))
     assert(between.end === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
 
-    // If startInterval ends after startInterval the operator should be not defined.
+    // If startInterval ends after endInterval starts the operator should be not defined.
     val incorrect_between = Between(interval2, interval1)
     assert(incorrect_between.isDefined === false)
   }
