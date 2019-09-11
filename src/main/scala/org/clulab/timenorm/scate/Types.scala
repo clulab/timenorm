@@ -562,7 +562,7 @@ case class Between(startInterval: Interval,
                    startIncluded: Boolean = false,
                    endIncluded: Boolean = false,
                    triggerCharSpan: Option[(Int, Int)] = None) extends Interval {
-  val isDefined: Boolean = startInterval.isDefined && endInterval.isDefined
+  val isDefined: Boolean = startInterval.isDefined && endInterval.isDefined && startInterval.end.isBefore(endInterval.start)
   val charSpan: Option[(Int, Int)] = maxSpan(Seq(startInterval.charSpan, endInterval.charSpan, triggerCharSpan))
   lazy val start: LocalDateTime = if (startIncluded) startInterval.start else startInterval.end
   lazy val end: LocalDateTime = if (endIncluded) endInterval.end else endInterval.start
