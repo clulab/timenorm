@@ -824,11 +824,12 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval],
   override val base: TemporalUnit = repeatingIntervals.minBy(_.base.getDuration).base
   override val range: TemporalUnit = repeatingIntervals.maxBy(_.range.getDuration).range
 
+  // Throw an early exception in case of an impossible combination of day and month, e.g. "31 April".
   for {
     month <- repeatingIntervals.collectFirst{ case RepeatingField(ChronoField.MONTH_OF_YEAR, month, _, _) => month }
     day <- repeatingIntervals.collectFirst{ case RepeatingField(ChronoField.DAY_OF_MONTH, day, _, _) => day }
   } {
-    java.time.MonthDay.of(month.toInt, day.toInt) // throws an exception if this is an invalid combination
+    java.time.MonthDay.of(month.toInt, day.toInt)
   }
 
   private val sortedRepeatingIntervals = repeatingIntervals.toList
