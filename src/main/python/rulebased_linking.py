@@ -43,10 +43,24 @@ def get_relation(parent, child):
     '''
     if parent.type in conf.TN_SCHEMA:
         for relation in conf.TN_SCHEMA[parent.type]:
-            if relation != "parenType" and parent.type not in conf.EXCLUDED and child.type not in conf.EXCLUDED:
+            if (relation != "parenType" and parent.properties.find(relation) is None and
+                    parent.type not in conf.EXCLUDED and child.type not in conf.EXCLUDED):
                 for validChild in conf.TN_SCHEMA[parent.type][relation][1]:
                     if validChild == child.type:
                             return relation
+
+
+def get_entity(entity_list, entity_id):
+    '''
+    Look for an Entity in entity_list given its id
+    :param entity_list list Entity: a list of Entity
+    :param entity_id string: the target entity id
+    :return Entity: the Entity if its found, None otherwise
+    '''
+    for entity in entity_list:
+        if entity.id == entity_id:
+            return entity
+    return None
 
 
 def get_and_prepare_entities(xml_tree, text):
@@ -83,6 +97,23 @@ def get_and_prepare_entities(xml_tree, text):
         entities.append(Entity(entity_id, entity_start, entity_end, entity_span, entity_type,
                                entity_parentsType, entity.find('./properties')))
     return entities
+
+
+def recursive_link(entity_list, target, source):
+    '''
+    Check if linking source to target will create a recursive link in the entity list
+    :param entity_list list Entity: the list where to perform the search
+    :param target Entity: the target Entity
+    :param source Entity: the source Entity
+    :return bool: True if the link will create a recursive link, False otherwise
+    '''
+    for property in target.properties:
+        if source.id == property.text:
+            return True
+        property_entity = get_entity(entity_list, property.text)
+        if recursive_link(entity_list, property_entity, source):
+            return True
+    return False
 
 
 def type_linked(links, entity_type):
@@ -140,12 +171,12 @@ def link_entities(entities, text):
         for pointer_entity in reversed(stack):
             if not bool(entity.sources) and not type_linked(entity.targets + entity.sources, pointer_entity.type):
                 link_type = get_relation(entity, pointer_entity)
-                if link_type is not None:
+                if link_type is not None and not recursive_link(stack, pointer_entity, entity):
                     if entity.properties.find(link_type) is None:
                         update_entity_links(entity, pointer_entity, link_type)
                 else:
                     link_type = get_relation(pointer_entity, entity)
-                    if link_type is not None:
+                    if link_type is not None and not recursive_link(stack, entity, pointer_entity):
                         if pointer_entity.properties.find(link_type) is None:
                             update_entity_links(pointer_entity, entity, link_type)
         stack.append(entity)
