@@ -250,7 +250,8 @@
       <entity type="Frequency" color="ff7030" hotkey="f">
 	<properties>
 	  <property type="Type" input="choice">,Century,Quarter-Century,Decade,Year,Quarter-Year,Month,Week,Day,Hour,Minute,Second,Other</property>
-	  <property type="Every" input="list" maxlink="1" required="False" instanceOf="Frequency,Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" />
+	  <!-- <property type="Every" input="list" maxlink="1" required="False" instanceOf="Frequency,Calendar-Interval,Season-Of-Year,Month-Of-Year,Week-Of-Year,Day-Of-Month,Day-Of-Week,Part-Of-Week,Part-Of-Day,Hour-Of-Day,Minute-Of-Hour,Second-Of-Minute,Union,Intersection,Every-Nth" /> -->
+	  <property type="Every" input="list" maxlink="1" required="False" instanceOf="Calendar-Interval" />
 	  <property type="Number" input="list" maxlink="1" required="False" instanceOf="Number" />
 	  <property type="Modifier" input="list" maxlink="1" required="False" instanceOf="Modifier" />
 	</properties>

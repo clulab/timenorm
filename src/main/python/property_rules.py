@@ -20,16 +20,23 @@ def Type(entity):
     '''
     property_value = entity.span.title()
     if entity.type in conf.DATE_TYPES:
-        if entity.span in conf.DATE_TYPES[entity.type]:
-            property_value = conf.DATE_TYPES[entity.type][entity.span]
-        # Type of "Calendar-Interval" must be singular
-        if entity.type == "Calendar-Interval" and property_value != "Unknown":
-            if property_value.endswith("s"):
-                property_value = property_value[:-1]
-        # Type of "Period" must be plural
-        elif entity.type == "Period" and property_value != "Unknown":
-            if not property_value.endswith("s"):
-                property_value += "s"
+        if entity.span.lower() in conf.DATE_TYPES[entity.type]:
+            property_value = conf.DATE_TYPES[entity.type][entity.span.lower()]
+        elif re.match(r"^[0-9]{2}s?$", property_value):
+            property_value = "Years"
+        else:
+            property_value = "Unknown"
+        if property_value != "Unknown":
+            # Type of "Calendar-Interval" must be singular
+            if entity.type == "Calendar-Interval":
+                if property_value.endswith("s"):
+                    property_value = property_value[:-1]
+            # Type of "Period" must be plural
+            elif entity.type == "Period":
+                if not property_value.endswith("s"):
+                    property_value += "s"
+    elif entity.type == "Frequency":
+        property_value = "Other"
     return property_value
 
 
@@ -49,13 +56,14 @@ def Value(entity):
     return property_value
 
 
-def Interval_Type(entity):
+def Interval_Type(entity, prefix):
     '''
     Rules for "Interval-Type", "Interval-Type-Start" and "Interval-Type-End" properties
     :param entity Entity:
     :return property_value string:
     '''
-    if entity.properties.xpath("./Interval[./text()]"):
+    query = "./" + prefix + "Interval[./text()]"
+    if entity.properties.xpath(query):
         return "Link"
     else:
         return "DocTime"
@@ -104,7 +112,8 @@ def complete_properties(entities, text, xml_tree, dctDayofWeek):
                     elif property_type == "Value":
                         property_value = Value(entity)
                     elif re.search("Interval-Type", property_type):
-                        property_value = Interval_Type(entity)
+                        prefix = property_type.replace("Interval-Type", "")
+                        property_value = Interval_Type(entity, prefix)
                     elif property_type == "Semantics":
                         property_value = Semantics(entity, xml_tree, text, dctDayofWeek)
 

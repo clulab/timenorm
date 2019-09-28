@@ -16,4 +16,5 @@ TN_SCHEMA = config['DATA']['schema']
 TN_SCHEMA = anafora_funct.get_schema(TN_SCHEMA)
 DATE_TYPES = config['DATA']['types']
 DATE_TYPES = anafora_funct.get_types(DATE_TYPES)
+GRAMMAR = config['DATA']['grammar']
 EXCLUDED = config['OPTIONS']['excluded'].split(" ")

@@ -29,7 +29,9 @@ class Entity(object):
         self.type = type
         self.parentsType = parentsType
         self.properties = properties
-        self.links = []
+        self.targets = []
+        self.sources = []
+
 
 
 def get_relation(parent, child):
@@ -85,7 +87,7 @@ def get_and_prepare_entities(xml_tree, text):
 
 def type_linked(links, entity_type):
     '''
-    Check if a type has beend already linked to an entity
+    Check if a type has been already linked to an entity
     to avoid revisiting it.
     In the case of "Day-Of-Week" or "Day-Of-Month" types
     take both into account.
@@ -111,8 +113,8 @@ def update_entity_links(parent_entity, child_entity, link_type):
     :param child_entity Entity:
     :param link_type string:
     '''
-    parent_entity.links.append(child_entity.type)
-    child_entity.links.append(parent_entity.type)
+    parent_entity.targets.append(child_entity.type)
+    child_entity.sources.append(parent_entity.type)
     link_value = child_entity.id
     new_link = etree.Element(link_type)
     new_link.text = link_value
@@ -136,7 +138,7 @@ def link_entities(entities, text):
             stack = list()
         previous = entity
         for pointer_entity in reversed(stack):
-            if not type_linked(entity.links, pointer_entity.type):
+            if not bool(entity.sources) and not type_linked(entity.targets + entity.sources, pointer_entity.type):
                 link_type = get_relation(entity, pointer_entity)
                 if link_type is not None:
                     if entity.properties.find(link_type) is None:
