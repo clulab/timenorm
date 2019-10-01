@@ -116,6 +116,8 @@ def complete_properties(entities, text, xml_tree, dctDayofWeek):
                         property_value = Interval_Type(entity, prefix)
                     elif property_type == "Semantics":
                         property_value = Semantics(entity, xml_tree, text, dctDayofWeek)
+                    elif property_type == "Start-Included" or property_type == "End-Included":
+                        property_value = "Not-Included"
 
                     # Add the property if the value has been solved
                     if property_value is not None:

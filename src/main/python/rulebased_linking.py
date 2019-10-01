@@ -33,6 +33,21 @@ class Entity(object):
         self.sources = []
 
 
+def filter_between_relations(relations, between, entity):
+    start_indicators = ["from", "since"]
+    end_indicators = ["to", "until"]
+    fitered_relations = relations.copy()
+    if 'End-Interval' in fitered_relations and between.start > entity.start:
+        del fitered_relations['End-Interval']
+    else:
+        if ('Start-Interval' in fitered_relations and
+                (between.properties.find('./Start-Interval')is not None or between.span.lower() in end_indicators)):
+            del fitered_relations['Start-Interval']
+        if ('End-Interval' in fitered_relations and
+                (between.properties.find('./End-Interval')is not None or between.span.lower() in start_indicators)):
+            del fitered_relations['End-Interval']
+    return fitered_relations
+
 
 def get_relation(parent, child):
     '''
@@ -41,13 +56,18 @@ def get_relation(parent, child):
     :param child Entity: The child entity.
     :return string: The relation type. Empty string if noun found.
     '''
+    valid_relations = []
     if parent.type in conf.TN_SCHEMA:
-        for relation in conf.TN_SCHEMA[parent.type]:
+        relations = conf.TN_SCHEMA[parent.type]
+        if parent.type == "Between":
+            relations = filter_between_relations(relations, parent, child)
+        for relation in relations:
             if (relation != "parenType" and parent.properties.find(relation) is None and
                     parent.type not in conf.EXCLUDED and child.type not in conf.EXCLUDED):
                 for validChild in conf.TN_SCHEMA[parent.type][relation][1]:
                     if validChild == child.type:
-                            return relation
+                        valid_relations.append(relation)
+    return valid_relations
 
 
 def get_entity(entity_list, entity_id):
@@ -152,6 +172,24 @@ def update_entity_links(parent_entity, child_entity, link_type):
     parent_entity.properties.append(new_link)
 
 
+def try_link(entity_list, source, target):
+    '''
+    Try to link source to target given entity_list
+    :param entity_list list Entity: the entity list where the link will be added
+    :param source Entity: the source Entity
+    :param target Entity: the target Entity
+    :return bool: return True is success, False otherwise
+    '''
+    link_types = get_relation(source, target)
+    linked = False
+    if bool(link_types) and not recursive_link(entity_list, target, source):
+        for link_type in link_types:
+            if source.properties.find(link_type) is None:
+                update_entity_links(source, target, link_type)
+                linked = True
+    return linked
+
+
 def link_entities(entities, text):
     '''
     Link the entities together
@@ -170,15 +208,8 @@ def link_entities(entities, text):
         previous = entity
         for pointer_entity in reversed(stack):
             if not bool(entity.sources) and not type_linked(entity.targets + entity.sources, pointer_entity.type):
-                link_type = get_relation(entity, pointer_entity)
-                if link_type is not None and not recursive_link(stack, pointer_entity, entity):
-                    if entity.properties.find(link_type) is None:
-                        update_entity_links(entity, pointer_entity, link_type)
-                else:
-                    link_type = get_relation(pointer_entity, entity)
-                    if link_type is not None and not recursive_link(stack, entity, pointer_entity):
-                        if pointer_entity.properties.find(link_type) is None:
-                            update_entity_links(pointer_entity, entity, link_type)
+                if not try_link(stack, entity, pointer_entity):
+                    try_link(stack, pointer_entity, entity)
         stack.append(entity)
 
 
