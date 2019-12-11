@@ -135,7 +135,7 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
 
   test("between-May2016-and-March2017"){
     val Array(betweenMay2016andMarch2017: Interval) = batch(12)
-    assert(betweenMay2016andMarch2017.charSpan === Some((734, 765)))
+    assert(betweenMay2016andMarch2017.charSpan === Some((708,739)))
     assert(betweenMay2016andMarch2017.start === SimpleInterval.of(2016, 5).start) // 1 May 2016 and 30 March 2017
     assert(betweenMay2016andMarch2017.end === SimpleInterval.of(2017, 3).end)
   }
@@ -151,15 +151,5 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
       """.stripMargin)
     val ids = (xml \\ "id").map(_.text)
     assert(ids === ids.distinct)
-  }
-
-  test("kkkk") {
-    val parser = new TemporalNeuralParser()
-    val Array(dct: Interval) = parser.parse("2018-07-06")
-    val batch = parser.parseBatch(
-      "At a critical moment in 2011 the factory producing RUTF in Ethiopia had an issue with hygiene and had to be closed for a week, affecting supply critically."
-    ,Array((0, 155)), SimpleInterval(dct.start, dct.end)
-    )
-    val i = batch(0)
   }
 }
