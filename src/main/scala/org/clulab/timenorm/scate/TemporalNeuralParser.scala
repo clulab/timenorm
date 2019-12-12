@@ -117,7 +117,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
   lazy private val betweenIndicators: Map[String, IndexedSeq[String]] = {
     resourceLines("/org/clulab/timenorm/linking_configure/between-indicators.txt").map(_.split(' ')).map{
       case Array(key, string) => (key, string)
-    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2))
+    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2)).toMap
   }
 
   lazy private val operatorToPropertyToTypes: Map[String, Map[String, Set[String]]] = {
