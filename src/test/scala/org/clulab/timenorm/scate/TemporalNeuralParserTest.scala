@@ -152,4 +152,16 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
     val ids = (xml \\ "id").map(_.text)
     assert(ids === ids.distinct)
   }
+
+  test("number-too-long"){
+    // 20110805000336031965 is too long to be converted to Long type.
+    // parseToXML should be able to produce a well formed XML with Value equal to 20110805000336031965
+    val xml = parser.parseToXML("20110805000336031965")
+    val value = (xml \\ "Value").map(_.text)
+    assert(value === List("20110805000336031965"))
+
+    // parse should not produce any TimeExpression
+    val timexes = parser.parse("20110805000336031965")
+    assert(timexes.length === 0)
+  }
 }

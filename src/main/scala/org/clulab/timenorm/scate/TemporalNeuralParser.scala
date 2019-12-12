@@ -13,7 +13,8 @@ import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
-import scala.xml.{XML, Elem}
+import scala.util.Try
+import scala.xml.{Elem, XML}
 
 
 object TemporalNeuralParser {
@@ -158,7 +159,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
     for (xml <- parseBatchToXML(text, spans)) yield {
       implicit val data: Data = new Data(xml, Some(text))
       val reader = new AnaforaReader(textCreationTime)
-      data.topEntities.map(reader.temporal).toArray
+      data.topEntities.flatMap(e => Try(Some(reader.temporal(e))).getOrElse(None)).toArray
     }
   }
 
@@ -324,7 +325,10 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
            try {
              Some(cleanedText.toLong)
            } catch {
-             case _: NumberFormatException => textToNumber(cleanedText.split("""[\s-]+"""))
+             case _: NumberFormatException => """^\d+$""".r.findFirstIn(cleanedText) match {
+               case Some(_) => None
+               case None => textToNumber(cleanedText.split("""[\s-]+"""))
+             }
            }
          Some((propertyType, valueOption.map(_.toString).getOrElse(timeText)))
        case intervalType if intervalType contains "Interval-Type" =>
