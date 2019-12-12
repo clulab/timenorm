@@ -113,6 +113,13 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
     }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2).toMap).toMap
   }
 
+  // textual indicators that help to filter links for Between operators
+  lazy private val betweenIndicators: Map[String, IndexedSeq[String]] = {
+    resourceLines("/org/clulab/timenorm/linking_configure/between-indicators.txt").map(_.split(' ')).map{
+      case Array(key, string) => (key, string)
+    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2))
+  }
+
   lazy private val operatorToPropertyToTypes: Map[String, Map[String, Set[String]]] = {
     val path = "/org/clulab/timenorm/linking_configure/timenorm-schema.xml"
     val xml = XML.load(this.getClass.getResourceAsStream(path))
@@ -247,12 +254,10 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
   }
 
   def filterBetween(property: String, text: String, source: (Int, Int, String), target: (Int, Int, String)): Boolean = {
-    val start_indicators = Array("from", "since")
-    val end_indicators = Array("to", "until")
     val source_text = text.slice(source._1, source._2)
     property match {
-      case "End-Interval" if source._1 > target._1 || start_indicators.contains(source_text) => false
-      case "Start-Interval" if source._1 < target._1 && end_indicators.contains(source_text) => false
+      case "End-Interval" if source._1 > target._1 || betweenIndicators.getOrElse("Start", IndexedSeq()).contains(source_text) => false
+      case "Start-Interval" if source._1 < target._1 && betweenIndicators.getOrElse("End", IndexedSeq()).contains(source_text) => false
       case _ => true
     }
   }
@@ -303,6 +308,8 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
   private def inferProperties(timeText: String, timeType: String, links: Array[(String, Int)]): Array[(String, String)] = {
     val propertyOptions = for (propertyType <- this.operatorToPropertyToTypes(timeType).keys) yield propertyType match {
        case "Type" =>
+         // The "Type" value for decades (70s, 80s, ...) is set as "Years".
+         // It will be converted into "Year" in case of "Period". E.g. "He is in his 70s".
          val timeTextNoDecades = """"^[0-9]{2}s?$""".r.replaceAllIn(timeText, "Years")
          val p = this.operatorToTextToType.get(timeType).flatMap(_.get(timeTextNoDecades.toLowerCase)).getOrElse("Unknown")
          (timeType, p.last) match {

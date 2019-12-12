@@ -1,11 +1,10 @@
 package org.clulab.timenorm.scate
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import scala.xml.Elem
 import org.clulab.anafora.{Anafora, Data, Entity}
 
-import scala.io.Source
 
 object EvaluateLinker {
 
@@ -39,7 +38,7 @@ object EvaluateLinker {
   }
 
   private def textContent(path: String): String = {
-    Source.fromInputStream(this.getClass.getResourceAsStream(path)).getLines.mkString
+    Files.readAllBytes(Paths.get(path)).mkString
   }
 
   def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {
