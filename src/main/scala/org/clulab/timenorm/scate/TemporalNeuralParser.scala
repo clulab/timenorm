@@ -13,7 +13,6 @@ import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
-import scala.util.Try
 import scala.xml.{Elem, XML}
 
 
@@ -159,7 +158,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
     for (xml <- parseBatchToXML(text, spans)) yield {
       implicit val data: Data = new Data(xml, Some(text))
       val reader = new AnaforaReader(textCreationTime)
-      data.topEntities.flatMap(e => Try(Some(reader.temporal(e))).getOrElse(None)).toArray
+      data.topEntities.map(reader.temporal).toArray
     }
   }
 

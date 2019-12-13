@@ -160,8 +160,7 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
     val value = (xml \\ "Value").map(_.text)
     assert(value === List("20110805000336031965"))
 
-    // parse should not produce any TimeExpression
-    val timexes = parser.parse("20110805000336031965")
-    assert(timexes.length === 0)
+    // parse should throw an AnaforaReader.Exception
+    intercept[AnaforaReader.Exception] { parser.parse("20110805000336031965") }
   }
 }
