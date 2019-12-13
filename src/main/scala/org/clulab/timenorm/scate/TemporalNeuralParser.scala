@@ -13,7 +13,7 @@ import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
-import scala.xml.{XML, Elem}
+import scala.xml.{Elem, XML}
 
 
 object TemporalNeuralParser {
@@ -113,6 +113,13 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
     }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2).toMap).toMap
   }
 
+  // textual indicators that help to filter links for Between operators
+  lazy private val betweenIndicators: Map[String, IndexedSeq[String]] = {
+    resourceLines("/org/clulab/timenorm/linking_configure/between-indicators.txt").map(_.split(' ')).map{
+      case Array(key, string) => (key, string)
+    }.toIndexedSeq.groupBy(_._1).mapValues(_.map(_._2)).toMap
+  }
+
   lazy private val operatorToPropertyToTypes: Map[String, Map[String, Set[String]]] = {
     val path = "/org/clulab/timenorm/linking_configure/timenorm-schema.xml"
     val xml = XML.load(this.getClass.getResourceAsStream(path))
@@ -156,12 +163,12 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
   }
 
   def parseBatchToXML(text: String, spans: Array[(Int, Int)]): Array[Elem] = {
-    val antixmlCleanedText = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]+""".r.replaceAllIn(text, " ")
+    val antixmlCleanedText = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]""".r.replaceAllIn(text, " ")
 
     val allTimeSpans = identifyBatch(text, spans)
     val timeSpanToId = allTimeSpans.flatten.zipWithIndex.toMap.mapValues(i => s"$i@id")
     for (timeSpans <- allTimeSpans) yield {
-      val entityElems = for ((timeSpan, links) <- timeSpans zip inferLinks(timeSpans)) yield {
+      val entityElems = for ((timeSpan, links) <- timeSpans zip inferLinks(text, timeSpans)) yield {
         val id = timeSpanToId(timeSpan)
         val (start, end, timeType) = timeSpan
         val timeText = antixmlCleanedText.substring(start, end)
@@ -246,7 +253,16 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
     }
   }
 
-  def inferLinks(timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
+  def filterBetween(property: String, text: String, source: (Int, Int, String), target: (Int, Int, String)): Boolean = {
+    val source_text = text.slice(source._1, source._2)
+    property match {
+      case "End-Interval" if source._1 > target._1 || betweenIndicators.getOrElse("Start", IndexedSeq()).contains(source_text) => false
+      case "Start-Interval" if source._1 < target._1 && betweenIndicators.getOrElse("End", IndexedSeq()).contains(source_text) => false
+      case _ => true
+    }
+  }
+
+  def inferLinks(text: String, timeSpans: Array[(Int, Int, String)]): Array[Array[(String, Int)]] = {
     val links = Array.fill(timeSpans.length)(mutable.ArrayBuffer.empty[(String, Int)])
     val ancestors = Array.fill(timeSpans.length)(mutable.Set.empty[Int])
     val descendants = Array.fill(timeSpans.length)(mutable.Set.empty[Int])
@@ -265,8 +281,8 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
           (source, target) <- Seq((s, i), (i, s))
           sourceType = timeSpans(source)._3
           targetType = timeSpans(target)._3
-          propertyAllowedValues <- this.operatorToPropertyToTypes.get(sourceType).toSeq
-          (propertyName, allowedValues) <- propertyAllowedValues
+          propertyAllowedValues <- this.operatorToPropertyToTypes.get(sourceType)
+          (propertyName, allowedValues) <- propertyAllowedValues.filterKeys(filterBetween(_, text, timeSpans(source), timeSpans(target)))
           // the slot should be valid according to the schema
           if allowedValues contains targetType
           // the slot should not already be full
@@ -292,10 +308,14 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
   private def inferProperties(timeText: String, timeType: String, links: Array[(String, Int)]): Array[(String, String)] = {
     val propertyOptions = for (propertyType <- this.operatorToPropertyToTypes(timeType).keys) yield propertyType match {
        case "Type" =>
-         val p = this.operatorToTextToType.get(timeType).flatMap(_.get(timeText)).getOrElse(timeText)
+         // The "Type" value for decades (70s, 80s, ...) is set as "Years".
+         // It will be converted into "Year" in case of "Period". E.g. "He is in his 70s".
+         val timeTextNoDecades = """"^[0-9]{2}s?$""".r.replaceAllIn(timeText, "Years")
+         val p = this.operatorToTextToType.get(timeType).flatMap(_.get(timeTextNoDecades.toLowerCase)).getOrElse("Unknown")
          (timeType, p.last) match {
            case ("Calendar-Interval", 's') => Some((propertyType, p.dropRight(1)))
            case ("Period", l) if p != "Unknown" && l != 's' => Some((propertyType, p + "s"))
+           case ("Frequency", _) => Some((propertyType, "Other"))
            case _ => Some((propertyType, p))
          }
        case "Value" =>
@@ -304,7 +324,10 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
            try {
              Some(cleanedText.toLong)
            } catch {
-             case _: NumberFormatException => textToNumber(cleanedText.split("""[\s-]+"""))
+             case _: NumberFormatException => """^\d+$""".r.findFirstIn(cleanedText) match {
+               case Some(_) => None
+               case None => textToNumber(cleanedText.split("""[\s-]+"""))
+             }
            }
          Some((propertyType, valueOption.map(_.toString).getOrElse(timeText)))
        case intervalType if intervalType contains "Interval-Type" =>

@@ -46,6 +46,14 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     }
   }
 
+  private def intValue(value: String): Int = {
+    try {
+      value.toInt
+    } catch {
+      case _: NumberFormatException => throw new AnaforaReader.Exception(s"expected numeric Value, found $value")
+    }
+  }
+
   def number(entity: Entity)(implicit data: Data): Number = entity.properties("Value") match {
     case "?" => VagueNumber(entity.text.getOrElse(""), Some(entity.fullSpan))
     case "" => throw new AnaforaReader.Exception(s"""cannot parse number from "${entity.text} and ${entity.xml}""")
@@ -58,7 +66,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
         val g = gcd(numerator, denominator)
         FractionalNumber(number, numerator / g, denominator / g, Some(entity.fullSpan))
       } else if (value.forall(_.isDigit)) {
-        IntNumber(value.toInt, Some(entity.fullSpan))
+        IntNumber(intValue(value), Some(entity.fullSpan))
       } else {
         VagueNumber(value, Some(entity.fullSpan))
       }
@@ -150,10 +158,10 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     val result = (entity.`type`, valueOption, periods, repeatingIntervals, numbers, semantics) match {
       case ("Event", None, N, N, N, None) => Event(entity.text.getOrElse(""), charSpan)
       case ("Year", Some(value), N, N, N, None) => value.partition(_ != '?') match {
-        case (year, questionMarks) => Year(year.toInt, questionMarks.length, charSpan)
+        case (year, questionMarks) => Year(intValue(year), questionMarks.length, charSpan)
       }
       case ("Two-Digit-Year", Some(value), N, N, N, None) => value.partition(_ != '?') match {
-        case (year, questionMarks) => YearSuffix(interval(properties), year.toInt, year.length, questionMarks.length, charSpan)
+        case (year, questionMarks) => YearSuffix(interval(properties), intValue(year), year.length, questionMarks.length, charSpan)
       }
       case ("Between", None, N, N, N, None) => Between(
         interval(properties, "Start-"),
@@ -184,9 +192,9 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("After", None, N, Seq(rInterval), N, Inc) => AfterRI(interval(properties), rInterval, from = Interval.Start, triggerCharSpan = charSpan)
       case ("After", None, N, Seq(rInterval), Seq(number), Exc) => AfterRI(interval(properties), rInterval, number, triggerCharSpan = charSpan)
       case ("After", None, N, Seq(rInterval), Seq(number), Inc) => AfterRI(interval(properties), rInterval, number, from = Interval.Start, triggerCharSpan = charSpan)
-      case ("NthFromStart", Some(value), N, N, N, None) => NthP(interval(properties), value.toInt, UnknownPeriod(), triggerCharSpan = charSpan)
-      case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthP(interval(properties), value.toInt, period, triggerCharSpan = charSpan)
-      case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthRI(interval(properties), value.toInt, rInterval, triggerCharSpan = charSpan)
+      case ("NthFromStart", Some(value), N, N, N, None) => NthP(interval(properties), intValue(value), UnknownPeriod(), triggerCharSpan = charSpan)
+      case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthP(interval(properties), intValue(value), period, triggerCharSpan = charSpan)
+      case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthRI(interval(properties), intValue(value), rInterval, triggerCharSpan = charSpan)
       case ("Intersection", None, N, N, N, None) => IntersectionI(entity.properties.getEntities("Intervals").map(interval), charSpan)
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Interval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
@@ -217,7 +225,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("Last", None, N, Seq(rInterval), Seq(number), N) => LastRIs(interval(entity.properties), rInterval, number, triggerCharSpan = charSpan)
       case ("Next", None, N, Seq(rInterval), Seq(number), N) => NextRIs(interval(entity.properties), rInterval, number, triggerCharSpan = charSpan)
       case ("NthFromStart", Some(value), N, Seq(rInterval), Seq(number), N) =>
-        NthRIs(interval(entity.properties), value.toInt, rInterval, number, triggerCharSpan = charSpan)
+        NthRIs(interval(entity.properties), intValue(value), rInterval, number, triggerCharSpan = charSpan)
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse Intervals from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }

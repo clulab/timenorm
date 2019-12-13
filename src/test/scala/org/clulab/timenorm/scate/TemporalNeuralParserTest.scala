@@ -31,6 +31,9 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
       |FOOD PROGRAMME Rome, 2016   The designations employed and the presentation of material in this
       |the past several months
       |nineteen ninety nine
+      |until next December
+      |from May 2016 to March 2017
+      |between May 2016 and March 2017
     """.stripMargin.trim,
     Array(
       (0, 10),    // 2018-10-10
@@ -42,12 +45,14 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
       (355, 519), // Between 1 ... 77,874
       (520, 614), // FOOD PROGRAMME ... in this
       (615, 638), // the past several months
-      (639, 659)  // nineteen ninety nine
+      (639, 659), // nineteen ninety nine
+      (660, 679), // until next December
+      (680, 707), // from May 2016 to March 2017
+      (708, 739)  // between May 2016 and March 2017
     ),
     // use a SimpleInterval here so that there's no associated character span
     SimpleInterval(dct.start, dct.end)
   )
-
 
   test("interval") {
     val Array(year: Interval) = batch(0)
@@ -114,6 +119,27 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
     assert(year1999 === SimpleInterval.of(1999))
   }
 
+  test("until-December"){
+    val Array(untilDecember: Interval) = batch(10)
+    assert(untilDecember.charSpan === Some((660, 679)))
+    assert(untilDecember.start === dct.start)
+    assert(untilDecember.end === SimpleInterval.of(2018, 12).end)
+  }
+
+  test("from-May2016-to-March2017") {
+    val Array(fromMay2016toMarch2017: Interval) = batch(11)
+    assert(fromMay2016toMarch2017.charSpan === Some((685, 707)))
+    assert(fromMay2016toMarch2017.start === SimpleInterval.of(2016, 5).start)
+    assert(fromMay2016toMarch2017.end === SimpleInterval.of(2017, 3).end)
+  }
+
+  test("between-May2016-and-March2017"){
+    val Array(betweenMay2016andMarch2017: Interval) = batch(12)
+    assert(betweenMay2016andMarch2017.charSpan === Some((708,739)))
+    assert(betweenMay2016andMarch2017.start === SimpleInterval.of(2016, 5).start) // 1 May 2016 and 30 March 2017
+    assert(betweenMay2016andMarch2017.end === SimpleInterval.of(2017, 3).end)
+  }
+
   test("no-duplicate-ids") {
     // in July 2019, for the text below, the parser generated [After even][Next tual][After ly] and the code for
     // expanding to word boundaries expanded these all to have the span, resulting in <entity> nodes with identical IDs
@@ -125,5 +151,16 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
       """.stripMargin)
     val ids = (xml \\ "id").map(_.text)
     assert(ids === ids.distinct)
+  }
+
+  test("number-too-long"){
+    // 20110805000336031965 is too long to be converted to Long type.
+    // parseToXML should be able to produce a well formed XML with Value equal to 20110805000336031965
+    val xml = parser.parseToXML("20110805000336031965")
+    val value = (xml \\ "Value").map(_.text)
+    assert(value === List("20110805000336031965"))
+
+    // parse should throw an AnaforaReader.Exception
+    intercept[AnaforaReader.Exception] { parser.parse("20110805000336031965") }
   }
 }

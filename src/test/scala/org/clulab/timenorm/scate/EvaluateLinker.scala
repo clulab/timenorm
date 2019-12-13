@@ -1,9 +1,10 @@
 package org.clulab.timenorm.scate
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import scala.xml.Elem
 import org.clulab.anafora.{Anafora, Data, Entity}
+
 
 object EvaluateLinker {
 
@@ -36,6 +37,10 @@ object EvaluateLinker {
     distances.toSeq.groupBy(_._1).mapValues(_.map(_._2).groupBy(identity).mapValues(_.length).toMap).toMap
   }
 
+  private def textContent(path: String): String = {
+    Files.readAllBytes(Paths.get(path)).mkString
+  }
+
   def evaluateLinker(inRoots: Array[Path], verbose: Boolean = false): (Int, Int, Int) = {
     val parser = new TemporalNeuralParser()
     val results = for {
@@ -44,7 +49,8 @@ object EvaluateLinker {
       data = Data.fromPaths(xmlPath)
       entities = data.entities.sortBy(_.fullSpan._1)
       timeSpans = entities.map(e => (e.fullSpan._1, e.fullSpan._2, e.`type`))
-      (i, links) <- entities.indices zip parser.inferLinks(timeSpans.toArray)
+      text = textContent(xmlPath.toString.replace(".TimeNorm.gold.completed.xml", ""))
+      (i, links) <- entities.indices zip parser.inferLinks(text, timeSpans.toArray)
     } yield {
       val goldProperties = entities(i).properties.xml.child.collect{
         case elem: Elem if elem.text.contains("@") => (elem.label, elem.text)
