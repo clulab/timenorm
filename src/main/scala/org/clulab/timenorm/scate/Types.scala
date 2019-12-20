@@ -849,11 +849,10 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval],
         startPoint = startPoint.minus(1, range)
       } while(iterators.exists(startPoint isAfter _.head.start))
       val firstInterval = iterators.head.next
-      val tup = iterators.tail.map(_.span(_.start isAfter startPoint)).unzip
-      val othersAfterStart = tup._1.map(_.toList)
-      iterators = iterators.head :: tup._2.map(_.buffered)
+      val (othersAfterStart, rest) = iterators.tail.map(_.span(_.start isAfter startPoint)).unzip
+      iterators = iterators.head :: rest.map(_.buffered)
 
-      othersAfterStart.iterator.foldLeft(List(firstInterval)) {
+      othersAfterStart.map(_.toList).iterator.foldLeft(List(firstInterval)) {
         (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
       }
     }.flatten
@@ -873,11 +872,10 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval],
         startPoint = startPoint.plus(1, range)
       } while(iterators.exists(startPoint isBefore _.head.end))
       val firstInterval = iterators.head.next
-      val tup = iterators.tail.map(_.span(_.end isBefore startPoint)).unzip
-      val othersBeforeStart = tup._1.map(_.toList)
-      iterators = iterators.head :: tup._2.map(_.buffered)
+      val (othersBeforeStart, rest) = iterators.tail.map(_.span(_.start isBefore startPoint)).unzip
+      iterators = iterators.head :: rest.map(_.buffered)
 
-      othersBeforeStart.iterator.foldLeft(List(firstInterval)) {
+      othersBeforeStart.map(_.toList).iterator.foldLeft(List(firstInterval)) {
         (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
       }
     }.flatten

@@ -153,6 +153,18 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
     assert(ids === ids.distinct)
   }
 
+  test("no-duplicate-ids-2") {
+    // for "last" in text below, the parser generated explicit and implicit Last operators at the same time with same IDs
+    // this caused an infinite loop in the normalization
+    val xml = parser.parseToXML(
+      """
+        |up to 2.6 percent in 2017 from last year's 1.4 percent,
+        |the IMF said on Monday in its latest Regional Economic Outlook
+      """.stripMargin)
+    val ids = (xml \\ "id").map(_.text)
+    assert(ids === ids.distinct)
+  }
+
   test("number-too-long"){
     // 20110805000336031965 is too long to be converted to Long type.
     // parseToXML should be able to produce a well formed XML with Value equal to 20110805000336031965
@@ -162,5 +174,12 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
 
     // parse should throw an AnaforaReader.Exception
     intercept[AnaforaReader.Exception] { parser.parse("20110805000336031965") }
+  }
+
+  test("4-bytes-unicode-character") {
+    // 4-bytes unicode characters must be replaced by 2 space characters
+    // otherwise parser produces incorrect spans for later time expressions
+    val Array(year2013: Interval) = parser.parse("the mean value (\uD835\uDF07) for 2013")
+    assert(year2013.charSpan === Some((24,28)))
   }
 }
