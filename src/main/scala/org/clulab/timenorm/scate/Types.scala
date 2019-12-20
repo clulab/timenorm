@@ -842,12 +842,16 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval],
     if (startInterval.start.plus(1, range).isBefore(ldt)) {
       startPoint = startPoint.plus(1, range)
     }
-    val iterators = sortedRepeatingIntervals.map(_.preceding(startPoint).buffered)
+    var iterators = sortedRepeatingIntervals.map(_.preceding(startPoint).buffered)
 
     Iterator.continually {
-      startPoint = startPoint.minus(1, range)
+      do {
+        startPoint = startPoint.minus(1, range)
+      } while(iterators.exists(startPoint isAfter _.head.start))
       val firstInterval = iterators.head.next
-      val othersAfterStart = iterators.tail.map(it => it.takeWhile(_ => it.head.start isAfter startPoint).toList)
+      val tup = iterators.tail.map(_.span(_.start isAfter startPoint)).unzip
+      val othersAfterStart = tup._1.map(_.toList)
+      iterators = iterators.head :: tup._2.map(_.buffered)
 
       othersAfterStart.iterator.foldLeft(List(firstInterval)) {
         (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
@@ -862,12 +866,16 @@ case class IntersectionRI(repeatingIntervals: Set[RepeatingInterval],
     if (startInterval.end.minus(1, range).isAfter(ldt)) {
       startPoint = startPoint.minus(1, range)
     }
-    val iterators = sortedRepeatingIntervals.map(_.following(startPoint).buffered)
+    var iterators = sortedRepeatingIntervals.map(_.following(startPoint).buffered)
 
     Iterator.continually {
-      startPoint = startPoint.plus(1, range)
+      do {
+        startPoint = startPoint.plus(1, range)
+      } while(iterators.exists(startPoint isBefore _.head.end))
       val firstInterval = iterators.head.next
-      val othersBeforeStart = iterators.tail.map(it => it.takeWhile(_ => it.head.end isBefore startPoint).toList)
+      val tup = iterators.tail.map(_.span(_.end isBefore startPoint)).unzip
+      val othersBeforeStart = tup._1.map(_.toList)
+      iterators = iterators.head :: tup._2.map(_.buffered)
 
       othersBeforeStart.iterator.foldLeft(List(firstInterval)) {
         (intersectedIntervals, newIntervals) => newIntervals.filter(overlapsWith(_, intersectedIntervals))
