@@ -163,7 +163,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
   }
 
   def parseBatchToXML(text: String, spans: Array[(Int, Int)]): Array[Elem] = {
-    val antixmlCleanedText = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]""".r.replaceAllIn(text, " ")
+    val antixmlCleanedText = """[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]""".r.replaceAllIn(text, " " * _.group(0).length)
 
     val allTimeSpans = identifyBatch(text, spans)
     val timeSpanToId = allTimeSpans.flatten.zipWithIndex.toMap.mapValues(i => s"$i@id")
@@ -249,7 +249,7 @@ class TemporalNeuralParser(modelStream: Option[InputStream] = None) extends Auto
     // for each batch, combine the different time operators into a single array
     for (i <- expandedTexts.indices.toArray) yield {
       val operators = nonOperators(i) ++ expOperators(i) ++ impOperators(i)
-      operators.sortBy { case (start, _, _) => start }
+      operators.sortBy { case (start, _, _) => start }.distinct
     }
   }
 

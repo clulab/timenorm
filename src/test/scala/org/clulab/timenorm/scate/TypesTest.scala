@@ -930,6 +930,34 @@ class TypesTest extends FunSuite with TypesSuite {
       ))
       fail("April 31st should throw an exception")
     }
+
+
+    // In the following cases IntersectRI must skip one range unit.
+    //Interval: March 1, 2012
+    val mar312012 = SimpleInterval.of(2012, 3, 1)
+    //RepeatingInterval: The evening of the 31st
+    val intersectRIWithSkips = IntersectionRI(
+                                Set(
+                                  RepeatingField(ChronoField.DAY_OF_MONTH, 31),
+                                  RepeatingField(org.clulab.time.EVENING_OF_DAY, 1)
+                                ))
+
+    val followingWithSkips = intersectRIWithSkips.following(mar312012.start)
+    //Expected: March 31 2012 @ 1700, April 1 2012 @ 0000
+    next = followingWithSkips.next
+    assert(next.start === LocalDateTime.of(2012, 3, 31, 17, 0))
+    assert(next.end === LocalDateTime.of(2012, 4, 1, 0, 0))
+
+    //Expected: May 31 2012 @ 1700, June 1 2012 @ 0000
+    next = followingWithSkips.next
+    assert(next.start === LocalDateTime.of(2012, 5, 31, 17, 0))
+    assert(next.end === LocalDateTime.of(2012, 6, 1, 0, 0))
+
+    //Expected: January 31 2012 @ 1700, February 1 2012 @ 0000
+    val precedingWithSkips = intersectRIWithSkips.preceding(mar312012.start)
+    next = precedingWithSkips.next
+    assert(next.start === LocalDateTime.of(2012, 1, 31, 17, 0))
+    assert(next.end === LocalDateTime.of(2012, 2, 1, 0, 0))
   }
 
   test("IntersectionI") {
