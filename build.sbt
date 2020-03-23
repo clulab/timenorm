@@ -1,6 +1,6 @@
 organization := "org.clulab"
 name := "timenorm"
-version := "1.0.4"
+version := "1.0.5"
 
 scalaVersion := "2.12.8"
 crossScalaVersions := List("2.11.12", "2.12.8", "2.13.0")
