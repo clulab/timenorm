@@ -320,7 +320,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
           case Seq() => interval(entity)
           case Seq(_) => intervals(entity)
         }
-      case "Time-Zone" => TimeZone(entity.text.getOrElse(""))
+      case "Time-Zone" => TimeZone(entity.text.getOrElse(""), Some(entity.fullSpan))
       case _ => repeatingInterval(entity)
     }
   }
