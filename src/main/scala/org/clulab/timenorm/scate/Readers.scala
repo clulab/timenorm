@@ -130,7 +130,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
       case "Link" => repeatingIntervalOrSuperInterval(properties.entity(prefix + "Interval")) match {
-        case interval: Interval => interval
+        case Some(interval: Interval) => interval
         case _ => interval(properties.entity(prefix + "Interval"))
       }
       case "DocTime" => DCT
