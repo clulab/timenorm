@@ -226,10 +226,10 @@ class ReadersTest extends FunSuite with TypesSuite {
     var aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(month: Interval, day: Interval) =>
+      case Seq(month: RepeatingInterval, day: RepeatingInterval) =>
         assert(month.charSpan === Some((0, 11)))
         assert(day.charSpan === Some((9,11)))
-      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+      case _ => fail("expected Seq(month: RI, day: RI), found " + temporals)
     }
   }
  // super interval to 2 Years
@@ -353,10 +353,12 @@ class ReadersTest extends FunSuite with TypesSuite {
     var aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(month: Interval, dateOne: RepeatingField, dateTwo: RepeatingField) =>
-        assert(month.charSpan === Some((0, 18)))
-//        assert(day.charSpan === Some((9,11)))
-      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+      case Seq(month: RepeatingInterval, day1: RepeatingInterval, union: RepeatingInterval, day2: RepeatingInterval) =>
+        assert(month.charSpan === Some((0, 8)))
+        assert(day1.charSpan === Some((0,11)))
+        assert(union.charSpan === Some((0,18)))
+        assert(day2.charSpan === Some((0,18)))
+      case _ => fail("expected Seq(month: RI, day1: RI, union: RI, day2: RI), found " + temporals)
     }
   }
 
