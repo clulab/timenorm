@@ -2,7 +2,6 @@ package org.clulab.timenorm.scate
 
 import java.time.{DayOfWeek, LocalDateTime, Month}
 import java.time.temporal.{ChronoField, ChronoUnit, IsoFields, WeekFields}
-
 import org.clulab.anafora.{Data, Entity, Properties}
 import org.clulab.time._
 
@@ -130,7 +129,10 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
 
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
-      case "Link" => interval(properties.entity(prefix + "Interval"))
+      case "Link" => repeatingIntervalOrSuperInterval(properties.entity(prefix + "Interval")) match {
+        case interval: Interval => interval
+        case _ => interval(properties.entity(prefix + "Interval"))
+      }
       case "DocTime" => DCT
       case "DocTime-Year" => SimpleInterval.of(DCT.start.getYear)
       case "DocTime-Era" => SimpleInterval(LocalDateTime.of(0, 1, 1, 0, 0), LocalDateTime.MAX)
@@ -304,6 +306,65 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     case other => other
   }
 
+//  def isIntervalFromSuperInterval(entity: Entity): Boolean = {
+//    System.out.println("boolean function: " + entity.properties.names)
+//    entity.`type` match {
+//      case "Year" => true
+//      case _ => entity.properties.getEntity("Super-Interval") match {
+//        case Some(entity) => isIntervalFromSuperInterval(entity)
+//        case None => false
+//      }
+//    }
+//  }
+
+  ThisRI(
+    ThisRI(
+      ThisRI(
+        ThisRI(
+          Year(2000),
+          RepeatingField(ChronoField.MONTH_OF_YEAR, 10)),
+        RepeatingField(ChronoField.DAY_OF_MONTH, 25)),
+      RepeatingField(ChronoField.HOUR_OF_DAY, 12)),
+    RepeatingField(ChronoField.MINUTE_OF_HOUR, 0))
+
+
+  def convertToIntervalBySuperInterval(entity: Entity): Option[Interval] = {
+    entity.`type` match {
+      case "Year" => Some(interval(entity))
+      // TODO: ask! what does the code do here?
+      case _ => entity.properties.getEntity("Super-Interval").flatMap(convertToIntervalBySuperInterval).map{
+        interval => ThisRI(interval, repeatingInterval(entity), Some(entity.fullSpan))
+      }
+    }
+  }
+
+  def repeatingIntervalOrSuperInterval(entity: Entity, repeatingIntervals: Set[RepeatingInterval] = Set.empty): Option[TimeExpression] = {
+    val y = entity.`type`
+    entity.`type` match {
+      case "Year" => Some(repeatingIntervals.size match {
+        case 0 => interval(entity)
+        case 1 => ThisRI(interval(entity), repeatingIntervals.head)
+        case _ => ThisRI(interval(entity), IntersectionRI(repeatingIntervals))
+      })
+      case "Union" | "Intersection" |"Calendar-Interval" | "Week-Of-Year" | "Season-Of-Year" | "Part-Of-Week" | "Part-Of-Day" | AnaforaReader.SomeChronoField(_)=>
+        val x = entity.properties.getEntity("Super-Interval")
+        val ri = repeatingInterval(entity)
+        entity.properties.getEntity("Super-Interval") match {
+          case Some(superEntity) => repeatingIntervalOrSuperInterval(superEntity, repeatingIntervals + ri)
+          case None => Some(if (repeatingIntervals.isEmpty) ri else IntersectionRI(repeatingIntervals + ri))
+        }
+      case _ => None
+    }
+  }
+
+  ThisRI(
+    Year(2000),
+    IntersectionRI(Set(
+      RepeatingField(ChronoField.MONTH_OF_YEAR, 10),
+      RepeatingField(ChronoField.DAY_OF_MONTH, 25),
+      RepeatingField(ChronoField.HOUR_OF_DAY, 12),
+      RepeatingField(ChronoField.MINUTE_OF_HOUR, 0))))
+
   def temporal(entity: Entity)(implicit data: Data): TimeExpression = {
     val intervalEntities = entity.properties.getEntities("Intervals")
     val repeatingIntervalEntities =
@@ -321,7 +382,14 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
           case Seq(_) => intervals(entity)
         }
       case "Time-Zone" => TimeZone(entity.text.getOrElse(""), Some(entity.fullSpan))
-      case _ => repeatingInterval(entity)
+      case _ => repeatingIntervalOrSuperInterval(entity) match {
+        case Some(temporal) => temporal
+        case None => repeatingInterval(entity)
+      }
+//      case _ => convertToIntervalBySuperInterval(entity) match {
+//        case Some(interval) => interval
+//        case None => repeatingInterval(entity)
+//      }
     }
   }
 }
