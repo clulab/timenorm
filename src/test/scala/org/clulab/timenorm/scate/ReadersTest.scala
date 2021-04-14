@@ -149,13 +149,25 @@ class ReadersTest extends FunSuite with TypesSuite {
     }
   }
 
-  test (testName = "December 2017") {
+  test (testName = "after December 2017") {
     val xml =
       <data>
         <annotations>
           <entity>
+            <id>0@e@Doc9@gold</id>
+            <span>0,5</span>
+            <type>After</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Interval-Not-Included</Semantics>
+              <Interval-Type>Link</Interval-Type>
+              <Interval>1@e@Doc9@gold</Interval>
+              <Period></Period>
+            </properties>
+          </entity>
+          <entity>
             <id>1@e@Doc9@gold</id>
-            <span>0,8</span>
+            <span>6,14</span>
             <type>Month-Of-Year</type>
             <parentsType>Repeating-Interval</parentsType>
             <properties>
@@ -167,7 +179,7 @@ class ReadersTest extends FunSuite with TypesSuite {
           </entity>
           <entity>
             <id>2@e@Doc9@gold</id>
-            <span>9,13</span>
+            <span>15,19</span>
             <type>Year</type>
             <parentsType>Interval</parentsType>
             <properties>
@@ -175,18 +187,18 @@ class ReadersTest extends FunSuite with TypesSuite {
               <Modifier></Modifier>
             </properties>
           </entity>
-          <!--TODO: what is "to" in the entity-->
         </annotations>
       </data>
-      implicit val data: Data = Data(xml, Some("December 2017"))
+      implicit val data: Data = Data(xml, Some("after December 2017"))
       val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
       var aReader = new AnaforaReader(dct)
       val temporals = data.entities.map(aReader.temporal)
       temporals match {
-        case Seq(month: Interval, year: Interval) =>
+        case Seq(after: Interval, month: Interval, year: Interval) =>
+          assert(after.charSpan === Some((0, 19)))
           assert(year === SimpleInterval.of(2017))
-          assert(year.charSpan === Some((9, 13)))
-          assert(month.charSpan === Some((0, 13)))
+          assert(year.charSpan === Some((15, 19)))
+          assert(month.charSpan === Some((6, 19)))
          case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
     }
   }
@@ -309,7 +321,7 @@ class ReadersTest extends FunSuite with TypesSuite {
     }
   }
 
-  test (testName = "December 17 and 18") {
+  test (testName = "December17and18") {
     val xml =
       <data>
         <annotations>
@@ -346,6 +358,16 @@ class ReadersTest extends FunSuite with TypesSuite {
               <Super-Interval>1@e@Doc9@gold</Super-Interval>
             </properties>
           </entity>
+          <entity>
+            <id>4@e@Doc8@gold</id>
+            <span>12,15</span>
+            <type>Union</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Repeating-Intervals>2@e@Doc9@gold</Repeating-Intervals>
+              <Repeating-Intervals>3@e@Doc9@gold</Repeating-Intervals>
+            </properties>
+          </entity>
         </annotations>
       </data>
     implicit val data: Data = Data(xml, Some("December 17 and 18"))
@@ -353,10 +375,11 @@ class ReadersTest extends FunSuite with TypesSuite {
     var aReader = new AnaforaReader(dct)
     val temporals = data.entities.map(aReader.temporal)
     temporals match {
-      case Seq(month: RepeatingInterval, day1: RepeatingInterval, union: RepeatingInterval, day2: RepeatingInterval) =>
+      case Seq(month: RepeatingInterval, day1: RepeatingInterval, day2: RepeatingInterval, union: RepeatingInterval) =>
         assert(month.charSpan === Some((0, 8)))
         assert(day1.charSpan === Some((0,11)))
-        assert(union.charSpan === Some((0,18)))
+        // the Union is on 17 and 18
+        assert(union.charSpan === Some((9,18)))
         assert(day2.charSpan === Some((0,18)))
       case _ => fail("expected Seq(month: RI, day1: RI, union: RI, day2: RI), found " + temporals)
     }
