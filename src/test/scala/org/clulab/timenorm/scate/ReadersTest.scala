@@ -160,9 +160,11 @@ class ReadersTest extends FunSuite with TypesSuite {
             <parentsType>Operator</parentsType>
             <properties>
               <Semantics>Interval-Not-Included</Semantics>
+              <!--TODO: ASK the difference between interval/repeating interval for operators-->
               <Interval-Type>Link</Interval-Type>
               <Interval>1@e@Doc9@gold</Interval>
               <Period></Period>
+              <Repeating-Interval></Repeating-Interval>
             </properties>
           </entity>
           <entity>
@@ -199,11 +201,128 @@ class ReadersTest extends FunSuite with TypesSuite {
           assert(year === SimpleInterval.of(2017))
           assert(year.charSpan === Some((15, 19)))
           assert(month.charSpan === Some((6, 19)))
+          assert(month === SimpleInterval.of(2017, 12))
          case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
     }
   }
-// it only exists as repeating interval
-// IntersectionRI()
+  // or do we want LastRI(DctTime, IntersectionRI(day, month)) (this one)
+  // or LastRI(IntersectionRI(day, month))
+  test (testName = "last December 25") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>0,4</span>
+            <type>Last</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Interval-Not-Included</Semantics>
+              <!-- TODO: ASK is it DocTime here? so it means the last 2017/12 for the current doc time?
+              // is it interval included?-->
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>5,13</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>14,16</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Value>25</Value>
+              <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("last December 25"))
+    val dct = SimpleInterval.of(2018, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(last: Interval, month: RepeatingInterval, day: RepeatingInterval) =>
+        // what does last include here
+        assert(last === SimpleInterval.of(2017, 12, 25))
+        assert(last.charSpan === Some((0, 16)))
+        assert(month.following(dct.end) === SimpleInterval.of(2018, 12))
+        assert(month.charSpan === Some((5, 13)))
+        assert(day.following(dct.end) === SimpleInterval.of(2018, 12, 25))
+        assert(day.charSpan === Some((5, 16)))
+      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+
+  test (testName = "this December 25") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>0@e@Doc9@gold</id>
+            <span>0,4</span>
+            <type>This</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>5,13</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>14,16</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Value>25</Value>
+              <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("this December 25"))
+    val dct = SimpleInterval.of(2018, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(thisInterval: Interval, month: RepeatingInterval, day: RepeatingInterval) =>
+        assert(thisInterval === SimpleInterval.of(2018, 12, 25))
+        assert(thisInterval.charSpan === Some((0, 16)))
+        assert(month.charSpan === Some((5, 13)))
+        assert(month.following(dct.end) === SimpleInterval.of(2018, 12))
+        assert(day.charSpan === Some((5, 16)))
+        assert(day.following(dct.end) === SimpleInterval.of(2018, 12, 25))
+      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+
   test (testName = "December 17") {
     val xml =
       <data>
@@ -273,28 +392,6 @@ class ReadersTest extends FunSuite with TypesSuite {
           </entity>
           <entity>
             <id>3@e@Doc9@gold</id>
-            <span>25,29</span>
-            <type>Year</type>
-            <parentsType>Interval</parentsType>
-            <properties>
-              <Value>2018</Value>
-              <Modifier></Modifier>
-            </properties>
-          </entity>
-          <entity>
-            <id>4@e@Doc9@gold</id>
-            <span>17,24</span>
-            <type>Month-Of-Year</type>
-            <parentsType>Repeating-Interval</parentsType>
-            <properties>
-              <Type>January</Type>
-              <Number></Number>
-              <Modifier></Modifier>
-              <Super-Interval>3@e@Doc9@gold</Super-Interval>
-            </properties>
-          </entity>
-          <entity>
-            <id>5@e@Doc9@gold</id>
             <span>14,16</span>
             <type>Between</type>
             <parentsType>Operator</parentsType>
@@ -307,7 +404,28 @@ class ReadersTest extends FunSuite with TypesSuite {
               <End-Included>Included</End-Included>
             </properties>
           </entity>
-          <!--TODO: what is "to" in the entity-->
+          <entity>
+            <id>4@e@Doc9@gold</id>
+            <span>17,24</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>January</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+              <Super-Interval>5@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>5@e@Doc9@gold</id>
+            <span>25,29</span>
+            <type>Year</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>2018</Value>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
         </annotations>
       </data>
     implicit val data: Data = Data(xml, Some("December 2017 to January 2018"))
@@ -317,11 +435,17 @@ class ReadersTest extends FunSuite with TypesSuite {
     temporals match {
       case Seq(month: Interval, yearOne: Interval, between: Interval, monthTwo: Interval, yearTwo: Interval) =>
         assert(month.charSpan === Some((0, 13)))
+        assert(month === SimpleInterval.of(2017, 12))
+        assert(yearOne.charSpan === Some((9, 13)))
+        assert(yearOne === SimpleInterval.of(2017))
+        assert(monthTwo === SimpleInterval.of(2018, 1))
+        assert(monthTwo.charSpan === Some((17, 29)))
+        assert(yearTwo.charSpan === Some((25, 29)))
       case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
     }
   }
 
-  test (testName = "December17and18") {
+  test (testName = "December 17 and 18") {
     val xml =
       <data>
         <annotations>
