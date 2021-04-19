@@ -259,9 +259,9 @@ class ReadersTest extends FunSuite with TypesSuite {
         // what does last include here
         assert(last === SimpleInterval.of(2017, 12, 25))
         assert(last.charSpan === Some((0, 16)))
-        assert(month.following(dct.end) === SimpleInterval.of(2018, 12))
+        assert(month.following(dct.end).next === SimpleInterval.of(2018, 12))
         assert(month.charSpan === Some((5, 13)))
-        assert(day.following(dct.end) === SimpleInterval.of(2018, 12, 25))
+        assert(day.following(dct.end).next === SimpleInterval.of(2018, 12, 25))
         assert(day.charSpan === Some((5, 16)))
       case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
     }
@@ -316,9 +316,9 @@ class ReadersTest extends FunSuite with TypesSuite {
         assert(thisInterval === SimpleInterval.of(2018, 12, 25))
         assert(thisInterval.charSpan === Some((0, 16)))
         assert(month.charSpan === Some((5, 13)))
-        assert(month.following(dct.end) === SimpleInterval.of(2018, 12))
+        assert(month.following(dct.end).next === SimpleInterval.of(2018, 12))
         assert(day.charSpan === Some((5, 16)))
-        assert(day.following(dct.end) === SimpleInterval.of(2018, 12, 25))
+        assert(day.following(dct.end).next === SimpleInterval.of(2018, 12, 25))
       case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
     }
   }
@@ -503,7 +503,7 @@ class ReadersTest extends FunSuite with TypesSuite {
         assert(month.charSpan === Some((0, 8)))
         assert(day1.charSpan === Some((0,11)))
         // the Union is on 17 and 18
-        assert(union.charSpan === Some((9,18)))
+        assert(union.charSpan === Some((0,18)))
         assert(day2.charSpan === Some((0,18)))
       case _ => fail("expected Seq(month: RI, day1: RI, union: RI, day2: RI), found " + temporals)
     }

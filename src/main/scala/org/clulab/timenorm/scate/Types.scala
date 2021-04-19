@@ -13,9 +13,9 @@ trait TimeExpression {
   def charSpan: Option[(Int, Int)]
 
   private[scate] def maxSpan(spanOptions: Seq[Option[(Int, Int)]]): Option[(Int, Int)] =
-    spanOptions.flatten.sorted match {
+    spanOptions.flatten match {
       case Seq() => None
-      case spans => Some((spans.head._1, spans.last._2))
+      case spans => Some((spans.map(_._1).min, spans.map(_._2).max))
     }
 }
 

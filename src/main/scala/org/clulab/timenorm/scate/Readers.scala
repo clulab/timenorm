@@ -129,10 +129,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
 
   def interval(properties: Properties, prefix: String = "")(implicit data: Data): Interval =
     properties(prefix + "Interval-Type") match {
-      case "Link" => repeatingIntervalOrSuperInterval(properties.entity(prefix + "Interval")) match {
-        case Some(interval: Interval) => interval
-        case _ => interval(properties.entity(prefix + "Interval"))
-      }
+      case "Link" => interval(properties.entity(prefix + "Interval"))
       case "DocTime" => DCT
       case "DocTime-Year" => SimpleInterval.of(DCT.start.getYear)
       case "DocTime-Era" => SimpleInterval(LocalDateTime.of(0, 1, 1, 0, 0), LocalDateTime.MAX)
@@ -198,8 +195,11 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case ("NthFromStart", Some(value), Seq(period), N, N, None) => NthP(interval(properties), intValue(value), period, triggerCharSpan = charSpan)
       case ("NthFromStart", Some(value), N, Seq(rInterval), N, None) => NthRI(interval(properties), intValue(value), rInterval, triggerCharSpan = charSpan)
       case ("Intersection", None, N, N, N, None) => IntersectionI(entity.properties.getEntities("Intervals").map(interval), charSpan)
-      case _ => throw new AnaforaReader.Exception(
-        s"""cannot parse Interval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
+      case _ => getRootSuperIntervalYear(entity) match {
+        case Some(year) => ThisRI(year, repeatingInterval(entity))
+        case None => throw new AnaforaReader.Exception(
+          s"""cannot parse Interval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
+      }
     }
     properties.getEntity("Sub-Interval") match {
       case None => result
@@ -236,7 +236,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
     val mod = modifier(entity.properties)
     val charSpan = Some(entity.fullSpan)
-    val result = (entity.`type`, entity.properties.get("Type")) match {
+    var result = (entity.`type`, entity.properties.get("Type")) match {
       case (_, Some("Unknown")) => UnknownRepeatingInterval(charSpan)
       case ("Union", None) =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
@@ -290,6 +290,21 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse RepeatingInterval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }
+    result = entity.properties.getEntity("Super-Interval") match {
+      case Some(superEntity) => superEntity.`type` match {
+        // don't follow Year Super-Intervals because the current method constructs only RepeatingIntervals
+        case "Year" => result
+        // anything else in a Super-Interval should be a RepeatingInterval
+        case _ => repeatingInterval(superEntity) match {
+          // if it's already an Intersection, just add this RepeatingInterval in
+          case IntersectionRI(repeatingIntervals, triggerCharSpan) =>
+            IntersectionRI(repeatingIntervals + result, triggerCharSpan)
+          // otherwise, create a new Intersection to combine this and the Super-Interval
+          case repeatingInterval => IntersectionRI(Set(repeatingInterval, result))
+        }
+      }
+      case None => result
+    }
     flatten(entity.properties.getEntities("Sub-Interval") match {
       case Seq() => result
       //case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
@@ -306,64 +321,12 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
     case other => other
   }
 
-//  def isIntervalFromSuperInterval(entity: Entity): Boolean = {
-//    System.out.println("boolean function: " + entity.properties.names)
-//    entity.`type` match {
-//      case "Year" => true
-//      case _ => entity.properties.getEntity("Super-Interval") match {
-//        case Some(entity) => isIntervalFromSuperInterval(entity)
-//        case None => false
-//      }
-//    }
-//  }
-
-  ThisRI(
-    ThisRI(
-      ThisRI(
-        ThisRI(
-          Year(2000),
-          RepeatingField(ChronoField.MONTH_OF_YEAR, 10)),
-        RepeatingField(ChronoField.DAY_OF_MONTH, 25)),
-      RepeatingField(ChronoField.HOUR_OF_DAY, 12)),
-    RepeatingField(ChronoField.MINUTE_OF_HOUR, 0))
-
-
-  def convertToIntervalBySuperInterval(entity: Entity): Option[Interval] = {
+  def getRootSuperIntervalYear(entity: Entity): Option[Interval] = {
     entity.`type` match {
       case "Year" => Some(interval(entity))
-      // TODO: ask! what does the code do here?
-      case _ => entity.properties.getEntity("Super-Interval").flatMap(convertToIntervalBySuperInterval).map{
-        interval => ThisRI(interval, repeatingInterval(entity), Some(entity.fullSpan))
-      }
+      case _ => entity.properties.getEntity("Super-Interval").flatMap(getRootSuperIntervalYear)
     }
   }
-
-  def repeatingIntervalOrSuperInterval(entity: Entity, repeatingIntervals: Set[RepeatingInterval] = Set.empty): Option[TimeExpression] = {
-    val y = entity.`type`
-    entity.`type` match {
-      case "Year" => Some(repeatingIntervals.size match {
-        case 0 => interval(entity)
-        case 1 => ThisRI(interval(entity), repeatingIntervals.head)
-        case _ => ThisRI(interval(entity), IntersectionRI(repeatingIntervals))
-      })
-      case "Union" | "Intersection" |"Calendar-Interval" | "Week-Of-Year" | "Season-Of-Year" | "Part-Of-Week" | "Part-Of-Day" | AnaforaReader.SomeChronoField(_)=>
-        val x = entity.properties.getEntity("Super-Interval")
-        val ri = repeatingInterval(entity)
-        entity.properties.getEntity("Super-Interval") match {
-          case Some(superEntity) => repeatingIntervalOrSuperInterval(superEntity, repeatingIntervals + ri)
-          case None => Some(if (repeatingIntervals.isEmpty) ri else IntersectionRI(repeatingIntervals + ri))
-        }
-      case _ => None
-    }
-  }
-
-  ThisRI(
-    Year(2000),
-    IntersectionRI(Set(
-      RepeatingField(ChronoField.MONTH_OF_YEAR, 10),
-      RepeatingField(ChronoField.DAY_OF_MONTH, 25),
-      RepeatingField(ChronoField.HOUR_OF_DAY, 12),
-      RepeatingField(ChronoField.MINUTE_OF_HOUR, 0))))
 
   def temporal(entity: Entity)(implicit data: Data): TimeExpression = {
     val intervalEntities = entity.properties.getEntities("Intervals")
@@ -382,14 +345,12 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
           case Seq(_) => intervals(entity)
         }
       case "Time-Zone" => TimeZone(entity.text.getOrElse(""), Some(entity.fullSpan))
-      case _ => repeatingIntervalOrSuperInterval(entity) match {
-        case Some(temporal) => temporal
+      case _ => getRootSuperIntervalYear(entity) match {
+        // If there's a chain of Super-Intervals to a Year, produce an Interval
+        case Some(year) => ThisRI(year, repeatingInterval(entity))
+        // Otherwise, produce a RepeatingInterval
         case None => repeatingInterval(entity)
       }
-//      case _ => convertToIntervalBySuperInterval(entity) match {
-//        case Some(interval) => interval
-//        case None => repeatingInterval(entity)
-//      }
     }
   }
 }
