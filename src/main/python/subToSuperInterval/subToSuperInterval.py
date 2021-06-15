@@ -1,33 +1,9 @@
 import anafora
 import argparse
 import os
+import re
 from collections import Counter
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dir", default=".",type=str, dest="path")
-
-    return parser.parse_args()
-
-def xml_to_data(root):
-    # to stroe the file that has duplicate ids.
-    duplicate_list = []
-    
-    # the map of xml file name to it's duplicate counter
-    data_dict = {}
-    
-    for sub_dir, _, xml_names in anafora.walk(root, xml_name_regex='TimeNorm\.gold\.completed'):
-        for xml in xml_names:
-            # check only the TimeNorm.gold.completed files
-            # if 'TimeNorm.gold.completed' in xml:
-            xml_path = root + '/' + sub_dir + '/'  + xml
-            try: 
-                data = anafora.AnaforaData.from_file(xml_path)
-                data_dict[xml_path] = data
-            except:
-                duplicate_list.append(xml_path)
-    
-    return data_dict
 
 def countDuplicate(data, key):
 
@@ -59,70 +35,6 @@ def getDuplicateMap(data_dict):
 
     return dup_dict
 
-def deleteTag(entity):
-    try:
-        sub = entity.properties['Sub-Interval']
-        entity.properties.__delitem__('Sub-Interval')
-    except:
-        pass
-
-def sanityCheck(data):
-
-    with open('./test_entities_super.txt', 'a') as fp:
-        
-        anno = data.annotations
-        
-        for entity in anno:
-
-            if 'Super-Interval' in entity.properties._tag_to_property_xml.keys():
-                
-                sup = entity.properties['Super-Interval']
-                
-                if sup == '':
-                    fp.write(entity.id + '->' + 'None' + '\n')
-                    
-                else:
-                    fp.write(entity.id + '->' + sup.id + '\n')  
-
-def modifyTag(data_dict):
-  
-    for path, data in data_dict.items():
-        
-        modifiedData = anafora.AnaforaData()
-        
-        anno = data.annotations
-        
-        for entity in anno:
-
-            if 'Sub-Interval' in entity.properties:
-                
-                sub = entity.properties['Sub-Interval']
-                if sub:
-                    if isinstance(sub, str):
-                        with open('./error.txt', 'a') as fp:
-                            fp.write(path + ':\n')
-                            fp.write(sub + '\n\n')
-                    else:
-                        sub.properties['Super-Interval'] = entity.id
-                        entity.properties['Super-Interval'] = ''
-                        # this delete tag would keep the errro ids
-                        deleteTag(entity)
-                else:
-                    entity.properties.__delitem__('Sub-Interval')
-
-    
-            modifiedData.annotations.append(entity)
-
-        out_path = './test_out/'
-        paths = path.split('/')
-        out_path += '/'.join(paths[1:-1])
-        
-        if not os.path.exists(out_path): 
-            os.makedirs(out_path)
-            
-        modifiedData.to_file(out_path + f'/modified.gold.completed.xml')
-        
-        # sanityCheck(modifiedData)
 
 def findBetween(data_dict):
     properties = set()
@@ -140,23 +52,29 @@ def findBetween(data_dict):
     
     return         
 
+
+def sub_to_super(input_dir, output_dir):
+    paths = anafora.walk(input_dir, xml_name_regex=r'TimeNorm\.gold\.completed')
+    for sub_dir, text_file_name, xml_file_names in paths:
+        for xml_file_name in xml_file_names:
+            input_path = os.path.join(input_dir, sub_dir, xml_file_name)
+            data = anafora.AnaforaData.from_file(input_path)
+            for entity in data.annotations:
+                if 'Sub-Interval' in entity.properties:
+                    sub_entity = entity.properties['Sub-Interval']
+                    if sub_entity:
+                        sub_entity.properties['Super-Interval'] = entity.id
+                    del entity.properties['Sub-Interval']
+            output_parent = os.path.join(output_dir, sub_dir)
+            if not os.path.exists(output_parent):
+                os.makedirs(output_parent)
+            data.to_file(os.path.join(output_parent, xml_file_name))
+
+
 if __name__ == "__main__":
-    
-    args = parse_args()
-    DIR = args.path
-    
-    data_dict = xml_to_data(DIR)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_dir")
+    parser.add_argument("output_dir")
+    args = parser.parse_args()
 
-
-    # dup_dict = getDuplicateMap(data_dict) 
-    # with open('./duplicate.txt', 'w+') as fp:
-    #     for key, value in dup_dict.items():
-    #         fp.write(key + ':' + '\n')
-    #         for span_type, count in value.items():
-    #             fp.write(str(span_type) + str(count) + '\n')
-    #         fp.write('\n')
-
-    # modify the tags
-    modifyTag(data_dict)
-
-
+    sub_to_super(**vars(args))
