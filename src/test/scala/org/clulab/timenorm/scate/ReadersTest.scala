@@ -77,6 +77,438 @@ class ReadersTest extends FunSuite with TypesSuite {
     }
   }
 
+  test("NoonSuperInterval") {
+    val elem =
+      <data>
+        <annotations>
+          <entity>
+            <id>1@test</id>
+            <span>0,4</span>
+            <type>Year</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Value>2000</Value>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@test</id>
+            <span>5,7</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>October</Type>
+              <Super-Interval>1@test</Super-Interval>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>3@test</id>
+            <span>8,10</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Value>25</Value>
+              <Super-Interval>2@test</Super-Interval>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>4@test</id>
+            <span>11,15</span>
+            <type>Part-Of-Day</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>Noon</Type>
+              <Super-Interval>3@test</Super-Interval>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = new Data(elem, Some("2000-10-25 noon"))
+
+    val dct = SimpleInterval.of(1998, 2, 13, 15, 44)
+    var aReader = new AnaforaReader(dct)
+
+    val temporals = data.entities.map(aReader.temporal)
+//    System.out.println(temporals.seq)
+    temporals match {
+      case Seq(year: Interval, month: Interval, day: Interval, noon: Interval) =>
+        assert(year === SimpleInterval.of(2000))
+        assert(year.charSpan === Some((0, 4)))
+        assert(month === SimpleInterval.of(2000, 10))
+        assert(month.charSpan === Some((0, 7)))
+        assert(day === SimpleInterval.of(2000, 10, 25))
+        assert(day.charSpan === Some((0, 10)))
+        assert(noon === SimpleInterval.of(2000, 10, 25, 12, 0))
+        assert(noon.charSpan === Some((0, 15)))
+      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+
+  test (testName = "after December 2017") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>0@e@Doc9@gold</id>
+            <span>0,5</span>
+            <type>After</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Interval-Not-Included</Semantics>
+              <!--TODO: ASK the difference between interval/repeating interval for operators-->
+              <Interval-Type>Link</Interval-Type>
+              <Interval>1@e@Doc9@gold</Interval>
+              <Period></Period>
+              <Repeating-Interval></Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>6,14</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+              <Super-Interval>2@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>15,19</span>
+            <type>Year</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>2017</Value>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+      implicit val data: Data = Data(xml, Some("after December 2017"))
+      val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
+      var aReader = new AnaforaReader(dct)
+      val temporals = data.entities.map(aReader.temporal)
+      temporals match {
+        case Seq(after: Interval, month: Interval, year: Interval) =>
+          assert(after.charSpan === Some((0, 19)))
+          assert(year === SimpleInterval.of(2017))
+          assert(year.charSpan === Some((15, 19)))
+          assert(month.charSpan === Some((6, 19)))
+          assert(month === SimpleInterval.of(2017, 12))
+         case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+  // or do we want LastRI(DctTime, IntersectionRI(day, month)) (this one)
+  // or LastRI(IntersectionRI(day, month))
+  test (testName = "last December 25") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>0,4</span>
+            <type>Last</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Semantics>Interval-Not-Included</Semantics>
+              <!-- TODO: ASK is it DocTime here? so it means the last 2017/12 for the current doc time?
+              // is it interval included?-->
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>5,13</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>14,16</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Value>25</Value>
+              <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("last December 25"))
+    val dct = SimpleInterval.of(2018, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(last: Interval, month: RepeatingInterval, day: RepeatingInterval) =>
+        // what does last include here
+        assert(last === SimpleInterval.of(2017, 12, 25))
+        assert(last.charSpan === Some((0, 16)))
+        assert(month.following(dct.end).next === SimpleInterval.of(2018, 12))
+        assert(month.charSpan === Some((5, 13)))
+        assert(day.following(dct.end).next === SimpleInterval.of(2018, 12, 25))
+        assert(day.charSpan === Some((5, 16)))
+      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+
+  test (testName = "this December 25") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>0@e@Doc9@gold</id>
+            <span>0,4</span>
+            <type>This</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Interval-Type>DocTime</Interval-Type>
+              <Interval></Interval>
+              <Period></Period>
+              <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>5,13</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>14,16</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Value>25</Value>
+              <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("this December 25"))
+    val dct = SimpleInterval.of(2018, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(thisInterval: Interval, month: RepeatingInterval, day: RepeatingInterval) =>
+        assert(thisInterval === SimpleInterval.of(2018, 12, 25))
+        assert(thisInterval.charSpan === Some((0, 16)))
+        assert(month.charSpan === Some((5, 13)))
+        assert(month.following(dct.end).next === SimpleInterval.of(2018, 12))
+        assert(day.charSpan === Some((5, 16)))
+        assert(day.following(dct.end).next === SimpleInterval.of(2018, 12, 25))
+      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+
+  test (testName = "December 17") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>0,8</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+              <Super-Interval>2@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>9,11</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>17</Value>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <!--TODO: what is "to" in the entity-->
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("December 17"))
+    val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(month: RepeatingInterval, day: RepeatingInterval) =>
+        assert(month.charSpan === Some((0, 11)))
+        assert(day.charSpan === Some((9,11)))
+      case _ => fail("expected Seq(month: RI, day: RI), found " + temporals)
+    }
+  }
+ // super interval to 2 Years
+  test (testName = "December 2017 to January 2018") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>0,8</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+              <Super-Interval>2@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>9,13</span>
+            <type>Year</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>2017</Value>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>3@e@Doc9@gold</id>
+            <span>14,16</span>
+            <type>Between</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Start-Interval-Type>Link</Start-Interval-Type>
+              <Start-Interval>1@e@Doc9@gold</Start-Interval>
+              <Start-Included>Included</Start-Included>
+              <End-Interval-Type>Link</End-Interval-Type>
+              <End-Interval>4@e@Doc9@gold</End-Interval>
+              <End-Included>Included</End-Included>
+            </properties>
+          </entity>
+          <entity>
+            <id>4@e@Doc9@gold</id>
+            <span>17,24</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>January</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+              <Super-Interval>5@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>5@e@Doc9@gold</id>
+            <span>25,29</span>
+            <type>Year</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>2018</Value>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("December 2017 to January 2018"))
+    val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(month: Interval, yearOne: Interval, between: Interval, monthTwo: Interval, yearTwo: Interval) =>
+        assert(month.charSpan === Some((0, 13)))
+        assert(month === SimpleInterval.of(2017, 12))
+        assert(yearOne.charSpan === Some((9, 13)))
+        assert(yearOne === SimpleInterval.of(2017))
+        assert(monthTwo === SimpleInterval.of(2018, 1))
+        assert(monthTwo.charSpan === Some((17, 29)))
+        assert(yearTwo.charSpan === Some((25, 29)))
+      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    }
+  }
+
+  test (testName = "December 17 and 18") {
+    val xml =
+      <data>
+        <annotations>
+          <entity>
+            <id>1@e@Doc9@gold</id>
+            <span>0,8</span>
+            <type>Month-Of-Year</type>
+            <parentsType>Repeating-Interval</parentsType>
+            <properties>
+              <Type>December</Type>
+              <Number></Number>
+              <Modifier></Modifier>
+            </properties>
+          </entity>
+          <entity>
+            <id>2@e@Doc9@gold</id>
+            <span>9,11</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>17</Value>
+              <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>3@e@Doc9@gold</id>
+            <span>16,18</span>
+            <type>Day-Of-Month</type>
+            <parentsType>Interval</parentsType>
+            <properties>
+              <Value>18</Value>
+              <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
+            </properties>
+          </entity>
+          <entity>
+            <id>4@e@Doc8@gold</id>
+            <span>12,15</span>
+            <type>Union</type>
+            <parentsType>Operator</parentsType>
+            <properties>
+              <Repeating-Intervals>2@e@Doc9@gold</Repeating-Intervals>
+              <Repeating-Intervals>3@e@Doc9@gold</Repeating-Intervals>
+            </properties>
+          </entity>
+        </annotations>
+      </data>
+    implicit val data: Data = Data(xml, Some("December 17 and 18"))
+    val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
+    var aReader = new AnaforaReader(dct)
+    val temporals = data.entities.map(aReader.temporal)
+    temporals match {
+      case Seq(month: RepeatingInterval, day1: RepeatingInterval, day2: RepeatingInterval, union: RepeatingInterval) =>
+        assert(month.charSpan === Some((0, 8)))
+        assert(day1.charSpan === Some((0,11)))
+        // the Union is on 17 and 18
+        assert(union.charSpan === Some((0,18)))
+        assert(day2.charSpan === Some((0,18)))
+      case _ => fail("expected Seq(month: RI, day1: RI, union: RI, day2: RI), found " + temporals)
+    }
+  }
+
   test("NYT19980206.0460 (2979,3004) first nine months of 1997") {
     val xml =
       <data>
