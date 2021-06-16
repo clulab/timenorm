@@ -353,6 +353,12 @@ case class ThisRIs(interval: Interval,
                    triggerCharSpan: Option[(Int, Int)] = None) extends Intervals with This {
   // force the case class toString rather than Seq.toString
   override lazy val toString: String = scala.runtime.ScalaRunTime._toString(this)
+
+  // force the case class equals rather than Seq.equals if types are identical
+  override def equals(that: Any): Boolean = that match {
+    case other: ThisRIs => this.productIterator.sameElements(other.productIterator)
+    case _ => super.equals(that)
+  }
 }
 
 /**
@@ -422,6 +428,12 @@ case class LastRIs(interval: Interval,
                    triggerCharSpan: Option[(Int, Int)] = None) extends Intervals with Last {
   // force the case class toString rather than Seq.toString
   override lazy val toString: String = scala.runtime.ScalaRunTime._toString(this)
+
+  // force the case class equals rather than Seq.equals if types are identical
+  override def equals(that: Any): Boolean = that match {
+    case lastRIs: LastRIs => this.productIterator.sameElements(lastRIs.productIterator)
+    case _ => super.equals(that)
+  }
 }
 
 /**
@@ -473,6 +485,12 @@ case class NextRIs(interval: Interval,
                    triggerCharSpan: Option[(Int, Int)] = None) extends Intervals with Next {
   // force the case class toString rather than Seq.toString
   override lazy val toString: String = scala.runtime.ScalaRunTime._toString(this)
+
+  // force the case class equals rather than Seq.equals if types are identical
+  override def equals(that: Any): Boolean = that match {
+    case other: NextRIs => this.productIterator.sameElements(other.productIterator)
+    case _ => super.equals(that)
+  }
 }
 
 /**
@@ -651,6 +669,15 @@ case class NthRIs(interval: Interval, index: Int,
     case result if result.forall(interval.contains) => result
     case result => throw new UnsupportedOperationException(s"one of $result is outside of $interval")
   }
+
+  // force the case class toString rather than Seq.toString
+  override lazy val toString: String = scala.runtime.ScalaRunTime._toString(this)
+
+  // force the case class equals rather than Seq.equals if types are identical
+  override def equals(that: Any): Boolean = that match {
+    case other: NthRIs => this.productIterator.sameElements(other.productIterator)
+    case _ => super.equals(that)
+  }
 }
 
 case class IntersectionI(intervals: Seq[Interval],
@@ -787,6 +814,9 @@ case class RepeatingField(field: TemporalField,
 
 case class UnionRI(repeatingIntervals: Set[RepeatingInterval],
                    triggerCharSpan: Option[(Int, Int)] = None) extends RepeatingInterval {
+  if (repeatingIntervals.isEmpty) {
+    throw new UnsupportedOperationException("repeatingIntervals may not be empty")
+  }
   val isDefined: Boolean = repeatingIntervals.forall(_.isDefined)
   val charSpan: Option[(Int, Int)] = maxSpan(repeatingIntervals.toSeq.map(_.charSpan) :+ triggerCharSpan)
   override val base: TemporalUnit = repeatingIntervals.minBy(_.base.getDuration).base
