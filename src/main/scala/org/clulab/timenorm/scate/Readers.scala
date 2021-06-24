@@ -4,6 +4,7 @@ import java.time.{DayOfWeek, LocalDateTime, Month}
 import java.time.temporal.{ChronoField, ChronoUnit, IsoFields, WeekFields}
 import org.clulab.anafora.{Data, Entity, Properties}
 import org.clulab.time._
+import org.clulab.timenorm.scate
 
 object AnaforaReader {
 
@@ -236,7 +237,7 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
   def repeatingInterval(entity: Entity)(implicit data: Data): RepeatingInterval = {
     val mod = modifier(entity.properties)
     val charSpan = Some(entity.fullSpan)
-    var result = (entity.`type`, entity.properties.get("Type")) match {
+    val result = (entity.`type`, entity.properties.get("Type")) match {
       case (_, Some("Unknown")) => UnknownRepeatingInterval(charSpan)
       case ("Union", None) =>
         val repeatingIntervalEntities = entity.properties.getEntities("Repeating-Intervals")
@@ -290,35 +291,17 @@ class AnaforaReader(val DCT: Interval)(implicit data: Data) {
       case _ => throw new AnaforaReader.Exception(
         s"""cannot parse RepeatingInterval from "${entity.text}" and ${entity.descendants.map(_.xml)}""")
     }
-    result = entity.properties.getEntity("Super-Interval") match {
-      case Some(superEntity) => superEntity.`type` match {
-        // don't follow Year Super-Intervals because the current method constructs only RepeatingIntervals
-        case "Year" => result
-        // anything else in a Super-Interval should be a RepeatingInterval
-        case _ => repeatingInterval(superEntity) match {
-          // if it's already an Intersection, just add this RepeatingInterval in
-          case IntersectionRI(repeatingIntervals, triggerCharSpan) =>
-            IntersectionRI(repeatingIntervals + result, triggerCharSpan)
-          // otherwise, create a new Intersection to combine this and the Super-Interval
-          case repeatingInterval => IntersectionRI(Set(repeatingInterval, result))
-        }
-      }
-      case None => result
+    // Don't follow Year Super-Intervals because the current method constructs only RepeatingIntervals
+    val superIntervalEntities = entity.properties.getEntity("Super-Interval").toSet.filter(_.`type` != "Year")
+    // Only take the first Sub-Interval. If there are more than one they are supposed to be equivalent.
+    val subIntervalEntities = entity.properties.getEntities("Sub-Interval").toSet.take(1)
+    // Flatten any IntersectionRIs, in preparation for creating a new one
+    val repeatingIntervalsToMerge = (superIntervalEntities ++ subIntervalEntities).map(repeatingInterval).flatMap {
+      case IntersectionRI(repeatingIntervals, _) => repeatingIntervals
+      case repeatingInterval => Set(repeatingInterval)
     }
-    flatten(entity.properties.getEntities("Sub-Interval") match {
-      case Seq() => result
-      //case subEntities => IntersectionRI(Set(result) ++ subEntities.map(repeatingInterval))
-      case subEntities => IntersectionRI(Set(result) ++ Set(repeatingInterval(subEntities.head))) // Only take the first SubInterval. If there are more than one they should be equivalent.
-
-    })
-  }
-
-  def flatten(repeatingInterval: RepeatingInterval): RepeatingInterval = repeatingInterval match {
-    case IntersectionRI(repeatingIntervals, charSpan) => IntersectionRI(repeatingIntervals.flatMap {
-      case IntersectionRI(subIntervals, _) => subIntervals.map(flatten)
-      case rIntervals => Set(rIntervals)
-    }, charSpan)
-    case other => other
+    // Return the RepeatingInterval, merging with others via IntersectionRI if necessary
+    if (repeatingIntervalsToMerge.isEmpty) result else IntersectionRI(repeatingIntervalsToMerge + result)
   }
 
   def getRootSuperIntervalYear(entity: Entity): Option[Interval] = {

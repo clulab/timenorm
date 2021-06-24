@@ -708,7 +708,7 @@ private[scate] object RepeatingInterval {
     case ChronoUnit.DECADES => LocalDateTime.of(ldt.getYear / 10 * 10, 1, 1, 0, 0)
     case ChronoUnit.YEARS => ldt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
     case IsoFields.QUARTER_YEARS =>
-      ldt.withMonth((ldt.getMonthValue - 1) / 4 + 1).withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
+      ldt.withMonth((ldt.getMonthValue - 1) / 3 * 3 + 1).withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.MONTHS => ldt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS)
     case ChronoUnit.WEEKS => ldt.withDayOfYear((ldt.getDayOfYear - ldt.getDayOfWeek.getValue + 1) max 1).truncatedTo(ChronoUnit.DAYS)
     case range: MonthDayPartialRange => ldt.`with`(range.first).truncatedTo(ChronoUnit.DAYS)

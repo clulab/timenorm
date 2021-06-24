@@ -2,7 +2,7 @@ package org.clulab.timenorm.scate
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoField
-import java.time.temporal.ChronoUnit.DAYS
+import java.time.temporal.ChronoUnit
 
 import org.clulab.anafora.Data
 import org.scalatest.FunSuite
@@ -62,18 +62,22 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = new Data(elem, Some("2000-10-25 noon"))
-
     val dct = SimpleInterval.of(1998, 2, 13, 15, 44)
-    var aReader = new AnaforaReader(dct)
-
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(year: Interval, _: RepeatingInterval, _: RepeatingInterval, noon: RepeatingField) =>
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(year: ThisRI, month: IntersectionRI, day: IntersectionRI, noon: RepeatingField) =>
         assert(year === SimpleInterval.of(2000, 10, 25, 12, 0))
         assert(year.charSpan === Some((0, 15)))
+        assert(month.following(dct.end).next() === SimpleInterval.of(1998, 10, 25, 12, 0))
+        assert(month.charSpan === Some((5, 15)))
+        assert(day.following(dct.end).next() === SimpleInterval.of(1998, 2, 25, 12, 0))
+        assert(day.charSpan === Some((8, 15)))
         assert(noon.field === ChronoField.MINUTE_OF_DAY)
         assert(noon.charSpan === Some((11, 15)))
-      case _ => fail("expected Seq(year: I, month: RI, day: RI, noon: RI), found " + temporals)
+        // ensure intersections are not nested
+        for (intersectionRI <- Seq(month, day)) {
+          assert(intersectionRI.repeatingIntervals.collect { case ri: IntersectionRI => ri }.isEmpty)
+        }
+      case other => fail(f"expected Seq(year: I, month: RI, day: RI, noon: RI), found $other")
     }
   }
 
@@ -129,14 +133,9 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = new Data(elem, Some("2000-10-25 noon"))
-
     val dct = SimpleInterval.of(1998, 2, 13, 15, 44)
-    var aReader = new AnaforaReader(dct)
-
-    val temporals = data.entities.map(aReader.temporal)
-//    System.out.println(temporals.seq)
-    temporals match {
-      case Seq(year: Interval, month: Interval, day: Interval, noon: Interval) =>
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(year: Year, month: ThisRI, day: ThisRI, noon: ThisRI) =>
         assert(year === SimpleInterval.of(2000))
         assert(year.charSpan === Some((0, 4)))
         assert(month === SimpleInterval.of(2000, 10))
@@ -145,7 +144,12 @@ class ReadersTest extends FunSuite with TypesSuite {
         assert(day.charSpan === Some((0, 10)))
         assert(noon === SimpleInterval.of(2000, 10, 25, 12, 0))
         assert(noon.charSpan === Some((0, 15)))
-      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+        // ensure intersections are not nested
+        for (thisRI <- Seq(day, noon)) {
+          val IntersectionRI(repeatingIntervals, _) = thisRI.repeatingInterval
+          assert(repeatingIntervals.collect{ case ri: IntersectionRI => ri}.isEmpty)
+        }
+      case other => fail(f"expected Seq(year: I, month: I, day: I, noon: I), found $other")
     }
   }
 
@@ -193,20 +197,17 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
       implicit val data: Data = Data(xml, Some("after December 2017"))
       val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
-      var aReader = new AnaforaReader(dct)
-      val temporals = data.entities.map(aReader.temporal)
-      temporals match {
-        case Seq(after: Interval, month: Interval, year: Interval) =>
+      data.entities.map(new AnaforaReader(dct).temporal) match {
+        case Seq(after: AfterP, month: ThisRI, year: Year) =>
           assert(after.charSpan === Some((0, 19)))
+          assert(!after.isDefined)
+          assert(month === SimpleInterval.of(2017, 12))
+          assert(month.charSpan === Some((6, 19)))
           assert(year === SimpleInterval.of(2017))
           assert(year.charSpan === Some((15, 19)))
-          assert(month.charSpan === Some((6, 19)))
-          assert(month === SimpleInterval.of(2017, 12))
-         case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+         case other => fail(f"expected Seq(after: I, month: I, year: I), found $other")
     }
   }
-  // or do we want LastRI(DctTime, IntersectionRI(day, month)) (this one)
-  // or LastRI(IntersectionRI(day, month))
   test (testName = "last December 25") {
     val xml =
       <data>
@@ -218,8 +219,6 @@ class ReadersTest extends FunSuite with TypesSuite {
             <parentsType>Operator</parentsType>
             <properties>
               <Semantics>Interval-Not-Included</Semantics>
-              <!-- TODO: ASK is it DocTime here? so it means the last 2017/12 for the current doc time?
-              // is it interval included?-->
               <Interval-Type>DocTime</Interval-Type>
               <Interval></Interval>
               <Period></Period>
@@ -252,18 +251,15 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, Some("last December 25"))
     val dct = SimpleInterval.of(2018, 2, 6, 22, 19)
-    var aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(last: Interval, month: RepeatingInterval, day: RepeatingInterval) =>
-        // what does last include here
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(last: LastRI, month: RepeatingField, day: IntersectionRI) =>
         assert(last === SimpleInterval.of(2017, 12, 25))
         assert(last.charSpan === Some((0, 16)))
         assert(month.following(dct.end).next === SimpleInterval.of(2018, 12))
         assert(month.charSpan === Some((5, 13)))
         assert(day.following(dct.end).next === SimpleInterval.of(2018, 12, 25))
         assert(day.charSpan === Some((5, 16)))
-      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+      case other => fail(f"expected Seq(year: I, month: I, day: I, noon: I), found $other")
     }
   }
 
@@ -309,17 +305,15 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, Some("this December 25"))
     val dct = SimpleInterval.of(2018, 2, 6, 22, 19)
-    var aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(thisInterval: Interval, month: RepeatingInterval, day: RepeatingInterval) =>
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(thisInterval: ThisRI, month: RepeatingField, day: IntersectionRI) =>
         assert(thisInterval === SimpleInterval.of(2018, 12, 25))
         assert(thisInterval.charSpan === Some((0, 16)))
-        assert(month.charSpan === Some((5, 13)))
         assert(month.following(dct.end).next === SimpleInterval.of(2018, 12))
-        assert(day.charSpan === Some((5, 16)))
+        assert(month.charSpan === Some((5, 13)))
         assert(day.following(dct.end).next === SimpleInterval.of(2018, 12, 25))
-      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+        assert(day.charSpan === Some((5, 16)))
+      case other => fail(f"expected Seq(year: I, month: I, day: I, noon: I), found $other")
     }
   }
 
@@ -336,7 +330,6 @@ class ReadersTest extends FunSuite with TypesSuite {
               <Type>December</Type>
               <Number></Number>
               <Modifier></Modifier>
-              <Super-Interval>2@e@Doc9@gold</Super-Interval>
             </properties>
           </entity>
           <entity>
@@ -347,23 +340,22 @@ class ReadersTest extends FunSuite with TypesSuite {
             <properties>
               <Value>17</Value>
               <Modifier></Modifier>
+              <Super-Interval>1@e@Doc9@gold</Super-Interval>
             </properties>
           </entity>
-          <!--TODO: what is "to" in the entity-->
         </annotations>
       </data>
     implicit val data: Data = Data(xml, Some("December 17"))
     val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
-    var aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(month: RepeatingInterval, day: RepeatingInterval) =>
-        assert(month.charSpan === Some((0, 11)))
-        assert(day.charSpan === Some((9,11)))
-      case _ => fail("expected Seq(month: RI, day: RI), found " + temporals)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(month: RepeatingField, day: IntersectionRI) =>
+        assert(month.charSpan === Some((0, 8)))
+        assert(month.following(dct.end).next === SimpleInterval.of(1998, 12))
+        assert(day.charSpan === Some((0, 11)))
+        assert(day.following(dct.end).next === SimpleInterval.of(1998, 12, 17))
+      case other => fail(f"expected Seq(month: RI, day: RI), found $other")
     }
   }
- // super interval to 2 Years
   test (testName = "December 2017 to January 2018") {
     val xml =
       <data>
@@ -430,18 +422,19 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, Some("December 2017 to January 2018"))
     val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
-    var aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(month: Interval, yearOne: Interval, between: Interval, monthTwo: Interval, yearTwo: Interval) =>
-        assert(month.charSpan === Some((0, 13)))
-        assert(month === SimpleInterval.of(2017, 12))
-        assert(yearOne.charSpan === Some((9, 13)))
-        assert(yearOne === SimpleInterval.of(2017))
-        assert(monthTwo === SimpleInterval.of(2018, 1))
-        assert(monthTwo.charSpan === Some((17, 29)))
-        assert(yearTwo.charSpan === Some((25, 29)))
-      case _ => fail("expected Seq(year: I, month: I, day: I, noon: I), found " + temporals)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(dec: ThisRI, y2017: Year, between: Between, jan: ThisRI, y2018: Year) =>
+        assert(dec === SimpleInterval.of(2017, 12))
+        assert(dec.charSpan === Some((0, 13)))
+        assert(y2017 === SimpleInterval.of(2017))
+        assert(y2017.charSpan === Some((9, 13)))
+        assert(between === SimpleInterval(dec.start, jan.end))
+        assert(between.charSpan === Some((0, 29)))
+        assert(jan === SimpleInterval.of(2018, 1))
+        assert(jan.charSpan === Some((17, 29)))
+        assert(y2018 === SimpleInterval.of(2018))
+        assert(y2018.charSpan === Some((25, 29)))
+      case other => fail(f"expected Seq(year: I, month: I, day: I, noon: I), found $other")
     }
   }
 
@@ -496,16 +489,22 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, Some("December 17 and 18"))
     val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
-    var aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(month: RepeatingInterval, day1: RepeatingInterval, day2: RepeatingInterval, union: RepeatingInterval) =>
-        assert(month.charSpan === Some((0, 8)))
-        assert(day1.charSpan === Some((0,11)))
-        // the Union is on 17 and 18
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(dec: RepeatingField, day17: IntersectionRI, day18: IntersectionRI, union: UnionRI) =>
+        assert(dec.following(dct.end).next === SimpleInterval.of(1998, 12))
+        assert(dec.charSpan === Some((0, 8)))
+        assert(day17.following(dct.end).next === SimpleInterval.of(1998, 12, 17))
+        assert(day17.charSpan === Some((0,11)))
+        assert(union.following(dct.end).take(4).toSeq === Seq(
+          SimpleInterval.of(1998, 12, 17),
+          SimpleInterval.of(1998, 12, 18),
+          SimpleInterval.of(1999, 12, 17),
+          SimpleInterval.of(1999, 12, 18),
+        ))
         assert(union.charSpan === Some((0,18)))
-        assert(day2.charSpan === Some((0,18)))
-      case _ => fail("expected Seq(month: RI, day1: RI, union: RI, day2: RI), found " + temporals)
+        assert(day18.following(dct.end).next === SimpleInterval.of(1998, 12, 18))
+        assert(day18.charSpan === Some((0,18)))
+      case other => fail(f"expected Seq(month: RI, day1: RI, union: RI, day2: RI), found $other")
     }
   }
 
@@ -559,22 +558,21 @@ class ReadersTest extends FunSuite with TypesSuite {
           </entity>
         </annotations>
       </data>
-
     implicit val data: Data = Data(xml, Some("first nine months of 1997"))
-
     val dct = SimpleInterval.of(1998, 2, 6, 22, 19)
-    var aReader = new AnaforaReader(dct)
-
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(nth: NthRIs, number: Number, month: RepeatingInterval, year: Year) =>
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(nth: NthRIs, number: IntNumber, month: RepeatingUnit, year: Year) =>
         assert(nth === SimpleIntervals((1 to 9).map(m => SimpleInterval.of(1997, m))))
         assert(nth.charSpan === Some((0, 25)))
+        assert(number.n === 9)
         assert(number.charSpan === Some((6, 10)))
+        assert(month.unit === ChronoUnit.MONTHS)
+        assert(month.following(dct.end).next === SimpleInterval.of(1998, 3))
         // we currently don't attach Numbers to RepeatingIntervals
         // assert(month.charSpan === Some((6, 17)))
+        assert(year === SimpleInterval.of(1997))
         assert(year.charSpan === Some((21, 25)))
-      case _ => fail("expected Seq(nth: NRIs, number: N, month: RI, year: Y), found " + temporals)
+      case other => fail(f"expected Seq(nth: NRIs, number: N, month: RI, year: Y), found $other")
     }
   }
 
@@ -618,15 +616,17 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = Data(xml, Some("last few months"))
-    val start = LocalDateTime.now().truncatedTo(DAYS)
-    val dct = SimpleInterval(start, start.plusDays(1))
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(last: Last, _: Number, _: RepeatingInterval) =>
+    val dct = SimpleInterval.of(2021, 6, 24)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(last: Last, number: VagueNumber, months: RepeatingUnit) =>
         assert(!last.isDefined)
         assert(last.charSpan === Some((0, 15)))
-      case _ => fail("expected Seq(last: Last, number: N, month: RI), found " + temporals)
+        assert(!number.isDefined)
+        assert(number.charSpan === Some((5, 8)))
+        assert(months.unit === ChronoUnit.MONTHS)
+        assert(months.following(dct.end).next === SimpleInterval.of(2021, 7))
+        assert(months.charSpan === Some((9, 15)))
+      case other => fail(f"expected Seq(last: Last, number: N, month: RI), found $other")
     }
   }
 
@@ -672,15 +672,16 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = Data(xml, Some("19980331"))
-    val start = LocalDateTime.of(1998, 3, 31, 0, 0)
-    val dct = SimpleInterval(start, start.plusDays(1))
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(year: Interval, _: RepeatingInterval, _: RepeatingInterval) =>
+    val dct = SimpleInterval.of(2021, 6, 24)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(year: ThisRI, month: IntersectionRI, day: RepeatingField) =>
         assert(year === SimpleInterval.of(1998, 3, 31))
         assert(year.charSpan === Some((0, 8)))
-      case _ => fail("expected Seq(year: Y, month: RI, day: RI), found " + temporals)
+        assert(month.following(dct.end).next === SimpleInterval.of(2022, 3, 31))
+        assert(month.charSpan === Some((4, 8)))
+        assert(day.following(dct.end).next === SimpleInterval.of(2021, 7, 31))
+        assert(day.charSpan === Some((6, 8)))
+      case other => fail(f"expected Seq(year: Y, month: RI, day: RI), found $other")
     }
   }
 
@@ -716,16 +717,14 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = Data(xml, Some("Friday"))
-    val start = LocalDateTime.of(1998, 3, 6, 0, 0)
-    val dct = SimpleInterval(start, start.plusDays(1))
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(friday: RepeatingInterval, last: LastRI) =>
-        assert(last === SimpleInterval(start, start.plusDays(1)))
-        assert(friday.charSpan === Some((0, 6)))
+    val dct = SimpleInterval.of(1998, 3, 6)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(friday: RepeatingField, last: LastRI) =>
+        assert(last === dct)
         assert(last.charSpan === Some((0, 6)))
-      case _ => fail("expected Seq(friday: RI, last: Last), found " + temporals)
+        assert(friday.following(dct.end).next === SimpleInterval.of(1998, 3, 13))
+        assert(friday.charSpan === Some((0, 6)))
+      case other => fail(f"expected Seq(friday: RI, last: Last), found $other")
     }
   }
 
@@ -793,15 +792,20 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = Data(xml, None)
-    val aReader = new AnaforaReader(SimpleInterval.of(1998, 3, 22))
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(_: RepeatingInterval, last: LastRI, _: BeforeP, _: Event, intersection: IntersectionI) =>
+    val dct = SimpleInterval.of(1998, 3, 22)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(sunday: RepeatingField, last: LastRI, before: BeforeP, event: Event, intersection: IntersectionI) =>
+        assert(sunday.following(dct.end).next === SimpleInterval.of(1998, 3, 29))
+        assert(sunday.charSpan === Some((3926,3932)))
         assert(last === SimpleInterval.of(1998, 3, 22))
-        assert(!intersection.isDefined)
         assert(last.charSpan === Some((3926,3932)))
+        assert(!before.isDefined)
+        assert(before.charSpan === Some((3750,3925)))
+        assert(!event.isDefined)
+        assert(event.charSpan === Some((3750,3759)))
+        assert(!intersection.isDefined)
         assert(intersection.charSpan === Some((3750, 3932)))
-      case _ => fail("expected Seq(sunday: RI, last: I, before: I, event: I, intersection: I), found " + temporals)
+      case other => fail(f"expected Seq(sunday: RI, last: I, before: I, event: I, intersection: I), found $other")
     }
   }
 
@@ -857,13 +861,18 @@ class ReadersTest extends FunSuite with TypesSuite {
         </annotations>
       </data>
     implicit val data: Data = Data(xml, None)
-    val aReader = new AnaforaReader(SimpleInterval.of(1998, 2, 19))
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(_: RepeatingInterval, _: RepeatingInterval, _: ThisRI, intersection: Intervals) =>
+    val dct = SimpleInterval.of(1998, 2, 19)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(january: RepeatingField, year: RepeatingUnit, thisRI: ThisRI, intersection: Intervals) =>
+        assert(january.following(dct.end).next === SimpleInterval.of(1999, 1))
+        assert(january.charSpan === Some((1164,1171)))
+        assert(year.following(dct.end).next === SimpleInterval.of(1999))
+        assert(year.charSpan === Some((1177,1181)))
+        assert(thisRI === SimpleInterval.of(1998))
+        assert(thisRI.charSpan === Some((1172,1181)))
         assert(intersection === SimpleIntervals(Seq(SimpleInterval.of(1998, 1))))
         assert(intersection.charSpan === Some((1164, 1181)))
-      case _ => fail("expected Seq(january: RI, year: RI, this: I, intersection: Is), found " + temporals)
+      case other => fail(f"expected Seq(january: RI, year: RI, this: I, intersection: Is), found $other")
     }
   }
 
@@ -886,14 +895,13 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(1998, 2, 6)
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
+    data.entities.map(new AnaforaReader(dct).temporal) match {
       case Seq(quarterCentury: RepeatingInterval) =>
-        assert(ThisRI(dct, quarterCentury)
-          === SimpleInterval(LocalDateTime.of(1975, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 1, 0, 0)))
+        assert(quarterCentury.preceding(dct.start).next === SimpleInterval(
+          LocalDateTime.of(1950, 1, 1, 0, 0),
+          LocalDateTime.of(1975, 1, 1, 0, 0)))
         assert(quarterCentury.charSpan === Some((1095, 1110)))
-      case _ => fail("expected Seq(quarter-century: RI), found " + temporals)
+      case other => fail(f"expected Seq(quarter-century: RI), found $other")
     }
   }
 
@@ -929,13 +937,17 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(1989, 11, 1)
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(_: RepeatingInterval, nth: NthRI) =>
-        assert(nth === SimpleInterval(LocalDateTime.of(1900, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 1, 0, 0)))
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(century: RepeatingUnit, nth: NthRI) =>
+        assert(century.following(dct.end).next === SimpleInterval(
+          LocalDateTime.of(2000, 1, 1, 0, 0),
+          LocalDateTime.of(2100, 1, 1, 0, 0)))
+        assert(century.charSpan === Some((489,496)))
+        assert(nth === SimpleInterval(
+          LocalDateTime.of(1900, 1, 1, 0, 0),
+          LocalDateTime.of(2000, 1, 1, 0, 0)))
         assert(nth.charSpan === Some((484, 496)))
-      case _ => fail("expected Seq(century: RI, 20th: I), found " + temporals)
+      case other => fail(f"expected Seq(century: RI, 20th: I), found $other")
     }
   }
 
@@ -971,13 +983,17 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(1989, 11, 1)
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
-      case Seq(_: RepeatingInterval, nth: NthRI) =>
-        assert(nth === SimpleInterval(LocalDateTime.of(1989, 7, 1, 0, 0), LocalDateTime.of(1989, 10, 1, 0, 0)))
-        assert(nth.charSpan === Some((287, 300)))
-      case _ => fail("expected Seq(quarter: RI, 3rd: I), found " + temporals)
+    data.entities.map(new AnaforaReader(dct).temporal) match {
+      case Seq(quarter: RepeatingUnit, third: NthRI) =>
+        assert(quarter.following(dct.end).next === SimpleInterval(
+          LocalDateTime.of(1990, 1, 1, 0, 0),
+          LocalDateTime.of(1990, 4, 1, 0, 0)))
+        assert(quarter.charSpan === Some((293,300)))
+        assert(third === SimpleInterval(
+          LocalDateTime.of(1989, 7, 1, 0, 0),
+          LocalDateTime.of(1989, 10, 1, 0, 0)))
+        assert(third.charSpan === Some((287, 300)))
+      case other => fail(f"expected Seq(quarter: RI, third: I), found $other")
     }
   }
 
@@ -1001,13 +1017,11 @@ class ReadersTest extends FunSuite with TypesSuite {
       </data>
     implicit val data: Data = Data(xml, None)
     val dct = SimpleInterval.of(2010, 8, 5)
-    val aReader = new AnaforaReader(dct)
-    val temporals = data.entities.map(aReader.temporal)
-    temporals match {
+    data.entities.map(new AnaforaReader(dct).temporal) match {
       case Seq(year: YearSuffix) =>
         assert(year === SimpleInterval.of(2000))
         assert(year.charSpan === Some((6422,6424)))
-      case _ => fail("expected Seq(year: YearSuffix), found " + temporals)
+      case other => fail(f"expected Seq(year: YearSuffix), found $other")
     }
   }
 }
