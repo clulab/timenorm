@@ -95,7 +95,7 @@ object Properties {
 class Properties(xml: Elem) extends Annotation(xml) {
   private def textFor(name: String): IndexedSeq[String] = (xml \ name map {
     case elem: Elem => elem.text
-  }).toIndexedSeq
+  }).toIndexedSeq.filter(_.nonEmpty)
 
   def names: IndexedSeq[String] = xml.child.collect {
     case e: Elem => e.label
