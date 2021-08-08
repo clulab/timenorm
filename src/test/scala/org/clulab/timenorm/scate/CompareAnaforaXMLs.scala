@@ -44,9 +44,9 @@ object CompareAnaforaXMLs {
           if (root1 != entity1 && root2 != entity2) {
             // println(f"Skipping mid-chain:\n${entity1.xml}\n${entity2.xml}")
           } else {
-            val temporal1 = catcher.opt(reader1.temporal(root1)(data1))
-            val temporal2 = catcher.opt(reader2.temporal(root2)(data2))
-            if (temporal1 != temporal2) {
+            val temporal1 = catcher.withTry(reader1.temporal(root1)(data1))
+            val temporal2 = catcher.withTry(reader2.temporal(root2)(data2))
+            if (temporal1.toOption != temporal2.toOption) {
               println(f"Temporal mismatch in:\n$xmlPath1\n$xmlPath2\n" +
                 f"${entity1.xml}\n${entity2.xml}\n${temporal1}\n${temporal2}")
             }
