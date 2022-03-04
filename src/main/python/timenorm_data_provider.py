@@ -9,7 +9,6 @@ from transformers import PreTrainedTokenizerFast, AutoTokenizer
 class TimeDataProvider:
     def __init__(self,
                  corpus_dir: str,
-
                  ) -> None:
 
         if not os.path.exists(corpus_dir):
