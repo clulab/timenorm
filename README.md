@@ -1,7 +1,30 @@
-# timenorm
+# Spanish TimeNorm
 
 The timenorm library provides models for finding natural language expressions
 of dates and times and converting them to a normalized form.
+
+***
+
+This is a fork that adds the **Spanish TimeNorm SFCG**. It works as the English
+and Italian versions explained at the end of the original README (down below). 
+For instance:
+
+```scala
+scala> import org.clulab.timenorm.scfg._, scala.util.Success
+import org.clulab.timenorm.scfg._
+import scala.util.Success
+
+scala> val parser = TemporalExpressionParser.es // Choose the grammar
+parser: org.clulab.timenorm.scfg.TemporalExpressionParser = org.clulab.timenorm.scfg.TemporalExpressionParser@1815577b
+
+scala> val Success(temporal) = parser.parse("hace dos semanas", TimeSpan.of(2013, 1, 4)) // Input the timex and the anchor
+temporal: org.clulab.timenorm.scfg.Temporal = TimeSpan(2012-12-17T00:00Z,2012-12-24T00:00Z,Period(Map(Weeks -> 1),Exact),Exact)
+
+scala> temporal.timeMLValue
+res0: String = 2012-W51
+```
+
+***
 
 ## Text to time expressions with the neural parser
 
