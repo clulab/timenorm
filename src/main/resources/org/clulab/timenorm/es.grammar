@@ -16,6 +16,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Nil] ||| en ||| ||| 1.0
 [Nil] ||| mismo ||| ||| 1.0
 [Nil] ||| misma ||| ||| 1.0
+[Nil] ||| más ||| ||| 1.0
 [Nil] ||| . ||| ||| 1.0
 [Nil] ||| - ||| ||| 1.0
 [Nil] ||| / ||| ||| 1.0
@@ -499,7 +500,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Unspecified] ||| poca [Unit] ||| Unspecified [Unit] ||| 1.0
 [Period:Unspecified] ||| mucho [Unit] ||| Unspecified [Unit] ||| 1.0
 [Period:Unspecified] ||| mucha [Unit] ||| Unspecified [Unit] ||| 1.0
-[Period:Unspecified] ||| más [Unit] ||| Unspecified [Unit] ||| 1.0
+//[Period:Unspecified] ||| más [Unit] ||| Unspecified [Unit] ||| 1.0
 
 [Period:Unspecified] ||| algunos [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| algunas [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
@@ -509,7 +510,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period:Unspecified] ||| pocas [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| muchos [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
 [Period:Unspecified] ||| muchas [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
-[Period:Unspecified] ||| más [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
+//[Period:Unspecified] ||| más [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
 
 // P. ej., "semanas"
 [Period:Unspecified] ||| [Unit:Plural] ||| Unspecified [Unit:Plural] ||| 1.0
@@ -535,7 +536,7 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 [Period] ||| menos de [Period] ||| WithModifier [Period] LESS_THAN ||| 1.0
 [Period] ||| inferior a [Period] ||| WithModifier [Period] LESS_THAN ||| 1.0
 
-[Period] ||| más de [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
+//[Period] ||| más de [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
 [Period] ||| superior a [Period] ||| WithModifier [Period] MORE_THAN ||| 1.0
 
 [Period] ||| al menos [Period] ||| WithModifier [Period] EQUAL_OR_MORE ||| 1.0
@@ -1048,8 +1049,6 @@ ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]
 // P. ej., "desde el primer lunes del mes que viene"
 [TimeSpan:Regular] ||| desde [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
 [TimeSpan:Regular] ||| a partir [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
-[TimeSpan:Regular] ||| [TimeSpan:Regular] o más ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
-[TimeSpan:Regular] ||| [TimeSpan:Regular] o más tarde ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
 [TimeSpan:Regular] ||| al menos [TimeSpan:Regular] ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
 [TimeSpan:Regular] ||| [TimeSpan:Regular] al menos ||| WithModifier [TimeSpan:Regular] ON_OR_AFTER ||| 1.0
 
