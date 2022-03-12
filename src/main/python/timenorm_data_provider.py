@@ -1,10 +1,10 @@
 import os
 from typing import Tuple, List
-
+import numpy as np
 import anafora
 import spacy
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
-
+import collections
 
 class TimeDataProvider:
     def __init__(self,
@@ -39,6 +39,163 @@ class TimeDataProvider:
 
                 # generate a tuple for this document
                 yield text_path, text, xml_path, data
+    
+    @staticmethod
+    def iter_tokens(self, inputs, sentences):
+        for sent_index, sentence in enumerate(sentences):
+            token_tuples = []
+            for token_index in range(inputs["input_ids"].shape[1]):
+                offsets = inputs["offset_mapping"][sent_index][token_index].numpy()
+                start, end = [sentence.start_char + o for o in offsets]
+                token_id = inputs["input_ids"][sent_index][token_index]
+                token_tuples.append((token_index, token_id, start, end))
+            yield sent_index, sentence, token_tuples
+
+    @staticmethod
+    def extract_entity_values_from_doc(self, data, relation_to_extract):
+        doc_annotations = {}
+        if data:
+            for entity in data.annotations:
+                entity_values = {}
+                entity_id = entity.xml.find('id').text.split('@')[0]
+                entity_spans = entity.xml.find('span').text
+                entity_type = entity.xml.find('type').text
+                if entity_type == "Event": # do not consider event type entities at the moment
+                    continue
+                related_entity_id = None
+
+                if entity.properties.xml.find(relation_to_extract) is not None:
+                    if entity.properties.xml.find(relation_to_extract).text is not None:
+                        related_entity_id = entity.properties.xml.find(relation_to_extract).text.split('@')[0] # id of the related entity
+                
+                entity_values['entity_spans'] = entity_spans
+                entity_values['entity_type'] = entity_type
+                entity_values['related_entity_id'] = related_entity_id
+                
+                doc_annotations[entity_id] = entity_values
+
+        return doc_annotations
+
+    def read_data_to_distance_format(self, 
+                                     fast_tokenizer: PreTrainedTokenizerFast,
+                                     relation_to_extract: str, 
+                                     distances: List[str],
+                                     types: List[str]):
+        sentences = []
+        sentence_texts = {}
+        sentence_char_labels = {}
+        label_to_index = {l: i for i, l in enumerate(distances)}
+        type_to_index = {l: i for i, l in enumerate(types)}
+        for text_path, text, xml_path, data in self.iter_data(self.corpus_dir, "gold"):
+            char_labels = collections.defaultdict(set)
+            print(text_path)
+            tokenized_map = fast_tokenizer(text, return_offsets_mapping=True)
+            token_spans = tokenized_map['offset_mapping']
+            characters_to_token_ids = {}
+            token_id = -1 # to avoid first (0,0) span in offset_mapping
+            for token_span in token_spans:
+                start, end = token_span
+                for char_index in range(start,end):
+                    characters_to_token_ids[char_index] = token_id
+                token_id += 1
+                
+            doc_annotations = self.extract_entity_values_from_doc(data, relation_to_extract)
+            for entity_id in doc_annotations:
+                entity_values = doc_annotations[entity_id]
+                entity_type = entity_values['entity_type']
+                if(entity_values["related_entity_id"] == None):       # this is the case where entity does not have a relation
+                    label = "None"
+                    start = int(entity_values['entity_spans'].split(',')[0])
+                    end = int(entity_values['entity_spans'].split(',')[1])
+                    for i in range(start, end):
+                        char_labels[i].add((label, entity_type))
+
+                else:                                                       # this is the case where entity has a relation
+                    linked_id = entity_values["related_entity_id"]
+                    entity_beginning_char = int(entity_values['entity_spans'].split(',')[0])
+                    if linked_id not in doc_annotations.keys():
+                        print("the entity that is linked does not exist in the document")
+                        continue
+                    linked_entity_values = doc_annotations[linked_id]
+                    linked_entity_beginning_char = int(linked_entity_values['entity_spans'].split(',')[0])
+                    linked_distance = characters_to_token_ids[entity_beginning_char] - characters_to_token_ids[linked_entity_beginning_char]
+                
+                    label = str(linked_distance)
+                    if label not in distances: # if the distance between 2 entities that have a relation does not exist in predetermined distances (aka the distance is rare) 
+                        label = "None"          # the label of the first entity will be none
+                    
+                    start = int(entity_values['entity_spans'].split(',')[0])
+                    end = int(entity_values['entity_spans'].split(',')[1])
+                    for i in range(start, end):
+                        char_labels[i].add((label, entity_type))
+
+                    
+            nlp = spacy.load("en_core_web_lg")
+            doc = nlp(text)
+            for sentence in doc.sents:
+                sentences.append(sentence) # all sentences
+                sentence_texts[sentence] = text
+                sentence_char_labels[sentence] = char_labels 
+
+        inputs = fast_tokenizer([sentence.text for sentence in sentences],
+                                 padding="longest",
+                                 return_tensors="pt",
+                                 return_offsets_mapping=True) 
+
+        labels = np.empty(inputs["input_ids"].shape + (2,)) # added (2,) to get labels and types together in a list
+
+        for i, sentence, token_tuples in self.iter_tokens(inputs, sentences): # go back to raw texts, 
+                                                                         # and for each wordpiece assign a label: 
+                                                                         # None if its not annotated
+            text = sentence_texts[sentence]                              # None if annotated and no relation 
+            char_labels = sentence_char_labels[sentence]                 # distance if annotated and relation exist
+            for j, token_id, start, end in token_tuples:
+                # sanity check for mismatch between text and word-piece
+                word_piece = fast_tokenizer.decode(token_id)
+                if token_id not in fast_tokenizer.all_special_ids and text[start:end] != word_piece.lstrip(' '):
+                    raise ValueError(f"{text[start:end]!r} != {word_piece!r}")
+
+                # find labels for the given offsets
+                
+                
+                token_labels = {x for c in range(start, end) 
+                                for x, _ in char_labels[c]} # there was "or {None} here, i removed it"
+                
+                token_types = {x for c in range(start, end) 
+                                for _, x in char_labels[c]}
+                if not token_labels:
+                    token_label = "None"
+                elif len(token_labels) == 1:
+                    token_label = token_labels.pop()
+                else:
+                    context = f"{text[start-5:start]}[{text[start:end]}]"\
+                              f"{text[end:end+5]}"
+                    print(f"Skipping token labels: {context!r} {token_labels}")
+                    token_label = "None"
+                if not token_types:
+                    token_type = "None"
+                elif len(token_types) == 1:
+                    token_type = token_types.pop()
+                else:
+                    context = f"{text[start-5:start]}[{text[start:end]}]"\
+                              f"{text[end:end+5]}"
+                    print(f"Skipping token types: {context!r} {token_types}")
+                    token_type = "None"
+                    
+                
+                labels[i][j] = [label_to_index[token_label], type_to_index[token_type]] 
+            
+            if i%100 == 0:    
+                print(f'{i}/{len(sentences)} is done')
+        print("dataset has been created")
+        
+        return inputs, labels
+        """
+        return tf.data.Dataset.from_tensor_slices((
+            dict(inputs),
+            tf.constant(labels),
+        ))
+        """
 
     def read_data_to_pinter_seqs_format(self,
                                         fast_tokenizer: PreTrainedTokenizerFast,
