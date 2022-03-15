@@ -5,6 +5,8 @@ import anafora
 import spacy
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
 import collections
+import torch
+from sklearn.preprocessing import MultiLabelBinarizer
 
 class TimeDataProvider:
     def __init__(self,
@@ -196,6 +198,76 @@ class TimeDataProvider:
             tf.constant(labels),
         ))
         """
+
+    def read_data_to_multi_label_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int) -> Tuple[List[str], List[str]]:
+        """Read the data and format it for multi label token classification"""
+
+        label_to_index = {l: i for i, l in enumerate(types)}
+        mlb = MultiLabelBinarizer().fit([list(label_to_index.values())])
+        
+        inputs = {
+          "input_ids":[],
+          "attention_mask":[],
+          "offset_mapping":[]
+        }
+        labels = []
+        
+        def convert_to_onehot(tags):
+          """convert the list of integer labels to one hot vector format"""
+          return mlb.transform(tags)
+        
+        for _, text, _, data in self.iter_data(self.corpus_dir, "gold"):
+
+            #convert data into dict format: key - span, value - entity types
+            entity_values = {}
+            for entity in data.annotations:
+                entity_spans = entity.xml.find('span').text
+                start, end = [int(index) for index in entity_spans.split(',')]
+                entity_type = entity.xml.find('type').text
+                if entity_type == "Event": # do not consider event type entities at the moment
+                    continue
+                if (start,end) not in entity_values:
+                  entity_values[(start,end)] = [entity_type]
+                elif entity_type not in entity_values[(start,end)]: #not allowing duplicates
+                  entity_values[(start,end)].append(entity_type)
+            
+         
+            #split the text into sentences and tokenize them
+            nlp = spacy.load("en_core_web_lg")
+            doc = nlp(text)
+
+            for sentence in doc.sents:
+                tags = [] #labels for this sentence
+                sentence_start = sentence.start_char
+                tokenized_input = fast_tokenizer (sentence.text,max_length=max_length, padding='max_length', truncation=True,return_offsets_mapping=True)
+
+                token_offsets = tokenized_input["offset_mapping"]
+                for offset in token_offsets:
+                    tok_start, tok_end = sentence_start+offset[0], sentence_start+offset[1]
+                    label = ["None"]
+                    if (tok_start, tok_end) in entity_values:
+                      label = entity_values.pop((tok_start, tok_end))
+                    #see if this span is a subword
+                    else:
+                      for gold_span in entity_values:
+                          gold_span_start, gold_span_end = gold_span
+                          if gold_span_start<=tok_start and tok_end<=gold_span_end:
+                              label = entity_values.pop(gold_span)
+                              break
+                    tags.append([label_to_index[l] for l in label])
+                    
+                # append sentence level data
+                labels.append(convert_to_onehot(tags))
+                inputs["input_ids"].append(torch.tensor(tokenized_input["input_ids"]))
+                inputs["attention_mask"].append(torch.tensor(tokenized_input["attention_mask"]))
+                inputs["offset_mapping"].append(torch.tensor(tokenized_input["offset_mapping"]))
+
+        #convert list to tensors
+        for key in inputs: 
+          inputs[key] = torch.stack(inputs[key],dim=0) 
+        labels = torch.from_numpy(np.asarray(labels))
+        
+        return inputs,labels
 
     def read_data_to_pinter_seqs_format(self,
                                         fast_tokenizer: PreTrainedTokenizerFast,
