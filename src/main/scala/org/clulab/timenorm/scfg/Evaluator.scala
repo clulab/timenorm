@@ -84,6 +84,7 @@ object Evaluator {
     val parser = lang match {
       case "es" => TemporalExpressionParser.es
       case "en" => TemporalExpressionParser.en
+      case "it" => TemporalExpressionParser.it
     }
 
     val norm_list = ListBuffer[String]()
