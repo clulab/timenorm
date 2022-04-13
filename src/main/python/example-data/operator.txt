@@ -1,0 +1,14 @@
+Sum
+Difference
+Union
+Intersection
+Every-Nth
+This
+Last
+Next
+Before
+After
+Between
+NthFromStart
+NthFromEnd
+Frequency

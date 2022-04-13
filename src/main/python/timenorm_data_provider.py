@@ -19,6 +19,25 @@ class TimeDataProvider:
         self.corpus_dir = corpus_dir
 
     @staticmethod
+    def get_time_type_lists(root_dir: str):
+        types = []
+        operator_types = []
+        non_operator_types = []
+        f = open(os.path.join(root_dir, 'types.txt'))
+        lines = f.readlines()
+        for line in lines:
+            types.append(line.replace("\n", ""))
+        f = open(os.path.join(root_dir, 'operator.txt'))
+        lines = f.readlines()
+        for line in lines:
+            operator_types.append(line.replace("\n", ""))
+        f = open(os.path.join(root_dir, 'non-operator.txt'))
+        lines = f.readlines()
+        for line in lines:
+            non_operator_types.append(line.replace("\n", ""))
+
+        return types, operator_types, non_operator_types
+    @staticmethod
     def iter_data(root_dir: str, xml_type: str):
         for dir_path, dir_names, file_names in os.walk(root_dir):
             if not dir_names:
@@ -83,8 +102,8 @@ class TimeDataProvider:
                                  fast_tokenizer: PreTrainedTokenizerFast,
                                  split: str, # Train, Dev, Test
                                  relation_to_extract: str, 
-                                 distances: List[str],
-                                 types: List[str]): # for this function, set self.corpus to directory that has Train, Dev, Test subdirectories
+                                 distances: List[str]): # for this function, set self.corpus to directory that has Train, Dev, Test subdirectories
+        types, operator_types, non_operator_types = self.get_time_type_lists(self.corpus_dir)
         sentences = []
         sentence_texts = {}
         sentence_char_labels = {}
@@ -174,7 +193,7 @@ class TimeDataProvider:
                     token_label = "None"
                 elif len(token_labels) == 1:
                     token_label = token_labels.pop()
-                else:                   # if there is more than one type throw away the operator one
+                else:                   
                     context = f"{text[start-5:start]}[{text[start:end]}]"\
                               f"{text[end:end+5]}"
                     print(f"Skipping token labels: {context!r} {token_labels}")
@@ -183,11 +202,19 @@ class TimeDataProvider:
                     token_type = "None"
                 elif len(token_types) == 1:
                     token_type = token_types.pop()
-                else:               # if there is more than one type throw away the operator one
-                    context = f"{text[start-5:start]}[{text[start:end]}]"\
-                              f"{text[end:end+5]}"
-                    print(f"Skipping token types: {context!r} {token_types}")
+                else:               # if there is more than one type throw away the operator ones and take the first non operator as type
                     token_type = "None"
+                    for _token_type in token_types:
+                        if _token_type in non_operator_types:
+                            token_type = _token_type
+                            break
+                    if token_type == "None":
+                        print("none of the assigned types are non-operator, can't choose, so set type to None.")
+                        context = f"{text[start-5:start]}[{text[start:end]}]"\
+                                  f"{text[end:end+5]}"
+                        print(f"Skipping token types: {context!r} {token_types}")
+                    
+                        
                     
                 
                 # labels[i][j] = [label_to_index[token_label], type_to_index[token_type]] 
@@ -208,12 +235,11 @@ class TimeDataProvider:
     def read_data_to_distance_format(self,
                                    fast_tokenizer: PreTrainedTokenizerFast,
                                    relation_to_extract: str,
-                                   distances: List[str],
-                                   types: List[str]):
+                                   distances: List[str]):
         dataset_dict = {}
-        dataset_dict['train'] = self.create_dataset_for_split(fast_tokenizer, 'Train', relation_to_extract, distances, types)
-        dataset_dict['validation'] = self.create_dataset_for_split(fast_tokenizer, 'Dev', relation_to_extract, distances, types)
-        dataset_dict['test'] = self.create_dataset_for_split(fast_tokenizer, 'Test', relation_to_extract, distances, types)
+        dataset_dict['train'] = self.create_dataset_for_split(fast_tokenizer, 'Train', relation_to_extract, distances)
+        dataset_dict['validation'] = self.create_dataset_for_split(fast_tokenizer, 'Dev', relation_to_extract, distances)
+        dataset_dict['test'] = self.create_dataset_for_split(fast_tokenizer, 'Test', relation_to_extract, distances)
 
         return DatasetDict(dataset_dict)
 

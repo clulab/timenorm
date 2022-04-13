@@ -60,18 +60,14 @@ validity_dict = {
                 'NotNormalizable': [], 
                 }
 
-f = open('./example-data/types.txt')
-lines = f.readlines()
-types = []
-for line in lines:
-    types.append(line.replace("\n", ""))
+
 
 num_labels = len(distances)
 num_epochs = 3
 learning_rate = 2e-5
 batch_size = 32
 
-tokenized_dataset = data_provider.read_data_to_distance_format(tokenizer, relation_to_extract, distances, types)
+tokenized_dataset = data_provider.read_data_to_distance_format(tokenizer, relation_to_extract, distances)
 
 print("dataset is tokenized and provided")
 train_dataloader, eval_dataloader, test_dataloader = load_data(tokenized_dataset, batch_size)
@@ -92,6 +88,8 @@ setup_results_to_write[f"num_epochs:{num_epochs}-learning_rate:{learning_rate}-b
 
 setup_output_path = os.path.join(output_path, f"{num_epochs}epochs", f"{learning_rate}learning_rate", f"{batch_size}batch_size")
 best_model_step1.save_pretrained(setup_output_path)
+
+test(setup_output_path, os.path.join(data_provider.corpus_dir, "Test"), os.path.join(setup_output_path, 'predictions'))
 
 write_results(setup_output_path, setup_results_to_write)
 

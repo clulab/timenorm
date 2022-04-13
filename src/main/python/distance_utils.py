@@ -89,7 +89,7 @@ def train_eval_loop(model, train_dataloader, eval_dataloader, num_epochs, learni
             logits = outputs.logits
             batch_predictions = torch.argmax(logits, dim=-1)
             eval_predictions.append(batch_predictions)
-            eval_labels.append(batch["labels"])
+            eval_labels.append(batch['labels_distance'])
             progress_bar_eval.update(1)
             list_eval_loss.append(outputs.loss.item())
         
@@ -100,6 +100,40 @@ def train_eval_loop(model, train_dataloader, eval_dataloader, num_epochs, learni
         results_line = "epoch: " + str(epoch+1) + " precision_micro: " + str(results["precision_micro"]) + " precision_macro: " + str(results["precision_macro"]) + " recall_micro: " + str(results["recall_micro"]) + " recall_macro: " + str(results["recall_macro"]) + " f1_micro: " + str(results["f1_micro"]) + " f1_macro: " + str(results["f1_macro"])
         results_to_write.append(results_line)
     return model, results_to_write, list_train_loss, list_eval_loss
+
+def test(model_name_or_path, test_dir, output_dir):
+    model = RobertaForTokenClassificationCustom.from_pretrained(model_name_or_path)
+
+    for sub_dir, text_file_name, xml_file_name, text in iter_anafora(test_dir):
+        sentences = [sentence for sentence in nlp(text).sents]
+        inputs = tokenize([sentence.text for sentence in sentences])
+        print(f'predicting on {tf.data.Dataset.from_tensor_slices(inputs)}')
+        logits = model(inputs)["logits"]
+        labels = tf.math.argmax(logits, axis=-1)
+        data = anafora.AnaforaData()
+        n = 1
+        entity = None
+        for i, sentence, token_tuples in iter_tokens(inputs, sentences):
+            for j, token_id, start, end in token_tuples:
+                if token_id not in tokenizer.all_special_ids:
+                    label = time_types[labels[i][j]]
+                    if label is not None:
+                        print(f'{start}:{end} {label} {text[start:end]!r}')
+                        if _can_merge(text, entity, label, start):
+                            (start, _), = entity.spans
+                        else:
+                            entity = anafora.AnaforaEntity()
+                            entity.id = f"{n}@e@{text_file_name}@system"
+                            entity.type = label
+                            data.annotations.append(entity)
+                            n += 1
+                        entity.spans = (start, end),
+
+        output_sub_dir = os.path.join(output_dir, sub_dir)
+        if not os.path.exists(output_sub_dir):
+            os.makedirs(output_sub_dir, exist_ok=True)
+        xml_file_name = xml_file_name.replace("gold", "system")
+        data.to_file(os.path.join(output_sub_dir, xml_file_name))
 
 def write_results(path, results_to_write):
     results_file = open(os.path.join(path, "all_results_on_eval.txt"), "w")
