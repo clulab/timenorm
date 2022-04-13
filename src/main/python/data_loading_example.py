@@ -18,7 +18,7 @@ distances = [
     '3',
     '4',
 ]
-f = open('./types.txt')
+f = open('./example-data/types.txt')
 lines = f.readlines()
 types = []
 for line in lines:

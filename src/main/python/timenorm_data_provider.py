@@ -7,6 +7,7 @@ from transformers import PreTrainedTokenizerFast, AutoTokenizer
 import collections
 import torch
 from sklearn.preprocessing import MultiLabelBinarizer
+from datasets import Dataset, DatasetDict
 
 class TimeDataProvider:
     def __init__(self,
@@ -43,7 +44,7 @@ class TimeDataProvider:
                 yield text_path, text, xml_path, data
     
     @staticmethod
-    def iter_tokens(self, inputs, sentences):
+    def iter_tokens(inputs, sentences):
         for sent_index, sentence in enumerate(sentences):
             token_tuples = []
             for token_index in range(inputs["input_ids"].shape[1]):
@@ -54,7 +55,7 @@ class TimeDataProvider:
             yield sent_index, sentence, token_tuples
 
     @staticmethod
-    def extract_entity_values_from_doc(self, data, relation_to_extract):
+    def extract_entity_values_from_doc(data, relation_to_extract):
         doc_annotations = {}
         if data:
             for entity in data.annotations:
@@ -78,17 +79,18 @@ class TimeDataProvider:
 
         return doc_annotations
 
-    def read_data_to_distance_format(self, 
-                                     fast_tokenizer: PreTrainedTokenizerFast,
-                                     relation_to_extract: str, 
-                                     distances: List[str],
-                                     types: List[str]):
+    def create_dataset_for_split(self,
+                                 fast_tokenizer: PreTrainedTokenizerFast,
+                                 split: str, # Train, Dev, Test
+                                 relation_to_extract: str, 
+                                 distances: List[str],
+                                 types: List[str]): # for this function, set self.corpus to directory that has Train, Dev, Test subdirectories
         sentences = []
         sentence_texts = {}
         sentence_char_labels = {}
         label_to_index = {l: i for i, l in enumerate(distances)}
         type_to_index = {l: i for i, l in enumerate(types)}
-        for text_path, text, xml_path, data in self.iter_data(self.corpus_dir, "gold"):
+        for text_path, text, xml_path, data in self.iter_data(os.path.join(self.corpus_dir, split), "gold"):
             char_labels = collections.defaultdict(set)
             print(text_path)
             tokenized_map = fast_tokenizer(text, return_offsets_mapping=True)
@@ -132,7 +134,8 @@ class TimeDataProvider:
                         char_labels[i].add((label, entity_type))
 
                     
-            nlp = spacy.load("en_core_web_lg")
+            # nlp = spacy.load("en_core_web_lg")
+            nlp = spacy.load("en_core_web_sm")
             doc = nlp(text)
             for sentence in doc.sents:
                 sentences.append(sentence) # all sentences
@@ -144,7 +147,9 @@ class TimeDataProvider:
                                  return_tensors="pt",
                                  return_offsets_mapping=True) 
 
-        labels = np.empty(inputs["input_ids"].shape + (2,)) # added (2,) to get labels and types together in a list
+        # labels = np.empty(inputs["input_ids"].shape + (2,)) # added (2,) to get labels and types together in a list
+        labels_type = np.empty(inputs["input_ids"].shape)
+        labels_distance = np.empty(inputs["input_ids"].shape)
 
         for i, sentence, token_tuples in self.iter_tokens(inputs, sentences): # go back to raw texts, 
                                                                          # and for each wordpiece assign a label: 
@@ -169,7 +174,7 @@ class TimeDataProvider:
                     token_label = "None"
                 elif len(token_labels) == 1:
                     token_label = token_labels.pop()
-                else:
+                else:                   # if there is more than one type throw away the operator one
                     context = f"{text[start-5:start]}[{text[start:end]}]"\
                               f"{text[end:end+5]}"
                     print(f"Skipping token labels: {context!r} {token_labels}")
@@ -178,26 +183,39 @@ class TimeDataProvider:
                     token_type = "None"
                 elif len(token_types) == 1:
                     token_type = token_types.pop()
-                else:
+                else:               # if there is more than one type throw away the operator one
                     context = f"{text[start-5:start]}[{text[start:end]}]"\
                               f"{text[end:end+5]}"
                     print(f"Skipping token types: {context!r} {token_types}")
                     token_type = "None"
                     
                 
-                labels[i][j] = [label_to_index[token_label], type_to_index[token_type]] 
+                # labels[i][j] = [label_to_index[token_label], type_to_index[token_type]] 
+                labels_type[i][j] = type_to_index[token_type]
+                labels_distance[i][j] = label_to_index[token_label]
             
             if i%100 == 0:    
                 print(f'{i}/{len(sentences)} is done')
-        print("dataset has been created")
-        
-        return inputs, labels
-        """
-        return tf.data.Dataset.from_tensor_slices((
-            dict(inputs),
-            tf.constant(labels),
-        ))
-        """
+        labels_type = torch.from_numpy(labels_type)
+        labels_distance = torch.from_numpy(labels_distance)
+        split_dict = {}
+        split_dict['input_ids'] = inputs['input_ids']
+        split_dict['labels_type'] = labels_type
+        split_dict['labels_distance'] = labels_distance
+
+        return Dataset.from_dict(split_dict)
+
+    def read_data_to_distance_format(self,
+                                   fast_tokenizer: PreTrainedTokenizerFast,
+                                   relation_to_extract: str,
+                                   distances: List[str],
+                                   types: List[str]):
+        dataset_dict = {}
+        dataset_dict['train'] = self.create_dataset_for_split(fast_tokenizer, 'Train', relation_to_extract, distances, types)
+        dataset_dict['validation'] = self.create_dataset_for_split(fast_tokenizer, 'Dev', relation_to_extract, distances, types)
+        dataset_dict['test'] = self.create_dataset_for_split(fast_tokenizer, 'Test', relation_to_extract, distances, types)
+
+        return DatasetDict(dataset_dict)
 
     def read_data_to_multi_label_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int) -> Tuple[List[str], List[str]]:
         """Read the data and format it for multi label token classification"""
