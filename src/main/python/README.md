@@ -38,3 +38,13 @@ To train a time entity identification model:
 $ python model_training.py -input "model_inputs" -out "model_outputs"
 ```
 
+To train a multi-label time entity identification model:
+```
+$ python torch_multilabel.py --nb_epochs "epochs" --train_batch_size "batch_size" --eval_batch_size "batch_size" --lr_rate "learning_rate" --data_dir "the_model_input_files_dir"
+```
+To train a multi-class time entity identification model:
+```
+$ python torch_multiclass.py --nb_epochs "epochs" --train_batch_size "batch_size" --eval_batch_size "batch_size" --lr_rate "learning_rate" --data_dir "the_model_input_files_dir"
+```
+
+
