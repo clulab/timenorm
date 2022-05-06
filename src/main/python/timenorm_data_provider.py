@@ -199,7 +199,7 @@ class TimeDataProvider:
         ))
         """
 
-    def read_data_to_multi_label_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int) -> Tuple[List[str], List[str]]:
+    def read_data_to_multi_label_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int, eval=False) -> Tuple[List[str], List[str]]:
         """Read the data and format it for multi label token classification"""
 
         label_to_index = {l: i for i, l in enumerate(types)}
@@ -207,14 +207,15 @@ class TimeDataProvider:
         
         inputs = {
           "input_ids":[],
-          "attention_mask":[],
-          "offset_mapping":[]
+          "attention_mask":[]
         }
+        if eval is True: inputs["offset_mapping"]= []
         labels = []
         
         def convert_to_onehot(tags):
           """convert the list of integer labels to one hot vector format"""
-          return mlb.transform(tags)
+          converted = mlb.transform(tags)
+          return converted[:,1:] #exclude None label 
         
         for _, text, _, data in self.iter_data(self.corpus_dir, "gold"):
 
@@ -260,14 +261,120 @@ class TimeDataProvider:
                 labels.append(convert_to_onehot(tags))
                 inputs["input_ids"].append(torch.tensor(tokenized_input["input_ids"]))
                 inputs["attention_mask"].append(torch.tensor(tokenized_input["attention_mask"]))
-                inputs["offset_mapping"].append(torch.tensor(tokenized_input["offset_mapping"]))
+                if eval is True:
+                    inputs["offset_mapping"].append(torch.tensor(tokenized_input["offset_mapping"]))
 
         #convert list to tensors
         for key in inputs: 
           inputs[key] = torch.stack(inputs[key],dim=0) 
-        labels = torch.from_numpy(np.asarray(labels))
+        labels = torch.from_numpy(np.asarray(labels)).to(torch.float)
         
         return inputs,labels
+
+    def read_data_to_operator_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int, eval=False) -> Tuple[List[str], List[str]]:
+        """
+        Read the data and format it for multi-class classification 
+        :param types labels (i.e., operator or non-operator) of the multi class classifier
+        :param eval  whether the tokenizer will return offsets that will be needed in evaluation
+        """
+        def get_type_from_file(FILENAME):
+            types = []
+            with open(FILENAME,'r') as f:
+                lines = f.readlines()
+            for line in lines:
+                types.append(line.replace("\n", ""))
+            return types
+
+        operator = get_type_from_file('operator.txt')
+        non_operator = get_type_from_file('non-operator.txt')
+        op_bio_label_to_index = {**{"B-"+l: i+1 for i, l in enumerate(operator)}, **{"I-"+l: i+len(operator)+1 for i, l in enumerate(operator)}}
+        nonop_bio_label_to_index = {**{"B-"+l: i+1 for i, l in enumerate(non_operator)}, **{"I-"+l: i+len(operator)+1 for i, l in enumerate(non_operator)}}
+
+        label_to_index = {l: i+1 for i, l in enumerate(types)} #None label index is 0 
+        bio_label_to_index = op_bio_label_to_index if types == operator else nonop_bio_label_to_index
+
+        inputs = {
+            "input_ids":[],
+            "attention_mask":[]
+        }
+        if eval is True: inputs["offset_mapping"]= []
+        labels = []
+        bio_labels = []
+
+        for _, text, _, data in self.iter_data(self.corpus_dir, "gold"):
+            #convert data into dict format: key - span, value - entity types
+            entity_values = {}
+            for entity in data.annotations:
+                entity_spans = entity.xml.find('span').text
+                start, end = [int(index) for index in entity_spans.split(',')]
+                entity_type = entity.xml.find('type').text
+                if entity_type == "Event": # do not consider event type entities at the moment
+                    continue
+                if (start,end) not in entity_values:
+                    entity_values[(start,end)] = [entity_type]
+                elif entity_type not in entity_values[(start,end)]: #not allowing duplicates
+                    entity_values[(start,end)].append(entity_type)
+            
+            #split the text into sentences and tokenize them
+            nlp = spacy.load("en_core_web_lg")
+            doc = nlp(text)
+
+            for sentence in doc.sents:
+                prev_label = None 
+
+                tags = [] #labels for this sentence
+                bio_tags = [] 
+                
+                sentence_start = sentence.start_char
+                tokenized_input = fast_tokenizer (sentence.text,max_length=max_length, padding='max_length', truncation=True,return_offsets_mapping=True)
+                token_offsets = tokenized_input["offset_mapping"]
+                for offset in token_offsets:
+                    tok_start, tok_end = sentence_start+offset[0], sentence_start+offset[1]
+                    label = ["None"]
+                    if (tok_start, tok_end) in entity_values:
+                        label = entity_values.pop((tok_start, tok_end))
+                    #see if this span is a subwords
+                    else:
+                        for gold_span in entity_values:
+                            gold_span_start, gold_span_end = gold_span
+                            if gold_span_start<=tok_start and tok_end<=gold_span_end:
+                                label = entity_values.pop(gold_span)
+                                break
+
+                    tok_label = [label_to_index[l] if l in label_to_index else 0 for l in label]
+                    tags.append(tok_label[0])
+
+                    tok_bio_label = [l for l in label]
+                    #decide inside/outside for BIO format
+                    if tok_bio_label[0]!="None" and tok_bio_label[0] in label_to_index:
+                        if tok_bio_label[0] == prev_label:
+                            bio_tags.append(bio_label_to_index["I-"+tok_bio_label[0]])
+                        else:
+                            bio_tags.append(bio_label_to_index["B-"+tok_bio_label[0]])
+                    else:
+                        bio_tags.append(0) #None label 
+                    prev_label = tok_bio_label[0] #update
+
+                #append sentence level data
+                labels.append(tags)
+                bio_labels.append(bio_tags)
+
+                inputs["input_ids"].append(torch.tensor(tokenized_input["input_ids"]))
+                inputs["attention_mask"].append(torch.tensor(tokenized_input["attention_mask"]))
+                if eval is True:
+                    inputs["offset_mapping"].append(torch.tensor(tokenized_input["offset_mapping"]))
+
+        #convert list to tensors
+        for key in inputs: 
+            inputs[key] = torch.stack(inputs[key],dim=0)
+
+        labels = torch.from_numpy(np.asarray(labels))
+        labels = labels.type(torch.LongTensor)
+
+        bio_labels = torch.from_numpy(np.asarray(bio_labels))
+        bio_labels = labels.type(torch.LongTensor)
+
+        return inputs,labels, bio_labels
 
     def read_data_to_pinter_seqs_format(self,
                                         fast_tokenizer: PreTrainedTokenizerFast,
