@@ -1,17 +1,13 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
 import java.io.File
 
-import scala.collection.JavaConverters._
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import java.time.DateTimeException
-import org.timen.TIMEN
-
 import com.lexicalscope.jewel.cli.CliFactory
 import com.lexicalscope.jewel.cli.{ Option => CliOption }
+import org.timen.TIMEN
+
+import scala.collection.JavaConverters._
+import scala.util.{Failure, Success}
 
 /**
  * This is not actually a test, but it can be run over TimeML files to see what can and cannot
@@ -145,7 +141,7 @@ object TimeMLProcessor {
           fileNormalizerStats(corpusFile, normalizer).correct += 1
         }
 
-        // if a known error has been fixed, log it so that it can be removed from the list 
+        // if a known error has been fixed, log it so that it can be removed from the list
         if (isCorrect && isKnownFailure) {
           normalizer match {
             case n: TemporalExpressionParser => System.err.println("Failure has been fixed: " + key)
@@ -170,11 +166,11 @@ object TimeMLProcessor {
             case _ =>
           }
         }
-        
+
         // yield the normalizer results to allow later comparison
         (normalizer, value, isCorrect)
       }
-      
+
       // if the normalizers had different predictions, log the incorrect one
       if (results.map(_._3).toSet == Set(true, false)) {
         val Seq((normalizer, value, correct)) = results.filter(_._3 == false)

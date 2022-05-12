@@ -1,15 +1,11 @@
-package org.clulab.timenorm.formal
+package org.clulab.timenorm.scate
 
 import java.time.temporal.{ChronoField, ChronoUnit}
 
-import org.junit.runner.RunWith
+import org.clulab.time._
+import org.clulab.timenorm.scate.TimeNormScorer.{Timex, intervalPrecision, intervalScores, parseDCT, score}
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.clulab.timenorm.TimeNormScorer.{parseDCT, score, intervalPrecision, intervalScores, Timex}
-import org.clulab.timenorm.field.NIGHT_OF_DAY
 
-
-@RunWith(classOf[JUnitRunner])
 class TimeNormScorerTest extends FunSuite with TypesSuite {
 
   def assertScore(timex1: TimeExpression,
@@ -93,13 +89,13 @@ class TimeNormScorerTest extends FunSuite with TypesSuite {
     val goldTimexes = Seq(
       Timex("G1", (0, 3), SimpleInterval.of(1980, 5)),
       Timex("G2", (5, 10), SimpleInterval.of(1985, 2, 1)),
-      Timex("G3", (11, 12), SimpleInterval.of(1985, 2, 2)),
+      Timex("G3", (11, 12), SimpleInterval.of(1985, 2, 2))
     )
     val systemTimexes = Seq(
       Timex("S1", (0, 1), SimpleInterval.of(1980, 5, 1)),
       Timex("S2", (2, 3), SimpleInterval.of(1980, 5, 31)),
       Timex("S3", (3, 5), SimpleInterval.of(1980, 5)),
-      Timex("S4", (9, 12), SimpleInterval.of(1985, 2)),
+      Timex("S4", (9, 12), SimpleInterval.of(1985, 2))
     )
     val (precisions, recalls) = intervalScores(goldTimexes, systemTimexes)
     assert(precisions === Seq(1.0, 1.0, 0.0, 2/28.0))

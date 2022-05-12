@@ -1,27 +1,28 @@
-package org.clulab.timenorm.formal
+package org.clulab.timenorm.scate
 
 import java.time.temporal._
-
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
 import java.time.{DateTimeException, DayOfWeek, LocalDateTime}
 import java.util.Collections.singletonList
 
-import org.clulab.timenorm.field.{NIGHT_OF_DAY, SUMMER_OF_YEAR, WINTER_OF_YEAR}
-import org.scalactic.Prettifier
+import org.clulab.time._
+import org.scalactic.{Equality, Prettifier}
+import org.scalatest.FunSuite
 
 trait TypesSuite {
-  implicit def intervalEquality[T <: Interval] = new org.scalactic.Equality[T] {
+  implicit def intervalEquality[T <: Interval]: Equality[T] = new Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
       case Interval(bStart, bEnd) => a.start == bStart && a.end == bEnd
       case _ => false
     }
   }
 
-  implicit def intervalsEquality[T <: Seq[_ <: Interval]] = new org.scalactic.Equality[T] {
+  implicit def intervalsEquality[T <: Seq[_ <: Interval]]: Equality[T] = new Equality[T] {
     override def areEqual(a: T, b: Any): Boolean = b match {
-      case i: Seq[_] => a.size == i.size && (a zip i).forall{ case (x, y) => intervalEquality.areEqual(x, y) }
+      case c: Seq[_] =>
+        a.size == c.size &&
+        // use .indices instead of .zip here, because type inference in scala 2.11 can't figure out the zip
+        // (a zip c).forall{ case (x, y) => intervalEquality.areEqual(x, y) }
+        a.indices.forall(i => intervalEquality.areEqual(a(i), c(i)))
       case _ => false
     }
   }
@@ -39,7 +40,6 @@ trait TypesSuite {
   }
 }
 
-@RunWith(classOf[JUnitRunner])
 class TypesTest extends FunSuite with TypesSuite {
 
   test("SimpleInterval") {
@@ -101,9 +101,8 @@ class TypesTest extends FunSuite with TypesSuite {
     val ldt = LocalDateTime.of(2000, 1, 1, 0, 0, 0, 0)
     val number = IntNumber(5)
     val unit = ChronoUnit.YEARS
-    val mod = Modifier.Exact
 
-    val simple = SimplePeriod(unit, number, mod)
+    val simple = SimplePeriod(unit, number)
     assert(simple.addTo(ldt) === LocalDateTime.of(2005, 1, 1, 0, 0, 0, 0))
     assert(simple.subtractFrom(ldt) === LocalDateTime.of(1995, 1, 1, 0, 0, 0, 0))
     assert(simple.get(unit) === 5)
@@ -116,17 +115,17 @@ class TypesTest extends FunSuite with TypesSuite {
 
     val vagueNumber = VagueNumber("A few")
 
-    intercept[scala.MatchError] {
-      SimplePeriod(unit, vagueNumber, mod).addTo(ldt)
+    intercept[UnsupportedOperationException] {
+      SimplePeriod(unit, vagueNumber).addTo(ldt)
     }
   }
 
   test("SumP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
-    val period4 = SimplePeriod(ChronoUnit.DAYS, 2, Modifier.Mid)
-    val periodSum = SumP(Set(period1, period2, period3), Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Some(Modifier.Exact()))
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Some(Modifier.Fiscal()))
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Some(Modifier.Approx()))
+    val period4 = SimplePeriod(ChronoUnit.DAYS, 2, Some(Modifier.Mid()))
+    val periodSum = SumP(Set(period1, period2, period3), Some(Modifier.Exact()))
     val ldt = LocalDateTime.of(2000, 6, 10, 0, 0, 0, 0)
 
     val list = new java.util.ArrayList[TemporalUnit]
@@ -139,7 +138,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(periodSum.getUnits() === list)
 
     //Tests for periodSums that contain periodSums
-    val periodSum2 = SumP(Set(period4, periodSum), Modifier.Fiscal)
+    val periodSum2 = SumP(Set(period4, periodSum), Some(Modifier.Fiscal()))
     list.add(ChronoUnit.DAYS)
 
     assert(periodSum2.addTo(ldt) === LocalDateTime.of(2003, 9, 12, 0, 0, 0, 0))
@@ -153,10 +152,10 @@ class TypesTest extends FunSuite with TypesSuite {
   }
 
   test("LastP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
-    val periodSum = SumP(Set(period1, period2, period3), Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Some(Modifier.Exact()))
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Some(Modifier.Fiscal()))
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Some(Modifier.Approx()))
+    val periodSum = SumP(Set(period1, period2, period3), Some(Modifier.Exact()))
 
     val year = Year(2000)
     val lastPeriod = LastP(year, period1)
@@ -177,17 +176,17 @@ class TypesTest extends FunSuite with TypesSuite {
       === SimpleInterval(LocalDateTime.of(2017, 8, 17, 0, 0), LocalDateTime.of(2017, 8, 31, 0, 0)))
 
     assert(NextP(Year(2000), SumP(Set(
-      SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact),
-      SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal),
-      SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx))))
+      SimplePeriod(ChronoUnit.YEARS, 1, Some(Modifier.Exact())),
+      SimplePeriod(ChronoUnit.YEARS, 2, Some(Modifier.Fiscal())),
+      SimplePeriod(ChronoUnit.MONTHS, 3, Some(Modifier.Approx())))))
       === SimpleInterval(LocalDateTime.of(2001, 1, 1, 0, 0), LocalDateTime.of(2004, 4, 1, 0, 0, 0, 0)))
   }
 
   test("BeforeP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
-    val periodSum = SumP(Set(period1, period2, period3), Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Some(Modifier.Exact()))
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Some(Modifier.Fiscal()))
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Some(Modifier.Approx()))
+    val periodSum = SumP(Set(period1, period2, period3), Some(Modifier.Exact()))
 
     val year = Year(2000)
     val beforePeriod = BeforeP(year, period1)
@@ -207,10 +206,10 @@ class TypesTest extends FunSuite with TypesSuite {
   }
 
   test("AfterP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
-    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Modifier.Fiscal)
-    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Modifier.Approx)
-    val periodSum = SumP(Set(period1, period2, period3), Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Some(Modifier.Exact()))
+    val period2 = SimplePeriod(ChronoUnit.YEARS, 2, Some(Modifier.Fiscal()))
+    val period3 = SimplePeriod(ChronoUnit.MONTHS, 3, Some(Modifier.Approx()))
+    val periodSum = SumP(Set(period1, period2, period3), Some(Modifier.Exact()))
 
     val year = Year(2000)
     val afterPeriod = AfterP(year, period1)
@@ -230,7 +229,7 @@ class TypesTest extends FunSuite with TypesSuite {
   }
 
   test("ThisP") {
-    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Modifier.Exact)
+    val period1 = SimplePeriod(ChronoUnit.YEARS, 1, Some(Modifier.Exact()))
 
     val year = Year(2002)
     val thisPeriod = ThisP(year, period1)
@@ -239,7 +238,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(thisPeriod.end === LocalDateTime.of(2003, 1, 1, 0, 0, 0, 0))
 
     val interval = SimpleInterval(LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0), LocalDateTime.of(2001, 1, 1, 0, 0, 0, 0))
-    val period = SimplePeriod(ChronoUnit.DAYS, 5, Modifier.Exact)
+    val period = SimplePeriod(ChronoUnit.DAYS, 5, Some(Modifier.Exact()))
     val thisPeriod2 = ThisP(interval, period)
 
     assert(thisPeriod2.start === LocalDateTime.of(2000, 12, 29, 12, 0, 0, 0))
@@ -253,6 +252,10 @@ class TypesTest extends FunSuite with TypesSuite {
 
     assert(between.start === LocalDateTime.of(2000, 1, 1, 0, 0, 0, 0))
     assert(between.end === LocalDateTime.of(2002, 1, 1, 0, 0, 0, 0))
+
+    // If startInterval ends after endInterval starts the operator should be not defined.
+    val incorrect_between = Between(interval2, interval1)
+    assert(incorrect_between.isDefined === false)
   }
 
   test("NthP") {
@@ -269,16 +272,16 @@ class TypesTest extends FunSuite with TypesSuite {
     val ldt2 = LocalDateTime.of(2003, 5, 11, 22, 10, 20, 0)
     val interval = SimpleInterval(ldt1, ldt2)
 
-    val pre = RepeatingUnit(ChronoUnit.MONTHS, Modifier.Exact).preceding(interval.start)
+    val pre = RepeatingUnit(ChronoUnit.MONTHS, Some(Modifier.Exact())).preceding(interval.start)
     assert(pre.next === SimpleInterval.of(2002, 2))
     assert(pre.next === SimpleInterval.of(2002, 1))
 
-    val follow = RepeatingUnit(ChronoUnit.MONTHS, Modifier.Exact).following(interval.end)
+    val follow = RepeatingUnit(ChronoUnit.MONTHS, Some(Modifier.Exact())).following(interval.end)
     assert(follow.next === SimpleInterval.of(2003, 6))
     assert(follow.next === SimpleInterval.of(2003, 7))
 
     //Truncate method tests
-    val mod = Modifier.End
+    val mod = Some(Modifier.End())
     val centuryRI = RepeatingUnit(ChronoUnit.CENTURIES, mod)
     val decadeRI = RepeatingUnit(ChronoUnit.DECADES, mod)
     val weeksRI = RepeatingUnit(ChronoUnit.WEEKS, mod)
@@ -311,7 +314,7 @@ class TypesTest extends FunSuite with TypesSuite {
 
     val interval2 = SimpleInterval(
       LocalDateTime.of(2001, 2, 12, 3, 3), LocalDateTime.of(2001, 2, 14, 22, 0))
-    val daysRI = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val daysRI = RepeatingUnit(ChronoUnit.DAYS, Some(Modifier.Exact()))
     assert(daysRI.preceding(interval2.start).next === SimpleInterval.of(2001, 2, 11))
     assert(daysRI.following(interval2.end).next === SimpleInterval.of(2001, 2, 15))
 
@@ -331,7 +334,7 @@ class TypesTest extends FunSuite with TypesSuite {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
 
-    val monthMay = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val monthMay = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
     val pre = monthMay.preceding(interval.start)
     assert(pre.next === SimpleInterval.of(2001, 5))
     assert(pre.next === SimpleInterval.of(2000, 5))
@@ -339,7 +342,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(post.next === SimpleInterval.of(2004, 5))
     assert(post.next === SimpleInterval.of(2005, 5))
 
-    val day29 = RepeatingField(ChronoField.DAY_OF_MONTH, 29, Modifier.Exact)
+    val day29 = RepeatingField(ChronoField.DAY_OF_MONTH, 29, Some(Modifier.Exact()))
     val pre2 = day29.preceding(interval.start)
     assert(pre2.next === SimpleInterval.of(2002, 1, 29))
     assert(pre2.next === SimpleInterval.of(2001, 12, 29))
@@ -353,7 +356,7 @@ class TypesTest extends FunSuite with TypesSuite {
     assert(nov.following(LocalDateTime.of(1989, 11, 2, 0, 0)).next === SimpleInterval.of(1990, 11))
 
     //No Exception at FieldRepeatingInterval instantiation
-    val day300 = RepeatingField(ChronoField.DAY_OF_MONTH, 300, Modifier.Approx)
+    val day300 = RepeatingField(ChronoField.DAY_OF_MONTH, 300, Some(Modifier.Approx()))
     intercept[DateTimeException] {
       //Exception thrown here
       val testException = day300.preceding(interval.start)
@@ -371,9 +374,9 @@ class TypesTest extends FunSuite with TypesSuite {
   test("LastRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
     val friday = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
-    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val day = RepeatingUnit(ChronoUnit.DAYS, Some(Modifier.Exact()))
 
     assert(LastRI(interval, may) === SimpleInterval.of(2001, 5))
     assert(LastRI(interval, day) === SimpleInterval.of(2002, 3, 21))
@@ -401,8 +404,8 @@ class TypesTest extends FunSuite with TypesSuite {
   test("LastRIs") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
+    val day = RepeatingUnit(ChronoUnit.DAYS, Some(Modifier.Exact()))
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
@@ -420,7 +423,7 @@ class TypesTest extends FunSuite with TypesSuite {
   test("NextRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
 
     assert(NextRI(interval, may) === SimpleInterval.of(2004, 5))
     assert(NextRI(interval, RepeatingUnit(ChronoUnit.DAYS)) === SimpleInterval.of(2003, 5, 11))
@@ -435,8 +438,8 @@ class TypesTest extends FunSuite with TypesSuite {
   test("NextRIs") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
+    val day = RepeatingUnit(ChronoUnit.DAYS, Some(Modifier.Exact()))
 
     //Interval: March 22, 2002 @ 11:30:30 to May 10, 2003 @ 22:10:20
     //FieldRI: May
@@ -456,8 +459,8 @@ class TypesTest extends FunSuite with TypesSuite {
   test("AfterRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
+    val day = RepeatingUnit(ChronoUnit.DAYS, Some(Modifier.Exact()))
 
     assert(AfterRI(interval, may) === SimpleInterval.of(2004, 5))
     assert(AfterRI(interval, may, 10) === SimpleInterval.of(2013, 5))
@@ -471,8 +474,8 @@ class TypesTest extends FunSuite with TypesSuite {
   test("BeforeRI") {
     val interval = SimpleInterval(
       LocalDateTime.of(2002, 3, 22, 11, 30, 30, 0), LocalDateTime.of(2003, 5, 10, 22, 10, 20, 0))
-    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Modifier.Exact)
-    val day = RepeatingUnit(ChronoUnit.DAYS, Modifier.Exact)
+    val may = RepeatingField(ChronoField.MONTH_OF_YEAR, 5, Some(Modifier.Exact()))
+    val day = RepeatingUnit(ChronoUnit.DAYS, Some(Modifier.Exact()))
 
     assert(BeforeRI(interval, may) === SimpleInterval.of(2001, 5))
     assert(BeforeRI(interval, may, 5) === SimpleInterval.of(1997, 5))
@@ -685,8 +688,8 @@ class TypesTest extends FunSuite with TypesSuite {
 
   test("UnionRI") {
     var interval = SimpleInterval(LocalDateTime.of(2003, 1, 1, 0, 0), LocalDateTime.of(2003, 1, 30, 0, 0))
-    val fieldRI = RepeatingField(ChronoField.MONTH_OF_YEAR, 2, Modifier.Exact)
-    val fieldRI2 = RepeatingField(ChronoField.DAY_OF_MONTH, 20, Modifier.Exact)
+    val fieldRI = RepeatingField(ChronoField.MONTH_OF_YEAR, 2, Some(Modifier.Exact()))
+    val fieldRI2 = RepeatingField(ChronoField.DAY_OF_MONTH, 20, Some(Modifier.Exact()))
     var unionRI = UnionRI(Set(fieldRI, fieldRI2))
 
     assert(unionRI.base === ChronoUnit.DAYS)
@@ -767,7 +770,7 @@ class TypesTest extends FunSuite with TypesSuite {
     //Interval: July 1 to July 30, 2011
     //UnitRI: Weeks
     //FieldRI: 20th of the month
-    val fieldRI3 = RepeatingField(ChronoField.DAY_OF_MONTH, 20, Modifier.Exact)
+    val fieldRI3 = RepeatingField(ChronoField.DAY_OF_MONTH, 20, Some(Modifier.Exact()))
     unionRI = UnionRI(Set(unitRI1, fieldRI3))
 
     //Preceding
@@ -847,9 +850,9 @@ class TypesTest extends FunSuite with TypesSuite {
     //January, Friday the 13th
     var intersectRI = IntersectionRI(
       Set(
-        RepeatingField(ChronoField.DAY_OF_WEEK, 5, Modifier.Exact), //Friday
-        RepeatingField(ChronoField.DAY_OF_MONTH, 13, Modifier.Exact), //the 13th
-        RepeatingField(ChronoField.MONTH_OF_YEAR, 1, Modifier.Exact)) //January
+        RepeatingField(ChronoField.DAY_OF_WEEK, 5, Some(Modifier.Exact())), //Friday
+        RepeatingField(ChronoField.DAY_OF_MONTH, 13, Some(Modifier.Exact())), //the 13th
+        RepeatingField(ChronoField.MONTH_OF_YEAR, 1, Some(Modifier.Exact()))) //January
     )
 
     assert(intersectRI.base === ChronoUnit.DAYS)
@@ -886,8 +889,8 @@ class TypesTest extends FunSuite with TypesSuite {
     //RI: The hours of Friday the 13th
     intersectRI = IntersectionRI(
       Set(
-        RepeatingField(ChronoField.DAY_OF_WEEK, 5, Modifier.Exact), //Friday
-        RepeatingField(ChronoField.DAY_OF_MONTH, 13, Modifier.Exact), //the 13th
+        RepeatingField(ChronoField.DAY_OF_WEEK, 5, Some(Modifier.Exact())), //Friday
+        RepeatingField(ChronoField.DAY_OF_MONTH, 13, Some(Modifier.Exact())), //the 13th
         RepeatingUnit(ChronoUnit.HOURS) //Hours
       ))
     //Interval: The year of 2016
@@ -918,6 +921,43 @@ class TypesTest extends FunSuite with TypesSuite {
     val mar31 = IntersectionRI(Set(march, day31))
     val startOf1980 = LocalDateTime.of(1980, 1, 1, 0, 0)
     assert(mar31.following(startOf1980).next === SimpleInterval.of(1980, 3, 31))
+
+    // RI: April 31st
+    intercept[java.time.DateTimeException] {
+      IntersectionRI(Set(
+        RepeatingField(ChronoField.MONTH_OF_YEAR, 4),
+        RepeatingField(ChronoField.DAY_OF_MONTH, 31)
+      ))
+      fail("April 31st should throw an exception")
+    }
+
+
+    // In the following cases IntersectRI must skip one range unit.
+    //Interval: March 1, 2012
+    val mar312012 = SimpleInterval.of(2012, 3, 1)
+    //RepeatingInterval: The evening of the 31st
+    val intersectRIWithSkips = IntersectionRI(
+                                Set(
+                                  RepeatingField(ChronoField.DAY_OF_MONTH, 31),
+                                  RepeatingField(org.clulab.time.EVENING_OF_DAY, 1)
+                                ))
+
+    val followingWithSkips = intersectRIWithSkips.following(mar312012.start)
+    //Expected: March 31 2012 @ 1700, April 1 2012 @ 0000
+    next = followingWithSkips.next
+    assert(next.start === LocalDateTime.of(2012, 3, 31, 17, 0))
+    assert(next.end === LocalDateTime.of(2012, 4, 1, 0, 0))
+
+    //Expected: May 31 2012 @ 1700, June 1 2012 @ 0000
+    next = followingWithSkips.next
+    assert(next.start === LocalDateTime.of(2012, 5, 31, 17, 0))
+    assert(next.end === LocalDateTime.of(2012, 6, 1, 0, 0))
+
+    //Expected: January 31 2012 @ 1700, February 1 2012 @ 0000
+    val precedingWithSkips = intersectRIWithSkips.preceding(mar312012.start)
+    next = precedingWithSkips.next
+    assert(next.start === LocalDateTime.of(2012, 1, 31, 17, 0))
+    assert(next.end === LocalDateTime.of(2012, 2, 1, 0, 0))
   }
 
   test("IntersectionI") {
@@ -946,9 +986,9 @@ class TypesTest extends FunSuite with TypesSuite {
     val threeDays = SimplePeriod(ChronoUnit.DAYS, 3)
     val fridays = RepeatingField(ChronoField.DAY_OF_WEEK, 5)
     assert(threeDays.isDefined === true)
-    assert(UnknownPeriod.isDefined === false)
+    assert(UnknownPeriod().isDefined === false)
     assert(SumP(Set(threeDays, threeDays)).isDefined === true)
-    assert(SumP(Set(threeDays, UnknownPeriod)).isDefined === false)
+    assert(SumP(Set(threeDays, UnknownPeriod())).isDefined === false)
     assert(LastRI(SimpleInterval.of(1998, 2, 16), fridays).isDefined === true)
     assert(AfterRI(Year(1965), fridays).isDefined === true)
   }

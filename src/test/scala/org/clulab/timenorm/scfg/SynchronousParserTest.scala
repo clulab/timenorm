@@ -3,16 +3,11 @@ package org.clulab.timenorm.scfg
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit._
 
-import org.clulab.timenorm.field._
-import org.clulab.timenorm.scfg.parse._
-import org.clulab.timenorm.{Modifier, PeriodSet}
-import org.junit.runner.RunWith
+import org.clulab.time._
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
 import scala.collection.immutable.Seq
 
-@RunWith(classOf[JUnitRunner])
 class SynchronousParserTest extends FunSuite {
 
   val grammar = SynchronousGrammar.fromString("""ROOTS [Period] [PeriodSet] [TimeSpan] [TimeSpanSet]

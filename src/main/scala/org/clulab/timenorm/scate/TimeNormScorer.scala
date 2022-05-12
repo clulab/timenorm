@@ -1,14 +1,12 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scate
 
-import org.clulab.timenorm.formal.{Interval, TimeExpression}
-import org.clulab.timenorm.formal._
-
-import org.clulab.anafora.Data
 import java.io.File
+import java.nio.file.Paths
 import java.time.{Instant, LocalDateTime, ZoneId}
 
-import scala.util.Try
+import org.clulab.anafora.Data
 
+import scala.util.Try
 
 object TimeNormScorer {
 
@@ -22,10 +20,16 @@ object TimeNormScorer {
   object Timex {
     def allFrom(reader: AnaforaReader)(implicit data: Data): Seq[Timex] = {
       data.topEntities.filter(e => !skip.contains(e.`type`)).flatMap(e =>
-        Try(Timex(e.id, e.fullSpan, reader.temporal(e))).fold(ex => {ex.printStackTrace(); Seq.empty}, ts => Seq(ts)))
+        try {
+          Seq(Timex(e.id, e.fullSpan, reader.temporal(e)))
+        } catch {
+          case e: Exception =>
+            e.printStackTrace()
+            Seq.empty
+        })
     }
     def allIntervalsFrom(reader: AnaforaReader)(implicit data: Data): Seq[Timex] = {
-      allFrom(reader)(data).filter(t => Try(intervals(t.time).size > 0 && intervals(t.time).forall(i => i.isDefined)).getOrElse(false))
+      allFrom(reader).filter(t => Try(intervals(t.time).nonEmpty && intervals(t.time).forall(_.isDefined)).getOrElse(false))
     }
   }
 
@@ -151,7 +155,7 @@ object TimeNormScorer {
       val dct: Interval = parseDCT(dctString)
       printf("DCT: %s\n\n",dctString)
 
-      val goldData = Data.fromPaths(xmlFile.getPath, None)
+      val goldData = Data.fromPaths(xmlFile.toPath, None)
       val goldTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(goldData))(goldData)
       sum_gs += goldTimexes.size
 
@@ -162,7 +166,7 @@ object TimeNormScorer {
 
       val outFile = allTimeNormFiles(new File(outPath))(0)
       val outFilePath = outPath + "/" + outFile.getName
-      val systemData = Data.fromPaths(outFilePath, None)
+      val systemData = Data.fromPaths(Paths.get(outFilePath), None)
       val systemTimexes = Timex.allIntervalsFrom(new AnaforaReader(dct)(systemData))(systemData)
       sum_sys += systemTimexes.size
 

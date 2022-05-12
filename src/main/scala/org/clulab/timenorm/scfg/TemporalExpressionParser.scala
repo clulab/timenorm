@@ -1,27 +1,15 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
 import java.io.File
 import java.net.URL
 import java.text.Normalizer
+import java.time.temporal.IsoFields.QUARTER_YEARS
+import java.time.{DateTimeException, LocalDate}
 import java.util.logging.Logger
-
-import org.clulab.timenorm.scfg.SynchronousParser
-import org.clulab.timenorm.scfg.SynchronousGrammar
-import org.clulab.timenorm.scfg.parse.TemporalParse
-import org.clulab.timenorm.scfg.parse.PeriodParse
-import org.clulab.timenorm.scfg.parse.PeriodSetParse
-import org.clulab.timenorm.scfg.parse.TimeSpanParse
-import org.clulab.timenorm.scfg.parse.TimeSpanSetParse
 
 import scala.collection.immutable.IndexedSeq
 import scala.io.Source
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import java.time.DateTimeException
-import java.time.LocalDate
-import java.time.temporal.IsoFields.QUARTER_YEARS
+import scala.util.{Failure, Success, Try}
 
 
 object TemporalExpressionParser {

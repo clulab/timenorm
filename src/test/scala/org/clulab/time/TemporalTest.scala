@@ -1,15 +1,10 @@
-package org.clulab.timenorm.field
+package org.clulab.time
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
+
 import org.scalatest.FunSuite
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
-import java.time.ZoneId
 
-@RunWith(classOf[JUnitRunner])
-class TemporalFieldsTest extends FunSuite {
+class TemporalTest extends FunSuite {
   
   test("getting parts of day") {
     val apr28 = ZonedDateTime.of(LocalDateTime.of(2000, 3, 27, 3, 0), ZoneId.of("Z"))

@@ -1,12 +1,7 @@
 package org.clulab.anafora
 
-import com.codecommit.antixml._
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
-
-@RunWith(classOf[JUnitRunner])
 class AnaforaTest extends FunSuite {
   test("TimeML example") {
     val xml = <data>
@@ -53,9 +48,9 @@ class AnaforaTest extends FunSuite {
           </properties>
         </relation>
       </annotations>
-    </data>.convert
+    </data>
 
-    implicit val data = Data(xml, Some("abcdefghijklmnopqrstuvwxyz0123456789"))
+    implicit val data: Data = Data(xml, Some("abcdefghijklmnopqrstuvwxyz0123456789"))
     assert(data.entities.size === 2)
     assert(data.relations.size === 2)
     val Seq(time, event) = data.entities
@@ -70,12 +65,20 @@ class AnaforaTest extends FunSuite {
     assert(time.properties("type") === "DATE")
     assert(time.properties("temporalFunction") === "false")
     assert(time.properties("value") === "1989-10-25")
+    assert(time.entityChildren === IndexedSeq.empty)
+    assert(time.relationChildren === IndexedSeq.empty)
+    assert(time.descendants === IndexedSeq(time))
+    assert(time.properties.names === IndexedSeq("functionInDocument", "type", "temporalFunction", "value"))
+    assert(time.properties.getEntity("type") === None)
 
     assert(event.id === "4@e@wsj_1073@gold")
     assert(event.`type` === "EVENT")
     assert(event.spans === IndexedSeq((332, 336)))
     assert(event.properties("stem") === "pay")
     assert(event.properties("class") === "OCCURRENCE")
+    assert(event.entityChildren === IndexedSeq.empty)
+    assert(event.relationChildren === IndexedSeq.empty)
+    assert(event.descendants === IndexedSeq(event))
 
     assert(makeinstance.id === "10@r@wsj_1073@gold")
     assert(makeinstance.`type` === "MAKEINSTANCE")
@@ -85,6 +88,9 @@ class AnaforaTest extends FunSuite {
     assert(makeinstance.properties("pos") === "VERB")
     assert(makeinstance.properties("tense") === "PAST")
     assert(makeinstance.properties("aspect") === "NONE")
+    assert(makeinstance.entityChildren === IndexedSeq(event))
+    assert(makeinstance.relationChildren === IndexedSeq.empty)
+    assert(makeinstance.descendants.toSet === Set(makeinstance, event))
 
     assert(tlink.id === "14@r@wsj_1073@gold")
     assert(tlink.`type` === "TLINK")
@@ -94,6 +100,9 @@ class AnaforaTest extends FunSuite {
     assert(tlink.properties("eventInstanceID") === "10@r@wsj_1073@gold")
     assert(tlink.properties.relation("eventInstanceID") === makeinstance)
     assert(tlink.properties("origin") === "USER")
+    assert(tlink.entityChildren === IndexedSeq(time))
+    assert(tlink.relationChildren === IndexedSeq(makeinstance))
+    assert(tlink.descendants.toSet === Set(tlink, time, makeinstance, event))
   }
 
 }

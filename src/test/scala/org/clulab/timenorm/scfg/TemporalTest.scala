@@ -1,11 +1,9 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
 import java.time.temporal.ChronoUnit._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+
 import org.scalatest.FunSuite
 
-@RunWith(classOf[JUnitRunner])
 class TemporalTest extends FunSuite {
   
   test("TimeSpan century") {

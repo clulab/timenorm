@@ -1,15 +1,14 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
-import java.time.ZonedDateTime
-import java.time.temporal.TemporalUnit
-import java.time.temporal.TemporalField
-import java.time.temporal.ChronoUnit._
 import java.time.temporal.ChronoField._
+import java.time.temporal.ChronoUnit._
 import java.time.temporal.IsoFields._
+import java.time.temporal.{TemporalField, TemporalUnit}
+import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+
+import org.clulab.time._
+
 import scala.collection.immutable.ListMap
-import java.time.LocalDateTime
-import java.time.ZoneId
-import org.clulab.timenorm.field._
 
 /**
  * A temporal object, such as a time span or a period.
@@ -415,7 +414,7 @@ object TimeSpan {
         case 3 => Map(DECADE -> centuryOrDecadeOrYear.toInt)
         case 4 => Map(YEAR -> centuryOrDecadeOrYear.toInt)
       }
-      case Array(year, seasonOrQuarterOrMonthOrWeek) => Map(YEAR -> year.toInt) ++ {
+      case Array(year, seasonOrQuarterOrMonthOrWeek) => Map[TemporalField, Int](YEAR -> year.toInt) ++ {
         seasonOrQuarterOrMonthOrWeek match {
           case "SP" => Map(SPRING_OF_YEAR -> 1)
           case "SU" => Map(SUMMER_OF_YEAR -> 1)
@@ -428,7 +427,7 @@ object TimeSpan {
           }
         }
       }
-      case Array(year, monthOrWeek, dayOrWeekend) => Map(YEAR -> year.toInt) ++ {
+      case Array(year, monthOrWeek, dayOrWeekend) => Map[TemporalField, Int](YEAR -> year.toInt) ++ {
         monthOrWeek.head match {
           case 'W' => dayOrWeekend match {
             case "WE" => Map(ISO_WEEK.OF_YEAR -> monthOrWeek.tail.toInt, WEEKEND_OF_WEEK -> 1)
@@ -437,7 +436,7 @@ object TimeSpan {
         }
       }
       case Array(year, month, day, hourOrPartOfDay) =>
-        Map(YEAR -> year.toInt, MONTH_OF_YEAR -> month.toInt, DAY_OF_MONTH -> day.toInt) ++ {
+        Map[TemporalField, Int](YEAR -> year.toInt, MONTH_OF_YEAR -> month.toInt, DAY_OF_MONTH -> day.toInt) ++ {
           hourOrPartOfDay match {
             case "MO" => Map(MORNING_OF_DAY -> 1)
             case "AF" => Map(AFTERNOON_OF_DAY -> 1)

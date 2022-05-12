@@ -1,12 +1,11 @@
-package org.clulab.timenorm
+package org.clulab.timenorm.scfg
 
-import scala.util.Success
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FunSuite
 import java.time.temporal.ChronoUnit._
 
-@RunWith(classOf[JUnitRunner])
+import org.scalatest.FunSuite
+
+import scala.util.Success
+
 class TemporalExpressionParserTest extends FunSuite {
 
   test("works as described in documentation") {

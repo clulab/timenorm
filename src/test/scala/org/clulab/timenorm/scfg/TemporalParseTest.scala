@@ -1,4 +1,4 @@
-package org.clulab.timenorm.scfg.parse
+package org.clulab.timenorm.scfg
 
 import java.time.DayOfWeek
 import java.time.temporal.ChronoField._
@@ -6,15 +6,11 @@ import java.time.temporal.ChronoUnit._
 import java.time.temporal.IsoFields._
 import java.time.temporal.TemporalUnit
 
-import org.clulab.timenorm.{Modifier, TimeSpan}
-import org.clulab.timenorm.field._
-import org.junit.runner.RunWith
+import org.clulab.time._
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
 import scala.collection.immutable.Seq
 
-@RunWith(classOf[JUnitRunner])
 class TemporalParseTest extends FunSuite {
 
   test("resolves simple periods") {

@@ -1,11 +1,10 @@
-package org.clulab.timenorm.scfg.parse
+package org.clulab.timenorm.scfg
 
+import java.time.temporal._
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
-import java.time.temporal.{ChronoField, ChronoUnit, IsoFields, TemporalField, TemporalUnit}
 
-import org.clulab.timenorm.PeriodSet.{Frequency, Quantifier}
-import org.clulab.timenorm.{Modifier, Period, PeriodSet, TimeSpan, TimeSpanSet}
-import org.clulab.timenorm.field._
+import org.clulab.time._
+import org.clulab.timenorm.scfg.PeriodSet.{Frequency, Quantifier}
 import org.clulab.timenorm.scfg.SynchronousParser.Tree
 
 import scala.collection.immutable.Seq
