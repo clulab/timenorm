@@ -216,19 +216,8 @@ def to_digits(tree):
     return digits
 
 
+#
+# E.g.:
 # parser = SynchronousParser(sg.load_grammar("../resources/org/clulab/timenorm/en.numbers.grammar"))
-parser = SynchronousParser(sg.load_grammar("/home/egoitz/Home/Code/scala/geonorm/src/main/resources/en.grammar"))
-#result = parser.parse_all(["the", "first", "week", "of", "1976"])
-
-import sys
-instr = sys.argv[1]
-#instr = "the eastern slopes of the SHP , from SHP to SHP"
-result = parser.parse_all(instr.split(" "))
-result = to_digits(result[0])
-print(result)
-# result = to_digits(result[0])
-# result.reverse()
-# sum = 0
-# for magnitude, digit in enumerate(result):
-#     sum += 10 ** magnitude * digit
-# print(sum)
+# result = parser.parse_all(["the", "first", "week", "of", "1976"])
+#
