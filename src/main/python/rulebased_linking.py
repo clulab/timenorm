@@ -9,7 +9,7 @@ Created on Sat Feb 18 18:50:43 2017
 import os
 import re
 import argparse
-import glob
+from anafora import walk
 from lxml import etree
 import dateutil.parser as dprs
 
@@ -242,27 +242,8 @@ def process_documents(xml_paths, dct_paths, raw_paths, out_paths):
         link_entities(entities, text)
         complete_properties(entities, text, xml_tree, dctDayofWeek)
 
-        if not os.path.exists(os.path.dirname(out_file_path)):
-            os.makedirs(os.path.dirname(out_file_path))
+        os.makedirs(os.path.dirname(out_file_path), exist_ok=True)
         xml_tree.write(out_file_path, pretty_print=True)
-
-
-def get_file_paths(dir_path, doc_names, regex):
-    '''
-    Return a list of file paths found in dir_path that match regex.
-    :param dir_path string: the directory path
-    :param doc_names list string: the list of document names
-    :param regex raw string: the regular expression
-    :return list string:
-    '''
-    if dir_path is None:
-        return [None]*len(doc_names)
-    found_file_paths = []
-    for doc_name in doc_names:
-        file_paths_in_subpath = glob.glob(os.path.join(dir_path, doc_name, "*"))
-        matching_file_paths_in_subpath = [file_path for file_path in file_paths_in_subpath if re.search(regex, file_path)]
-        found_file_paths.extend(matching_file_paths_in_subpath)
-    return found_file_paths
 
 
 def create_file_paths(dir_path, doc_names, extension):
@@ -278,10 +259,25 @@ def create_file_paths(dir_path, doc_names, extension):
 
 
 def set_paths(in_path, dct_path, raw_path, out_path, extension):
-    doc_names = os.listdir(in_path)
-    xml_paths = get_file_paths(in_path, doc_names, r"\.xml$")
-    dct_paths = get_file_paths(dct_path, doc_names, r"\.dct$")
-    raw_paths = get_file_paths(raw_path, doc_names, r"(\.txt|[^.]{4}$)")
+    xml_paths = walk(in_path, r"\.xml$")
+    xml_paths = list(xml_paths)
+    doc_names = [path[1] for path in xml_paths]
+    xml_paths = [os.path.join(in_path, path[0], file_path)
+                 for path in xml_paths for file_path in path[2]]
+    if dct_path is None:
+        dct_paths = [None] * len(doc_names)
+    else:
+        dct_paths = walk(dct_path, r"\.dct$")
+        dct_paths = [os.path.join(in_path, path[0], file_path)
+                     for path in dct_paths for file_path in path[2]
+                     if path[1] in doc_names]
+    if raw_path is None:
+        raw_paths = [None] * len(doc_names)
+    else:
+        raw_paths = walk(raw_path, r"(\.txt|[^.]{4}$)")
+        raw_paths = [os.path.join(in_path, path[0], file_path)
+                     for path in raw_paths for file_path in path[2]
+                     if path[1] in doc_names]
     out_paths = create_file_paths(out_path, doc_names, extension)
     return xml_paths, dct_paths, raw_paths, out_paths
 
