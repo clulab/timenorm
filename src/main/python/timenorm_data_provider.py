@@ -82,13 +82,14 @@ class TimeDataProvider:
                 entity_id = entity.xml.find('id').text.split('@')[0]
                 entity_spans = entity.xml.find('span').text
                 entity_type = entity.xml.find('type').text
-                if entity_type == "Event": # do not consider event type entities at the moment
-                    continue
+                #if entity_type == "Event": # do not consider event type entities at the moment
+                 #   continue
                 related_entity_id = None
 
                 if entity.properties.xml.find(relation_to_extract) is not None:
                     if entity.properties.xml.find(relation_to_extract).text is not None:
                         related_entity_id = entity.properties.xml.find(relation_to_extract).text.split('@')[0] # id of the related entity
+
                 
                 entity_values['entity_spans'] = entity_spans
                 entity_values['entity_type'] = entity_type
@@ -137,6 +138,8 @@ class TimeDataProvider:
                     linked_id = entity_values["related_entity_id"]
                     entity_beginning_char = int(entity_values['entity_spans'].split(',')[0])
                     if linked_id not in doc_annotations.keys():
+                        print("linked_id: ",linked_id)
+                        print("entity_values: ", entity_values)
                         print("the entity that is linked does not exist in the document")
                         continue
                     linked_entity_values = doc_annotations[linked_id]
@@ -231,7 +234,11 @@ class TimeDataProvider:
         split_dict['labels_distance'] = labels_distance
 
         return Dataset.from_dict(split_dict)
+<<<<<<< Updated upstream
 
+=======
+    
+>>>>>>> Stashed changes
     def read_data_to_distance_format(self,
                                    fast_tokenizer: PreTrainedTokenizerFast,
                                    relation_to_extract: str,
@@ -243,7 +250,11 @@ class TimeDataProvider:
 
         return DatasetDict(dataset_dict)
 
+<<<<<<< Updated upstream
     def read_data_to_multi_label_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int) -> Tuple[List[str], List[str]]:
+=======
+    def read_data_to_multi_label_format(self, fast_tokenizer:  PreTrainedTokenizerFast, types:List[str], max_length:int, eval=False) -> Tuple[List[str], List[str]]:
+>>>>>>> Stashed changes
         """Read the data and format it for multi label token classification"""
 
         label_to_index = {l: i for i, l in enumerate(types)}

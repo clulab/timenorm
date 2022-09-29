@@ -20,7 +20,11 @@ index_to_distance = {v: k for k, v in distance_to_index.items()}
 
 weights = [1 if d=='None' else 500 for d in distances]
 
+<<<<<<< Updated upstream
 f = open('./example-data/types.txt')
+=======
+f = open('./utilTextFiles/types.txt')
+>>>>>>> Stashed changes
 lines = f.readlines()
 types = []
 for line in lines:
@@ -29,6 +33,7 @@ for line in lines:
 type_to_index = {l: i for i, l in enumerate(types)}
 index_to_type = {v: k for k, v in type_to_index.items()}
 
+<<<<<<< Updated upstream
 def load_data(tokenized_dataset, batch_size):
     
     train_dataloader = DataLoader(tokenized_dataset['train'], batch_size=batch_size)
@@ -36,6 +41,8 @@ def load_data(tokenized_dataset, batch_size):
     test_dataloader = DataLoader(tokenized_dataset['test'], batch_size=batch_size)
     
     return train_dataloader, eval_dataloader, test_dataloader
+=======
+>>>>>>> Stashed changes
 
 class RobertaForTokenClassificationCustom(RobertaForTokenClassification):
     def forward(
@@ -49,6 +56,10 @@ class RobertaForTokenClassificationCustom(RobertaForTokenClassification):
         labels_type=None,
         labels_distance=None,
         validity_dict=None,
+<<<<<<< Updated upstream
+=======
+        test=False,
+>>>>>>> Stashed changes
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
@@ -75,6 +86,7 @@ class RobertaForTokenClassificationCustom(RobertaForTokenClassification):
 
         sequence_output = self.dropout(sequence_output)
         logits = self.classifier(sequence_output)
+<<<<<<< Updated upstream
 
         loss = None
         
@@ -101,14 +113,55 @@ class RobertaForTokenClassificationCustom(RobertaForTokenClassification):
                         target_token_type = index_to_type[target_token_type_index]
                         if target_token_type not in validity_dict[token_type]: # check if neighbor token's type if it can be a valid relation
                             logits[i][j][index] = 0                                             # to predict for the original token
+=======
+        
+
+        loss = None
+        
+        if test:
+            return TokenClassifierOutput(
+            loss=loss,
+            logits=logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+            )
+        
+        weight = torch.tensor(weights, dtype=logits.dtype, device=labels_distance.device)
+        labels_distance = labels_distance.to(torch.long)
+        loss_fct = CrossEntropyLoss(weight=weight)
+        if validity_dict != None:
+            for i in range(len(labels_distance)):
+                for j in range(len(labels_distance[i])):
+                    token_distance_index = labels_distance.to("cpu").numpy()[i][j]
+                    token_type_index = labels_type.to("cpu").numpy()[i][j]
+                    token_distance = index_to_distance[token_distance_index]
+                    token_type = index_to_type[token_type_index]
+                    if token_distance != 'None':
+                        # check the neighbor tokens' type to see if they can be a valid relation to predict for the original token (labels[i][j]) 
+                        indices = []
+                        updates = []
+                        for index, distance in enumerate(distances): # explore the neighbor tokens
+                            if distance == 'None':
+                                continue    # because it is the original token itself
+                            target_j = j - int(distance) # reverse version of the equation to calculate distances while building the dataset
+                            if target_j < 0 or target_j > len(distances) -1: 
+                                continue        # if the target_j index is out of limits, pass
+                            target_token_type_index = labels_type.to("cpu").numpy()[i][target_j]
+                            target_token_type = index_to_type[target_token_type_index]
+                            if target_token_type not in validity_dict[token_type]: # check if neighbor token's type if it can be a valid relation
+                                logits[i][j][index] = 0                                                   # to predict for the original token
+>>>>>>> Stashed changes
         #print(labels_distance.shape)
         labels_distance = torch.reshape(labels_distance, (-1,)) # convert from shape (a, b) to (a*b,)
         #print(labels_distance.shape)
         #print(logits.shape)
         logits = torch.reshape(logits, (-1,logits.shape[-1])) # convert from shape (a, b, c) to (a*b, c)
         #print(logits.shape)
+<<<<<<< Updated upstream
         
 
+=======
+>>>>>>> Stashed changes
         loss = loss_fct(logits, labels_distance)
 
         if not return_dict:
