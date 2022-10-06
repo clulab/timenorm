@@ -43,7 +43,8 @@ class TimeDataProvider:
             if not dir_names:
 
                 # read the text from the text file
-                [text_file_name] = [f for f in file_names if not f.endswith(".xml")]
+                print(file_names)
+                [text_file_name] = [f for f in file_names if not (f.endswith(".xml") or f.endswith(".json") or f.startswith("."))]
                 text_path = os.path.join(dir_path, text_file_name)
                 with open(text_path) as text_file:
                     text = text_file.read()
@@ -181,13 +182,13 @@ class TimeDataProvider:
 
         # labels = np.empty(inputs["input_ids"].shape + (2,)) # added (2,) to get labels and types together in a list
         labels_type = np.empty(inputs["input_ids"].shape)
-        labels_distance = np.empty(inputs["input_ids"].shape)
+        labels_location = np.empty(inputs["input_ids"].shape)
 
         for i, sentence, token_tuples in self.iter_tokens(inputs, sentences): # go back to raw texts, 
                                                                          # and for each wordpiece assign a label: 
                                                                          # None if its not annotated
             text = sentence_texts[sentence]                              # None if annotated and no relation 
-            char_labels = sentence_char_labels[sentence]                 # distance if annotated and relation exist
+            char_labels = sentence_char_labels[sentence]                 # distance/lrd if annotated and relation exist
             for j, token_id, start, end in token_tuples:
                 # sanity check for mismatch between text and word-piece
                 word_piece = fast_tokenizer.decode(token_id)

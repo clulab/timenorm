@@ -19,7 +19,6 @@ dataset_path = "/xdisk/bethard/kbozler/timenorm/tempeval-2013-replicate-dataset-
 
 relation_to_extract = 'Sub-Interval'
 output_path = f"/xdisk/bethard/kbozler/timenorm/relation-extraction/method2/{relation_to_extract}/{model_name}/"
->>>>>>> Stashed changes
 distances = [
     '-6',
     '-5',
