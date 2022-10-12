@@ -6,14 +6,10 @@ from datasets import load_from_disk
 
 model_name = "roberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-output_path = f"/xdisk/bethard/kbozler/timenorm/relation-extraction/method2/{model_name}/"
-data_provider = TimeDataProvider(corpus_dir="./example-data")
-relation_to_extract = 'Sub-Interval'
-model_name = "roberta-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+output_path = f"/xdisk/bethard/kbozler/timenorm/relation-extraction/lrd/{model_name}/"
+relation_to_extract = 'Interval'
 
-dataset_path = "/xdisk/bethard/kbozler/timenorm/tempeval-2013-replicate-dataset-object"
-#data_provider = TimeDataProvider(corpus_dir="./tempeval-2013-replicate")
+dataset_path = "/xdisk/bethard/kbozler/timenorm/lrd/tempeval-2013-replicate-dataset-object"
 
 relation_to_extract = 'Sub-Interval'
 output_path = f"/xdisk/bethard/kbozler/timenorm/relation-extraction/method2/{relation_to_extract}/{model_name}/"
