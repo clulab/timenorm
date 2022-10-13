@@ -43,3 +43,20 @@ class Year(Interval):
                                        day = 1)
         self.end = self.start + dur.relativedelta(years = duration_in_years)
 
+@dataclasses.dataclass
+class YearSuffix(Interval):
+    interval: Interval
+    last_digits: int
+    n_suffix_digits: int
+    n_missing_digits: int = 0
+    trigger_char_span: Sequence[tuple[int, int]] = None
+    char_span: Sequence[tuple[int, int]] = field(init = False)
+    
+    def __post_init__(self):
+        max_span_idx = np.argmax([self.interval.char_span[1] - self.interval.char_span[0], 
+                        self.trigger_char_span[1] - self.trigger_char_span[0]])
+        self.char_span = self.interval.char_span if max_span_idx == 0 else self.trigger_char_span
+        divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
+        multiplier = 10 ** self.n_suffix_digits
+        year = Year(self.interval.start.year / divider * multiplier + self.last_digits, n_missing_digits)
+        super().__init__(year.start, year.end)
