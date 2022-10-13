@@ -1,6 +1,8 @@
 import dataclasses
+from dataclasses import field
 import datetime
 import dateutil.relativedelta as dur
+from collections.abc import Sequence
 
 
 @dataclasses.dataclass
@@ -25,3 +27,19 @@ class Interval:
         last_name += "s"
         end = start + dur.relativedelta(**{last_name: 1})
         return cls(start, end)
+
+@dataclasses.dataclass
+class Year(Interval):
+    digits: int
+    n_missing_digits: int = 0
+    char_span: Sequence[tuple[int, int]] = None
+    start: datetime.datetime = field(init = False)
+    end: datetime.datetime = field(init = False)
+    
+    def __post_init__(self):
+        duration_in_years = 10 ** self.n_missing_digits
+        self.start = datetime.datetime(year = self.digits * duration_in_years,
+                                       month = 1,
+                                       day = 1)
+        self.end = self.start + dur.relativedelta(years = duration_in_years)
+
