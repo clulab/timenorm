@@ -11,6 +11,9 @@ class Interval:
     start: datetime.datetime
     end: datetime.datetime
 
+    def isoformat(self):
+        return f"{self.start.isoformat()}-{self.end.isoformat()}"
+
     @classmethod
     def of(cls, year, *args):
         # match Interval.of arguments with datetime.__init__ arguments
