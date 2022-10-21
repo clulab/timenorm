@@ -12,7 +12,7 @@ class Interval:
     end: datetime.datetime
 
     def isoformat(self):
-        return f"{self.start.isoformat()}-{self.end.isoformat()}"
+        return f"{self.start.isoformat()} {self.end.isoformat()}"
 
     @classmethod
     def of(cls, year, *args):
@@ -39,7 +39,7 @@ class Year(Interval):
     char_span: Sequence[tuple[int, int]] = None
     start: datetime.datetime = field(init = False)
     end: datetime.datetime = field(init = False)
-    
+    # create start and end instance variables using passed in values.
     def __post_init__(self):
         duration_in_years = 10 ** self.n_missing_digits
         self.start = datetime.datetime(year = self.digits * duration_in_years,
@@ -53,29 +53,12 @@ class YearSuffix(Interval):
     last_digits: int
     n_suffix_digits: int
     n_missing_digits: int = 0
-    trigger_char_span: Sequence[tuple[int, int]] = None
-    char_span: Sequence[tuple[int, int]] = field(init = False)
     start: datetime.datetime = field(init = False)
     end: datetime.datetime = field(init = False)
     
     def __post_init__(self):
-        self.char_span = max_span(self.interval.char_span, self.trigger_char_span)
-        divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
-        multiplier = 10 ** self.n_suffix_digits
-        year = Year(int(self.interval.start.year / divider * multiplier + self.last_digits), self.n_missing_digits)
+        divider = int(10 ** (self.n_suffix_digits + self.n_missing_digits))
+        multiplier = int(10 ** self.n_suffix_digits)
+        year = Year(self.interval.start.year // divider * multiplier + self.last_digits, self.n_missing_digits)
         self.start = year.start
         self.end = year.end
-
-def max_span(interval_span, trigger_span):
-    '''
-    This is a helper function created to determine, between two spans, which is longer.
-    Parameters:
-    :interval_span: :trigger_span: tuple[int, int]
-    Returns:
-    A span (tuple of ints) - either interval_span or trigger_span
-    '''
-    if not trigger_span:
-        return interval_span
-    max_span_idx = np.argmax([interval_span[1] - interval_span[0], 
-                            trigger_span[1] - trigger_span[0]])
-    return interval_span if max_span_idx == 0 else trigger_span
