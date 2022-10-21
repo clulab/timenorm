@@ -64,7 +64,7 @@ class YearSuffix(Interval):
         self.end = year.end
 
 @dataclasses.dataclass
-class Period: # TODO: do I need to use this ?
+class Period:
     unit: str
     n: int
     def __post_init__(self):
@@ -75,7 +75,6 @@ class Period: # TODO: do I need to use this ?
             raise NameError(f'"{self.unit}" not a valid time unit. Options are:' + \
                 '\n"year", "month", "day", "hour", "minute", "second", "microsecond"')
         self.unit += "s"
-        # if n is not an integer, throw TypeError
         if type(self.n) != int:
             raise TypeError(self.__repr__ + "does not support" + str(type(self.n)))
 
@@ -84,3 +83,18 @@ class Period: # TODO: do I need to use this ?
 
     def subtract_from(self, date: datetime.datetime):
         return date - dur.relativedelta(**{self.unit: self.n})
+    
+    @staticmethod
+    def expand(interval: Interval, period: Period) -> Interval:
+        # if the end date of interval is larger than the start increased by the period
+        # return the interval
+        if interval.end >= period.add_to(interval.start):
+             return interval
+        mid = interval.start + (interval.end - interval.end) / 2
+        half_period = (period.subtract_from(interval.start) - interval.start) / 2
+        start = mid - half_period
+        return Interval(start, start + period)
+
+    @staticmethod
+    def one_unit(period: Period) -> Period:
+        return Period(period.unit, 1)
