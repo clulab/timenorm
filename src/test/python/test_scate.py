@@ -1,4 +1,5 @@
 import scate
+import datetime
 
 
 def test_interval():
@@ -23,3 +24,9 @@ def test_year_suffix():
     assert scate.YearSuffix(scate.Year(1903), 3, 1, 1).isoformat() == "1930-01-01T00:00:00 1940-01-01T00:00:00"
     assert scate.YearSuffix(scate.Year(132, 1), 8, 1, 1).isoformat() == "1380-01-01T00:00:00 1390-01-01T00:00:00"
     assert scate.YearSuffix(scate.Year(132, 1), 240, 3, 1).isoformat() == "2400-01-01T00:00:00 2410-01-01T00:00:00"
+
+def test_period():
+    date = datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
+    period = scate.Period("year", 5)
+    assert period.add_to(date).isoformat() == "2005-01-01T00:00:00" 
+    assert period.subtract_from(date).isoformat() == "1995-01-01T00:00:00" 

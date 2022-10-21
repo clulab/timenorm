@@ -62,3 +62,25 @@ class YearSuffix(Interval):
         year = Year(self.interval.start.year // divider * multiplier + self.last_digits, self.n_missing_digits)
         self.start = year.start
         self.end = year.end
+
+@dataclasses.dataclass
+class Period: # TODO: do I need to use this ?
+    unit: str
+    n: int
+    def __post_init__(self):
+        # if unit is not in recognizable format, throw error with guidance. 
+        # Otherwise, add 's' to end of unit for use in dur.relativedelta
+        names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]
+        if self.unit not in names:
+            raise NameError(f'"{self.unit}" not a valid time unit. Options are:' + \
+                '\n"year", "month", "day", "hour", "minute", "second", "microsecond"')
+        self.unit += "s"
+        # if n is not an integer, throw TypeError
+        if type(self.n) != int:
+            raise TypeError(self.__repr__ + "does not support" + str(type(self.n)))
+
+    def add_to(self, date: datetime.datetime): # TODO: QUESTION: way to override __add__ instead?
+        return date + dur.relativedelta(**{self.unit: self.n})
+
+    def subtract_from(self, date: datetime.datetime):
+        return date - dur.relativedelta(**{self.unit: self.n})
