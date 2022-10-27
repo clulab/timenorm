@@ -1,5 +1,6 @@
 import scate
 import datetime
+from time_unit import TimeUnit
 
 
 def test_interval():
@@ -30,3 +31,21 @@ def test_period():
     period = scate.Period("year", 5)
     assert period.add_to(date).isoformat() == "2005-01-01T00:00:00" 
     assert period.subtract_from(date).isoformat() == "1995-01-01T00:00:00" 
+
+def test_truncate():
+    date = datetime.datetime(2026, 2, 3, 1, 7, 35, 30)
+    assert TimeUnit.truncate(date, TimeUnit.QUARTER_CENTURY).isoformat() == "2025-01-01T00:00:00"
+    assert TimeUnit.truncate(date, TimeUnit.CENTURY).isoformat() == "2000-01-01T00:00:00"
+    assert TimeUnit.truncate(date, TimeUnit.DECADE).isoformat() == "2020-01-01T00:00:00"
+
+def test_this_p():
+    period1 = scate.Period("year", 1)
+    year = scate.Year(2002)
+    this_period = scate.ThisP(year, period1)
+    assert this_period.start.isoformat() == "2002-01-01T00:00:00"
+    assert this_period.end.isoformat() == "2003-01-01T00:00:00"
+    interval = scate.Interval(datetime.datetime(2001, 1, 1), datetime.datetime(2001, 1, 1))
+    period2 = scate.Period("day", 5)
+    this_period2 = scate.ThisP(interval, period2)
+    assert this_period2.start.isoformat() == "2000-12-29T12:00:00"
+    assert this_period2.end.isoformat() == "2001-01-03T12:00:00"

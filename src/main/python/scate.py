@@ -4,13 +4,14 @@ import datetime
 import dateutil.relativedelta as dur
 from collections.abc import Sequence
 import numpy as np
+from time_unit import TimeUnit
 
 
 @dataclasses.dataclass
 class Interval:
     start: datetime.datetime
     end: datetime.datetime
-
+    
     def isoformat(self):
         return f"{self.start.isoformat()} {self.end.isoformat()}"
 
@@ -64,7 +65,7 @@ class YearSuffix(Interval):
         self.end = year.end
 
 @dataclasses.dataclass
-class Period:
+class Period: # extend relative delta
     unit: str
     n: int
     def __post_init__(self):
@@ -72,29 +73,74 @@ class Period:
         # Otherwise, add 's' to end of unit for use in dur.relativedelta
         names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]
         if self.unit not in names:
-            raise NameError(f'"{self.unit}" not a valid time unit. Options are:' + \
+            raise ValueError(f'"{self.unit}" not a valid time unit. Options are:' + \
                 '\n"year", "month", "day", "hour", "minute", "second", "microsecond"')
         self.unit += "s"
         if type(self.n) != int:
             raise TypeError(self.__repr__ + "does not support" + str(type(self.n)))
-
-    def add_to(self, date: datetime.datetime): # TODO: QUESTION: way to override __add__ instead?
+    # try to use relative delta instead of add_to and subtract_from
+    def add_to(self, date: datetime.datetime): # way to override __add__ instead? __add__, __radd__
         return date + dur.relativedelta(**{self.unit: self.n})
 
     def subtract_from(self, date: datetime.datetime):
         return date - dur.relativedelta(**{self.unit: self.n})
     
     @staticmethod
-    def expand(interval: Interval, period: Period) -> Interval:
+    def expand(interval: Interval, period) -> Interval:
         # if the end date of interval is larger than the start increased by the period
         # return the interval
-        if interval.end >= period.add_to(interval.start):
-             return interval
-        mid = interval.start + (interval.end - interval.end) / 2
-        half_period = (period.subtract_from(interval.start) - interval.start) / 2
+        # 
+        mid = interval.start + (interval.end - interval.start) / 2
+        half_period = (interval.start - period.subtract_from(interval.start)) / 2
         start = mid - half_period
-        return Interval(start, start + period)
+        return Interval(start, period.add_to(start))
 
     @staticmethod
-    def one_unit(period: Period) -> Period:
+    def one_unit(period):
         return Period(period.unit, 1)
+
+    @staticmethod
+    def expand_if_larger(interval: Interval, period) -> Interval:
+        return Period.expand(interval, period) if interval.end >= period.add_to(interval.start) else interval
+
+@dataclasses.dataclass
+class ThisP(Interval):
+    interval: Interval
+    period: Period
+    start: datetime.datetime = field(init = False)
+    end:datetime.datetime = field(init = False)
+
+    def __post_init__(self):
+        this_period = Period.expand(self.interval, self.period)
+        self.start = this_period.start
+        self.end = this_period.end
+
+@dataclasses.dataclass
+class RepeatingInterval:
+    preceding: datetime.datetime # = iter(Interval) TODO: this isn't right, figure out what the scala code is doing
+    following: datetime.datetime # = iter(Interval)
+    base: TimeUnit # unit
+    range: TimeUnit # unit
+
+@dataclasses.dataclass
+class RepeatingUnit(RepeatingInterval):
+    unit: TimeUnit
+    base: TimeUnit = field(init = False)
+    range: TimeUnit = field(init = False)
+    
+    def __post_init__(self):
+        self.base = self.unit
+        self.range = self.unit
+    
+    def preceding(self, ldt: datetime.datetime):
+        dt_unit = self.unit.name.lower() + "s" #converting TimeUnit to datetime format
+        end = TimeUnit.truncate(ldt, self.unit) + dur.relativedelta(**{dt_unit: 1})
+        start = end - dur.relativedelta(**{dt_unit:1})
+        while True:
+            end = start
+            start = start - dur.relativedelta(**{dt_unit:1})
+            # break condition? When does this end?
+
+
+        
+
