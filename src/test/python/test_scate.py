@@ -37,6 +37,10 @@ def test_truncate():
     assert TimeUnit.truncate(date, TimeUnit.QUARTER_CENTURY).isoformat() == "2025-01-01T00:00:00"
     assert TimeUnit.truncate(date, TimeUnit.CENTURY).isoformat() == "2000-01-01T00:00:00"
     assert TimeUnit.truncate(date, TimeUnit.DECADE).isoformat() == "2020-01-01T00:00:00"
+    date2 = datetime.datetime(2022, 10, 27, 7, 0, 0, 0)
+    assert TimeUnit.truncate(date2, TimeUnit.WEEK).isoformat() == "2022-10-24T00:00:00"
+    # TODO: ask Steve about this, isoformat doesn't include milliseconds? Or should it?
+    # assert TimeUnit.truncate(date2, TimeUnit.MILLISECOND).isoformat() == "2022-10-27T07:00:00.000"
 
 def test_this_p():
     period1 = scate.Period("year", 1)
@@ -49,3 +53,10 @@ def test_this_p():
     this_period2 = scate.ThisP(interval, period2)
     assert this_period2.start.isoformat() == "2000-12-29T12:00:00"
     assert this_period2.end.isoformat() == "2001-01-03T12:00:00"
+
+def test_repeating_unit():
+    repeating_unit = scate.RepeatingUnit(TimeUnit.YEAR)
+    preceding = repeating_unit.preceding(datetime.datetime(2000, 1, 1))
+    assert next(preceding).start.isoformat() == "1999-01-01T00:00:00"
+    assert next(preceding).start.isoformat() == "1998-01-01T00:00:00"
+
