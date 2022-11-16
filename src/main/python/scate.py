@@ -3,9 +3,84 @@ from dataclasses import field
 import datetime
 import dateutil.relativedelta as dur
 from collections.abc import Sequence, Iterator
+from collections import namedtuple
 import numpy as np
-from time_unit import TimeUnit
+from enum import Enum
 
+class TimeUnit(Enum):
+    # values of units are (ISO offset, base name, range name)
+    # base name is required due to presence of units such as "DAY_OF_MONTH" where base needs to be specified.
+    MICROSECOND = (None, "MICROSECOND","SECOND")
+    MILLISECOND = (23, "MILLISECOND","SECOND")
+    SECOND = (19, "SECOND","MINUTE")
+    MINUTE = (16, "MINUTE","HOUR")
+    HOUR = (13, "HOUR","DAY")
+    DAY_OF_WEEK = (None, "DAY", "WEEK")
+    DAY_OF_MONTH = (10, "DAY", "MONTH")
+    DAY_OF_YEAR = (None, "DAY", "YEAR")
+    DAY = tuple(DAY_OF_MONTH)
+    WEEK_OF_MONTH = (None, "WEEK", "MONTH")
+    WEEK_OF_YEAR = (None, "WEEK", "YEAR")
+    WEEK = tuple(WEEK_OF_YEAR)
+    MONTH_OF_YEAR = (None, "MONTH", "YEAR")
+    MONTH = tuple(MONTH_OF_YEAR)
+    QUARTER_YEAR = (None, "QUARTER_YEAR", "YEAR")
+    YEAR = (None, "YEAR", None)
+    DECADE = (None, "DECADE", None)
+    QUARTER_CENTURY = (None, "QUARTER_CENTURY", None) 
+    CENTURY = (None, "CENTURY", None)
+
+    def __init__(self, iso_offset, base_name, range_name):
+        self.iso_offset = iso_offset
+        self.base_name = base_name
+        self.range_name = range_name
+
+    @property
+    def base(self):
+        return TimeUnit[self.base_name]
+    
+    @property
+    def range(self):
+        return TimeUnit[self.range_name]
+    
+    @property
+    def dt_format(self):
+        if self.name in ["MONTH_OF_YEAR", "DAY_OF_MONTH"]:
+            return self.name.split("_OF_")[0].lower()
+        elif self.name not in ["YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "MICROSECOND"]:
+            raise ValueError(f"{self.name} unit type does not exist for datetime objects")
+        return self.name.lower()
+    
+    @property
+    def rd_format(self):
+        if self.name in ["MONTH_OF_YEAR", "DAY_OF_MONTH"]:
+            return self.dt_format + "s"
+        if self.name not in ["YEAR", "MONTH", "WEEK", "DAY", "HOUR", "MINUTE", "SECOND", "MICROSECOND"]:
+            raise ValueError(f"{self.name} unit type does not exist in dateutil.relativedelta")
+        return self.dt_format + "s"
+
+    @staticmethod
+    def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
+        if unit == TimeUnit.MICROSECOND:
+            return ldt
+        elif unit.iso_offset: # if we can use iso string to truncate
+            return datetime.datetime.fromisoformat(ldt.isoformat()[:unit.iso_offset])
+        else: # special cases, further calculation/specification needed
+            if unit == TimeUnit.CENTURY:
+                return datetime.datetime(ldt.year // 100 * 100, 1, 1, 0, 0)
+            elif unit == TimeUnit.QUARTER_CENTURY:
+                return datetime.datetime(ldt.year // 25 * 25, 1, 1, 0, 0)
+            elif unit == TimeUnit.DECADE:
+                return datetime.datetime(ldt.year // 10 * 10, 1, 1, 0, 0)
+            elif unit == TimeUnit.YEAR:
+                return datetime.datetime(ldt.year, 1, 1, 0, 0)
+            elif unit == TimeUnit.QUARTER_YEAR:
+                return datetime.datetime(ldt.year, (ldt.month - 1) // 3 * 3 + 1, 1, 0, 0)
+            elif unit == TimeUnit.MONTH: # shouldn't MONTH_OF_YEAR be the same?
+                return datetime.datetime(ldt.year, ldt.month, 1, 0, 0)
+            elif unit == TimeUnit.WEEK:
+                week_start = datetime.date.fromordinal(ldt.timetuple().tm_yday - ldt.timetuple().tm_wday)
+                return datetime.datetime(ldt.year, week_start.month, week_start.day, 0, 0)
 
 @dataclasses.dataclass
 class Interval:
@@ -146,6 +221,40 @@ class RepeatingUnit(RepeatingInterval):
             start = end
             end = start + dur.relativedelta(**{self.unit.rd_format:1})
             yield Interval(start, end)
+
+@dataclasses.dataclass
+class RepeatingField(RepeatingInterval):
+    field: TimeUnit
+    value: int
+    base: TimeUnit = field(init = False)
+    range: TimeUnit = field(init = False)
+
+    def __post_init__(self):
+        self.base = self.field.base                                                       
+        self.range = self.field.range
+    
+    def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
+        # update date to use field value (i.e., update ldt.month so MONTH == 5 when ldt.month is 1)
+        # then truncate to the base unit.
+        start = TimeUnit.truncate(ldt.replace(**{self.field.dt_format:self.value}),
+                                    # + dur.relativedelta(**{self.range.rd_format: 1})),
+                                self.base)
+        end = start + dur.relativedelta(**{self.base.rd_format: 1})
+        if not ldt < end:
+            start += dur.relativedelta(**{self.range.rd_format: 1})
+        while True:
+            start -= dur.relativedelta(**{self.range.rd_format: 1})
+            yield Interval(start, start + dur.relativedelta(**{self.base.rd_format: 1}))
+    
+    def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
+        start = TimeUnit.truncate(ldt.replace(**{self.field.dt_format:self.value}), self.base)
+        if not start < ldt:
+            start -= dur.relativedelta(**{self.range.rd_format: 1})
+        while True:
+            start += dur.relativedelta(**{self.range.rd_format: 1})
+            yield Interval(start, start + dur.relativedelta(**{self.base.rd_format: 1}))
+
+
 
 
         
