@@ -70,12 +70,23 @@ def test_repeating_field():
 
     day29 = scate.RepeatingField(scate.TimeUnit.DAY_OF_MONTH, 29)
     pre2 = day29.preceding(interval.start)
-    assert next(pre2).isoformat() == "2002-02-28T00:00:00 2002-03-01T00:00:00"
-    assert next(pre2).isoformat() == "2001-12-29T00:00:00 2002-12-30T00:00:00"
+    assert next(pre2).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
+    assert next(pre2).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
     post2 = day29.following(interval.end)
     assert next(post2).isoformat() == "2003-05-29T00:00:00 2003-05-30T00:00:00"
     assert next(post2).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
 
+    # make sure that preceding and following are strict (no overlap allowed)
+    nov = scate.RepeatingField(scate.TimeUnit.MONTH_OF_YEAR, 11)
+    nov_start = datetime.datetime(1989, 11, 2)
+    assert next(nov.preceding(nov_start)).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
+    assert next(nov.following(nov_start)).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
 
+    day31 = scate.RepeatingField(scate.TimeUnit.DAY_OF_MONTH, 31)
+    start_of_mar_1980 = datetime.datetime(1980, 3, 1)
+    assert next(day31.following(start_of_mar_1980)).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
+    feb15 = datetime.datetime(2000, 2, 15)
+    assert next(day31.following(feb15)).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
+    assert next(day31.preceding(feb15)).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
     
 
