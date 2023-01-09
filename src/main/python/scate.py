@@ -13,30 +13,32 @@ from enum import Enum
 class TimeUnit(Enum):
     # values of units are (ISO offset, base name, range name)
     # base name is required due to presence of units such as "DAY_OF_MONTH" where base needs to be specified.
-    MICROSECOND = (None, "MICROSECOND","SECOND")
-    MILLISECOND = (23, "MILLISECOND","SECOND")
-    SECOND = (19, "SECOND","MINUTE")
-    MINUTE = (16, "MINUTE","HOUR")
-    HOUR = (13, "HOUR","DAY")
-    DAY_OF_WEEK = (None, "DAY", "WEEK")
-    DAY_OF_MONTH = (10, "DAY", "MONTH")
-    DAY_OF_YEAR = (None, "DAY", "YEAR")
+    MICROSECOND = (None, "MICROSECOND","SECOND", None, None)
+    MILLISECOND = (23, "MILLISECOND","SECOND", None, None)
+    SECOND = (19, "SECOND","MINUTE", SECONDLY, "bysecond")
+    MINUTE = (16, "MINUTE","HOUR", MINUTELY, "byminute")
+    HOUR = (13, "HOUR","DAY", HOURLY, "byhour")
+    DAY_OF_WEEK = (None, "DAY", "WEEK", DAILY, "byweekday")
+    DAY_OF_MONTH = (10, "DAY", "MONTH", DAILY, "bymonthday")
+    DAY_OF_YEAR = (None, "DAY", "YEAR", DAILY, "byyearday")
     DAY = tuple(DAY_OF_MONTH)
-    WEEK_OF_MONTH = (None, "WEEK", "MONTH")
-    WEEK_OF_YEAR = (None, "WEEK", "YEAR")
+    WEEK_OF_MONTH = (None, "WEEK", "MONTH", None, None)
+    WEEK_OF_YEAR = (None, "WEEK", "YEAR", WEEKLY, "byweekno")
     WEEK = tuple(WEEK_OF_YEAR)
-    MONTH_OF_YEAR = (None, "MONTH", "YEAR")
+    MONTH_OF_YEAR = (None, "MONTH", "YEAR", MONTHLY, "bymonth")
     MONTH = tuple(MONTH_OF_YEAR)
-    QUARTER_YEAR = (None, "QUARTER_YEAR", "YEAR")
-    YEAR = (None, "YEAR", None)
-    DECADE = (None, "DECADE", None)
-    QUARTER_CENTURY = (None, "QUARTER_CENTURY", None) 
-    CENTURY = (None, "CENTURY", None)
+    QUARTER_YEAR = (None, "QUARTER_YEAR", "YEAR", None, None)
+    YEAR = (None, "YEAR", None, YEARLY, None)
+    DECADE = (None, "DECADE", None, None, None)
+    QUARTER_CENTURY = (None, "QUARTER_CENTURY", None, None, None)
+    CENTURY = (None, "CENTURY", None, None, None)
 
-    def __init__(self, iso_offset, base_name, range_name):
+    def __init__(self, iso_offset, base_name, range_name, rrule_freq, rrule_by):
         self.iso_offset = iso_offset
         self.base_name = base_name
         self.range_name = range_name
+        self.rrule_freq = rrule_freq
+        self.rrule_by = rrule_by
 
     @property
     def base(self):
@@ -61,23 +63,6 @@ class TimeUnit(Enum):
         if self.name not in ["YEAR", "MONTH", "WEEK", "DAY", "HOUR", "MINUTE", "SECOND", "MICROSECOND"]:
             raise ValueError(f"{self.name} unit type does not exist in dateutil.relativedelta")
         return self.dt_format + "s"
-    
-    @property
-    def rrule_format(self):
-        rrule_map = {"YEAR":YEARLY,
-            "MONTH": MONTHLY,
-            "WEEK": WEEKLY,
-            "DAY": DAILY,
-            "HOUR": HOURLY,
-            "MINUTE": MINUTELY,
-            "SECOND": SECONDLY}
-        if self.name == "MONTH_OF_YEAR":
-            return rrule_map["MONTH"]
-        elif self.name in ["DAY_OF_MONTH", "DAY"]:
-            return rrule_map["DAY"]
-        elif self.name not in ["YEAR", "MONTH", "WEEK", "HOUR", "MINUTE", "SECOND"]:
-            raise ValueError(f"{self.name} unit type does not exist in dateutil.rrule")
-        return rrule_map[self.name]
 
     @staticmethod
     def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
@@ -250,51 +235,24 @@ class RepeatingField(RepeatingInterval):
     range: TimeUnit = field(init = False)
 
     def __post_init__(self):
-        self.base = self.field.base                                                       
+        self.base = self.field.base
         self.range = self.field.range
-     
+        self._rrule_kwargs = {"freq": self.range.rrule_freq, self.base.rrule_by: self.value}
+        self._one_range = dur.relativedelta(**{self.range.rd_format: 1})
+        self._one_base = dur.relativedelta(**{self.base.rd_format: 1})
+
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        # update date to use field value (i.e., update ldt.month so MONTH == 5 when ldt.month is 1)
-        # then truncate to the base unit.
-        # this is opposite of what was done in scala (minus instead of plus)
-        start = TimeUnit.truncate(self._with_field_value(ldt, "minus"), self.base)
-        end = rrule(freq=self.base.rrule_format, dtstart = start).after(start)
-        if not ldt < end:
-            start = rrule(freq=self.range.rrule_format, dtstart = start).after(start)
         while True:
-            # start this rule 2 range before the current start, to get "before"
-            early_start = start - dur.relativedelta(**{self.range.rd_format: 2})
-            start = rrule(freq = self.range.rrule_format, dtstart = early_start).before(start)
-            yield Interval(start, rrule(freq = self.base.rrule_format, dtstart = start).after(start))
+            # rrule requires a starting point even when going backwards, so start twice the expected range
+            ldt = rrule(dtstart=ldt - 2 * self._one_range, **self._rrule_kwargs).before(ldt)
+            ldt = TimeUnit.truncate(ldt, self.base)
+            yield Interval(ldt, ldt + self._one_base)
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        # this is opposite of what was done in scala (plus instead of minus)
-        start = TimeUnit.truncate(self._with_field_value(ldt, "plus"), self.base)
-        if not start < ldt:
-            # start this rule 2 range before the current start, to get "before"
-            early_start = start - dur.relativedelta(**{self.range.rd_format: 2})
-            start = rrule(freq = self.range.rrule_format, dtstart = early_start).before(start)
         while True:
-            start = rrule(freq=self.range.rrule_format, dtstart = start).after(start)
-            yield Interval(start, rrule(freq = self.base.rrule_format, dtstart = start).after(start))
-    
-    def _with_field_value(self, ldt, operation):
-        # need a check for valid field value, should raise error?
-        # TODO: not certain this is equivalent (or, equivalent enough)
-        while True:
-            try:
-                return ldt.replace(**{self.field.dt_format:self.value})
-            except:
-                try:
-                    if operation == "minus":
-                        early_start = ldt - dur.relativedelta(**{self.range.rd_format: 1})
-                        ldt = rrule(freq=self.range.rrule_format, dtstart=early_start).before(ldt)
-                    elif operation == "plus":
-                        ldt = rrule(freq=self.range.rrule_format, dtstart = ldt).after(ldt)
-                    return ldt.replace(**{self.field.dt_format:self.value})
-                except:
-                    continue
-                
+            ldt = rrule(dtstart=ldt, **self._rrule_kwargs).after(ldt)
+            ldt = TimeUnit.truncate(ldt, self.base)
+            yield Interval(ldt, ldt + self._one_base)
 
 
 
