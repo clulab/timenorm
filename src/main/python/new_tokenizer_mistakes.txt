@@ -1,0 +1,72 @@
+start span is correct, end span is wrong:
+filename: wsj_0027 tokenizer start: 526 tokenizer end: 534 tokenized word: achieved original start: 526 original end: 549 original word: achieved and maintained
+filename: wsj_0165 tokenizer start: 882 tokenizer end: 883 tokenized word: 1 original start: 882 original end: 886 original word: 1.76
+filename: PRI19980303.2000.2550 tokenizer start: 3473 tokenizer end: 3476 tokenized word: one original start: 3473 original end: 3480 original word: one day
+filename: CNN19980223.1130.0960 tokenizer start: 659 tokenizer end: 667 tokenized word: nineteen original start: 659 original end: 679 original word: nineteen ninety-four
+filename: PRI19980205.2000.1998 tokenizer start: 668 tokenizer end: 671 tokenized word: two original start: 668 original end: 680 original word: two thousand
+filename: NYT19980206.0460 tokenizer start: 905 tokenizer end: 908 tokenized word: has original start: 905 original end: 913 original word: has been
+filename: NYT19980206.0460 tokenizer start: 1095 tokenizer end: 1102 tokenized word: quarter original start: 1095 original end: 1110 original word: quarter-century
+filename: AP900816-0139 tokenizer start: 4346 tokenizer end: 4352 tokenized word: fairly original start: 4346 original end: 4367 original word: fairly lengthy period
+filename: VOA19980331.1700.1533 tokenizer start: 1350 tokenizer end: 1353 tokenized word: two original start: 1350 original end: 1360 original word: two to six
+filename: VOA19980331.1700.1533 tokenizer start: 2252 tokenizer end: 2255 tokenized word: ten original start: 2252 original end: 2264 original word: ten thousand
+filename: ea980120.1830.0456 tokenizer start: 22 tokenizer end: 28 tokenized word: 980120 original start: 22 original end: 24 original word: 98
+filename: APW19980219.0476 tokenizer start: 2982 tokenizer end: 2984 tokenized word: 19 original start: 2982 original end: 2987 original word: 1970s
+filename: AP900815-0044 tokenizer start: 7754 tokenizer end: 7760 tokenized word: Desert original start: 7754 original end: 7767 original word: Desert Shield
+filename: AP900815-0044 tokenizer start: 30 tokenizer end: 33 tokenized word: EDT original start: 30 original end: 34 original word: EDT
+
+filename: AP900815-0044 tokenizer start: 1439 tokenizer end: 1443 tokenized word: some original start: 1439 original end: 1448 original word: some time
+filename: CNN19980227.2130.0067 tokenizer start: 317 tokenizer end: 325 tokenized word: nineteen original start: 317 original end: 336 original word: nineteen ninety-six
+filename: CNN19980227.2130.0067 tokenizer start: 408 tokenizer end: 416 tokenized word: nineteen original start: 408 original end: 429 original word: nineteen ninety-seven
+filename: CNN19980227.2130.0067 tokenizer start: 1707 tokenizer end: 1715 tokenized word: nineteen original start: 1707 original end: 1728 original word: nineteen ninety-seven
+filename: APW19980227.0487 tokenizer start: 608 tokenizer end: 612 tokenized word: more original start: 608 original end: 617 original word: more than
+filename: ABC19980108.1830.0711 tokenizer start: 670 tokenizer end: 673 tokenized word: Not original start: 670 original end: 683 original word: Not that long
+filename: ABC19980108.1830.0711 tokenizer start: 266 tokenizer end: 272 tokenized word: twenty original start: 266 original end: 277 original word: twenty four
+filename: APW19980808.0022 tokenizer start: 1550 tokenizer end: 1554 tokenized word: 0735 original start: 1550 original end: 1552 original word: 07
+filename: PRI19980121.2000.2591 tokenizer start: 697 tokenizer end: 700 tokenized word: two original start: 697 original end: 709 original word: two thousand
+filename: PRI19980121.2000.2591 tokenizer start: 687 tokenizer end: 691 tokenized word: more original start: 687 original end: 696 original word: more than
+filename: PRI19980121.2000.2591 tokenizer start: 329 tokenizer end: 337 tokenized word: nineteen original start: 329 original end: 350 original word: nineteen seventy-nine
+filename: ed980111.1130.0089 tokenizer start: 22 tokenizer end: 28 tokenized word: 980111 original start: 22 original end: 24 original word: 98
+filename: VOA19980303.1600.2745 tokenizer start: 1855 tokenizer end: 1860 tokenized word: fifty original start: 1855 original end: 1869 original word: fifty thousand
+filename: VOA19980303.1600.2745 tokenizer start: 2237 tokenizer end: 2240 tokenized word: two original start: 2237 original end: 2249 original word: two thousand
+filename: CNN19980222.1130.0084 tokenizer start: 581 tokenizer end: 583 tokenized word: no original start: 581 original end: 593 original word: no more than
+filename: APW19980418.0210 tokenizer start: 1151 tokenizer end: 1154 tokenized word: one original start: 1151 original end: 1158 original word: one day
+filename: APW19980227.0494 tokenizer start: 1541 tokenizer end: 1545 tokenized word: May. original start: 1541 original end: 1544 original word: May
+filename: APW19980227.0494 tokenizer start: 1856 tokenizer end: 1858 tokenized word: at original start: 1856 original end: 1864 original word: at least
+filename: APW19980227.0494 tokenizer start: 2819 tokenizer end: 2830 tokenized word: foreseeable original start: 2819 original end: 2837 original word: foreseeable future
+filename: APW19980227.0494 tokenizer start: 3020 tokenizer end: 3023 tokenized word: the original start: 3020 original end: 3028 original word: the past
+start span is wrong, end span is correct:
+filename: wsj_0027 tokenizer start: 539 tokenizer end: 549 tokenized word: maintained original start: 526 original end: 549 original word: achieved and maintained
+filename: NYT19980402.0453 tokenizer start: 304 tokenizer end: 310 tokenized word: c.1998 original start: 306 original end: 310 original word: 1998
+filename: wsj_0165 tokenizer start: 883 tokenizer end: 886 tokenized word: .76 original start: 882 original end: 886 original word: 1.76
+filename: PRI19980303.2000.2550 tokenizer start: 3477 tokenizer end: 3480 tokenized word: day original start: 3473 original end: 3480 original word: one day
+filename: CNN19980223.1130.0960 tokenizer start: 675 tokenizer end: 679 tokenized word: four original start: 659 original end: 679 original word: nineteen ninety-four
+filename: PRI19980205.2000.1998 tokenizer start: 672 tokenizer end: 680 tokenized word: thousand original start: 668 original end: 680 original word: two thousand
+filename: NYT19980206.0460 tokenizer start: 449 tokenizer end: 455 tokenized word: c.1998 original start: 451 original end: 455 original word: 1998
+filename: NYT19980206.0460 tokenizer start: 909 tokenizer end: 913 tokenized word: been original start: 905 original end: 913 original word: has been
+filename: NYT19980206.0460 tokenizer start: 1103 tokenizer end: 1110 tokenized word: century original start: 1095 original end: 1110 original word: quarter-century
+filename: AP900816-0139 tokenizer start: 4361 tokenizer end: 4367 tokenized word: period original start: 4346 original end: 4367 original word: fairly lengthy period
+filename: VOA19980331.1700.1533 tokenizer start: 1357 tokenizer end: 1360 tokenized word: six original start: 1350 original end: 1360 original word: two to six
+filename: VOA19980331.1700.1533 tokenizer start: 2256 tokenizer end: 2264 tokenized word: thousand original start: 2252 original end: 2264 original word: ten thousand
+filename: ea980120.1830.0456 tokenizer start: 22 tokenizer end: 28 tokenized word: 980120 original start: 26 original end: 28 original word: 20
+filename: AP900815-0044 tokenizer start: 7761 tokenizer end: 7767 tokenized word: Shield original start: 7754 original end: 7767 original word: Desert Shield
+filename: AP900815-0044 tokenizer start: 1444 tokenizer end: 1448 tokenized word: time original start: 1439 original end: 1448 original word: some time
+filename: CNN19980227.2130.0067 tokenizer start: 333 tokenizer end: 336 tokenized word: six original start: 317 original end: 336 original word: nineteen ninety-six
+filename: CNN19980227.2130.0067 tokenizer start: 424 tokenizer end: 429 tokenized word: seven original start: 408 original end: 429 original word: nineteen ninety-seven
+filename: CNN19980227.2130.0067 tokenizer start: 1723 tokenizer end: 1728 tokenized word: seven original start: 1707 original end: 1728 original word: nineteen ninety-seven
+filename: APW19980227.0487 tokenizer start: 613 tokenizer end: 617 tokenized word: than original start: 608 original end: 617 original word: more than
+filename: ABC19980108.1830.0711 tokenizer start: 679 tokenizer end: 683 tokenized word: long original start: 670 original end: 683 original word: Not that long
+filename: ABC19980108.1830.0711 tokenizer start: 273 tokenizer end: 277 tokenized word: four original start: 266 original end: 277 original word: twenty four
+filename: APW19980808.0022 tokenizer start: 1550 tokenizer end: 1554 tokenized word: 0735 original start: 1552 original end: 1554 original word: 35
+filename: NYT19980424.0421 tokenizer start: 250 tokenizer end: 256 tokenized word: c.1998 original start: 252 original end: 256 original word: 1998
+filename: PRI19980121.2000.2591 tokenizer start: 701 tokenizer end: 709 tokenized word: thousand original start: 697 original end: 709 original word: two thousand
+filename: PRI19980121.2000.2591 tokenizer start: 692 tokenizer end: 696 tokenized word: than original start: 687 original end: 696 original word: more than
+filename: PRI19980121.2000.2591 tokenizer start: 346 tokenizer end: 350 tokenized word: nine original start: 329 original end: 350 original word: nineteen seventy-nine
+filename: ed980111.1130.0089 tokenizer start: 22 tokenizer end: 28 tokenized word: 980111 original start: 26 original end: 28 original word: 11
+filename: VOA19980303.1600.2745 tokenizer start: 1861 tokenizer end: 1869 tokenized word: thousand original start: 1855 original end: 1869 original word: fifty thousand
+filename: VOA19980303.1600.2745 tokenizer start: 2241 tokenizer end: 2249 tokenized word: thousand original start: 2237 original end: 2249 original word: two thousand
+filename: CNN19980222.1130.0084 tokenizer start: 589 tokenizer end: 593 tokenized word: than original start: 581 original end: 593 original word: no more than
+filename: APW19980418.0210 tokenizer start: 1155 tokenizer end: 1158 tokenized word: day original start: 1151 original end: 1158 original word: one day
+filename: APW19980227.0494 tokenizer start: 1859 tokenizer end: 1864 tokenized word: least original start: 1856 original end: 1864 original word: at least
+filename: APW19980227.0494 tokenizer start: 2831 tokenizer end: 2837 tokenized word: future original start: 2819 original end: 2837 original word: foreseeable future
+filename: APW19980227.0494 tokenizer start: 3024 tokenizer end: 3028 tokenized word: past original start: 3020 original end: 3028 original word: the past
+filename: NYT19980212.0019 tokenizer start: 229 tokenizer end: 235 tokenized word: c.1998 original start: 231 original end: 235 original word: 1998

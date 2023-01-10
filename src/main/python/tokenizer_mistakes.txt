@@ -1,0 +1,156 @@
+start span is correct, end span is wrong:
+tokenizer start: 3857 tokenizer end: 3864 tokenized word: 0913EDT original start: 3857 original end: 3859 original word: 09
+tokenizer start: 526 tokenizer end: 534 tokenized word: achieved original start: 526 original end: 549 original word: achieved and maintained
+tokenizer start: 2085 tokenizer end: 2092 tokenized word: 2252EST original start: 2085 original end: 2087 original word: 22
+tokenizer start: 1274 tokenizer end: 1281 tokenized word: 0802EST original start: 1274 original end: 1276 original word: 08
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980306 original start: 25 original end: 29 original word: 1998
+tokenizer start: 3616 tokenizer end: 3623 tokenized word: 1411EST original start: 3616 original end: 3618 original word: 14
+tokenizer start: 3890 tokenizer end: 3897 tokenized word: 1426EST original start: 3890 original end: 3892 original word: 14
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980303 original start: 25 original end: 29 original word: 1998
+tokenizer start: 3473 tokenizer end: 3476 tokenized word: one original start: 3473 original end: 3480 original word: one day
+tokenizer start: 1077 tokenizer end: 1084 tokenized word: 0618EDT original start: 1077 original end: 1079 original word: 06
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980223 original start: 25 original end: 29 original word: 1998
+tokenizer start: 659 tokenizer end: 667 tokenized word: nineteen original start: 659 original end: 679 original word: nineteen ninety-four
+tokenizer start: 1244 tokenizer end: 1251 tokenized word: 0942EST original start: 1244 original end: 1246 original word: 09
+tokenizer start: 5136 tokenizer end: 5143 tokenized word: 0944EDT original start: 5136 original end: 5138 original word: 09
+tokenizer start: 1683 tokenizer end: 1690 tokenized word: 1544EST original start: 1683 original end: 1685 original word: 15
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980205 original start: 25 original end: 29 original word: 1998
+tokenizer start: 668 tokenizer end: 671 tokenized word: two original start: 668 original end: 680 original word: two thousand
+tokenizer start: 2434 tokenizer end: 2441 tokenized word: 0836EDT original start: 2434 original end: 2436 original word: 08
+tokenizer start: 5948 tokenizer end: 5955 tokenized word: 2219EST original start: 5948 original end: 5950 original word: 22
+tokenizer start: 905 tokenizer end: 908 tokenized word: has original start: 905 original end: 913 original word: has been
+tokenizer start: 1095 tokenizer end: 1102 tokenized word: quarter original start: 1095 original end: 1110 original word: quarter-century
+tokenizer start: 4346 tokenizer end: 4352 tokenized word: fairly original start: 4346 original end: 4367 original word: fairly lengthy period
+tokenizer start: 26 tokenizer end: 33 tokenized word: 2041EDT original start: 26 original end: 28 original word: 20
+tokenizer start: 65 tokenizer end: 72 tokenized word: 2041EDT original start: 65 original end: 67 original word: 20
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980331 original start: 25 original end: 29 original word: 1998
+tokenizer start: 1350 tokenizer end: 1353 tokenized word: two original start: 1350 original end: 1360 original word: two to six
+tokenizer start: 2252 tokenizer end: 2255 tokenized word: ten original start: 2252 original end: 2264 original word: ten thousand
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980120 original start: 25 original end: 29 original word: 1998
+tokenizer start: 4569 tokenizer end: 4576 tokenized word: 1457EST original start: 4569 original end: 4571 original word: 14
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980303 original start: 25 original end: 29 original word: 1998
+tokenizer start: 22 tokenizer end: 28 tokenized word: 980120 original start: 22 original end: 24 original word: 98
+tokenizer start: 1702 tokenizer end: 1709 tokenized word: 0626EST original start: 1702 original end: 1704 original word: 06
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980126 original start: 25 original end: 29 original word: 1998
+tokenizer start: 4406 tokenizer end: 4413 tokenized word: 0802EST original start: 4406 original end: 4408 original word: 08
+tokenizer start: 7754 tokenizer end: 7760 tokenized word: Desert original start: 7754 original end: 7767 original word: Desert Shield
+tokenizer start: 65 tokenizer end: 72 tokenized word: 1337EDT original start: 65 original end: 67 original word: 13
+tokenizer start: 26 tokenizer end: 33 tokenized word: 1337EDT original start: 26 original end: 28 original word: 13
+tokenizer start: 1439 tokenizer end: 1443 tokenized word: some original start: 1439 original end: 1448 original word: some time
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980227 original start: 25 original end: 29 original word: 1998
+tokenizer start: 317 tokenizer end: 325 tokenized word: nineteen original start: 317 original end: 336 original word: nineteen ninety-six
+tokenizer start: 408 tokenizer end: 416 tokenized word: nineteen original start: 408 original end: 429 original word: nineteen ninety-seven
+tokenizer start: 1707 tokenizer end: 1715 tokenized word: nineteen original start: 1707 original end: 1728 original word: nineteen ninety-seven
+tokenizer start: 2049 tokenizer end: 2056 tokenized word: 0809EST original start: 2049 original end: 2051 original word: 08
+tokenizer start: 608 tokenizer end: 612 tokenized word: more original start: 608 original end: 617 original word: more than
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980213 original start: 25 original end: 29 original word: 1998
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980205 original start: 25 original end: 29 original word: 1998
+tokenizer start: 670 tokenizer end: 673 tokenized word: Not original start: 670 original end: 683 original word: Not that long
+tokenizer start: 266 tokenizer end: 272 tokenized word: twenty original start: 266 original end: 277 original word: twenty four
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980108 original start: 25 original end: 29 original word: 1998
+tokenizer start: 1980 tokenizer end: 1987 tokenized word: 0053EDT original start: 1980 original end: 1982 original word: 00
+tokenizer start: 1550 tokenizer end: 1554 tokenized word: 0735 original start: 1550 original end: 1552 original word: 07
+tokenizer start: 2721 tokenizer end: 2728 tokenized word: 2149EDT original start: 2721 original end: 2723 original word: 21
+tokenizer start: 697 tokenizer end: 700 tokenized word: two original start: 697 original end: 709 original word: two thousand
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980121 original start: 25 original end: 29 original word: 1998
+tokenizer start: 687 tokenizer end: 691 tokenized word: more original start: 687 original end: 696 original word: more than
+tokenizer start: 329 tokenizer end: 337 tokenized word: nineteen original start: 329 original end: 350 original word: nineteen seventy-nine
+tokenizer start: 22 tokenizer end: 28 tokenized word: 980111 original start: 22 original end: 24 original word: 98
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980114 original start: 25 original end: 29 original word: 1998
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980303 original start: 25 original end: 29 original word: 1998
+tokenizer start: 1855 tokenizer end: 1860 tokenized word: fifty original start: 1855 original end: 1869 original word: fifty thousand
+tokenizer start: 2237 tokenizer end: 2240 tokenized word: two original start: 2237 original end: 2249 original word: two thousand
+tokenizer start: 1938 tokenizer end: 1945 tokenized word: 0737EDT original start: 1938 original end: 1940 original word: 07
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980222 original start: 25 original end: 29 original word: 1998
+tokenizer start: 581 tokenizer end: 583 tokenized word: no original start: 581 original end: 593 original word: no more than
+tokenizer start: 2026 tokenizer end: 2033 tokenized word: 0845EDT original start: 2026 original end: 2028 original word: 08
+tokenizer start: 1205 tokenizer end: 1212 tokenized word: 0756EST original start: 1205 original end: 1207 original word: 07
+tokenizer start: 1693 tokenizer end: 1700 tokenized word: 0607EDT original start: 1693 original end: 1695 original word: 06
+tokenizer start: 1151 tokenizer end: 1154 tokenized word: one original start: 1151 original end: 1158 original word: one day
+tokenizer start: 1780 tokenizer end: 1787 tokenized word: 1742EDT original start: 1780 original end: 1782 original word: 17
+tokenizer start: 4157 tokenizer end: 4164 tokenized word: 0817EST original start: 4157 original end: 4159 original word: 08
+tokenizer start: 1541 tokenizer end: 1545 tokenized word: May. original start: 1541 original end: 1544 original word: May
+tokenizer start: 1856 tokenizer end: 1858 tokenized word: at original start: 1856 original end: 1864 original word: at least
+tokenizer start: 2819 tokenizer end: 2830 tokenized word: foreseeable original start: 2819 original end: 2837 original word: foreseeable future
+tokenizer start: 3020 tokenizer end: 3023 tokenized word: the original start: 3020 original end: 3028 original word: the past
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980216 original start: 25 original end: 29 original word: 1998
+tokenizer start: 1378 tokenizer end: 1385 tokenized word: 0158EST original start: 1378 original end: 1380 original word: 01
+start span is wrong, end span is correct:
+tokenizer start: 3857 tokenizer end: 3864 tokenized word: 0913EDT original start: 3861 original end: 3864 original word: EDT
+tokenizer start: 539 tokenizer end: 549 tokenized word: maintained original start: 526 original end: 549 original word: achieved and maintained
+tokenizer start: 2085 tokenizer end: 2092 tokenized word: 2252EST original start: 2089 original end: 2092 original word: EST
+tokenizer start: 304 tokenizer end: 310 tokenized word: c.1998 original start: 306 original end: 310 original word: 1998
+tokenizer start: 1274 tokenizer end: 1281 tokenized word: 0802EST original start: 1278 original end: 1281 original word: EST
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980306 original start: 31 original end: 33 original word: 06
+tokenizer start: 3616 tokenizer end: 3623 tokenized word: 1411EST original start: 3620 original end: 3623 original word: EST
+tokenizer start: 3890 tokenizer end: 3897 tokenized word: 1426EST original start: 3894 original end: 3897 original word: EST
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980303 original start: 31 original end: 33 original word: 03
+tokenizer start: 3477 tokenizer end: 3480 tokenized word: day original start: 3473 original end: 3480 original word: one day
+tokenizer start: 1077 tokenizer end: 1084 tokenized word: 0618EDT original start: 1081 original end: 1084 original word: EDT
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980223 original start: 31 original end: 33 original word: 23
+tokenizer start: 675 tokenizer end: 679 tokenized word: four original start: 659 original end: 679 original word: nineteen ninety-four
+tokenizer start: 1244 tokenizer end: 1251 tokenized word: 0942EST original start: 1248 original end: 1251 original word: EST
+tokenizer start: 5136 tokenizer end: 5143 tokenized word: 0944EDT original start: 5140 original end: 5143 original word: EDT
+tokenizer start: 1683 tokenizer end: 1690 tokenized word: 1544EST original start: 1687 original end: 1690 original word: EST
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980205 original start: 31 original end: 33 original word: 05
+tokenizer start: 672 tokenizer end: 680 tokenized word: thousand original start: 668 original end: 680 original word: two thousand
+tokenizer start: 2434 tokenizer end: 2441 tokenized word: 0836EDT original start: 2438 original end: 2441 original word: EDT
+tokenizer start: 449 tokenizer end: 455 tokenized word: c.1998 original start: 451 original end: 455 original word: 1998
+tokenizer start: 5948 tokenizer end: 5955 tokenized word: 2219EST original start: 5952 original end: 5955 original word: EST
+tokenizer start: 909 tokenizer end: 913 tokenized word: been original start: 905 original end: 913 original word: has been
+tokenizer start: 1103 tokenizer end: 1110 tokenized word: century original start: 1095 original end: 1110 original word: quarter-century
+tokenizer start: 26 tokenizer end: 33 tokenized word: 2041EDT original start: 30 original end: 33 original word: EDT
+tokenizer start: 65 tokenizer end: 72 tokenized word: 2041EDT original start: 69 original end: 72 original word: EDT
+tokenizer start: 4361 tokenizer end: 4367 tokenized word: period original start: 4346 original end: 4367 original word: fairly lengthy period
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980331 original start: 31 original end: 33 original word: 31
+tokenizer start: 1357 tokenizer end: 1360 tokenized word: six original start: 1350 original end: 1360 original word: two to six
+tokenizer start: 2256 tokenizer end: 2264 tokenized word: thousand original start: 2252 original end: 2264 original word: ten thousand
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980120 original start: 31 original end: 33 original word: 20
+tokenizer start: 4569 tokenizer end: 4576 tokenized word: 1457EST original start: 4573 original end: 4576 original word: EST
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980303 original start: 31 original end: 33 original word: 03
+tokenizer start: 22 tokenizer end: 28 tokenized word: 980120 original start: 26 original end: 28 original word: 20
+tokenizer start: 1702 tokenizer end: 1709 tokenized word: 0626EST original start: 1706 original end: 1709 original word: EST
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980126 original start: 31 original end: 33 original word: 26
+tokenizer start: 4406 tokenizer end: 4413 tokenized word: 0802EST original start: 4410 original end: 4413 original word: EST
+tokenizer start: 7761 tokenizer end: 7767 tokenized word: Shield original start: 7754 original end: 7767 original word: Desert Shield
+tokenizer start: 65 tokenizer end: 72 tokenized word: 1337EDT original start: 69 original end: 72 original word: EDT
+tokenizer start: 1444 tokenizer end: 1448 tokenized word: time original start: 1439 original end: 1448 original word: some time
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980227 original start: 31 original end: 33 original word: 27
+tokenizer start: 333 tokenizer end: 336 tokenized word: six original start: 317 original end: 336 original word: nineteen ninety-six
+tokenizer start: 424 tokenizer end: 429 tokenized word: seven original start: 408 original end: 429 original word: nineteen ninety-seven
+tokenizer start: 1723 tokenizer end: 1728 tokenized word: seven original start: 1707 original end: 1728 original word: nineteen ninety-seven
+tokenizer start: 2049 tokenizer end: 2056 tokenized word: 0809EST original start: 2053 original end: 2056 original word: EST
+tokenizer start: 613 tokenizer end: 617 tokenized word: than original start: 608 original end: 617 original word: more than
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980213 original start: 31 original end: 33 original word: 13
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980205 original start: 31 original end: 33 original word: 05
+tokenizer start: 679 tokenizer end: 683 tokenized word: long original start: 670 original end: 683 original word: Not that long
+tokenizer start: 273 tokenizer end: 277 tokenized word: four original start: 266 original end: 277 original word: twenty four
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980108 original start: 31 original end: 33 original word: 08
+tokenizer start: 1980 tokenizer end: 1987 tokenized word: 0053EDT original start: 1984 original end: 1987 original word: EDT
+tokenizer start: 1550 tokenizer end: 1554 tokenized word: 0735 original start: 1552 original end: 1554 original word: 35
+tokenizer start: 250 tokenizer end: 256 tokenized word: c.1998 original start: 252 original end: 256 original word: 1998
+tokenizer start: 2721 tokenizer end: 2728 tokenized word: 2149EDT original start: 2725 original end: 2728 original word: EDT
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980121 original start: 31 original end: 33 original word: 21
+tokenizer start: 701 tokenizer end: 709 tokenized word: thousand original start: 697 original end: 709 original word: two thousand
+tokenizer start: 692 tokenizer end: 696 tokenized word: than original start: 687 original end: 696 original word: more than
+tokenizer start: 346 tokenizer end: 350 tokenized word: nine original start: 329 original end: 350 original word: nineteen seventy-nine
+tokenizer start: 22 tokenizer end: 28 tokenized word: 980111 original start: 26 original end: 28 original word: 11
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980114 original start: 31 original end: 33 original word: 14
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980303 original start: 31 original end: 33 original word: 03
+tokenizer start: 1861 tokenizer end: 1869 tokenized word: thousand original start: 1855 original end: 1869 original word: fifty thousand
+tokenizer start: 2241 tokenizer end: 2249 tokenized word: thousand original start: 2237 original end: 2249 original word: two thousand
+tokenizer start: 1938 tokenizer end: 1945 tokenized word: 0737EDT original start: 1942 original end: 1945 original word: EDT
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980222 original start: 31 original end: 33 original word: 22
+tokenizer start: 589 tokenizer end: 593 tokenized word: than original start: 581 original end: 593 original word: no more than
+tokenizer start: 2026 tokenizer end: 2033 tokenized word: 0845EDT original start: 2030 original end: 2033 original word: EDT
+tokenizer start: 1205 tokenizer end: 1212 tokenized word: 0756EST original start: 1209 original end: 1212 original word: EST
+tokenizer start: 1693 tokenizer end: 1700 tokenized word: 0607EDT original start: 1697 original end: 1700 original word: EDT
+tokenizer start: 1155 tokenizer end: 1158 tokenized word: day original start: 1151 original end: 1158 original word: one day
+tokenizer start: 1780 tokenizer end: 1787 tokenized word: 1742EDT original start: 1784 original end: 1787 original word: EDT
+tokenizer start: 4157 tokenizer end: 4164 tokenized word: 0817EST original start: 4161 original end: 4164 original word: EST
+tokenizer start: 1859 tokenizer end: 1864 tokenized word: least original start: 1856 original end: 1864 original word: at least
+tokenizer start: 2831 tokenizer end: 2837 tokenized word: future original start: 2819 original end: 2837 original word: foreseeable future
+tokenizer start: 3024 tokenizer end: 3028 tokenized word: past original start: 3020 original end: 3028 original word: the past
+tokenizer start: 25 tokenizer end: 33 tokenized word: 19980216 original start: 31 original end: 33 original word: 16
+tokenizer start: 229 tokenizer end: 235 tokenized word: c.1998 original start: 231 original end: 235 original word: 1998
+tokenizer start: 1378 tokenizer end: 1385 tokenized word: 0158EST original start: 1382 original end: 1385 original word: EST
