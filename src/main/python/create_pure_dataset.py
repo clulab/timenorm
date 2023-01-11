@@ -196,6 +196,8 @@ for split in splits:
                            "doc_key": k}
         text = v['text']
         sentences = list(nlp(text).sents)
+        empty_sentence_ids = []
+        sent_ctr = 0
         for sentence in sentences:
             sent_list = []
             for token in sentence:
@@ -204,7 +206,12 @@ for split in splits:
                 sent_list.append(token.text)
             if len(sent_list):
                 final_structure['sentences'].append(sent_list)
+            else:
+                empty_sentence_ids.append(sent_ctr)
+            sent_ctr += 1
         for sent_i in all_matching_token_info_per_sent[k].keys():
+            if sent_i in empty_sentence_ids:
+                continue
             types_sent_list = []
             for (start, end), (token_index, token_type) in all_matching_token_info_per_sent[k][sent_i].items():
                 types_sent_list.append([token_index, token_index, token_type])
@@ -213,6 +220,8 @@ for split in splits:
             else:
                 final_structure['ner'].append([])
         for sent_i in all_matching_relation_info[k].keys():
+            if sent_i in empty_sentence_ids:
+                continue
             relations_sent_list = []
             for token_index, token_index, related_token_index, related_token_index, relation in all_matching_relation_info[k][sent_i]:
                 relations_sent_list.append([token_index, token_index, related_token_index, related_token_index, relation])
