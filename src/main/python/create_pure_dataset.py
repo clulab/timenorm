@@ -124,6 +124,7 @@ for split in splits:
         all_matching_token_info_per_sent[filename] = matching_token_info_per_sent
         all_matching_token_info_per_doc[filename] = matching_token_info_per_doc
 
+    
 
     # create a dictionary to store entity info: id to spans
     all_entity_info = {}
@@ -209,12 +210,16 @@ for split in splits:
                 types_sent_list.append([token_index, token_index, token_type])
             if types_sent_list:    
                 final_structure['ner'].append(types_sent_list)
+            else:
+                final_structure['ner'].append([])
         for sent_i in all_matching_relation_info[k].keys():
             relations_sent_list = []
             for token_index, token_index, related_token_index, related_token_index, relation in all_matching_relation_info[k][sent_i]:
                 relations_sent_list.append([token_index, token_index, related_token_index, related_token_index, relation])
             if relations_sent_list:
                 final_structure['relations'].append(relations_sent_list)
+            else:
+                final_structure['relations'].append([])
         all_final_structure.append(final_structure)
 
 
