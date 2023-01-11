@@ -40,9 +40,10 @@ if os.path.exists(output_dir):
     pass
 else:
     os.mkdir(output_dir)
+all_entity_type_dict = {}
+all_entity_relation_dict = {}
 splits = ['Train', 'Dev', 'Test']
 for split in splits:
-
     original_dir = "/Users/bulut/timenorm-garage/tempeval-2013-replicate/" + split
     combined = {} # saves text and annotations of a single text file in each key
     nlp = spacy.load("en_core_web_md")
@@ -90,6 +91,10 @@ for split in splits:
         for entity in v["annotation"].annotations:
             entity_spans = entity.xml.find('span').text
             entity_type = entity.xml.find('type').text
+            if entity_type not in all_entity_type_dict.keys():
+                all_entity_type_dict[entity_type] = 1
+            else:
+                all_entity_type_dict[entity_type] += 1
             start, end = [int(index) for index in entity_spans.split(',')]
             # entity = v["text"][start:end]
             annotated_doc_spans.append((start,end, entity_type))
@@ -148,6 +153,10 @@ for split in splits:
                         relation = item.tag
                         related_entity_id = item.text.split('@')[0]
             if relation:
+                if relation not in all_entity_relation_dict.keys():
+                    all_entity_relation_dict[relation] = 1
+                else:
+                    all_entity_relation_dict[relation] += 1
                 start, end = all_entity_info[k][entity_id]
                 start_related, end_related = all_entity_info[k][related_entity_id]
                 annotated_doc_relations.append((start, end, start_related, end_related, relation))
@@ -220,6 +229,13 @@ for split in splits:
                 file.write("\n")
     print(f"{split} set is created")
 
+print(all_entity_type_dict)
+print(all_entity_relation_dict)
+print(len(all_entity_type_dict.keys()))
+print(len(all_entity_relation_dict.keys()))
+
+print(*list(all_entity_type_dict.keys()), sep='", "')
+print(*list(all_entity_relation_dict.keys()), sep='", "')
 
 
 """ statistics part
