@@ -42,7 +42,7 @@ else:
     os.mkdir(output_dir)
 all_entity_type_dict = {}
 all_entity_relation_dict = {}
-splits = ['Train', 'Dev', 'Test']
+splits = ['train', 'dev', 'test']
 for split in splits:
     original_dir = "/Users/bulut/timenorm-garage/tempeval-2013-replicate/" + split
     combined = {} # saves text and annotations of a single text file in each key
