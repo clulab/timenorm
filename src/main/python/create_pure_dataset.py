@@ -40,10 +40,11 @@ if os.path.exists(output_dir):
     pass
 else:
     os.mkdir(output_dir)
-all_entity_type_dict = {}
-all_entity_relation_dict = {}
+just_label_names = {}
 splits = ['train', 'dev', 'test']
 for split in splits:
+    all_entity_type_dict = {}
+    all_entity_relation_dict = {}
     original_dir = "/Users/bulut/timenorm-garage/tempeval-2013-replicate/" + split
     combined = {} # saves text and annotations of a single text file in each key
     nlp = spacy.load("en_core_web_md")
@@ -188,6 +189,7 @@ for split in splits:
         all_matching_relation_info[filename] = matching_relation_info
 
     # create final structure for each file
+    sent_lengths = []
     all_final_structure = []
     for k,v in combined.items():
         final_structure = {"sentences": [], 
@@ -205,6 +207,7 @@ for split in splits:
                     continue
                 sent_list.append(token.text)
             if len(sent_list):
+                sent_lengths.append(len(sent_list))
                 final_structure['sentences'].append(sent_list)
             else:
                 empty_sentence_ids.append(sent_ctr)
@@ -232,7 +235,9 @@ for split in splits:
         all_final_structure.append(final_structure)
 
 
-    
+    print("mean sentence length: ", sum(sent_lengths)/len(sent_lengths))
+    print("min sentence length: ", min(sent_lengths))
+    print("max sentence length: ", max(sent_lengths))
     filename = split + ".json"
     filepath = os.path.join(output_dir, filename)
 
@@ -242,16 +247,20 @@ for split in splits:
                 file.write(data)
                 file.write("\n")
     print(f"{split} set is created")
+    just_label_names[split] = list(all_entity_type_dict.keys())
+    print(all_entity_type_dict)
+    print(all_entity_relation_dict)
+    print(len(all_entity_type_dict.keys()))
+    print(len(all_entity_relation_dict.keys()))
 
-print(all_entity_type_dict)
-print(all_entity_relation_dict)
-print(len(all_entity_type_dict.keys()))
-print(len(all_entity_relation_dict.keys()))
+    print(*list(all_entity_type_dict.keys()), sep='", "')
+    print(*list(all_entity_relation_dict.keys()), sep='", "')
 
-print(*list(all_entity_type_dict.keys()), sep='", "')
-print(*list(all_entity_relation_dict.keys()), sep='", "')
-
-
+print(just_label_names)
+result = set(just_label_names['train']).difference(just_label_names['dev'])
+print(result)
+result = set(just_label_names['dev']).difference(just_label_names['train'])
+print(result)
 """ statistics part
 ctr_all_annotations = 0
 ctr_all_match = 0
