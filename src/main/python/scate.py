@@ -45,9 +45,9 @@ class TimeUnit(Enum):
     def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
         if unit == TimeUnit.MICROSECOND:
             return ldt
-        elif unit.iso_offset: # if we can use iso string to truncate
+        elif unit.iso_offset:  # if we can use iso string to truncate
             return datetime.datetime.fromisoformat(ldt.isoformat()[:unit.iso_offset])
-        else: # special cases, further calculation/specification needed
+        else:  # special cases, further calculation/specification needed
             if unit == TimeUnit.CENTURY:
                 return datetime.datetime(ldt.year // 100 * 100, 1, 1, 0, 0)
             elif unit == TimeUnit.QUARTER_CENTURY:
@@ -58,11 +58,13 @@ class TimeUnit(Enum):
                 return datetime.datetime(ldt.year, 1, 1, 0, 0)
             elif unit == TimeUnit.QUARTER_YEAR:
                 return datetime.datetime(ldt.year, (ldt.month - 1) // 3 * 3 + 1, 1, 0, 0)
-            elif unit == TimeUnit.MONTH: # shouldn't MONTH_OF_YEAR be the same?
+            elif unit == TimeUnit.MONTH:
                 return datetime.datetime(ldt.year, ldt.month, 1, 0, 0)
             elif unit == TimeUnit.WEEK:
-                week_start = datetime.date.fromordinal(ldt.timetuple().tm_yday - ldt.timetuple().tm_wday)
+                timetuple = ldt.timetuple()
+                week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
                 return datetime.datetime(ldt.year, week_start.month, week_start.day, 0, 0)
+
 
 @dataclasses.dataclass
 class Interval:
@@ -84,26 +86,29 @@ class Interval:
                 kwargs[name] = 1
         # create the datetime for the start
         start = datetime.datetime(**kwargs)
-        # end is one smallest unit specified larger than the start, and relativedelta argument names are plural
+        # end is one smallest unit specified larger than the start
         last_name, _ = pairs[-1]
+        # relativedelta argument names are plural
         last_name += "s"
         end = start + dur.relativedelta(**{last_name: 1})
         return cls(start, end)
+
 
 @dataclasses.dataclass
 class Year(Interval):
     digits: int
     n_missing_digits: int = 0
     char_span: Sequence[tuple[int, int]] = None
-    start: datetime.datetime = field(init = False)
-    end: datetime.datetime = field(init = False)
-    # create start and end instance variables using passed in values.
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
     def __post_init__(self):
         duration_in_years = 10 ** self.n_missing_digits
-        self.start = datetime.datetime(year = self.digits * duration_in_years,
-                                       month = 1,
-                                       day = 1)
-        self.end = self.start + dur.relativedelta(years = duration_in_years)
+        self.start = datetime.datetime(year=self.digits * duration_in_years,
+                                       month=1,
+                                       day=1)
+        self.end = self.start + dur.relativedelta(years=duration_in_years)
+
 
 @dataclasses.dataclass
 class YearSuffix(Interval):
@@ -111,25 +116,28 @@ class YearSuffix(Interval):
     last_digits: int
     n_suffix_digits: int
     n_missing_digits: int = 0
-    start: datetime.datetime = field(init = False)
-    end: datetime.datetime = field(init = False)
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
     
     def __post_init__(self):
         divider = int(10 ** (self.n_suffix_digits + self.n_missing_digits))
         multiplier = int(10 ** self.n_suffix_digits)
-        year = Year(self.interval.start.year // divider * multiplier + self.last_digits, self.n_missing_digits)
+        truncated_year = self.interval.start.year // divider
+        year = Year(truncated_year * multiplier + self.last_digits, self.n_missing_digits)
         self.start = year.start
         self.end = year.end
 
+
 @dataclasses.dataclass
-class Period: # extend relative delta
+class Period:
     unit: TimeUnit
     n: int
+
     def __post_init__(self):
         if type(self.n) != int:
             raise TypeError(self.__repr__ + "does not support" + str(type(self.n)))
-    # try to use relative delta instead of add_to and subtract_from
-    def add_to(self, date: datetime.datetime): # way to override __add__ instead? __add__, __radd__
+
+    def add_to(self, date: datetime.datetime):
         return date + dur.relativedelta(**{self.unit.relativedelta_name: self.n})
 
     def subtract_from(self, date: datetime.datetime):
@@ -141,14 +149,6 @@ class Period: # extend relative delta
         half_period = (interval.start - period.subtract_from(interval.start)) / 2
         start = mid - half_period
         return Interval(start, period.add_to(start))
-    
-    #### VERSION OF .expand without add_to and subtract_from methods... not as clear?
-    # @staticmethod
-    # def expand2(interval: Interval, period) -> Interval:
-    #     mid = interval.start + (interval.end - interval.start) / 2
-    #     half_period = (interval.start - (interval.start - dur.relativedelta(**{period.unit.rd_format: period.n}))) / 2
-    #     start = mid - half_period
-    #     return Interval(start, period.add_to(start))
 
     @staticmethod
     def one_unit(period):
@@ -160,56 +160,61 @@ class Period: # extend relative delta
         # return the interval
         return Period.expand(interval, period) if interval.end >= period.add_to(interval.start) else interval
 
+
 @dataclasses.dataclass
 class ThisP(Interval):
     interval: Interval
     period: Period
-    start: datetime.datetime = field(init = False)
-    end:datetime.datetime = field(init = False)
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
         this_period = Period.expand(self.interval, self.period)
         self.start = this_period.start
         self.end = this_period.end
 
+
 @dataclasses.dataclass
 class RepeatingInterval:
-    base: TimeUnit # unit
-    range: TimeUnit # unit
+    base: TimeUnit
+    range: TimeUnit
+
 
 @dataclasses.dataclass
 class RepeatingUnit(RepeatingInterval):
     unit: TimeUnit
-    base: TimeUnit = field(init = False)
-    range: TimeUnit = field(init = False)
+    base: TimeUnit = field(init=False)
+    range: TimeUnit = field(init=False)
     
     def __post_init__(self):
         self.base = self.unit
         self.range = self.unit
     
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        end = TimeUnit.truncate(ldt, self.unit) + dur.relativedelta(**{self.unit.relativedelta_name: 1})
-        start = end - dur.relativedelta(**{self.unit.relativedelta_name:1})
+        one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
+        end = TimeUnit.truncate(ldt, self.unit) + one_unit
+        start = end - one_unit
         while True:
             end = start
-            start = start - dur.relativedelta(**{self.unit.relativedelta_name:1})
+            start = start - one_unit
             yield Interval(start, end)
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
+        one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
         truncated = TimeUnit.truncate(ldt, self.unit)
-        end = truncated + dur.relativedelta(**{self.unit.relativedelta_name:1}) if truncated < ldt else truncated
-        start = end - dur.relativedelta(**{self.unit.relativedelta_name:1})
+        end = truncated + one_unit if truncated < ldt else truncated
         while True:
             start = end
-            end = start + dur.relativedelta(**{self.unit.relativedelta_name:1})
+            end = start + one_unit
             yield Interval(start, end)
+
 
 @dataclasses.dataclass
 class RepeatingField(RepeatingInterval):
     field: TimeUnit
     value: int
-    base: TimeUnit = field(init = False)
-    range: TimeUnit = field(init = False)
+    base: TimeUnit = field(init=False)
+    range: TimeUnit = field(init=False)
 
     def __post_init__(self):
         self.base = self.field.base
@@ -220,7 +225,8 @@ class RepeatingField(RepeatingInterval):
 
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         while True:
-            # rrule requires a starting point even when going backwards, so start twice the expected range
+            # rrule requires a starting point even when going backwards,
+            # so start at twice the expected range
             ldt = rrule(dtstart=ldt - 2 * self._one_range, **self._rrule_kwargs).before(ldt)
             ldt = TimeUnit.truncate(ldt, self.base)
             yield Interval(ldt, ldt + self._one_base)
@@ -230,8 +236,3 @@ class RepeatingField(RepeatingInterval):
             ldt = rrule(dtstart=ldt, **self._rrule_kwargs).after(ldt)
             ldt = TimeUnit.truncate(ldt, self.base)
             yield Interval(ldt, ldt + self._one_base)
-
-
-
-        
-
