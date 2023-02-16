@@ -4,39 +4,32 @@ import datetime
 import dateutil.relativedelta as dur
 from dateutil.rrule import rrule, YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, SECONDLY
 from collections.abc import Sequence, Iterator
-from collections import namedtuple
-import numpy as np
 from enum import Enum
 
 
-
 class TimeUnit(Enum):
-    # values of units are (ISO offset, base name, range name)
-    # base name is required due to presence of units such as "DAY_OF_MONTH" where base needs to be specified.
-    MICROSECOND = (None, "MICROSECOND","SECOND", None, None)
-    MILLISECOND = (23, "MILLISECOND","SECOND", None, None)
-    SECOND = (19, "SECOND","MINUTE", SECONDLY, "bysecond")
-    MINUTE = (16, "MINUTE","HOUR", MINUTELY, "byminute")
-    HOUR = (13, "HOUR","DAY", HOURLY, "byhour")
-    DAY_OF_WEEK = (None, "DAY", "WEEK", DAILY, "byweekday")
-    DAY_OF_MONTH = (10, "DAY", "MONTH", DAILY, "bymonthday")
-    DAY_OF_YEAR = (None, "DAY", "YEAR", DAILY, "byyearday")
-    DAY = tuple(DAY_OF_MONTH)
-    WEEK_OF_MONTH = (None, "WEEK", "MONTH", None, None)
-    WEEK_OF_YEAR = (None, "WEEK", "YEAR", WEEKLY, "byweekno")
-    WEEK = tuple(WEEK_OF_YEAR)
-    MONTH_OF_YEAR = (None, "MONTH", "YEAR", MONTHLY, "bymonth")
-    MONTH = tuple(MONTH_OF_YEAR)
-    QUARTER_YEAR = (None, "QUARTER_YEAR", "YEAR", None, None)
-    YEAR = (None, "YEAR", None, YEARLY, None)
-    DECADE = (None, "DECADE", None, None, None)
-    QUARTER_CENTURY = (None, "QUARTER_CENTURY", None, None, None)
-    CENTURY = (None, "CENTURY", None, None, None)
+    MICROSECOND = (None, "MICROSECOND", "SECOND", "microseconds", None, None)
+    MILLISECOND = (23, "MILLISECOND", "SECOND", None, None, None)
+    SECOND = (19, "SECOND", "MINUTE", "seconds", SECONDLY, "bysecond")
+    MINUTE = (16, "MINUTE", "HOUR", "minutes", MINUTELY, "byminute")
+    HOUR = (13, "HOUR", "DAY", "hours", HOURLY, "byhour")
+    DAY_OF_WEEK = (None, "DAY", "WEEK", "days", DAILY, "byweekday")
+    DAY = DAY_OF_MONTH = (10, "DAY", "MONTH", "days", DAILY, "bymonthday")
+    DAY_OF_YEAR = (None, "DAY", "YEAR", "days", DAILY, "byyearday")
+    WEEK_OF_MONTH = (None, "WEEK", "MONTH", "weeks", None, None)
+    WEEK = WEEK_OF_YEAR = (None, "WEEK", "YEAR", "weeks", WEEKLY, "byweekno")
+    MONTH = MONTH_OF_YEAR = (None, "MONTH", "YEAR", "months", MONTHLY, "bymonth")
+    QUARTER_YEAR = (None, "QUARTER_YEAR", "YEAR", None, None, None)
+    YEAR = (None, "YEAR", None, "years", YEARLY, None)
+    DECADE = (None, "DECADE", None, None, None, None)
+    QUARTER_CENTURY = (None, "QUARTER_CENTURY", None, None, None, None)
+    CENTURY = (None, "CENTURY", None, None, None, None)
 
-    def __init__(self, iso_offset, base_name, range_name, rrule_freq, rrule_by):
+    def __init__(self, iso_offset, base_name, range_name, relativedelta_name, rrule_freq, rrule_by):
         self.iso_offset = iso_offset
         self.base_name = base_name
         self.range_name = range_name
+        self.relativedelta_name = relativedelta_name
         self.rrule_freq = rrule_freq
         self.rrule_by = rrule_by
 
@@ -47,22 +40,6 @@ class TimeUnit(Enum):
     @property
     def range(self):
         return TimeUnit[self.range_name]
-    
-    @property
-    def dt_format(self):
-        if self.name in ["MONTH_OF_YEAR", "DAY_OF_MONTH"]:
-            return self.name.split("_OF_")[0].lower()
-        elif self.name not in ["YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "MICROSECOND"]:
-            raise ValueError(f"{self.name} unit type does not exist for datetime objects")
-        return self.name.lower()
-    
-    @property
-    def rd_format(self):
-        if self.name in ["MONTH_OF_YEAR", "DAY_OF_MONTH"]:
-            return self.dt_format + "s"
-        if self.name not in ["YEAR", "MONTH", "WEEK", "DAY", "HOUR", "MINUTE", "SECOND", "MICROSECOND"]:
-            raise ValueError(f"{self.name} unit type does not exist in dateutil.relativedelta")
-        return self.dt_format + "s"
 
     @staticmethod
     def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
@@ -153,10 +130,10 @@ class Period: # extend relative delta
             raise TypeError(self.__repr__ + "does not support" + str(type(self.n)))
     # try to use relative delta instead of add_to and subtract_from
     def add_to(self, date: datetime.datetime): # way to override __add__ instead? __add__, __radd__
-        return date + dur.relativedelta(**{self.unit.rd_format: self.n})
+        return date + dur.relativedelta(**{self.unit.relativedelta_name: self.n})
 
     def subtract_from(self, date: datetime.datetime):
-        return date - dur.relativedelta(**{self.unit.rd_format: self.n})
+        return date - dur.relativedelta(**{self.unit.relativedelta_name: self.n})
     
     @staticmethod
     def expand(interval: Interval, period) -> Interval:
@@ -211,20 +188,20 @@ class RepeatingUnit(RepeatingInterval):
         self.range = self.unit
     
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        end = TimeUnit.truncate(ldt, self.unit) + dur.relativedelta(**{self.unit.rd_format: 1})
-        start = end - dur.relativedelta(**{self.unit.rd_format:1})
+        end = TimeUnit.truncate(ldt, self.unit) + dur.relativedelta(**{self.unit.relativedelta_name: 1})
+        start = end - dur.relativedelta(**{self.unit.relativedelta_name:1})
         while True:
             end = start
-            start = start - dur.relativedelta(**{self.unit.rd_format:1})
+            start = start - dur.relativedelta(**{self.unit.relativedelta_name:1})
             yield Interval(start, end)
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
         truncated = TimeUnit.truncate(ldt, self.unit)
-        end = truncated + dur.relativedelta(**{self.unit.rd_format:1}) if truncated < ldt else truncated
-        start = end - dur.relativedelta(**{self.unit.rd_format:1})
+        end = truncated + dur.relativedelta(**{self.unit.relativedelta_name:1}) if truncated < ldt else truncated
+        start = end - dur.relativedelta(**{self.unit.relativedelta_name:1})
         while True:
             start = end
-            end = start + dur.relativedelta(**{self.unit.rd_format:1})
+            end = start + dur.relativedelta(**{self.unit.relativedelta_name:1})
             yield Interval(start, end)
 
 @dataclasses.dataclass
@@ -238,8 +215,8 @@ class RepeatingField(RepeatingInterval):
         self.base = self.field.base
         self.range = self.field.range
         self._rrule_kwargs = {"freq": self.range.rrule_freq, self.base.rrule_by: self.value}
-        self._one_range = dur.relativedelta(**{self.range.rd_format: 1})
-        self._one_base = dur.relativedelta(**{self.base.rd_format: 1})
+        self._one_range = dur.relativedelta(**{self.range.relativedelta_name: 1})
+        self._one_base = dur.relativedelta(**{self.base.relativedelta_name: 1})
 
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         while True:
