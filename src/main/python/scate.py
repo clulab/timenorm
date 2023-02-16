@@ -74,6 +74,13 @@ class Interval:
     def isoformat(self):
         return f"{self.start.isoformat()} {self.end.isoformat()}"
 
+    def __len__(self):
+        return 2
+
+    def __iter__(self):
+        yield self.start
+        yield self.end
+
     @classmethod
     def of(cls, year, *args):
         # match Interval.of arguments with datetime.__init__ arguments
@@ -133,32 +140,34 @@ class Period:
     unit: TimeUnit
     n: int
 
-    def __post_init__(self):
-        if type(self.n) != int:
-            raise TypeError(self.__repr__ + "does not support" + str(type(self.n)))
+    def __floordiv__(self, n):
+        return Period(self.unit, self.n // n)
 
-    def add_to(self, date: datetime.datetime):
-        return date + dur.relativedelta(**{self.unit.relativedelta_name: self.n})
+    def __truediv__(self, n):
+        return Period(self.unit, self.n / n)
 
-    def subtract_from(self, date: datetime.datetime):
-        return date - dur.relativedelta(**{self.unit.relativedelta_name: self.n})
-    
-    @staticmethod
-    def expand(interval: Interval, period) -> Interval:
-        mid = interval.start + (interval.end - interval.start) / 2
-        half_period = (interval.start - period.subtract_from(interval.start)) / 2
-        start = mid - half_period
-        return Interval(start, period.add_to(start))
+    def __radd__(self, other):
+        if isinstance(other, datetime.datetime):
+            return other + dur.relativedelta(**{self.unit.relativedelta_name: self.n})
+        elif isinstance(other, Interval):
+            return Interval(other.start + self, other.end + self)
+        else:
+            raise NotImplementedError
 
-    @staticmethod
-    def one_unit(period):
-        return Period(period.unit, 1)
+    def __rsub__(self, other):
+        if isinstance(other, datetime.datetime):
+            return other + dur.relativedelta(**{self.unit.relativedelta_name: -self.n})
+        elif isinstance(other, Interval):
+            return Interval(other.start - self, other.end - self)
+        else:
+            raise NotImplementedError
 
-    @staticmethod
-    def expand_if_larger(interval: Interval, period) -> Interval:
-        # if the end date of interval is larger than the start increased by the period
-        # return the interval
-        return Period.expand(interval, period) if interval.end >= period.add_to(interval.start) else interval
+    def expand(self, interval: Interval) -> Interval:
+        if interval.start + self > interval.end:
+            mid = interval.start + (interval.end - interval.start) / 2
+            start = mid - self / 2
+            interval = Interval(start, start + self)
+        return interval
 
 
 @dataclasses.dataclass
@@ -169,9 +178,7 @@ class ThisP(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        this_period = Period.expand(self.interval, self.period)
-        self.start = this_period.start
-        self.end = this_period.end
+        self.start, self.end = self.period.expand(self.interval)
 
 
 @dataclasses.dataclass

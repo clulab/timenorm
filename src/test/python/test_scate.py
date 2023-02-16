@@ -29,8 +29,8 @@ def test_year_suffix():
 def test_period():
     date = datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
     period = scate.Period(scate.TimeUnit.YEAR, 5)
-    assert period.add_to(date).isoformat() == "2005-01-01T00:00:00" 
-    assert period.subtract_from(date).isoformat() == "1995-01-01T00:00:00" 
+    assert (date + period).isoformat() == "2005-01-01T00:00:00"
+    assert (date - period).isoformat() == "1995-01-01T00:00:00"
 
 
 def test_truncate():
@@ -47,14 +47,10 @@ def test_truncate():
 def test_this_p():
     period1 = scate.Period(scate.TimeUnit.YEAR, 1)
     year = scate.Year(2002)
-    this_period = scate.ThisP(year, period1)
-    assert this_period.start.isoformat() == "2002-01-01T00:00:00"
-    assert this_period.end.isoformat() == "2003-01-01T00:00:00"
+    assert scate.ThisP(year, period1).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
     interval = scate.Interval(datetime.datetime(2001, 1, 1), datetime.datetime(2001, 1, 1))
     period2 = scate.Period(scate.TimeUnit.DAY, 5)
-    this_period2 = scate.ThisP(interval, period2)
-    assert this_period2.start.isoformat() == "2000-12-29T12:00:00"
-    assert this_period2.end.isoformat() == "2001-01-03T12:00:00"
+    assert scate.ThisP(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
 
 
 def test_repeating_unit():
