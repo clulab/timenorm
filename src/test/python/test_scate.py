@@ -77,19 +77,19 @@ def test_next():
 
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
-    assert scate.Unit.truncate(date, scate.Unit.CENTURY).isoformat() == "2000-01-01T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.QUARTER_CENTURY).isoformat() == "2025-01-01T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.DECADE).isoformat() == "2020-01-01T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.YEAR).isoformat() == "2026-01-01T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.QUARTER_YEAR).isoformat() == "2026-04-01T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.MONTH).isoformat() == "2026-05-01T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.WEEK).isoformat() == "2026-04-27T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.DAY).isoformat() == "2026-05-03T00:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.HOUR).isoformat() == "2026-05-03T01:00:00"
-    assert scate.Unit.truncate(date, scate.Unit.MINUTE).isoformat() == "2026-05-03T01:07:00"
-    assert scate.Unit.truncate(date, scate.Unit.SECOND).isoformat() == "2026-05-03T01:07:35"
-    assert scate.Unit.truncate(date, scate.Unit.MILLISECOND).isoformat() == "2026-05-03T01:07:35.001000"
-    assert scate.Unit.truncate(date, scate.Unit.MICROSECOND).isoformat() == "2026-05-03T01:07:35.001111"
+    assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"
+    assert scate.Unit.QUARTER_CENTURY.truncate(date).isoformat() == "2025-01-01T00:00:00"
+    assert scate.Unit.DECADE.truncate(date).isoformat() == "2020-01-01T00:00:00"
+    assert scate.Unit.YEAR.truncate(date).isoformat() == "2026-01-01T00:00:00"
+    assert scate.Unit.QUARTER_YEAR.truncate(date).isoformat() == "2026-04-01T00:00:00"
+    assert scate.Unit.MONTH.truncate(date).isoformat() == "2026-05-01T00:00:00"
+    assert scate.Unit.WEEK.truncate(date).isoformat() == "2026-04-27T00:00:00"
+    assert scate.Unit.DAY.truncate(date).isoformat() == "2026-05-03T00:00:00"
+    assert scate.Unit.HOUR.truncate(date).isoformat() == "2026-05-03T01:00:00"
+    assert scate.Unit.MINUTE.truncate(date).isoformat() == "2026-05-03T01:07:00"
+    assert scate.Unit.SECOND.truncate(date).isoformat() == "2026-05-03T01:07:35"
+    assert scate.Unit.MILLISECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001000"
+    assert scate.Unit.MICROSECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001111"
 
 
 def test_this_p():

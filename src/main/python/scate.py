@@ -28,27 +28,26 @@ class Unit(Enum):
         self._relativedelta_name = relativedelta_name
         self._rrule_freq = rrule_freq
 
-    @staticmethod
-    def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
-        if unit._iso_offset > 0:  # if we can use iso string to truncate
-            return datetime.datetime.fromisoformat(ldt.isoformat()[:unit._iso_offset])
+    def truncate(self, dt: datetime.datetime) -> datetime.datetime:
+        if self._iso_offset > 0:  # if we can use iso string to truncate
+            return datetime.datetime.fromisoformat(dt.isoformat()[:self._iso_offset])
         else:  # special cases, further calculation/specification needed
-            if unit == Unit.CENTURY:
-                return datetime.datetime(ldt.year // 100 * 100, 1, 1, 0, 0)
-            elif unit == Unit.QUARTER_CENTURY:
-                return datetime.datetime(ldt.year // 25 * 25, 1, 1, 0, 0)
-            elif unit == Unit.DECADE:
-                return datetime.datetime(ldt.year // 10 * 10, 1, 1, 0, 0)
-            elif unit == Unit.YEAR:
-                return datetime.datetime(ldt.year, 1, 1, 0, 0)
-            elif unit == Unit.QUARTER_YEAR:
-                return datetime.datetime(ldt.year, (ldt.month - 1) // 3 * 3 + 1, 1, 0, 0)
-            elif unit == Unit.MONTH:
-                return datetime.datetime(ldt.year, ldt.month, 1, 0, 0)
-            elif unit == Unit.WEEK:
-                timetuple = ldt.timetuple()
+            if self == Unit.CENTURY:
+                return datetime.datetime(dt.year // 100 * 100, 1, 1, 0, 0)
+            elif self == Unit.QUARTER_CENTURY:
+                return datetime.datetime(dt.year // 25 * 25, 1, 1, 0, 0)
+            elif self == Unit.DECADE:
+                return datetime.datetime(dt.year // 10 * 10, 1, 1, 0, 0)
+            elif self == Unit.YEAR:
+                return datetime.datetime(dt.year, 1, 1, 0, 0)
+            elif self == Unit.QUARTER_YEAR:
+                return datetime.datetime(dt.year, (dt.month - 1) // 3 * 3 + 1, 1, 0, 0)
+            elif self == Unit.MONTH:
+                return datetime.datetime(dt.year, dt.month, 1, 0, 0)
+            elif self == Unit.WEEK:
+                timetuple = dt.timetuple()
                 week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
-                return datetime.datetime(ldt.year, week_start.month, week_start.day, 0, 0)
+                return datetime.datetime(dt.year, week_start.month, week_start.day, 0, 0)
 
     def relativedelta(self, n):
         if self._relativedelta_name is not None:
@@ -211,7 +210,7 @@ class RepeatingUnit(Offset):
 
     def __rsub__(self, interval: Interval) -> Interval:
         one_unit = self.unit.relativedelta(1)
-        end = Unit.truncate(interval.start, self.unit) + one_unit
+        end = self.unit.truncate(interval.start) + one_unit
         start = end - one_unit
         end = start
         start = start - one_unit
@@ -219,7 +218,7 @@ class RepeatingUnit(Offset):
     
     def __radd__(self, interval: Interval) -> Interval:
         one_unit = self.unit.relativedelta(1)
-        truncated = Unit.truncate(interval.end, self.unit)
+        truncated = self.unit.truncate(interval.end)
         end = truncated + one_unit if truncated < interval.end else truncated
         start = end
         end = start + one_unit
@@ -243,12 +242,12 @@ class RepeatingField(Offset):
         # so start at twice the expected range
         dtstart = interval.start - 2 * self._one_range
         ldt = rrule(dtstart=dtstart, **self._rrule_kwargs).before(interval.start)
-        ldt = Unit.truncate(ldt, self.field.base)
+        ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
     
     def __radd__(self, interval: Interval) -> Interval:
         ldt = rrule(dtstart=interval.end, **self._rrule_kwargs).after(interval.end)
-        ldt = Unit.truncate(ldt, self.field.base)
+        ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
 
 
