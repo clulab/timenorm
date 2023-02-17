@@ -34,14 +34,20 @@ def test_period():
 
 
 def test_truncate():
-    date = datetime.datetime(2026, 2, 3, 1, 7, 35, 30)
-    assert scate.Unit.truncate(date, scate.Unit.QUARTER_CENTURY).isoformat() == "2025-01-01T00:00:00"
+    date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.truncate(date, scate.Unit.CENTURY).isoformat() == "2000-01-01T00:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.QUARTER_CENTURY).isoformat() == "2025-01-01T00:00:00"
     assert scate.Unit.truncate(date, scate.Unit.DECADE).isoformat() == "2020-01-01T00:00:00"
-    date2 = datetime.datetime(2022, 10, 27, 7, 0, 0, 0)
-    assert scate.Unit.truncate(date2, scate.Unit.WEEK).isoformat() == "2022-10-24T00:00:00"
-    # TODO: ask Steve about this, isoformat doesn't include milliseconds? Or should it?
-    # assert TimeUnit.truncate(date2, TimeUnit.MILLISECOND).isoformat() == "2022-10-27T07:00:00.000"
+    assert scate.Unit.truncate(date, scate.Unit.YEAR).isoformat() == "2026-01-01T00:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.QUARTER_YEAR).isoformat() == "2026-04-01T00:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.MONTH).isoformat() == "2026-05-01T00:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.WEEK).isoformat() == "2026-04-27T00:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.DAY).isoformat() == "2026-05-03T00:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.HOUR).isoformat() == "2026-05-03T01:00:00"
+    assert scate.Unit.truncate(date, scate.Unit.MINUTE).isoformat() == "2026-05-03T01:07:00"
+    assert scate.Unit.truncate(date, scate.Unit.SECOND).isoformat() == "2026-05-03T01:07:35"
+    assert scate.Unit.truncate(date, scate.Unit.MILLISECOND).isoformat() == "2026-05-03T01:07:35.001000"
+    assert scate.Unit.truncate(date, scate.Unit.MICROSECOND).isoformat() == "2026-05-03T01:07:35.001111"
 
 
 def test_this_p():
@@ -63,7 +69,7 @@ def test_repeating_unit():
 def test_repeating_field():
     interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
                               datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
-    month_may = scate.RepeatingField(scate.Unit.MONTH_OF_YEAR, 5)
+    month_may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
     pre = month_may.preceding(interval.start)
     assert next(pre).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
     assert next(pre).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
@@ -71,7 +77,7 @@ def test_repeating_field():
     assert next(post).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
     assert next(post).isoformat() == "2005-05-01T00:00:00 2005-06-01T00:00:00"
 
-    day29 = scate.RepeatingField(scate.Unit.DAY_OF_MONTH, 29)
+    day29 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 29)
     pre2 = day29.preceding(interval.start)
     assert next(pre2).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
     assert next(pre2).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
@@ -80,12 +86,12 @@ def test_repeating_field():
     assert next(post2).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
 
     # make sure that preceding and following are strict (no overlap allowed)
-    nov = scate.RepeatingField(scate.Unit.MONTH_OF_YEAR, 11)
+    nov = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11)
     nov_start = datetime.datetime(1989, 11, 2)
     assert next(nov.preceding(nov_start)).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
     assert next(nov.following(nov_start)).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
 
-    day31 = scate.RepeatingField(scate.Unit.DAY_OF_MONTH, 31)
+    day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
     start_of_mar_1980 = datetime.datetime(1980, 3, 1)
     assert next(day31.following(start_of_mar_1980)).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
     feb15 = datetime.datetime(2000, 2, 15)

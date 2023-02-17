@@ -8,44 +8,29 @@ from enum import Enum
 
 
 class Unit(Enum):
-    MICROSECOND = (None, "MICROSECOND", "SECOND", "microseconds", None, None)
-    MILLISECOND = (23, "MILLISECOND", "SECOND", None, None, None)
-    SECOND = (19, "SECOND", "MINUTE", "seconds", SECONDLY, "bysecond")
-    MINUTE = (16, "MINUTE", "HOUR", "minutes", MINUTELY, "byminute")
-    HOUR = (13, "HOUR", "DAY", "hours", HOURLY, "byhour")
-    DAY_OF_WEEK = (None, "DAY", "WEEK", "days", DAILY, "byweekday")
-    DAY = DAY_OF_MONTH = (10, "DAY", "MONTH", "days", DAILY, "bymonthday")
-    DAY_OF_YEAR = (None, "DAY", "YEAR", "days", DAILY, "byyearday")
-    WEEK_OF_MONTH = (None, "WEEK", "MONTH", "weeks", None, None)
-    WEEK = WEEK_OF_YEAR = (None, "WEEK", "YEAR", "weeks", WEEKLY, "byweekno")
-    MONTH = MONTH_OF_YEAR = (None, "MONTH", "YEAR", "months", MONTHLY, "bymonth")
-    QUARTER_YEAR = (None, "QUARTER_YEAR", "YEAR", None, None, None)
-    YEAR = (None, "YEAR", None, "years", YEARLY, None)
-    DECADE = (None, "DECADE", None, None, None, None)
-    QUARTER_CENTURY = (None, "QUARTER_CENTURY", None, None, None, None)
-    CENTURY = (None, "CENTURY", None, None, None, None)
+    MICROSECOND = (26, "microseconds", None)
+    MILLISECOND = (23, None, None)
+    SECOND = (19, "seconds", SECONDLY)
+    MINUTE = (16, "minutes", MINUTELY)
+    HOUR = (13, "hours", HOURLY)
+    DAY = (10, "days", DAILY)
+    # assign unique offsets so tuples are distinct
+    WEEK = (-1, "weeks", WEEKLY)
+    MONTH = (-2, "months", MONTHLY)
+    QUARTER_YEAR = (-3, None, None)
+    YEAR = (-4, "years", YEARLY)
+    DECADE = (-5, None, None)
+    QUARTER_CENTURY = (-6, None, None)
+    CENTURY = (-7, None, None)
 
-    def __init__(self, iso_offset, base_name, range_name, relativedelta_name, rrule_freq, rrule_by):
+    def __init__(self, iso_offset, relativedelta_name, rrule_freq):
         self.iso_offset = iso_offset
-        self.base_name = base_name
-        self.range_name = range_name
         self.relativedelta_name = relativedelta_name
         self.rrule_freq = rrule_freq
-        self.rrule_by = rrule_by
-
-    @property
-    def base(self):
-        return Unit[self.base_name]
-    
-    @property
-    def range(self):
-        return Unit[self.range_name]
 
     @staticmethod
     def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
-        if unit == Unit.MICROSECOND:
-            return ldt
-        elif unit.iso_offset:  # if we can use iso string to truncate
+        if unit.iso_offset > 0:  # if we can use iso string to truncate
             return datetime.datetime.fromisoformat(ldt.isoformat()[:unit.iso_offset])
         else:  # special cases, further calculation/specification needed
             if unit == Unit.CENTURY:
@@ -65,6 +50,20 @@ class Unit(Enum):
                 week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
                 return datetime.datetime(ldt.year, week_start.month, week_start.day, 0, 0)
 
+
+class Field(Enum):
+    DAY_OF_WEEK = (Unit.DAY, Unit.WEEK, "byweekday")
+    DAY_OF_MONTH = (Unit.DAY, Unit.MONTH, "bymonthday")
+    DAY_OF_YEAR = (Unit.DAY, Unit.YEAR, "byyearday")
+    WEEK_OF_MONTH = (Unit.WEEK, Unit.MONTH, None)
+    WEEK_OF_YEAR = (Unit.WEEK, Unit.YEAR, "byweekno")
+    MONTH_OF_YEAR = (Unit.MONTH, Unit.YEAR, "bymonth")
+    QUARTER_OF_YEAR = (Unit.QUARTER_YEAR, Unit.YEAR, None)
+
+    def __init__(self, base, range, rrule_by):
+        self.base = base
+        self.range = range
+        self.rrule_by = rrule_by
 
 @dataclasses.dataclass
 class Interval:
@@ -181,22 +180,18 @@ class ThisP(Interval):
         self.start, self.end = self.period.expand(self.interval)
 
 
-@dataclasses.dataclass
 class RepeatingInterval:
-    base: Unit
-    range: Unit
+    def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
+        raise NotImplementedError
+
+    def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
+        raise NotImplementedError
 
 
 @dataclasses.dataclass
 class RepeatingUnit(RepeatingInterval):
     unit: Unit
-    base: Unit = field(init=False)
-    range: Unit = field(init=False)
-    
-    def __post_init__(self):
-        self.base = self.unit
-        self.range = self.unit
-    
+
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
         end = Unit.truncate(ldt, self.unit) + one_unit
@@ -218,28 +213,24 @@ class RepeatingUnit(RepeatingInterval):
 
 @dataclasses.dataclass
 class RepeatingField(RepeatingInterval):
-    field: Unit
+    field: Field
     value: int
-    base: Unit = field(init=False)
-    range: Unit = field(init=False)
 
     def __post_init__(self):
-        self.base = self.field.base
-        self.range = self.field.range
-        self._rrule_kwargs = {"freq": self.range.rrule_freq, self.base.rrule_by: self.value}
-        self._one_range = dur.relativedelta(**{self.range.relativedelta_name: 1})
-        self._one_base = dur.relativedelta(**{self.base.relativedelta_name: 1})
+        self._rrule_kwargs = {"freq": self.field.range.rrule_freq, self.field.rrule_by: self.value}
+        self._one_range = dur.relativedelta(**{self.field.range.relativedelta_name: 1})
+        self._one_base = dur.relativedelta(**{self.field.base.relativedelta_name: 1})
 
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         while True:
             # rrule requires a starting point even when going backwards,
             # so start at twice the expected range
             ldt = rrule(dtstart=ldt - 2 * self._one_range, **self._rrule_kwargs).before(ldt)
-            ldt = Unit.truncate(ldt, self.base)
+            ldt = Unit.truncate(ldt, self.field.base)
             yield Interval(ldt, ldt + self._one_base)
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
         while True:
             ldt = rrule(dtstart=ldt, **self._rrule_kwargs).after(ldt)
-            ldt = Unit.truncate(ldt, self.base)
+            ldt = Unit.truncate(ldt, self.field.base)
             yield Interval(ldt, ldt + self._one_base)
