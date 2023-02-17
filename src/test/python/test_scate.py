@@ -33,6 +33,23 @@ def test_period():
     assert (date - period).isoformat() == "1995-01-01T00:00:00"
 
 
+def test_sum():
+    period1 = scate.Period(scate.Unit.YEAR, 1)
+    period2 = scate.Period(scate.Unit.YEAR, 2)
+    period3 = scate.Period(scate.Unit.MONTH, 3)
+    period4 = scate.Period(scate.Unit.DAY, 2)
+    period_sum = scate.Sum([period1, period2, period3])
+    dt = datetime.datetime(2000, 6, 10, 0, 0, 0, 0)
+
+    assert dt + period_sum == datetime.datetime(2003, 9, 10, 0, 0, 0, 0)
+    assert dt - period_sum == datetime.datetime(1997, 3, 10, 0, 0, 0, 0)
+
+    period_sum2 = scate.Sum([period4, period_sum])
+
+    assert dt + period_sum2 == datetime.datetime(2003, 9, 12, 0, 0, 0, 0)
+    assert dt - period_sum2 == datetime.datetime(1997, 3, 8, 0, 0, 0, 0)
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.truncate(date, scate.Unit.CENTURY).isoformat() == "2000-01-01T00:00:00"

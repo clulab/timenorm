@@ -158,12 +158,6 @@ class Period:
     unit: Unit
     n: int
 
-    def __floordiv__(self, n):
-        return Period(self.unit, self.n // n)
-
-    def __truediv__(self, n):
-        return Period(self.unit, self.n / n)
-
     def __radd__(self, other):
         if isinstance(other, datetime.datetime):
             return other + self.unit.relativedelta(self.n)
@@ -174,18 +168,33 @@ class Period:
 
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
-            return other + self.unit.relativedelta(-self.n)
+            return other - self.unit.relativedelta(self.n)
         elif isinstance(other, Interval):
             return Interval(other.start - self, other.end - self)
         else:
             raise NotImplementedError
 
     def expand(self, interval: Interval) -> Interval:
-        if interval.start + self > interval.end:
+        if interval.start + self.unit.relativedelta(self.n) > interval.end:
             mid = interval.start + (interval.end - interval.start) / 2
-            start = mid - self / 2
+            start = mid - self.unit.relativedelta(self.n / 2)
             interval = Interval(start, start + self)
         return interval
+
+
+@dataclasses.dataclass
+class Sum:
+    periods: list[Period]
+
+    def __radd__(self, other):
+        for period in self.periods:
+            other += period
+        return other
+
+    def __rsub__(self, other):
+        for period in self.periods:
+            other -= period
+        return other
 
 
 @dataclasses.dataclass
