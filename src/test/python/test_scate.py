@@ -61,6 +61,20 @@ def test_last():
     assert scate.Last(year, period_sum).isoformat() == "1996-10-01T00:00:00 2000-01-01T00:00:00"
 
 
+def test_next():
+    year1 = scate.Year(2000)
+    period1 = scate.Period(scate.Unit.YEAR, 1)
+    assert scate.Next(year1, period1).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
+    date2 = scate.Interval.of(2017, 8, 16)
+    period2 = scate.Period(scate.Unit.WEEK, 2)
+    assert scate.Next(date2, period2).isoformat() == "2017-08-17T00:00:00 2017-08-31T00:00:00"
+    year3 = scate.Year(2000)
+    period3 = scate.Sum([scate.Period(scate.Unit.YEAR, 1),
+                         scate.Period(scate.Unit.YEAR, 2),
+                         scate.Period(scate.Unit.MONTH, 3)])
+    assert scate.Next(year3, period3).isoformat() == "2001-01-01T00:00:00 2004-04-01T00:00:00"
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.truncate(date, scate.Unit.CENTURY).isoformat() == "2000-01-01T00:00:00"

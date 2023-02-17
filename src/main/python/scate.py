@@ -269,6 +269,18 @@ class Last(Interval):
 
 
 @dataclasses.dataclass
+class Next(Interval):
+    interval: Interval
+    offset: Union[Period, RepeatingInterval]
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        self.start = self.interval.end
+        self.end = self.interval.end + self.offset
+
+
+@dataclasses.dataclass
 class ThisP(Interval):
     interval: Interval
     period: Period
