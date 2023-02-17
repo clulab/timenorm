@@ -7,7 +7,7 @@ from collections.abc import Sequence, Iterator
 from enum import Enum
 
 
-class TimeUnit(Enum):
+class Unit(Enum):
     MICROSECOND = (None, "MICROSECOND", "SECOND", "microseconds", None, None)
     MILLISECOND = (23, "MILLISECOND", "SECOND", None, None, None)
     SECOND = (19, "SECOND", "MINUTE", "seconds", SECONDLY, "bysecond")
@@ -35,32 +35,32 @@ class TimeUnit(Enum):
 
     @property
     def base(self):
-        return TimeUnit[self.base_name]
+        return Unit[self.base_name]
     
     @property
     def range(self):
-        return TimeUnit[self.range_name]
+        return Unit[self.range_name]
 
     @staticmethod
     def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
-        if unit == TimeUnit.MICROSECOND:
+        if unit == Unit.MICROSECOND:
             return ldt
         elif unit.iso_offset:  # if we can use iso string to truncate
             return datetime.datetime.fromisoformat(ldt.isoformat()[:unit.iso_offset])
         else:  # special cases, further calculation/specification needed
-            if unit == TimeUnit.CENTURY:
+            if unit == Unit.CENTURY:
                 return datetime.datetime(ldt.year // 100 * 100, 1, 1, 0, 0)
-            elif unit == TimeUnit.QUARTER_CENTURY:
+            elif unit == Unit.QUARTER_CENTURY:
                 return datetime.datetime(ldt.year // 25 * 25, 1, 1, 0, 0)
-            elif unit == TimeUnit.DECADE:
+            elif unit == Unit.DECADE:
                 return datetime.datetime(ldt.year // 10 * 10, 1, 1, 0, 0)
-            elif unit == TimeUnit.YEAR:
+            elif unit == Unit.YEAR:
                 return datetime.datetime(ldt.year, 1, 1, 0, 0)
-            elif unit == TimeUnit.QUARTER_YEAR:
+            elif unit == Unit.QUARTER_YEAR:
                 return datetime.datetime(ldt.year, (ldt.month - 1) // 3 * 3 + 1, 1, 0, 0)
-            elif unit == TimeUnit.MONTH:
+            elif unit == Unit.MONTH:
                 return datetime.datetime(ldt.year, ldt.month, 1, 0, 0)
-            elif unit == TimeUnit.WEEK:
+            elif unit == Unit.WEEK:
                 timetuple = ldt.timetuple()
                 week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
                 return datetime.datetime(ldt.year, week_start.month, week_start.day, 0, 0)
@@ -137,7 +137,7 @@ class YearSuffix(Interval):
 
 @dataclasses.dataclass
 class Period:
-    unit: TimeUnit
+    unit: Unit
     n: int
 
     def __floordiv__(self, n):
@@ -183,15 +183,15 @@ class ThisP(Interval):
 
 @dataclasses.dataclass
 class RepeatingInterval:
-    base: TimeUnit
-    range: TimeUnit
+    base: Unit
+    range: Unit
 
 
 @dataclasses.dataclass
 class RepeatingUnit(RepeatingInterval):
-    unit: TimeUnit
-    base: TimeUnit = field(init=False)
-    range: TimeUnit = field(init=False)
+    unit: Unit
+    base: Unit = field(init=False)
+    range: Unit = field(init=False)
     
     def __post_init__(self):
         self.base = self.unit
@@ -199,7 +199,7 @@ class RepeatingUnit(RepeatingInterval):
     
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
-        end = TimeUnit.truncate(ldt, self.unit) + one_unit
+        end = Unit.truncate(ldt, self.unit) + one_unit
         start = end - one_unit
         while True:
             end = start
@@ -208,7 +208,7 @@ class RepeatingUnit(RepeatingInterval):
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
         one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
-        truncated = TimeUnit.truncate(ldt, self.unit)
+        truncated = Unit.truncate(ldt, self.unit)
         end = truncated + one_unit if truncated < ldt else truncated
         while True:
             start = end
@@ -218,10 +218,10 @@ class RepeatingUnit(RepeatingInterval):
 
 @dataclasses.dataclass
 class RepeatingField(RepeatingInterval):
-    field: TimeUnit
+    field: Unit
     value: int
-    base: TimeUnit = field(init=False)
-    range: TimeUnit = field(init=False)
+    base: Unit = field(init=False)
+    range: Unit = field(init=False)
 
     def __post_init__(self):
         self.base = self.field.base
@@ -235,11 +235,11 @@ class RepeatingField(RepeatingInterval):
             # rrule requires a starting point even when going backwards,
             # so start at twice the expected range
             ldt = rrule(dtstart=ldt - 2 * self._one_range, **self._rrule_kwargs).before(ldt)
-            ldt = TimeUnit.truncate(ldt, self.base)
+            ldt = Unit.truncate(ldt, self.base)
             yield Interval(ldt, ldt + self._one_base)
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
         while True:
             ldt = rrule(dtstart=ldt, **self._rrule_kwargs).after(ldt)
-            ldt = TimeUnit.truncate(ldt, self.base)
+            ldt = Unit.truncate(ldt, self.base)
             yield Interval(ldt, ldt + self._one_base)
