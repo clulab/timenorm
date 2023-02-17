@@ -24,14 +24,14 @@ class Unit(Enum):
     CENTURY = (-7, None, None)
 
     def __init__(self, iso_offset, relativedelta_name, rrule_freq):
-        self.iso_offset = iso_offset
-        self.relativedelta_name = relativedelta_name
-        self.rrule_freq = rrule_freq
+        self._iso_offset = iso_offset
+        self._relativedelta_name = relativedelta_name
+        self._rrule_freq = rrule_freq
 
     @staticmethod
     def truncate(ldt: datetime.datetime, unit) -> datetime.datetime:
-        if unit.iso_offset > 0:  # if we can use iso string to truncate
-            return datetime.datetime.fromisoformat(ldt.isoformat()[:unit.iso_offset])
+        if unit._iso_offset > 0:  # if we can use iso string to truncate
+            return datetime.datetime.fromisoformat(ldt.isoformat()[:unit._iso_offset])
         else:  # special cases, further calculation/specification needed
             if unit == Unit.CENTURY:
                 return datetime.datetime(ldt.year // 100 * 100, 1, 1, 0, 0)
@@ -50,6 +50,18 @@ class Unit(Enum):
                 week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
                 return datetime.datetime(ldt.year, week_start.month, week_start.day, 0, 0)
 
+    def relativedelta(self, n):
+        if self._relativedelta_name is not None:
+            return dur.relativedelta(**{self._relativedelta_name: n})
+        else:
+            raise NotImplementedError
+
+    def rrule_kwargs(self):
+        if self._rrule_freq is not None:
+            return {"freq": self._rrule_freq}
+        else:
+            raise NotImplementedError
+
 
 class Field(Enum):
     DAY_OF_WEEK = (Unit.DAY, Unit.WEEK, "byweekday")
@@ -63,7 +75,14 @@ class Field(Enum):
     def __init__(self, base, range, rrule_by):
         self.base = base
         self.range = range
-        self.rrule_by = rrule_by
+        self._rrule_by = rrule_by
+
+    def rrule_kwargs(self, value):
+        if self._rrule_by is not None:
+            return {self._rrule_by: value}
+        else:
+            raise NotImplementedError
+
 
 @dataclasses.dataclass
 class Interval:
@@ -147,7 +166,7 @@ class Period:
 
     def __radd__(self, other):
         if isinstance(other, datetime.datetime):
-            return other + dur.relativedelta(**{self.unit.relativedelta_name: self.n})
+            return other + self.unit.relativedelta(self.n)
         elif isinstance(other, Interval):
             return Interval(other.start + self, other.end + self)
         else:
@@ -155,7 +174,7 @@ class Period:
 
     def __rsub__(self, other):
         if isinstance(other, datetime.datetime):
-            return other + dur.relativedelta(**{self.unit.relativedelta_name: -self.n})
+            return other + self.unit.relativedelta(-self.n)
         elif isinstance(other, Interval):
             return Interval(other.start - self, other.end - self)
         else:
@@ -193,7 +212,7 @@ class RepeatingUnit(RepeatingInterval):
     unit: Unit
 
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
+        one_unit = self.unit.relativedelta(1)
         end = Unit.truncate(ldt, self.unit) + one_unit
         start = end - one_unit
         while True:
@@ -202,7 +221,7 @@ class RepeatingUnit(RepeatingInterval):
             yield Interval(start, end)
     
     def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        one_unit = dur.relativedelta(**{self.unit.relativedelta_name: 1})
+        one_unit = self.unit.relativedelta(1)
         truncated = Unit.truncate(ldt, self.unit)
         end = truncated + one_unit if truncated < ldt else truncated
         while True:
@@ -217,9 +236,11 @@ class RepeatingField(RepeatingInterval):
     value: int
 
     def __post_init__(self):
-        self._rrule_kwargs = {"freq": self.field.range.rrule_freq, self.field.rrule_by: self.value}
-        self._one_range = dur.relativedelta(**{self.field.range.relativedelta_name: 1})
-        self._one_base = dur.relativedelta(**{self.field.base.relativedelta_name: 1})
+        self._rrule_kwargs = {}
+        self._rrule_kwargs.update(self.field.range.rrule_kwargs())
+        self._rrule_kwargs.update(self.field.rrule_kwargs(self.value))
+        self._one_range = self.field.range.relativedelta(1)
+        self._one_base = self.field.base.relativedelta(1)
 
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         while True:
