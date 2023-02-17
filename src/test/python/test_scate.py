@@ -102,17 +102,13 @@ def test_this_p():
 
 
 def test_repeating_unit():
-    year = scate.RepeatingUnit(scate.Unit.YEAR)
     interval = scate.Interval.of(2000, 1, 1)
-    interval -= year
-    assert interval.isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
-    interval -= year
-    assert interval.isoformat() == "1998-01-01T00:00:00 1999-01-01T00:00:00"
+    year = scate.RepeatingUnit(scate.Unit.YEAR)
+    assert (interval - year).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
+    assert (interval - year - year).isoformat() == "1998-01-01T00:00:00 1999-01-01T00:00:00"
     day = scate.RepeatingUnit(scate.Unit.DAY)
-    interval += day
-    assert interval.isoformat() == "1999-01-01T00:00:00 1999-01-02T00:00:00"
-    interval += day
-    assert interval.isoformat() == "1999-01-02T00:00:00 1999-01-03T00:00:00"
+    assert (interval + day).isoformat() == "2000-01-02T00:00:00 2000-01-03T00:00:00"
+    assert (interval + day + day).isoformat() == "2000-01-03T00:00:00 2000-01-04T00:00:00"
 
 
 def test_repeating_field():
