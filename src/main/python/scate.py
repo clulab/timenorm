@@ -3,9 +3,8 @@ from dataclasses import field
 import datetime
 import dateutil.relativedelta as dur
 from dateutil.rrule import rrule, YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, SECONDLY
-from collections.abc import Sequence, Iterator
+from collections.abc import Sequence
 from enum import Enum
-from typing import Union
 
 
 class Unit(Enum):
@@ -154,8 +153,16 @@ class YearSuffix(Interval):
         self.end = year.end
 
 
+class Offset:
+    def __rsub__(self, other: Interval) -> Interval:
+        raise NotImplementedError
+
+    def __radd__(self, other: Interval) -> Interval:
+        raise NotImplementedError
+
+
 @dataclasses.dataclass
-class Period:
+class Period(Offset):
     unit: Unit
     n: int
 
@@ -184,7 +191,7 @@ class Period:
 
 
 @dataclasses.dataclass
-class Sum:
+class Sum(Offset):
     periods: list[Period]
 
     def __radd__(self, other):
@@ -198,39 +205,29 @@ class Sum:
         return other
 
 
-class RepeatingInterval:
-    def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        raise NotImplementedError
-
-    def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        raise NotImplementedError
-
-
 @dataclasses.dataclass
-class RepeatingUnit(RepeatingInterval):
+class RepeatingUnit(Offset):
     unit: Unit
 
-    def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
+    def __rsub__(self, interval: Interval) -> Interval:
         one_unit = self.unit.relativedelta(1)
-        end = Unit.truncate(ldt, self.unit) + one_unit
+        end = Unit.truncate(interval.start, self.unit) + one_unit
         start = end - one_unit
-        while True:
-            end = start
-            start = start - one_unit
-            yield Interval(start, end)
+        end = start
+        start = start - one_unit
+        return Interval(start, end)
     
-    def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
+    def __radd__(self, interval: Interval) -> Interval:
         one_unit = self.unit.relativedelta(1)
-        truncated = Unit.truncate(ldt, self.unit)
-        end = truncated + one_unit if truncated < ldt else truncated
-        while True:
-            start = end
-            end = start + one_unit
-            yield Interval(start, end)
+        truncated = Unit.truncate(interval.end, self.unit)
+        end = truncated + one_unit if truncated < interval.end else truncated
+        start = end
+        end = start + one_unit
+        return Interval(start, end)
 
 
 @dataclasses.dataclass
-class RepeatingField(RepeatingInterval):
+class RepeatingField(Offset):
     field: Field
     value: int
 
@@ -241,25 +238,24 @@ class RepeatingField(RepeatingInterval):
         self._one_range = self.field.range.relativedelta(1)
         self._one_base = self.field.base.relativedelta(1)
 
-    def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        while True:
-            # rrule requires a starting point even when going backwards,
-            # so start at twice the expected range
-            ldt = rrule(dtstart=ldt - 2 * self._one_range, **self._rrule_kwargs).before(ldt)
-            ldt = Unit.truncate(ldt, self.field.base)
-            yield Interval(ldt, ldt + self._one_base)
+    def __rsub__(self, interval: Interval) -> Interval:
+        # rrule requires a starting point even when going backwards,
+        # so start at twice the expected range
+        dtstart = interval.start - 2 * self._one_range
+        ldt = rrule(dtstart=dtstart, **self._rrule_kwargs).before(interval.start)
+        ldt = Unit.truncate(ldt, self.field.base)
+        return Interval(ldt, ldt + self._one_base)
     
-    def following(self, ldt: datetime.datetime) -> Iterator[Interval]:
-        while True:
-            ldt = rrule(dtstart=ldt, **self._rrule_kwargs).after(ldt)
-            ldt = Unit.truncate(ldt, self.field.base)
-            yield Interval(ldt, ldt + self._one_base)
+    def __radd__(self, interval: Interval) -> Interval:
+        ldt = rrule(dtstart=interval.end, **self._rrule_kwargs).after(interval.end)
+        ldt = Unit.truncate(ldt, self.field.base)
+        return Interval(ldt, ldt + self._one_base)
 
 
 @dataclasses.dataclass
 class Last(Interval):
     interval: Interval
-    offset: Union[Period, RepeatingInterval]
+    offset: Offset
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
 
@@ -271,7 +267,7 @@ class Last(Interval):
 @dataclasses.dataclass
 class Next(Interval):
     interval: Interval
-    offset: Union[Period, RepeatingInterval]
+    offset: Offset
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
 

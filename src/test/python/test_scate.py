@@ -102,40 +102,43 @@ def test_this_p():
 
 
 def test_repeating_unit():
-    repeating_unit = scate.RepeatingUnit(scate.Unit.YEAR)
-    preceding = repeating_unit.preceding(datetime.datetime(2000, 1, 1))
-    assert next(preceding).start.isoformat() == "1999-01-01T00:00:00"
-    assert next(preceding).start.isoformat() == "1998-01-01T00:00:00"
+    year = scate.RepeatingUnit(scate.Unit.YEAR)
+    interval = scate.Interval.of(2000, 1, 1)
+    interval -= year
+    assert interval.isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
+    interval -= year
+    assert interval.isoformat() == "1998-01-01T00:00:00 1999-01-01T00:00:00"
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    interval += day
+    assert interval.isoformat() == "1999-01-01T00:00:00 1999-01-02T00:00:00"
+    interval += day
+    assert interval.isoformat() == "1999-01-02T00:00:00 1999-01-03T00:00:00"
 
 
 def test_repeating_field():
     interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
                               datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
-    month_may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    pre = month_may.preceding(interval.start)
-    assert next(pre).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
-    assert next(pre).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
-    post = month_may.following(interval.end)
-    assert next(post).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
-    assert next(post).isoformat() == "2005-05-01T00:00:00 2005-06-01T00:00:00"
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    assert (interval - may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
+    assert (interval - may - may).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
+    assert (interval + may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
+    assert (interval + may + may).isoformat() == "2005-05-01T00:00:00 2005-06-01T00:00:00"
 
     day29 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 29)
-    pre2 = day29.preceding(interval.start)
-    assert next(pre2).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
-    assert next(pre2).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
-    post2 = day29.following(interval.end)
-    assert next(post2).isoformat() == "2003-05-29T00:00:00 2003-05-30T00:00:00"
-    assert next(post2).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
+    assert (interval - day29).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
+    assert (interval - day29 - day29).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
+    assert (interval + day29).isoformat() == "2003-05-29T00:00:00 2003-05-30T00:00:00"
+    assert (interval + day29 + day29).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
 
     # make sure that preceding and following are strict (no overlap allowed)
     nov = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11)
-    nov_start = datetime.datetime(1989, 11, 2)
-    assert next(nov.preceding(nov_start)).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
-    assert next(nov.following(nov_start)).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
+    interval = scate.Interval.of(1989, 11, 2)
+    assert (interval - nov).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
+    assert (interval + nov).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
 
     day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
-    start_of_mar_1980 = datetime.datetime(1980, 3, 1)
-    assert next(day31.following(start_of_mar_1980)).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
-    feb15 = datetime.datetime(2000, 2, 15)
-    assert next(day31.following(feb15)).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
-    assert next(day31.preceding(feb15)).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
+    interval = scate.Interval.of(1980, 3, 1)
+    assert (interval + day31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
+    interval = scate.Interval.of(2000, 2, 15)
+    assert (interval + day31).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
+    assert (interval - day31).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
