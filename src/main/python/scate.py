@@ -5,6 +5,7 @@ import dateutil.relativedelta as dur
 from dateutil.rrule import rrule, YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, SECONDLY
 from collections.abc import Sequence, Iterator
 from enum import Enum
+from typing import Union
 
 
 class Unit(Enum):
@@ -197,17 +198,6 @@ class Sum:
         return other
 
 
-@dataclasses.dataclass
-class ThisP(Interval):
-    interval: Interval
-    period: Period
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
-
-    def __post_init__(self):
-        self.start, self.end = self.period.expand(self.interval)
-
-
 class RepeatingInterval:
     def preceding(self, ldt: datetime.datetime) -> Iterator[Interval]:
         raise NotImplementedError
@@ -264,3 +254,26 @@ class RepeatingField(RepeatingInterval):
             ldt = rrule(dtstart=ldt, **self._rrule_kwargs).after(ldt)
             ldt = Unit.truncate(ldt, self.field.base)
             yield Interval(ldt, ldt + self._one_base)
+
+
+@dataclasses.dataclass
+class Last(Interval):
+    interval: Interval
+    offset: Union[Period, RepeatingInterval]
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        self.end = self.interval.start
+        self.start = self.interval.start - self.offset
+
+
+@dataclasses.dataclass
+class ThisP(Interval):
+    interval: Interval
+    period: Period
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        self.start, self.end = self.period.expand(self.interval)

@@ -50,6 +50,17 @@ def test_sum():
     assert dt - period_sum2 == datetime.datetime(1997, 3, 8, 0, 0, 0, 0)
 
 
+def test_last():
+    period1 = scate.Period(scate.Unit.YEAR, 1)
+    period2 = scate.Period(scate.Unit.YEAR, 2)
+    period3 = scate.Period(scate.Unit.MONTH, 3)
+    period_sum = scate.Sum([period1, period2, period3])
+
+    year = scate.Year(2000)
+    assert scate.Last(year, period1).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
+    assert scate.Last(year, period_sum).isoformat() == "1996-10-01T00:00:00 2000-01-01T00:00:00"
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.truncate(date, scate.Unit.CENTURY).isoformat() == "2000-01-01T00:00:00"
