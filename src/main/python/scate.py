@@ -8,46 +8,53 @@ from enum import Enum
 
 
 class Unit(Enum):
-    MICROSECOND = (26, "microseconds", None)
-    MILLISECOND = (23, None, None)
-    SECOND = (19, "seconds", SECONDLY)
-    MINUTE = (16, "minutes", MINUTELY)
-    HOUR = (13, "hours", HOURLY)
-    DAY = (10, "days", DAILY)
-    # assign unique offsets so tuples are distinct
-    WEEK = (-1, "weeks", WEEKLY)
-    MONTH = (-2, "months", MONTHLY)
-    QUARTER_YEAR = (-3, None, None)
-    YEAR = (-4, "years", YEARLY)
-    DECADE = (-5, None, None)
-    QUARTER_CENTURY = (-6, None, None)
-    CENTURY = (-7, None, None)
+    MICROSECOND = (1, "microseconds", None)
+    MILLISECOND = (2, None, None)
+    SECOND = (3, "seconds", SECONDLY)
+    MINUTE = (4, "minutes", MINUTELY)
+    HOUR = (5, "hours", HOURLY)
+    DAY = (6, "days", DAILY)
+    WEEK = (7, "weeks", WEEKLY)
+    MONTH = (8, "months", MONTHLY)
+    QUARTER_YEAR = (9, None, None)
+    YEAR = (10, "years", YEARLY)
+    DECADE = (11, None, None)
+    QUARTER_CENTURY = (12, None, None)
+    CENTURY = (13, None, None)
 
-    def __init__(self, iso_offset, relativedelta_name, rrule_freq):
-        self._iso_offset = iso_offset
+    def __init__(self, n, relativedelta_name, rrule_freq):
+        self._n = n
         self._relativedelta_name = relativedelta_name
         self._rrule_freq = rrule_freq
 
     def truncate(self, dt: datetime.datetime) -> datetime.datetime:
-        if self._iso_offset > 0:  # if we can use iso string to truncate
-            return datetime.datetime.fromisoformat(dt.isoformat()[:self._iso_offset])
-        else:  # special cases, further calculation/specification needed
-            if self == Unit.CENTURY:
-                return datetime.datetime(dt.year // 100 * 100, 1, 1, 0, 0)
-            elif self == Unit.QUARTER_CENTURY:
-                return datetime.datetime(dt.year // 25 * 25, 1, 1, 0, 0)
-            elif self == Unit.DECADE:
-                return datetime.datetime(dt.year // 10 * 10, 1, 1, 0, 0)
-            elif self == Unit.YEAR:
-                return datetime.datetime(dt.year, 1, 1, 0, 0)
-            elif self == Unit.QUARTER_YEAR:
-                return datetime.datetime(dt.year, (dt.month - 1) // 3 * 3 + 1, 1, 0, 0)
-            elif self == Unit.MONTH:
-                return datetime.datetime(dt.year, dt.month, 1, 0, 0)
-            elif self == Unit.WEEK:
-                timetuple = dt.timetuple()
-                week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
-                return datetime.datetime(dt.year, week_start.month, week_start.day, 0, 0)
+        if self is Unit.MILLISECOND:
+            dt = dt.replace(microsecond=dt.microsecond // 1000 * 1000)
+        elif self is Unit.SECOND:
+            dt = dt.replace(microsecond=0)
+        elif self is Unit.MINUTE:
+            dt = dt.replace(second=0, microsecond=0)
+        elif self is Unit.HOUR:
+            dt = dt.replace(minute=0, second=0, microsecond=0)
+        elif self is Unit.DAY:
+            dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif self is Unit.WEEK:
+            timetuple = dt.timetuple()
+            week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
+            dt = datetime.datetime(dt.year, week_start.month, week_start.day, 0, 0)
+        elif self is Unit.MONTH:
+            dt = datetime.datetime(dt.year, dt.month, 1, 0, 0)
+        elif self is Unit.QUARTER_YEAR:
+            dt = datetime.datetime(dt.year, (dt.month - 1) // 3 * 3 + 1, 1, 0, 0)
+        elif self is Unit.YEAR:
+            dt = datetime.datetime(dt.year, 1, 1, 0, 0)
+        elif self is Unit.DECADE:
+            dt = datetime.datetime(dt.year // 10 * 10, 1, 1, 0, 0)
+        elif self is Unit.QUARTER_CENTURY:
+            dt = datetime.datetime(dt.year // 25 * 25, 1, 1, 0, 0)
+        elif self is Unit.CENTURY:
+            dt = datetime.datetime(dt.year // 100 * 100, 1, 1, 0, 0)
+        return dt
 
     def relativedelta(self, n):
         if self._relativedelta_name is not None:
