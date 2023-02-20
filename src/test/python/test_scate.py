@@ -75,6 +75,23 @@ def test_next():
     assert scate.Next(year3, period3).isoformat() == "2001-01-01T00:00:00 2004-04-01T00:00:00"
 
 
+def test_before():
+    period1 = scate.Period(scate.Unit.YEAR, 1)
+    period2 = scate.Sum([period1,
+                         scate.Period(scate.Unit.YEAR, 2),
+                         scate.Period(scate.Unit.MONTH, 3)])
+    period3 = scate.Period(scate.Unit.WEEK, 2)
+    year = scate.Year(2000)
+    assert scate.Before(year, period1).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
+    assert scate.Before(year, period2).isoformat() == "1996-10-01T00:00:00 1997-10-01T00:00:00"
+
+    date = scate.Interval.of(2017, 7, 28)
+    assert scate.Before(date, period3).isoformat() == "2017-07-14T00:00:00 2017-07-15T00:00:00"
+    # when expanding, 2 weeks Before July 28 is the 7-day interval around July 14
+    assert scate.Before(date, period3, expand=True).isoformat() == \
+           "2017-07-11T00:00:00 2017-07-18T00:00:00"
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"

@@ -7,6 +7,41 @@ from collections.abc import Sequence
 from enum import Enum
 
 
+@dataclasses.dataclass
+class Interval:
+    start: datetime.datetime
+    end: datetime.datetime
+
+    def isoformat(self):
+        return f"{self.start.isoformat()} {self.end.isoformat()}"
+
+    def __len__(self):
+        return 2
+
+    def __iter__(self):
+        yield self.start
+        yield self.end
+
+    @classmethod
+    def of(cls, year, *args):
+        # match Interval.of arguments with datetime.__init__ arguments
+        names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]
+        pairs = list(zip(names, (year,) + args))
+        kwargs = dict(pairs)
+        # month and day are required by datetime, so give defaults here
+        for name in ["month", "day"]:
+            if name not in kwargs:
+                kwargs[name] = 1
+        # create the datetime for the start
+        start = datetime.datetime(**kwargs)
+        # end is one smallest unit specified larger than the start
+        last_name, _ = pairs[-1]
+        # relativedelta argument names are plural
+        last_name += "s"
+        end = start + dur.relativedelta(**{last_name: 1})
+        return cls(start, end)
+
+
 class Unit(Enum):
     MICROSECOND = (1, "microseconds", None)
     MILLISECOND = (2, None, None)
@@ -68,6 +103,13 @@ class Unit(Enum):
         else:
             raise NotImplementedError
 
+    def expand(self, interval: Interval, n: int = 1) -> Interval:
+        if interval.start + self.relativedelta(n) > interval.end:
+            mid = interval.start + (interval.end - interval.start) / 2
+            start = mid - self.relativedelta(n / 2)
+            interval = Interval(start, start + self.relativedelta(n))
+        return interval
+
 
 class Field(Enum):
     DAY_OF_WEEK = (Unit.DAY, Unit.WEEK, "byweekday")
@@ -88,41 +130,6 @@ class Field(Enum):
             return {self._rrule_by: value}
         else:
             raise NotImplementedError
-
-
-@dataclasses.dataclass
-class Interval:
-    start: datetime.datetime
-    end: datetime.datetime
-    
-    def isoformat(self):
-        return f"{self.start.isoformat()} {self.end.isoformat()}"
-
-    def __len__(self):
-        return 2
-
-    def __iter__(self):
-        yield self.start
-        yield self.end
-
-    @classmethod
-    def of(cls, year, *args):
-        # match Interval.of arguments with datetime.__init__ arguments
-        names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]
-        pairs = list(zip(names, (year,) + args))
-        kwargs = dict(pairs)
-        # month and day are required by datetime, so give defaults here
-        for name in ["month", "day"]:
-            if name not in kwargs:
-                kwargs[name] = 1
-        # create the datetime for the start
-        start = datetime.datetime(**kwargs)
-        # end is one smallest unit specified larger than the start
-        last_name, _ = pairs[-1]
-        # relativedelta argument names are plural
-        last_name += "s"
-        end = start + dur.relativedelta(**{last_name: 1})
-        return cls(start, end)
 
 
 @dataclasses.dataclass
@@ -160,6 +167,8 @@ class YearSuffix(Interval):
 
 
 class Offset:
+    unit: Unit
+
     def __rsub__(self, other: Interval) -> Interval:
         raise NotImplementedError
 
@@ -189,16 +198,15 @@ class Period(Offset):
             raise NotImplementedError
 
     def expand(self, interval: Interval) -> Interval:
-        if interval.start + self.unit.relativedelta(self.n) > interval.end:
-            mid = interval.start + (interval.end - interval.start) / 2
-            start = mid - self.unit.relativedelta(self.n / 2)
-            interval = Interval(start, start + self)
-        return interval
+        return self.unit.expand(interval, self.n)
 
 
 @dataclasses.dataclass
 class Sum(Offset):
     periods: list[Period]
+
+    def __post_init__(self):
+        self.unit = max(self.periods, key=lambda p: p.unit._n).unit
 
     def __radd__(self, other):
         for period in self.periods:
@@ -238,6 +246,7 @@ class RepeatingField(Offset):
     value: int
 
     def __post_init__(self):
+        self.unit = self.field.base
         self._rrule_kwargs = {}
         self._rrule_kwargs.update(self.field.range.rrule_kwargs())
         self._rrule_kwargs.update(self.field.rrule_kwargs(self.value))
@@ -280,6 +289,21 @@ class Next(Interval):
     def __post_init__(self):
         self.start = self.interval.end
         self.end = self.interval.end + self.offset
+
+
+@dataclasses.dataclass
+class Before(Interval):
+    interval: Interval
+    offset: Offset
+    expand: bool = False
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        interval = self.interval - self.offset
+        if self.expand:
+            interval = self.offset.unit.expand(interval)
+        self.start, self.end = interval
 
 
 @dataclasses.dataclass
