@@ -106,7 +106,21 @@ class Unit(Enum):
     def expand(self, interval: Interval, n: int = 1) -> Interval:
         if interval.start + self.relativedelta(n) > interval.end:
             mid = interval.start + (interval.end - interval.start) / 2
-            start = mid - self.relativedelta(n / 2)
+            if n % 2 == 0 or self in {Unit.MILLISECOND,
+                                      Unit.MICROSECOND,
+                                      Unit.SECOND,
+                                      Unit.MINUTE,
+                                      Unit.HOUR,
+                                      Unit.DAY,
+                                      Unit.WEEK}:
+                half = self.relativedelta(n / 2)
+            elif self is Unit.MONTH:
+                half = Unit.DAY.relativedelta(30 / 2)
+            elif self is Unit.YEAR:
+                half = Unit.DAY.relativedelta(365 / 2)
+            else:
+                raise NotImplementedError(f"don't know how to take {n}/2 {self}")
+            start = mid - half
             interval = Interval(start, start + self.relativedelta(n))
         return interval
 
@@ -301,6 +315,21 @@ class Before(Interval):
 
     def __post_init__(self):
         interval = self.interval - self.offset
+        if self.expand:
+            interval = self.offset.unit.expand(interval)
+        self.start, self.end = interval
+
+
+@dataclasses.dataclass
+class After(Interval):
+    interval: Interval
+    offset: Offset
+    expand: bool = False
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        interval = self.interval + self.offset
         if self.expand:
             interval = self.offset.unit.expand(interval)
         self.start, self.end = interval

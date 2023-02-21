@@ -92,6 +92,24 @@ def test_before():
            "2017-07-11T00:00:00 2017-07-18T00:00:00"
 
 
+def test_after():
+    period1 = scate.Period(scate.Unit.YEAR, 1)
+    period2 = scate.Sum([period1,
+                         scate.Period(scate.Unit.YEAR, 2),
+                         scate.Period(scate.Unit.MONTH, 3)])
+    period3 = scate.Period(scate.Unit.MONTH, 3)
+
+    year = scate.Year(2000)
+    assert scate.After(year, period1).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
+    assert scate.After(year, period2).isoformat() == "2003-04-01T00:00:00 2004-04-01T00:00:00"
+
+    date = scate.Interval.of(2000, 1, 25)
+    assert scate.After(date, period3).isoformat() == "2000-04-25T00:00:00 2000-04-26T00:00:00"
+    # when expanding, 3 months After January 25 is the 1-month interval around April 25
+    assert scate.After(date, period3, expand=True).isoformat() == \
+           "2000-04-10T12:00:00 2000-05-10T12:00:00"
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"
