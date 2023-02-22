@@ -336,7 +336,7 @@ class After(Interval):
 
 
 @dataclasses.dataclass
-class ThisP(Interval):
+class This(Interval):
     interval: Interval
     period: Period
     start: datetime.datetime = field(init=False)

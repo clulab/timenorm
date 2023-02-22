@@ -110,6 +110,15 @@ def test_after():
            "2000-04-10T12:00:00 2000-05-10T12:00:00"
 
 
+def test_this():
+    period1 = scate.Period(scate.Unit.YEAR, 1)
+    year = scate.Year(2002)
+    assert scate.This(year, period1).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
+    interval = scate.Interval(datetime.datetime(2001, 1, 1), datetime.datetime(2001, 1, 1))
+    period2 = scate.Period(scate.Unit.DAY, 5)
+    assert scate.This(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"
@@ -125,15 +134,6 @@ def test_truncate():
     assert scate.Unit.SECOND.truncate(date).isoformat() == "2026-05-03T01:07:35"
     assert scate.Unit.MILLISECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001000"
     assert scate.Unit.MICROSECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001111"
-
-
-def test_this_p():
-    period1 = scate.Period(scate.Unit.YEAR, 1)
-    year = scate.Year(2002)
-    assert scate.ThisP(year, period1).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
-    interval = scate.Interval(datetime.datetime(2001, 1, 1), datetime.datetime(2001, 1, 1))
-    period2 = scate.Period(scate.Unit.DAY, 5)
-    assert scate.ThisP(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
 
 
 def test_repeating_unit():
