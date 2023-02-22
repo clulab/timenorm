@@ -1,5 +1,6 @@
 import scate
 import datetime
+import pytest
 
 
 def test_interval():
@@ -117,6 +118,22 @@ def test_this():
     interval = scate.Interval(datetime.datetime(2001, 1, 1), datetime.datetime(2001, 1, 1))
     period2 = scate.Period(scate.Unit.DAY, 5)
     assert scate.This(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
+
+
+def test_between():
+    year1 = scate.Year(1999)
+    year2 = scate.Year(2002)
+    assert scate.Between(year1, year2).isoformat() == "2000-01-01T00:00:00 2002-01-01T00:00:00"
+    assert scate.Between(year1, year2, start_included=True).isoformat() == \
+           "1999-01-01T00:00:00 2002-01-01T00:00:00"
+    assert scate.Between(year1, year2, end_included=True).isoformat() == \
+           "2000-01-01T00:00:00 2003-01-01T00:00:00"
+    assert scate.Between(year1, year2, start_included=True, end_included=True).isoformat() == \
+           "1999-01-01T00:00:00 2003-01-01T00:00:00"
+
+    # it's an error for the start interval to be after the end interval
+    with pytest.raises(ValueError):
+        scate.Between(year2, year1)
 
 
 def test_truncate():

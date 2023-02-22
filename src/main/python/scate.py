@@ -344,3 +344,21 @@ class This(Interval):
 
     def __post_init__(self):
         self.start, self.end = self.period.expand(self.interval)
+
+
+@dataclasses.dataclass
+class Between(Interval):
+    start_interval: Interval
+    end_interval: Interval
+    start_included: bool = False
+    end_included: bool = False
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        self.start = self.start_interval.start if self.start_included else self.start_interval.end
+        self.end = self.end_interval.end if self.end_included else self.end_interval.start
+        if self.end < self.start:
+            start_iso = self.start_interval.isoformat()
+            end_iso = self.end_interval.isoformat()
+            raise ValueError(f"{start_iso} is not before {end_iso}")
