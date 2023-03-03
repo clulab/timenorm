@@ -362,3 +362,33 @@ class Between(Interval):
             start_iso = self.start_interval.isoformat()
             end_iso = self.end_interval.isoformat()
             raise ValueError(f"{start_iso} is not before {end_iso}")
+
+
+@dataclasses.dataclass
+class NthFromStart(Interval):
+    interval: Interval
+    index: int
+    offset: Offset
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        self.start = self.interval.start
+        for i in range(self.index - 1):
+            self.start += self.offset
+        self.end = self.start + self.offset
+
+
+@dataclasses.dataclass
+class NthFromEnd(Interval):
+    interval: Interval
+    index: int
+    offset: Offset
+    start: datetime.datetime = field(init=False)
+    end: datetime.datetime = field(init=False)
+
+    def __post_init__(self):
+        self.end = self.interval.end
+        for i in range(self.index - 1):
+            self.end -= self.offset
+        self.start = self.end - self.offset
