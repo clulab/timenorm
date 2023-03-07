@@ -22,6 +22,12 @@ class Interval:
         yield self.start
         yield self.end
 
+    def __add__(self, offset):
+        return self.end + offset
+
+    def __sub__(self, offset):
+        return self.start - offset
+
     @classmethod
     def of(cls, year, *args):
         # match Interval.of arguments with datetime.__init__ arguments
@@ -189,10 +195,10 @@ class YearSuffix(Interval):
 class Offset:
     unit: Unit
 
-    def __rsub__(self, other: Interval) -> Interval:
+    def __rsub__(self, other: datetime.datetime) -> Interval:
         raise NotImplementedError
 
-    def __radd__(self, other: Interval) -> Interval:
+    def __radd__(self, other: datetime.datetime) -> Interval:
         raise NotImplementedError
 
 
@@ -201,21 +207,11 @@ class Period(Offset):
     unit: Unit
     n: int
 
-    def __radd__(self, other):
-        if isinstance(other, datetime.datetime):
-            return other + self.unit.relativedelta(self.n)
-        elif isinstance(other, Interval):
-            return Interval(other.start + self, other.end + self)
-        else:
-            raise NotImplementedError
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        return Interval(other, other + self.unit.relativedelta(self.n))
 
-    def __rsub__(self, other):
-        if isinstance(other, datetime.datetime):
-            return other - self.unit.relativedelta(self.n)
-        elif isinstance(other, Interval):
-            return Interval(other.start - self, other.end - self)
-        else:
-            raise NotImplementedError
+    def __rsub__(self, other: datetime.datetime) -> Interval:
+        return Interval(other - self.unit.relativedelta(self.n), other)
 
     def expand(self, interval: Interval) -> Interval:
         return self.unit.expand(interval, self.n)
@@ -228,33 +224,35 @@ class Sum(Offset):
     def __post_init__(self):
         self.unit = max(self.periods, key=lambda p: p.unit._n).unit
 
-    def __radd__(self, other):
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        end = other
         for period in self.periods:
-            other += period
-        return other
+            end = (end + period).end
+        return Interval(other, end)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: datetime.datetime) -> Interval:
+        start = other
         for period in self.periods:
-            other -= period
-        return other
+            start = (start - period).start
+        return Interval(start, other)
 
 
 @dataclasses.dataclass
 class RepeatingUnit(Offset):
     unit: Unit
 
-    def __rsub__(self, interval: Interval) -> Interval:
+    def __rsub__(self, other: datetime.datetime) -> Interval:
         one_unit = self.unit.relativedelta(1)
-        end = self.unit.truncate(interval.start) + one_unit
+        end = self.unit.truncate(other) + one_unit
         start = end - one_unit
         end = start
         start = start - one_unit
         return Interval(start, end)
     
-    def __radd__(self, interval: Interval) -> Interval:
+    def __radd__(self, other: datetime.datetime) -> Interval:
         one_unit = self.unit.relativedelta(1)
-        truncated = self.unit.truncate(interval.end)
-        end = truncated + one_unit if truncated < interval.end else truncated
+        truncated = self.unit.truncate(other)
+        end = truncated + one_unit if truncated < other else truncated
         start = end
         end = start + one_unit
         return Interval(start, end)
@@ -273,16 +271,16 @@ class RepeatingField(Offset):
         self._one_range = self.field.range.relativedelta(1)
         self._one_base = self.field.base.relativedelta(1)
 
-    def __rsub__(self, interval: Interval) -> Interval:
+    def __rsub__(self, other: datetime.datetime) -> Interval:
         # rrule requires a starting point even when going backwards,
         # so start at twice the expected range
-        dtstart = interval.start - 2 * self._one_range
-        ldt = rrule(dtstart=dtstart, **self._rrule_kwargs).before(interval.start)
+        dtstart = other - 2 * self._one_range
+        ldt = rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
         ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
     
-    def __radd__(self, interval: Interval) -> Interval:
-        ldt = rrule(dtstart=interval.end, **self._rrule_kwargs).after(interval.end)
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        ldt = rrule(dtstart=other, **self._rrule_kwargs).after(other)
         ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
 
@@ -295,8 +293,7 @@ class Last(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        self.end = self.interval.start
-        self.start = self.interval.start - self.offset
+        self.start, self.end = self.interval - self.offset
 
 
 @dataclasses.dataclass
@@ -307,8 +304,7 @@ class Next(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        self.start = self.interval.end
-        self.end = self.interval.end + self.offset
+        self.start, self.end = self.interval + self.offset
 
 
 @dataclasses.dataclass
@@ -320,7 +316,9 @@ class Before(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        interval = self.interval - self.offset
+        start = (self.interval.start - self.offset).start
+        end = (self.interval.end - self.offset).start
+        interval = Interval(start, end)
         if self.expand:
             interval = self.offset.unit.expand(interval)
         self.start, self.end = interval
@@ -335,7 +333,9 @@ class After(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        interval = self.interval + self.offset
+        start = (self.interval.start + self.offset).end
+        end = (self.interval.end + self.offset).end
+        interval = Interval(start, end)
         if self.expand:
             interval = self.offset.unit.expand(interval)
         self.start, self.end = interval
@@ -379,10 +379,10 @@ class NthFromStart(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        self.start = self.interval.start
+        offset = self.interval.start
         for i in range(self.index - 1):
-            self.start += self.offset
-        self.end = self.start + self.offset
+            offset = (offset + self.offset).end
+        self.start, self.end = offset + self.offset
 
 
 @dataclasses.dataclass
@@ -394,7 +394,7 @@ class NthFromEnd(Interval):
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        self.end = self.interval.end
+        offset = self.interval.end
         for i in range(self.index - 1):
-            self.end -= self.offset
-        self.start = self.end - self.offset
+            offset = (offset - self.offset).start
+        self.start, self.end = offset - self.offset

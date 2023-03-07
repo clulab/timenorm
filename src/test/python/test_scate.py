@@ -1,5 +1,6 @@
 import scate
 import datetime
+import dateutil.rrule
 import pytest
 
 
@@ -30,8 +31,8 @@ def test_year_suffix():
 def test_period():
     date = datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
     period = scate.Period(scate.Unit.YEAR, 5)
-    assert (date + period).isoformat() == "2005-01-01T00:00:00"
-    assert (date - period).isoformat() == "1995-01-01T00:00:00"
+    assert (date + period).end.isoformat() == "2005-01-01T00:00:00"
+    assert (date - period).start.isoformat() == "1995-01-01T00:00:00"
 
 
 def test_sum():
@@ -42,13 +43,13 @@ def test_sum():
     period_sum = scate.Sum([period1, period2, period3])
     dt = datetime.datetime(2000, 6, 10, 0, 0, 0, 0)
 
-    assert dt + period_sum == datetime.datetime(2003, 9, 10, 0, 0, 0, 0)
-    assert dt - period_sum == datetime.datetime(1997, 3, 10, 0, 0, 0, 0)
+    assert (dt + period_sum).end == datetime.datetime(2003, 9, 10, 0, 0, 0, 0)
+    assert (dt - period_sum).start == datetime.datetime(1997, 3, 10, 0, 0, 0, 0)
 
     period_sum2 = scate.Sum([period4, period_sum])
 
-    assert dt + period_sum2 == datetime.datetime(2003, 9, 12, 0, 0, 0, 0)
-    assert dt - period_sum2 == datetime.datetime(1997, 3, 8, 0, 0, 0, 0)
+    assert (dt + period_sum2).end == datetime.datetime(2003, 9, 12, 0, 0, 0, 0)
+    assert (dt - period_sum2).start == datetime.datetime(1997, 3, 8, 0, 0, 0, 0)
 
 
 def test_last():
@@ -60,6 +61,23 @@ def test_last():
     year = scate.Year(2000)
     assert scate.Last(year, period1).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
     assert scate.Last(year, period_sum).isoformat() == "1996-10-01T00:00:00 2000-01-01T00:00:00"
+
+    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
+                              datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    friday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    assert scate.Last(interval, may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
+    assert scate.Last(interval, day).isoformat() == "2002-03-21T00:00:00 2002-03-22T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 7), day).isoformat() == \
+           "2017-07-06T00:00:00 2017-07-07T00:00:00"
+    # July 7, 2017 is a Friday
+    assert scate.Last(scate.Interval.of(2017, 7, 7), friday).isoformat() == \
+           "2017-06-30T00:00:00 2017-07-01T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 8), friday).isoformat() == \
+           "2017-07-07T00:00:00 2017-07-08T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 6), friday).isoformat() == \
+           "2017-06-30T00:00:00 2017-07-01T00:00:00"
 
 
 def test_next():
