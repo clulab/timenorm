@@ -94,6 +94,12 @@ class Unit(Enum):
     def relativedelta(self, n):
         if self._relativedelta_name is not None:
             return dur.relativedelta(**{self._relativedelta_name: n})
+        elif self is Unit.CENTURY:
+            return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 100 * n})
+        elif self is Unit.QUARTER_CENTURY:
+            return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 25 * n})
+        elif self is Unit.DECADE:
+            return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 10 * n})
         else:
             raise NotImplementedError
 

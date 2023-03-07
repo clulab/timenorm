@@ -163,13 +163,47 @@ def test_truncate():
 
 
 def test_repeating_unit():
-    interval = scate.Interval.of(2000, 1, 1)
+    century = scate.RepeatingUnit(scate.Unit.CENTURY)
+    decade = scate.RepeatingUnit(scate.Unit.DECADE)
     year = scate.RepeatingUnit(scate.Unit.YEAR)
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+
+    interval = scate.Interval.of(2000, 1, 1)
     assert (interval - year).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
     assert (interval - year - year).isoformat() == "1998-01-01T00:00:00 1999-01-01T00:00:00"
-    day = scate.RepeatingUnit(scate.Unit.DAY)
     assert (interval + day).isoformat() == "2000-01-02T00:00:00 2000-01-03T00:00:00"
     assert (interval + day + day).isoformat() == "2000-01-03T00:00:00 2000-01-04T00:00:00"
+
+    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
+                              datetime.datetime(2003, 5, 11, 22, 10, 20, 0))
+    assert (interval - month).isoformat() == scate.Interval.of(2002, 2).isoformat()
+    assert (interval - month - month).isoformat() == scate.Interval.of(2002, 1).isoformat()
+    assert (interval + month).isoformat() == scate.Interval.of(2003, 6).isoformat()
+    assert (interval + month + month).isoformat() == scate.Interval.of(2003, 7).isoformat()
+    assert (interval - century).isoformat() == "1900-01-01T00:00:00 2000-01-01T00:00:00"
+    assert (interval + century).isoformat() == "2100-01-01T00:00:00 2200-01-01T00:00:00"
+    assert (interval - decade).isoformat() == "1990-01-01T00:00:00 2000-01-01T00:00:00"
+    assert (interval + decade).isoformat() == "2010-01-01T00:00:00 2020-01-01T00:00:00"
+    # March 11, 2002 is a Monday
+    assert (interval - week).isoformat() == "2002-03-11T00:00:00 2002-03-18T00:00:00"
+    # May 12, 2003 is a Monday
+    assert (interval + week).isoformat() == "2003-05-12T00:00:00 2003-05-19T00:00:00"
+
+    interval = scate.Interval(datetime.datetime(2001, 2, 12, 3, 3),
+                              datetime.datetime(2001, 2, 14, 22, 0))
+    assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
+    assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 15).isoformat()
+
+    interval = scate.Interval(datetime.datetime(2001, 2, 12, 0, 0),
+                              datetime.datetime(2001, 2, 14, 0, 0))
+    assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
+    assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 14).isoformat()
+
+    # December 31, 2012 is a Monday
+    interval = scate.Interval.of(2013, 1, 8)
+    assert (interval - week).isoformat() == "2012-12-31T00:00:00 2013-01-07T00:00:00"
 
 
 def test_repeating_field():
