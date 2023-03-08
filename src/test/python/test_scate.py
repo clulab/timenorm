@@ -79,6 +79,10 @@ def test_last():
     assert scate.Last(scate.Interval.of(2017, 7, 6), friday).isoformat() == \
            "2017-06-30T00:00:00 2017-07-01T00:00:00"
 
+    # January 2nd is the first Monday of 2017
+    last_week = scate.Last(scate.Interval.of(2017, 1, 9), scate.RepeatingUnit(scate.Unit.WEEK))
+    assert last_week.isoformat() == "2017-01-02T00:00:00 2017-01-09T00:00:00"
+
 
 def test_next():
     year1 = scate.Year(2000)
