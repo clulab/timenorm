@@ -106,6 +106,8 @@ class Unit(Enum):
             return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 25 * n})
         elif self is Unit.DECADE:
             return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 10 * n})
+        elif self is Unit.QUARTER_YEAR:
+            return dur.relativedelta(**{Unit.MONTH._relativedelta_name: 3 * n})
         else:
             raise NotImplementedError
 
@@ -289,11 +291,13 @@ class RepeatingField(Offset):
 class Last(Interval):
     interval: Interval
     offset: Offset
+    interval_included: bool = False
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        self.start, self.end = self.interval - self.offset
+        start = self.interval.end if self.interval_included else self.interval.start
+        self.start, self.end = start - self.offset
 
 
 @dataclasses.dataclass

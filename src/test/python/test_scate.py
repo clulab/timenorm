@@ -71,17 +71,28 @@ def test_last():
     assert scate.Last(interval, day).isoformat() == "2002-03-21T00:00:00 2002-03-22T00:00:00"
     assert scate.Last(scate.Interval.of(2017, 7, 7), day).isoformat() == \
            "2017-07-06T00:00:00 2017-07-07T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 7), day, interval_included=True).isoformat() == \
+           "2017-07-07T00:00:00 2017-07-08T00:00:00"
     # July 7, 2017 is a Friday
     assert scate.Last(scate.Interval.of(2017, 7, 7), friday).isoformat() == \
            "2017-06-30T00:00:00 2017-07-01T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 7), friday, interval_included=True).isoformat() == \
+           "2017-07-07T00:00:00 2017-07-08T00:00:00"
     assert scate.Last(scate.Interval.of(2017, 7, 8), friday).isoformat() == \
            "2017-07-07T00:00:00 2017-07-08T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 8), friday, interval_included=True).isoformat() == \
+           "2017-07-07T00:00:00 2017-07-08T00:00:00"
     assert scate.Last(scate.Interval.of(2017, 7, 6), friday).isoformat() == \
+           "2017-06-30T00:00:00 2017-07-01T00:00:00"
+    assert scate.Last(scate.Interval.of(2017, 7, 6), friday, interval_included=True).isoformat() == \
            "2017-06-30T00:00:00 2017-07-01T00:00:00"
 
     # January 2nd is the first Monday of 2017
     last_week = scate.Last(scate.Interval.of(2017, 1, 9), scate.RepeatingUnit(scate.Unit.WEEK))
     assert last_week.isoformat() == "2017-01-02T00:00:00 2017-01-09T00:00:00"
+
+    assert scate.Last(interval, scate.RepeatingUnit(scate.Unit.QUARTER_YEAR)).isoformat() == \
+        "2001-10-01T00:00:00 2002-01-01T00:00:00"
 
 
 def test_next():
