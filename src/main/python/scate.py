@@ -186,11 +186,10 @@ class YearSuffix(Interval):
     end: datetime.datetime = dataclasses.field(init=False)
     
     def __post_init__(self):
-        divider = int(10 ** (self.n_suffix_digits + self.n_missing_digits))
-        multiplier = int(10 ** self.n_suffix_digits)
-        truncated_year = self.interval.start.year // divider
-        year = Year(truncated_year * multiplier + self.last_digits, self.n_missing_digits)
-        self.start, self.end = year
+        divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
+        multiplier = 10 ** self.n_suffix_digits
+        digits = self.interval.start.year // divider * multiplier + self.last_digits
+        self.start, self.end = Year(digits, self.n_missing_digits)
 
 
 class Offset:
