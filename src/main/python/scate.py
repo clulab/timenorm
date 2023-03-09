@@ -293,12 +293,16 @@ class RepeatingField(Offset):
 
 
 @dataclasses.dataclass
-class Last(Interval):
+class IntervalOp(Interval):
     interval: Interval
     offset: Offset
-    interval_included: bool = False
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
+
+
+@dataclasses.dataclass
+class Last(IntervalOp):
+    interval_included: bool = False
 
     def __post_init__(self):
         start = self.interval.end if self.interval_included else self.interval.start
@@ -321,12 +325,8 @@ class LastN:
 
 
 @dataclasses.dataclass
-class Next(Interval):
-    interval: Interval
-    offset: Offset
+class Next(IntervalOp):
     interval_included: bool = False
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
         end = self.interval.start if self.interval_included else self.interval.end
@@ -334,11 +334,7 @@ class Next(Interval):
 
 
 @dataclasses.dataclass
-class Before(Interval):
-    interval: Interval
-    offset: Offset
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+class Before(IntervalOp):
 
     def __post_init__(self):
         self.start = (self.interval.start - self.offset).start
@@ -346,11 +342,7 @@ class Before(Interval):
 
 
 @dataclasses.dataclass
-class After(Interval):
-    interval: Interval
-    offset: Offset
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+class After(IntervalOp):
 
     def __post_init__(self):
         self.start = (self.interval.start + self.offset).end
@@ -387,12 +379,8 @@ class Between(Interval):
 
 
 @dataclasses.dataclass
-class NthFromStart(Interval):
-    interval: Interval
+class NthFromStart(IntervalOp):
     index: int
-    offset: Offset
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
         offset = self.interval.start
@@ -402,12 +390,8 @@ class NthFromStart(Interval):
 
 
 @dataclasses.dataclass
-class NthFromEnd(Interval):
-    interval: Interval
+class NthFromEnd(IntervalOp):
     index: int
-    offset: Offset
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
         offset = self.interval.end
