@@ -172,9 +172,7 @@ class Year(Interval):
 
     def __post_init__(self):
         duration_in_years = 10 ** self.n_missing_digits
-        self.start = datetime.datetime(year=self.digits * duration_in_years,
-                                       month=1,
-                                       day=1)
+        self.start = datetime.datetime(year=self.digits * duration_in_years, month=1, day=1)
         self.end = self.start + dateutil.relativedelta.relativedelta(years=duration_in_years)
 
 
@@ -192,8 +190,7 @@ class YearSuffix(Interval):
         multiplier = int(10 ** self.n_suffix_digits)
         truncated_year = self.interval.start.year // divider
         year = Year(truncated_year * multiplier + self.last_digits, self.n_missing_digits)
-        self.start = year.start
-        self.end = year.end
+        self.start, self.end = year
 
 
 class Offset:
@@ -245,21 +242,18 @@ class Sum(Offset):
 class RepeatingUnit(Offset):
     unit: Unit
 
+    def __post_init__(self):
+        self._one_unit = self.unit.relativedelta(1)
+
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        one_unit = self.unit.relativedelta(1)
-        end = self.unit.truncate(other) + one_unit
-        start = end - one_unit
-        end = start
-        start = start - one_unit
-        return Interval(start, end)
+        end = self.unit.truncate(other)
+        return Interval(end - self._one_unit, end)
     
     def __radd__(self, other: datetime.datetime) -> Interval:
-        one_unit = self.unit.relativedelta(1)
-        truncated = self.unit.truncate(other)
-        end = truncated + one_unit if truncated < other else truncated
-        start = end
-        end = start + one_unit
-        return Interval(start, end)
+        start = self.unit.truncate(other)
+        if start < other:
+            start += self._one_unit
+        return Interval(start, start + self._one_unit)
 
 
 @dataclasses.dataclass
@@ -269,9 +263,7 @@ class RepeatingField(Offset):
 
     def __post_init__(self):
         self.unit = self.field.base
-        self._rrule_kwargs = {}
-        self._rrule_kwargs.update(self.field.range.rrule_kwargs())
-        self._rrule_kwargs.update(self.field.rrule_kwargs(self.value))
+        self._rrule_kwargs = self.field.range.rrule_kwargs() | self.field.rrule_kwargs(self.value)
         self._one_range = self.field.range.relativedelta(1)
         self._one_base = self.field.base.relativedelta(1)
 
@@ -304,22 +296,6 @@ class Last(IntervalOp):
     def __post_init__(self):
         start = self.interval.end if self.interval_included else self.interval.start
         self.start, self.end = start - self.offset
-
-
-@dataclasses.dataclass
-class N:
-    interval_op_class: type
-    interval: Interval
-    offset: Offset
-    n: int
-    kwargs: dict = dataclasses.field(default_factory=dict)
-
-    def __iter__(self):
-        interval = self.interval_op_class(self.interval, self.offset, **self.kwargs)
-        yield interval
-        for i in range(self.n - 1):
-            interval = self.interval_op_class(interval, self.offset)
-            yield interval
 
 
 @dataclasses.dataclass
@@ -396,3 +372,19 @@ class NthFromEnd(IntervalOp):
         for i in range(self.index - 1):
             offset = (offset - self.offset).start
         self.start, self.end = offset - self.offset
+
+
+@dataclasses.dataclass
+class N:
+    interval_op_class: type
+    interval: Interval
+    offset: Offset
+    n: int
+    kwargs: dict = dataclasses.field(default_factory=dict)
+
+    def __iter__(self):
+        interval = self.interval_op_class(self.interval, self.offset, **self.kwargs)
+        yield interval
+        for i in range(self.n - 1):
+            interval = self.interval_op_class(interval, self.offset)
+            yield interval
