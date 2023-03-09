@@ -335,34 +335,24 @@ class Next(Interval):
 class Before(Interval):
     interval: Interval
     offset: Offset
-    expand: bool = False
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        start = (self.interval.start - self.offset).start
-        end = (self.interval.end - self.offset).start
-        interval = Interval(start, end)
-        if self.expand:
-            interval = self.offset.unit.expand(interval)
-        self.start, self.end = interval
+        self.start = (self.interval.start - self.offset).start
+        self.end = (self.interval.end - self.offset).start
 
 
 @dataclasses.dataclass
 class After(Interval):
     interval: Interval
     offset: Offset
-    expand: bool = False
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        start = (self.interval.start + self.offset).end
-        end = (self.interval.end + self.offset).end
-        interval = Interval(start, end)
-        if self.expand:
-            interval = self.offset.unit.expand(interval)
-        self.start, self.end = interval
+        self.start = (self.interval.start + self.offset).end
+        self.end = (self.interval.end + self.offset).end
 
 
 @dataclasses.dataclass

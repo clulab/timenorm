@@ -136,7 +136,7 @@ def test_before():
     date = scate.Interval.of(2017, 7, 28)
     assert scate.Before(date, period3).isoformat() == "2017-07-14T00:00:00 2017-07-15T00:00:00"
     # when expanding, 2 weeks Before July 28 is the 7-day interval around July 14
-    assert scate.Before(date, period3, expand=True).isoformat() == \
+    assert period3.unit.expand(scate.Before(date, period3)).isoformat() == \
            "2017-07-11T00:00:00 2017-07-18T00:00:00"
 
 
@@ -154,7 +154,7 @@ def test_after():
     date = scate.Interval.of(2000, 1, 25)
     assert scate.After(date, period3).isoformat() == "2000-04-25T00:00:00 2000-04-26T00:00:00"
     # when expanding, 3 months After January 25 is the 1-month interval around April 25
-    assert scate.After(date, period3, expand=True).isoformat() == \
+    assert period3.unit.expand(scate.After(date, period3)).isoformat() == \
            "2000-04-10T12:00:00 2000-05-10T12:00:00"
 
 
