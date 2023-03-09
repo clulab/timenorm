@@ -324,11 +324,13 @@ class LastN:
 class Next(Interval):
     interval: Interval
     offset: Offset
+    interval_included: bool = False
     start: datetime.datetime = field(init=False)
     end: datetime.datetime = field(init=False)
 
     def __post_init__(self):
-        self.start, self.end = self.interval + self.offset
+        end = self.interval.start if self.interval_included else self.interval.end
+        self.start, self.end = end + self.offset
 
 
 @dataclasses.dataclass

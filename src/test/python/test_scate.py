@@ -122,6 +122,17 @@ def test_next():
                          scate.Period(scate.Unit.MONTH, 3)])
     assert scate.Next(year3, period3).isoformat() == "2001-01-01T00:00:00 2004-04-01T00:00:00"
 
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    assert scate.Next(interval, may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
+    assert scate.Next(interval, day).isoformat() == "2003-05-11T00:00:00 2003-05-12T00:00:00"
+    # January 2nd is the first Monday of 2017
+    next_week = scate.Next(scate.Interval.of(2017, 1, 8), scate.RepeatingUnit(scate.Unit.WEEK))
+    assert next_week.isoformat() == "2017-01-09T00:00:00 2017-01-16T00:00:00"
+    assert scate.Next(interval, may, interval_included=True).isoformat() == \
+           "2002-05-01T00:00:00 2002-06-01T00:00:00"
+
 
 def test_before():
     period1 = scate.Period(scate.Unit.YEAR, 1)
