@@ -1,10 +1,8 @@
 import dataclasses
-from dataclasses import field
 import datetime
-import dateutil.relativedelta as dur
-from dateutil.rrule import rrule, YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, SECONDLY
-from collections.abc import Sequence
-from enum import Enum
+import dateutil.relativedelta
+import dateutil.rrule
+import enum
 
 
 @dataclasses.dataclass
@@ -49,21 +47,21 @@ class Interval:
         last_name, _ = pairs[-1]
         # relativedelta argument names are plural
         last_name += "s"
-        end = start + dur.relativedelta(**{last_name: 1})
+        end = start + dateutil.relativedelta.relativedelta(**{last_name: 1})
         return cls(start, end)
 
 
-class Unit(Enum):
+class Unit(enum.Enum):
     MICROSECOND = (1, "microseconds", None)
     MILLISECOND = (2, None, None)
-    SECOND = (3, "seconds", SECONDLY)
-    MINUTE = (4, "minutes", MINUTELY)
-    HOUR = (5, "hours", HOURLY)
-    DAY = (6, "days", DAILY)
-    WEEK = (7, "weeks", WEEKLY)
-    MONTH = (8, "months", MONTHLY)
+    SECOND = (3, "seconds", dateutil.rrule.SECONDLY)
+    MINUTE = (4, "minutes", dateutil.rrule.MINUTELY)
+    HOUR = (5, "hours", dateutil.rrule.HOURLY)
+    DAY = (6, "days", dateutil.rrule.DAILY)
+    WEEK = (7, "weeks", dateutil.rrule.WEEKLY)
+    MONTH = (8, "months", dateutil.rrule.MONTHLY)
     QUARTER_YEAR = (9, None, None)
-    YEAR = (10, "years", YEARLY)
+    YEAR = (10, "years", dateutil.rrule.YEARLY)
     DECADE = (11, None, None)
     QUARTER_CENTURY = (12, None, None)
     CENTURY = (13, None, None)
@@ -104,15 +102,15 @@ class Unit(Enum):
 
     def relativedelta(self, n):
         if self._relativedelta_name is not None:
-            return dur.relativedelta(**{self._relativedelta_name: n})
+            return dateutil.relativedelta.relativedelta(**{self._relativedelta_name: n})
         elif self is Unit.CENTURY:
-            return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 100 * n})
+            return dateutil.relativedelta.relativedelta(**{Unit.YEAR._relativedelta_name: 100 * n})
         elif self is Unit.QUARTER_CENTURY:
-            return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 25 * n})
+            return dateutil.relativedelta.relativedelta(**{Unit.YEAR._relativedelta_name: 25 * n})
         elif self is Unit.DECADE:
-            return dur.relativedelta(**{Unit.YEAR._relativedelta_name: 10 * n})
+            return dateutil.relativedelta.relativedelta(**{Unit.YEAR._relativedelta_name: 10 * n})
         elif self is Unit.QUARTER_YEAR:
-            return dur.relativedelta(**{Unit.MONTH._relativedelta_name: 3 * n})
+            return dateutil.relativedelta.relativedelta(**{Unit.MONTH._relativedelta_name: 3 * n})
         else:
             raise NotImplementedError
 
@@ -144,7 +142,7 @@ class Unit(Enum):
         return interval
 
 
-class Field(Enum):
+class Field(enum.Enum):
     DAY_OF_WEEK = (Unit.DAY, Unit.WEEK, "byweekday")
     DAY_OF_MONTH = (Unit.DAY, Unit.MONTH, "bymonthday")
     DAY_OF_YEAR = (Unit.DAY, Unit.YEAR, "byyearday")
@@ -169,16 +167,15 @@ class Field(Enum):
 class Year(Interval):
     digits: int
     n_missing_digits: int = 0
-    char_span: Sequence[tuple[int, int]] = None
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
         duration_in_years = 10 ** self.n_missing_digits
         self.start = datetime.datetime(year=self.digits * duration_in_years,
                                        month=1,
                                        day=1)
-        self.end = self.start + dur.relativedelta(years=duration_in_years)
+        self.end = self.start + dateutil.relativedelta.relativedelta(years=duration_in_years)
 
 
 @dataclasses.dataclass
@@ -187,8 +184,8 @@ class YearSuffix(Interval):
     last_digits: int
     n_suffix_digits: int
     n_missing_digits: int = 0
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
     
     def __post_init__(self):
         divider = int(10 ** (self.n_suffix_digits + self.n_missing_digits))
@@ -282,12 +279,12 @@ class RepeatingField(Offset):
         # rrule requires a starting point even when going backwards,
         # so start at twice the expected range
         dtstart = other - 2 * self._one_range
-        ldt = rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
+        ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
         ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
     
     def __radd__(self, other: datetime.datetime) -> Interval:
-        ldt = rrule(dtstart=other, **self._rrule_kwargs).after(other)
+        ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other)
         ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
 
@@ -296,8 +293,8 @@ class RepeatingField(Offset):
 class IntervalOp(Interval):
     interval: Interval
     offset: Offset
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
 
 
 @dataclasses.dataclass
@@ -315,7 +312,7 @@ class N:
     interval: Interval
     offset: Offset
     n: int
-    kwargs: dict = field(default_factory=dict)
+    kwargs: dict = dataclasses.field(default_factory=dict)
 
     def __iter__(self):
         interval = self.interval_op_class(self.interval, self.offset, **self.kwargs)
@@ -354,8 +351,8 @@ class After(IntervalOp):
 class This(Interval):
     interval: Interval
     period: Period
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
         self.start, self.end = self.period.expand(self.interval)
@@ -367,8 +364,8 @@ class Between(Interval):
     end_interval: Interval
     start_included: bool = False
     end_included: bool = False
-    start: datetime.datetime = field(init=False)
-    end: datetime.datetime = field(init=False)
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
         self.start = self.start_interval.start if self.start_included else self.start_interval.end
