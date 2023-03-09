@@ -29,6 +29,11 @@ class Interval:
         return self.start - offset
 
     @classmethod
+    def fromisoformat(cls, string):
+        start, end = [datetime.datetime.fromisoformat(x) for x in string.split()]
+        return cls(start, end)
+
+    @classmethod
     def of(cls, year, *args):
         # match Interval.of arguments with datetime.__init__ arguments
         names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]

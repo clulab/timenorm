@@ -43,13 +43,13 @@ def test_sum():
     period_sum = scate.Sum([period1, period2, period3])
     dt = datetime.datetime(2000, 6, 10, 0, 0, 0, 0)
 
-    assert (dt + period_sum).end == datetime.datetime(2003, 9, 10, 0, 0, 0, 0)
-    assert (dt - period_sum).start == datetime.datetime(1997, 3, 10, 0, 0, 0, 0)
+    assert (dt + period_sum).end.isoformat() == "2003-09-10T00:00:00"
+    assert (dt - period_sum).start.isoformat() == "1997-03-10T00:00:00"
 
     period_sum2 = scate.Sum([period4, period_sum])
 
-    assert (dt + period_sum2).end == datetime.datetime(2003, 9, 12, 0, 0, 0, 0)
-    assert (dt - period_sum2).start == datetime.datetime(1997, 3, 8, 0, 0, 0, 0)
+    assert (dt + period_sum2).end.isoformat() == "2003-09-12T00:00:00"
+    assert (dt - period_sum2).start.isoformat() == "1997-03-08T00:00:00"
 
 
 def test_last():
@@ -62,8 +62,7 @@ def test_last():
     assert scate.Last(year, period1).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
     assert scate.Last(year, period_sum).isoformat() == "1996-10-01T00:00:00 2000-01-01T00:00:00"
 
-    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
-                              datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
     friday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR)
     day = scate.RepeatingUnit(scate.Unit.DAY)
@@ -96,8 +95,7 @@ def test_last():
 
 
 def test_last_n():
-    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
-                              datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
     day = scate.RepeatingUnit(scate.Unit.DAY)
 
@@ -164,7 +162,7 @@ def test_this():
     period1 = scate.Period(scate.Unit.YEAR, 1)
     year = scate.Year(2002)
     assert scate.This(year, period1).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
-    interval = scate.Interval(datetime.datetime(2001, 1, 1), datetime.datetime(2001, 1, 1))
+    interval = scate.Interval.fromisoformat("2001-01-01T00:00:00 2001-01-01T00:00:00")
     period2 = scate.Period(scate.Unit.DAY, 5)
     assert scate.This(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
 
@@ -225,8 +223,7 @@ def test_repeating_unit():
     assert (interval + day).isoformat() == "2000-01-02T00:00:00 2000-01-03T00:00:00"
     assert (interval + day + day).isoformat() == "2000-01-03T00:00:00 2000-01-04T00:00:00"
 
-    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
-                              datetime.datetime(2003, 5, 11, 22, 10, 20, 0))
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     assert (interval - month).isoformat() == scate.Interval.of(2002, 2).isoformat()
     assert (interval - month - month).isoformat() == scate.Interval.of(2002, 1).isoformat()
     assert (interval + month).isoformat() == scate.Interval.of(2003, 6).isoformat()
@@ -240,13 +237,11 @@ def test_repeating_unit():
     # May 12, 2003 is a Monday
     assert (interval + week).isoformat() == "2003-05-12T00:00:00 2003-05-19T00:00:00"
 
-    interval = scate.Interval(datetime.datetime(2001, 2, 12, 3, 3),
-                              datetime.datetime(2001, 2, 14, 22, 0))
+    interval = scate.Interval.fromisoformat("2001-02-12T03:03 2001-02-14T22:00")
     assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
     assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 15).isoformat()
 
-    interval = scate.Interval(datetime.datetime(2001, 2, 12, 0, 0),
-                              datetime.datetime(2001, 2, 14, 0, 0))
+    interval = scate.Interval.fromisoformat("2001-02-12 2001-02-14")
     assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
     assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 14).isoformat()
 
@@ -256,8 +251,7 @@ def test_repeating_unit():
 
 
 def test_repeating_field():
-    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
-                              datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
     assert (interval - may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
     assert (interval - may - may).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
