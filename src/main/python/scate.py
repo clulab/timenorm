@@ -301,6 +301,21 @@ class Last(Interval):
 
 
 @dataclasses.dataclass
+class LastN:
+    interval: Interval
+    offset: Offset
+    n: int
+    interval_included: bool = False
+
+    def __iter__(self):
+        interval = Last(self.interval, self.offset, self.interval_included)
+        yield interval
+        for i in range(self.n - 1):
+            interval = Last(interval, self.offset)
+            yield interval
+
+
+@dataclasses.dataclass
 class Next(Interval):
     interval: Interval
     offset: Offset

@@ -95,6 +95,22 @@ def test_last():
         "2001-10-01T00:00:00 2002-01-01T00:00:00"
 
 
+def test_last_n():
+    interval = scate.Interval(datetime.datetime(2002, 3, 22, 11, 30, 30, 0),
+                              datetime.datetime(2003, 5, 10, 22, 10, 20, 0))
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+
+    assert [x.isoformat() for x in scate.LastN(interval, may, 3)] == \
+           [f"{y}-05-01T00:00:00 {y}-06-01T00:00:00" for y in [2001, 2000, 1999]]
+
+    assert [x.isoformat() for x in scate.LastN(interval, day, 5)] == \
+           [f"2002-03-{d}T00:00:00 2002-03-{d + 1}T00:00:00" for d in [21, 20, 19, 18, 17]]
+
+    assert [x.isoformat() for x in scate.LastN(interval, day, 1, interval_included=True)] == \
+           ["2003-05-09T00:00:00 2003-05-10T00:00:00"]
+
+
 def test_next():
     year1 = scate.Year(2000)
     period1 = scate.Period(scate.Unit.YEAR, 1)
