@@ -310,17 +310,18 @@ class Last(IntervalOp):
 
 
 @dataclasses.dataclass
-class LastN:
+class N:
+    interval_op_class: type
     interval: Interval
     offset: Offset
     n: int
-    interval_included: bool = False
+    kwargs: dict = field(default_factory=dict)
 
     def __iter__(self):
-        interval = Last(self.interval, self.offset, self.interval_included)
+        interval = self.interval_op_class(self.interval, self.offset, **self.kwargs)
         yield interval
         for i in range(self.n - 1):
-            interval = Last(interval, self.offset)
+            interval = self.interval_op_class(interval, self.offset)
             yield interval
 
 
