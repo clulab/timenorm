@@ -159,21 +159,36 @@ def test_before():
 
 
 def test_after():
-    period1 = scate.Period(scate.Unit.YEAR, 1)
-    period2 = scate.Sum([period1,
-                         scate.Period(scate.Unit.YEAR, 2),
-                         scate.Period(scate.Unit.MONTH, 3)])
-    period3 = scate.Period(scate.Unit.MONTH, 3)
+    year = scate.Period(scate.Unit.YEAR, 1)
+    month = scate.Period(scate.Unit.MONTH, 3)
+    year3month3 = scate.Sum([year, scate.Period(scate.Unit.YEAR, 2), scate.Period(scate.Unit.MONTH, 3)])
 
-    year = scate.Year(2000)
-    assert scate.After(year, period1).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
-    assert scate.After(year, period2).isoformat() == "2003-04-01T00:00:00 2004-04-01T00:00:00"
+    interval = scate.Year(2000)
+    assert scate.After(interval, year).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
+    assert scate.After(interval, year, 2).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
 
-    date = scate.Interval.of(2000, 1, 25)
-    assert scate.After(date, period3).isoformat() == "2000-04-25T00:00:00 2000-04-26T00:00:00"
+    assert scate.After(interval, year3month3).isoformat() == "2003-04-01T00:00:00 2004-04-01T00:00:00"
+    assert scate.After(interval, year3month3, 3).isoformat() == "2009-10-01T00:00:00 2010-10-01T00:00:00"
+
+    interval = scate.Interval.of(2000, 1, 25)
+    assert scate.After(interval, month).isoformat() == "2000-04-25T00:00:00 2000-04-26T00:00:00"
+    assert scate.After(interval, month).isoformat() == "2000-04-25T00:00:00 2000-04-26T00:00:00"
     # when expanding, 3 months After January 25 is the 1-month interval around April 25
-    assert period3.unit.expand(scate.After(date, period3)).isoformat() == \
+    assert month.unit.expand(scate.After(interval, month)).isoformat() == \
            "2000-04-10T12:00:00 2000-05-10T12:00:00"
+
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+
+    assert scate.After(interval, may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
+    assert scate.After(interval, may, interval_included=True).isoformat() == \
+           "2002-05-01T00:00:00 2002-06-01T00:00:00"
+    assert scate.After(interval, may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
+    assert scate.After(interval, day).isoformat() == "2003-05-11T00:00:00 2003-05-12T00:00:00"
+    assert scate.After(interval, day, interval_included=True).isoformat() == \
+           "2002-03-23T00:00:00 2002-03-24T00:00:00"
+    assert scate.After(interval, day, 11).isoformat() == "2003-05-21T00:00:00 2003-05-22T00:00:00"
 
 
 def test_this():

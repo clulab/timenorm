@@ -316,10 +316,22 @@ class Before(IntervalOp):
 
 @dataclasses.dataclass
 class After(IntervalOp):
+    n: int = 1
+    interval_included: bool = False
 
     def __post_init__(self):
-        self.start = (self.interval.start + self.offset).end
-        self.end = (self.interval.end + self.offset).end
+        if isinstance(self.offset, (RepeatingUnit, RepeatingField)):
+            end = self.interval.start if self.interval_included else self.interval.end
+            for i in range(self.n - 1):
+                end = (end + self.offset).end
+            self.start, self.end = end + self.offset
+        elif self.interval_included:
+            raise ValueError("interval_included=True cannot be used with Periods")
+        else:
+            self.start, self.end = self.interval
+            for i in range(self.n):
+                self.start = (self.start + self.offset).end
+                self.end = (self.end + self.offset).end
 
 
 @dataclasses.dataclass
