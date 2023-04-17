@@ -385,6 +385,8 @@ class Nth(IntervalOp):
         for i in range(self.index - 1):
             offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
         self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
+        if self.start < self.interval.start or self.end > self.interval.end:
+            raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}")
 
 
 @dataclasses.dataclass

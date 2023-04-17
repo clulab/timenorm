@@ -230,11 +230,29 @@ def test_between():
 
 def test_nth():
     y2001 = scate.Year(2001)
+    month = scate.Period(scate.Unit.MONTH, 1)
     year = scate.Period(scate.Unit.YEAR, 1)
-    period = scate.Sum([scate.Period(scate.Unit.YEAR, 1), scate.Period(scate.Unit.MINUTE, 20)])
-    assert scate.Nth(y2001, year, 2).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
-    assert scate.Nth(y2001, year, 2, from_end=True).isoformat() == "2000-01-01T00:00:00 2001-01-01T00:00:00"
-    assert scate.Nth(y2001, period, 4).isoformat() == "2004-01-01T01:00:00 2005-01-01T01:20:00"
+    period = scate.Sum([month, scate.Period(scate.Unit.MINUTE, 20)])
+    assert scate.Nth(y2001, year, 1).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
+    assert scate.Nth(y2001, month, 2).isoformat() == "2001-02-01T00:00:00 2001-03-01T00:00:00"
+    assert scate.Nth(y2001, month, 2, from_end=True).isoformat() == "2001-11-01T00:00:00 2001-12-01T00:00:00"
+    assert scate.Nth(y2001, period, 4).isoformat() == "2001-04-01T01:00:00 2001-05-01T01:20:00"
+    with pytest.raises(ValueError):
+        scate.Nth(y2001, year, 2)
+
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    quarter_year = scate.RepeatingUnit(scate.Unit.QUARTER_YEAR)
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    assert scate.Nth(y2001, quarter_year, 4).isoformat() == "2001-10-01T00:00:00 2002-01-01T00:00:00"
+    assert scate.Nth(interval, may, 1).isoformat() == "2002-05-01T00:00:00 2002-06-01T00:00:00"
+    assert scate.Nth(interval, may, 1, from_end=True).isoformat() == "2002-05-01T00:00:00 2002-06-01T00:00:00"
+    assert scate.Nth(interval, day, 3).isoformat() == "2002-03-25T00:00:00 2002-03-26T00:00:00"
+    assert scate.Nth(interval, day, 3, from_end=True).isoformat() == "2003-05-07T00:00:00 2003-05-08T00:00:00"
+    with pytest.raises(ValueError):
+        scate.Nth(interval, may, 5)
+    with pytest.raises(ValueError):
+        scate.Nth(interval, may, 2, from_end=True)
 
 
 def test_truncate():
