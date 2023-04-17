@@ -383,14 +383,8 @@ class Nth(IntervalOp):
     def __post_init__(self):
         offset = self.interval.end if self.from_end else self.interval.start
         for i in range(self.index - 1):
-            if self.from_end:
-                offset = (offset - self.offset).start
-            else:
-                offset = (offset + self.offset).end
-        if self.from_end:
-            self.start, self.end = offset - self.offset
-        else:
-            self.start, self.end = offset + self.offset
+            offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
+        self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
 
 
 @dataclasses.dataclass
