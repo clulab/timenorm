@@ -157,6 +157,21 @@ def test_before():
     assert period3.unit.expand(scate.Before(date, period3)).isoformat() == \
            "2017-07-11T00:00:00 2017-07-18T00:00:00"
 
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    assert scate.Before(interval, may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
+    assert scate.Before(interval, may, interval_included=True).isoformat() == \
+           "2002-05-01T00:00:00 2002-06-01T00:00:00"
+    assert scate.Before(interval, may, 5).isoformat() == "1997-05-01T00:00:00 1997-06-01T00:00:00"
+    assert scate.Before(interval, day).isoformat() == "2002-03-21T00:00:00 2002-03-22T00:00:00"
+    assert scate.Before(interval, day, interval_included=True).isoformat() == \
+           "2003-05-09T00:00:00 2003-05-10T00:00:00"
+    assert scate.Before(interval, day, 20).isoformat() == "2002-03-02T00:00:00 2002-03-03T00:00:00"
+
+    # assert(BeforeRI(interval, may, from = Interval.End) === SimpleInterval.of(2002, 5))
+    # assert(BeforeRI(interval, day, from = Interval.End) === SimpleInterval.of(2003, 5, 9))
+
 
 def test_after():
     year = scate.Period(scate.Unit.YEAR, 1)
