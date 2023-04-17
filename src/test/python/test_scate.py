@@ -232,9 +232,9 @@ def test_nth():
     y2001 = scate.Year(2001)
     year = scate.Period(scate.Unit.YEAR, 1)
     period = scate.Sum([scate.Period(scate.Unit.YEAR, 1), scate.Period(scate.Unit.MINUTE, 20)])
-    assert scate.NthFromStart(y2001, year, 2).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
-    assert scate.NthFromEnd(y2001, year, 2).isoformat() == "2000-01-01T00:00:00 2001-01-01T00:00:00"
-    assert scate.NthFromStart(y2001, period, 4).isoformat() == "2004-01-01T01:00:00 2005-01-01T01:20:00"
+    assert scate.Nth(y2001, year, 2).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
+    assert scate.Nth(y2001, year, 2, from_end=True).isoformat() == "2000-01-01T00:00:00 2001-01-01T00:00:00"
+    assert scate.Nth(y2001, period, 4).isoformat() == "2004-01-01T01:00:00 2005-01-01T01:20:00"
 
 
 def test_truncate():
