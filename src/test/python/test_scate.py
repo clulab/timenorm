@@ -205,11 +205,27 @@ def test_after():
 
 def test_this():
     period1 = scate.Period(scate.Unit.YEAR, 1)
-    year = scate.Year(2002)
-    assert scate.This(year, period1).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
+    interval = scate.Year(2002)
+    assert scate.This(interval, period1).isoformat() == "2002-01-01T00:00:00 2003-01-01T00:00:00"
+
     interval = scate.Interval.fromisoformat("2001-01-01T00:00:00 2001-01-01T00:00:00")
     period2 = scate.Period(scate.Unit.DAY, 5)
     assert scate.This(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
+
+    interval = scate.Year(2016)
+    april = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 4)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    assert scate.This(interval, april).isoformat() == "2016-04-01T00:00:00 2016-05-01T00:00:00"
+    with pytest.raises(ValueError):
+        scate.This(interval, day)
+
+    interval = scate.Interval.fromisoformat("2016-07-01T00:00:00 2016-07-02T00:00:00")
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    assert scate.This(interval, month).isoformat() == "2016-07-01T00:00:00 2016-08-01T00:00:00"
+    assert scate.This(interval, scate.Season.SUMMER).isoformat() == "2016-06-01T00:00:00 2016-09-01T00:00:00"
+    assert scate.This(interval, scate.Season.WINTER).isoformat() == "2016-12-01T00:00:00 2017-03-01T00:00:00"
+    print("HERE!")
+    assert scate.This(interval, scate.DayPart.NIGHT).isoformat() == "2016-07-01T00:00:00 2016-07-01T06:00:00"
 
 
 def test_between():
@@ -339,3 +355,27 @@ def test_repeating_field():
     interval = scate.Interval.of(2000, 2, 15)
     assert (interval + day31).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
     assert (interval - day31).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
+
+
+def test_seasons():
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    assert (interval + scate.Season.SPRING).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"
+    assert (interval - scate.Season.SPRING).isoformat() == "2001-03-01T00:00:00 2001-06-01T00:00:00"
+    assert (interval + scate.Season.SUMMER).isoformat() == "2003-06-01T00:00:00 2003-09-01T00:00:00"
+    assert (interval - scate.Season.SUMMER).isoformat() == "2001-06-01T00:00:00 2001-09-01T00:00:00"
+    assert (interval + scate.Season.FALL).isoformat() == "2003-09-01T00:00:00 2003-12-01T00:00:00"
+    assert (interval - scate.Season.FALL).isoformat() == "2001-09-01T00:00:00 2001-12-01T00:00:00"
+    assert (interval + scate.Season.WINTER).isoformat() == "2003-12-01T00:00:00 2004-03-01T00:00:00"
+    assert (interval - scate.Season.WINTER).isoformat() == "2001-12-01T00:00:00 2002-03-01T00:00:00"
+
+
+def test_day_parts():
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    assert (interval + scate.DayPart.MORNING).isoformat() == "2003-05-11T06:00:00 2003-05-11T12:00:00"
+    assert (interval - scate.DayPart.MORNING).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
+    assert (interval + scate.DayPart.AFTERNOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
+    assert (interval - scate.DayPart.AFTERNOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
+    assert (interval + scate.DayPart.EVENING).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"
+    assert (interval - scate.DayPart.EVENING).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
+    assert (interval + scate.DayPart.NIGHT).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
+    assert (interval - scate.DayPart.NIGHT).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"

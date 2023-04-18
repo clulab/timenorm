@@ -281,6 +281,91 @@ class RepeatingField(Offset):
 
 
 @dataclasses.dataclass
+class RRuleOffset(Offset):
+    unit: Unit
+    rrule_kwargs: dict
+    start_rrule_kwargs: dict
+    end_rrule_kwargs: dict
+
+    def __post_init__(self):
+        self._one_unit = self.unit.relativedelta(1)
+        self._one_micro = Unit.MICROSECOND.relativedelta(1)
+        self.start_rrule_kwargs.update(self.rrule_kwargs)
+        self.end_rrule_kwargs.update(self.rrule_kwargs)
+
+    def __rsub__(self, other: datetime.datetime) -> Interval:
+        # rrule requires a starting point even when going backwards,
+        # so start at twice the expected range
+        dtstart = other - 2 * self._one_unit
+        end = dateutil.rrule.rrule(dtstart=dtstart, **self.end_rrule_kwargs).before(other)
+        start = dateutil.rrule.rrule(dtstart=dtstart, **self.start_rrule_kwargs).before(end)
+        return Interval(start, end)
+
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        # we need to allow start == other, so move other back the smallest amount possible
+        other -= self._one_micro
+        start = dateutil.rrule.rrule(dtstart=other, **self.start_rrule_kwargs).after(other)
+        end = dateutil.rrule.rrule(dtstart=start, **self.end_rrule_kwargs).after(start)
+        return Interval(start, end)
+
+
+class Season:
+    # Defined as "meterological seasons"
+    # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
+    SPRING = RRuleOffset(
+        unit=Unit.YEAR,
+        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
+        start_rrule_kwargs=dict(bymonth=3),
+        end_rrule_kwargs=dict(bymonth=6))
+
+    SUMMER = RRuleOffset(
+        unit=Unit.YEAR,
+        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
+        start_rrule_kwargs=dict(bymonth=6),
+        end_rrule_kwargs=dict(bymonth=9))
+
+    FALL = AUTUMN = RRuleOffset(
+        unit=Unit.YEAR,
+        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
+        start_rrule_kwargs=dict(bymonth=9),
+        end_rrule_kwargs=dict(bymonth=12))
+
+    WINTER = RRuleOffset(
+        unit=Unit.YEAR,
+        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
+        start_rrule_kwargs=dict(bymonth=12),
+        end_rrule_kwargs=dict(bymonth=3))
+
+
+class DayPart:
+    # defined as used in forecasts
+    # https://www.weather.gov/bgm/forecast_terms
+    MORNING = RRuleOffset(
+        unit=Unit.DAY,
+        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
+        start_rrule_kwargs=dict(byhour=6),
+        end_rrule_kwargs=dict(byhour=12))
+
+    AFTERNOON = RRuleOffset(
+        unit=Unit.DAY,
+        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
+        start_rrule_kwargs=dict(byhour=12),
+        end_rrule_kwargs=dict(byhour=18))
+
+    EVENING = RRuleOffset(
+        unit=Unit.DAY,
+        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
+        start_rrule_kwargs=dict(byhour=18),
+        end_rrule_kwargs=dict(byhour=0))
+
+    NIGHT = RRuleOffset(
+        unit=Unit.DAY,
+        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
+        start_rrule_kwargs=dict(byhour=0),
+        end_rrule_kwargs=dict(byhour=6))
+
+
+@dataclasses.dataclass
 class IntervalOp(Interval):
     interval: Interval
     offset: Offset
@@ -349,12 +434,20 @@ class After(IntervalOp):
 @dataclasses.dataclass
 class This(Interval):
     interval: Interval
-    period: Period
+    offset: Offset
     start: datetime.datetime = dataclasses.field(init=False)
     end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
-        self.start, self.end = self.period.expand(self.interval)
+        if isinstance(self.offset, (RepeatingUnit, RepeatingField, RRuleOffset)):
+            start = self.offset.unit.truncate(self.interval.start)
+            self.start, self.end = start + self.offset
+            if (self.end + self.offset).end < self.interval.end:
+                raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
+        elif isinstance(self.offset, Period):
+            self.start, self.end = self.offset.expand(self.interval)
+        else:
+            raise NotImplementedError
 
 
 @dataclasses.dataclass
