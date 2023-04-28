@@ -16,7 +16,7 @@ To use the TimeNorm SCFG system from the Scala console:
 
 3. Compile the program from the main directory using `sbt package`.
 
-4. Open the Scala console using `scala -cp target/scala-2.12/timenorm_[version].jar`.
+4. Open the Scala console using `scala -cp target/scala-[version]/timenorm_[version].jar`.
 
 Once you open the Scala console, you should be able to use TimeNorm SCFG to normalize single or multiple timexes.
 
