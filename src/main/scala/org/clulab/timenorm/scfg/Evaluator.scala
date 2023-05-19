@@ -119,31 +119,28 @@ object Evaluator {
     DCTs are normalized with respect to themselves */
 
     // Process the DCT depending on the presence of a time reference
-    val pattern = "T".r
-    val anchor = pattern.findFirstIn(dctTimex) match {
-      // Get the anchor timespan if time is specified
-      case Some(_) =>
-        val dct = dctTimex.split("T")
-        val date = dct(0).split("-")
-        val time = dct(1).split(":")
-        val year = date(0).toInt
-        val month = date(1).toInt
-        val day = date(2).toInt
-        val hours = time(0).toInt
-        val minutes = time(1).toInt
-        val seconds = time.length match {
-          case 3 => time(2).toInt
-          case _ => 0
-        }
-        TimeSpan.of(year, month, day, hours, minutes, seconds)
-
+    val anchor = if (dctTimex.contains('T')) {
+      val dct = dctTimex.split("T")
+      val date = dct(0).split("-")
+      val time = dct(1).split(":")
+      val year = date(0).toInt
+      val month = date(1).toInt
+      val day = date(2).toInt
+      val hours = time(0).toInt
+      val minutes = time(1).toInt
+      val seconds = time.length match {
+        case 3 => time(2).toInt
+        case _ => 0
+      }
+      TimeSpan.of(year, month, day, hours, minutes, seconds)
+    }
+    else {
       // Get the anchor timespan if time is not specified
-      case None =>
-        val dct = dctTimex.split("-")
-        val year = dct(0).toInt
-        val month = dct(1).toInt
-        val day = dct(2).toInt
-        TimeSpan.of(year, month, day)
+      val dct = dctTimex.split("-")
+      val year = dct(0).toInt
+      val month = dct(1).toInt
+      val day = dct(2).toInt
+      TimeSpan.of(year, month, day)
     }
 
     // Parse the timex with respect to its anchor
@@ -164,13 +161,13 @@ object Evaluator {
     format, and counts the number of timexes and correct normalizations */
 
     // Create the output writer
-    val writer = new PrintWriter(new File(outFile))
+    val printWriter = new PrintWriter(new File(outFile))
 
     var goldCounter = 0
     var normCounter = 0
 
     // Iterate over timex list and get each timex, gold and norm set
-    for (i <- 0 to timexList.length - 1) {
+    for (i <- timexList.indices) {
       val timex = timexList(i)
       val gold = goldList(i)
       val norm = normList(i)
@@ -178,16 +175,17 @@ object Evaluator {
 
       // If this is a timex, write the data and sum a gold value
       if (timex != "") {
-        writer.write(s"${timex}\t${gold}\t${norm}\n")
+        printWriter.println(s"${timex}\t${gold}\t${norm}")
         goldCounter += 1
         // If timex exists in corpus and normalization is equal to gold,
         // sum a correct norm value
         if (gold != "-" && norm == gold) {normCounter += 1}
       }
       // If this is a doc separator, write a newline
-      else {writer.write(s"\n")}
+      else
+        printWriter.println
     }
-    writer.close()
+    printWriter.close()
     (goldCounter, normCounter)
   }
 }
