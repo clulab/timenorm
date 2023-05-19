@@ -1,5 +1,4 @@
 target/
-project/
 .cache
 .idea
 .settings/
@@ -12,3 +11,4 @@ project/
 .bsp/
 .metals/
 .vscode/
+metals.sbt
