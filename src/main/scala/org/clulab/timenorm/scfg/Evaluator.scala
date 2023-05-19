@@ -1,7 +1,9 @@
-import org.clulab.timenorm.scfg._
-import scala.util.{Success, Failure}, scala.io.Source
-import java.io._
+package org.clulab.timenorm.scfg
+
 import scala.collection.mutable.ListBuffer
+import scala.util.{Success, Failure}, scala.io.Source
+
+import java.io._
 
 object Evaluator {
   /**
@@ -9,7 +11,7 @@ object Evaluator {
   standard normalizations
   */
 
-  def main(lang:String, in_file:String, out_file:String) = {
+  def main(lang: String, inFile: String, outFile: String): Unit = {
     /**
     Enter the language ("es"/"en") and the input and output paths
 
@@ -20,65 +22,65 @@ object Evaluator {
     */
 
     // Obtain the data of timexes and gold values from the input file
-    val (timex_list, gold_list) = get_content(in_file)
+    val (timexList, goldList) = getContent(inFile)
     // Obtain the normalizations of the timexes.
-    val norm_list = get_normalizations(lang, timex_list)
+    val normList = getNormalizations(lang, timexList)
     // Compare gold and system normalizations, write the results and get the
     //sums of timexes and correct normalizations
-    val (sum_gold, sum_norm) = compare_and_write(out_file, timex_list, gold_list, norm_list)
+    val (sumGold, sumNorm) = compareAndWrite(outFile, timexList, goldList, normList)
 
     // Compute number of errors and accuracy
-    var sum_errors = sum_gold - sum_norm
-    var accuracy = sum_norm.toFloat * 100 / sum_gold
+    val sumErrors = sumGold - sumNorm
+    val accuracy = sumNorm.toFloat * 100 / sumGold
 
     // Print the final statistics
     println(f"""\n
-                |Number of timexes (also DCTs): $sum_gold%6d
-                |Correct normalizations:        $sum_norm%6d
-                |Incorrect normalizations:      $sum_errors%6d
+                |Number of timexes (also DCTs): $sumGold%6d
+                |Correct normalizations:        $sumNorm%6d
+                |Incorrect normalizations:      $sumErrors%6d
                 |Accuracy:                      $accuracy%6.2f\n""".stripMargin)
   }
 
 
-  def get_content(in_file:String) : (List[String], List[String]) = {
-    /**Obtains the content from the input file as timex and value lists*/
+  def getContent(inFile: String): (List[String], List[String]) = {
+    /** Obtains the content from the input file as timex and value lists */
 
     // Turn input file to a list of lines
-    val content = Source.fromFile(in_file).getLines.toList
+    val content = Source.fromFile(inFile).getLines.toList
     // Obtain the standard line length from the first DCT
-    val std_line_length = content(0).split("\t").length
+    val stdLineLength = content(0).split("\t").length
 
-    val timex_list = ListBuffer[String]()
-    val gold_list = ListBuffer[String]()
+    val timexList = ListBuffer[String]()
+    val goldList = ListBuffer[String]()
 
     for (line <- content) {
       // If line is not a doc separator (indicated by empty string):
       if (line != "") {
         // If line length equals the standard, get the timex and its gold value
-        if (line.split("\t").length == std_line_length) {
-          timex_list += line.split("\t").head
-          gold_list += line.split("\t").last
+        if (line.split("\t").length == stdLineLength) {
+          timexList += line.split("\t").head
+          goldList += line.split("\t").last
         }
         // If this is a detected timex absent in the evaluation corpus, get the
         // timex but append "" as gold normalization
         else {
-          timex_list += line.split("\t").head
-          gold_list += "-"
+          timexList += line.split("\t").head
+          goldList += "-"
         }
       }
       // Otherwise, add empty strings to mark end of document timexes
       else {
-        timex_list += ""
-        gold_list += ""
+        timexList += ""
+        goldList += ""
       }
     }
-    return (timex_list.toList, gold_list.toList)
+    (timexList.toList, goldList.toList)
   }
 
 
-  def get_normalizations(lang:String, timex_list:List[String]) : List[String] = {
-    /**Processes the data, sends timexes and DCTs to the normalizer and returns
-    the list with all the normalizations*/
+  def getNormalizations(lang: String, timexList: List[String]): List[String] = {
+    /** Processes the data, sends timexes and DCTs to the normalizer and returns
+    the list with all the normalizations */
 
     // Select the parser for the desired grammar depending on the language
     val parser = lang match {
@@ -87,41 +89,41 @@ object Evaluator {
       case "it" => TemporalExpressionParser.it
     }
 
-    val norm_list = ListBuffer[String]()
-    var dct_timex = ""
+    val normList = ListBuffer[String]()
+    var dctTimex = ""
 
-    for (timex <- timex_list) {
+    for (timex <- timexList) {
       // If this is a timex (is not a doc separator):
       if (timex != "") {
         println(timex)
         // If this is the first timex in a doc, consider it a DCT
-        if (dct_timex == "") {
-          dct_timex = timex
+        if (dctTimex == "") {
+          dctTimex = timex
         }
         // Normalize the timex and append the normalization
-        var value = normalize(parser, timex, dct_timex)
-        norm_list += value
+        val value = normalize(parser, timex, dctTimex)
+        normList += value
       }
       // If this is a doc separator, empty the DCT timex and append ""
       else {
-        dct_timex = ""
-        norm_list += ""
+        dctTimex = ""
+        normList += ""
       }
     }
-    return norm_list.toList
+    normList.toList
   }
 
 
-  def normalize(parser:TemporalExpressionParser, timex:String, dct_timex:String) : String = {
-    /**Normalizes a timex according to the parser and the DCT timex.
-    DCTs are normalized with respect to themselves*/
+  def normalize(parser: TemporalExpressionParser, timex: String, dctTimex: String): String = {
+    /** Normalizes a timex according to the parser and the DCT timex.
+    DCTs are normalized with respect to themselves */
 
     // Process the DCT depending on the presence of a time reference
     val pattern = "T".r
-    val anchor = pattern.findFirstIn(dct_timex) match {
+    val anchor = pattern.findFirstIn(dctTimex) match {
       // Get the anchor timespan if time is specified
       case Some(_) =>
-        val dct = dct_timex.split("T")
+        val dct = dctTimex.split("T")
         val date = dct(0).split("-")
         val time = dct(1).split(":")
         val year = date(0).toInt
@@ -137,7 +139,7 @@ object Evaluator {
 
       // Get the anchor timespan if time is not specified
       case None =>
-        val dct = dct_timex.split("-")
+        val dct = dctTimex.split("-")
         val year = dct(0).toInt
         val month = dct(1).toInt
         val day = dct(2).toInt
@@ -148,46 +150,44 @@ object Evaluator {
     parser.parse(timex, anchor) match {
       // If the parser fails, return an empty string as normalization
       case Failure(temporal) =>
-        return "-"
+        "-"
       // If the parser successes, return the normalization of the timex
       case Success(temporal) =>
-        return temporal.timeMLValue
+        temporal.timeMLValue
     }
   }
 
 
-  def compare_and_write(out_file:String, timex_list:List[String],
-    gold_list:List[String], norm_list:List[String]) : (Int, Int) = {
-    /**Writes the results on the output file, in "{timex}\t{gold}\t{norm}"
-    format, and counts the number of timexes and correct normalizations*/
+  def compareAndWrite(outFile: String, timexList: List[String],
+      goldList: List[String], normList: List[String]): (Int, Int) = {
+    /** Writes the results on the output file, in "{timex}\t{gold}\t{norm}"
+    format, and counts the number of timexes and correct normalizations */
 
     // Create the output writer
-    val writer = new PrintWriter(new File(out_file))
+    val writer = new PrintWriter(new File(outFile))
 
-    var gold_counter = 0
-    var norm_counter = 0
+    var goldCounter = 0
+    var normCounter = 0
 
     // Iterate over timex list and get each timex, gold and norm set
-    for (i <- 0 to timex_list.length - 1) {
-      val timex = timex_list(i)
-      val gold = gold_list(i)
-      val norm = norm_list(i)
+    for (i <- 0 to timexList.length - 1) {
+      val timex = timexList(i)
+      val gold = goldList(i)
+      val norm = normList(i)
       println(s"${timex}\t${gold}\t${norm}")
 
       // If this is a timex, write the data and sum a gold value
       if (timex != "") {
         writer.write(s"${timex}\t${gold}\t${norm}\n")
-        gold_counter += 1
+        goldCounter += 1
         // If timex exists in corpus and normalization is equal to gold,
         // sum a correct norm value
-        if (gold != "-" && norm == gold) {norm_counter += 1}
+        if (gold != "-" && norm == gold) {normCounter += 1}
       }
       // If this is a doc separator, write a newline
       else {writer.write(s"\n")}
     }
     writer.close()
-    return (gold_counter, norm_counter)
+    (goldCounter, normCounter)
   }
-
-
 }
