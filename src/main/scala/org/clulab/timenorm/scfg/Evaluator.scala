@@ -96,32 +96,16 @@ object Evaluator {
     /** Normalizes a timex according to the parser and the DCT timex.
     DCTs are normalized with respect to themselves */
 
-    def parseDate(date: String): (Int, Int, Int) = {
-      val Seq(year, month, day) = date.split("-").toSeq.map(_.toInt)
-      (year, month, day)
-    }
-
-    def parseTime(time: String): (Int, Int, Int) = {
-      val (hour, minute, second) = time.split(":").toSeq.map(_.toInt).match {
-        case Seq(hour, minute, second) => (hour, minute, second)
-        case Seq(hour, minute) => (hour, minute, 0)
-      }
-      (hour, minute, second)
-    }
-
-    // Process the DCT depending on the presence of a time reference
-    val anchor = if (dctTimex.contains('T')) {
-      val Array(date, time) = dctTimex.split("T")
-      val (year, month, day) = parseDate(date)
-      val (hour, minute, second) = parseTime(time)
-      TimeSpan.of(year, month, day, hour, minute, second)
-    }
-    else {
-      // Get the anchor timespan if time is not specified
-      val date = dctTimex
-      val (year, month, day) = parseDate(date)
-      TimeSpan.of(year, month, day)
-    }
+    val fullDctTimex = dctTimex + (
+      if (dctTimex.contains('T'))
+        if (dctTimex.count(_ == ':') >= 2) ""
+        else ":00" // Add missing seconds.
+      else
+        "T00:00:00" // Add missing time.
+    )
+    val Array(year, month, day, hour, minute, second) =
+        fullDctTimex.replace('T', '-').replace(':', '-').split('-').map(_.toInt)
+    val anchor = TimeSpan.of(year, month, day, hour, minute, second)
 
     // Parse the timex with respect to its anchor
     parser.parse(timex, anchor) match {
