@@ -9,7 +9,7 @@ object Evaluator {
   standard normalizations
   */
 
-  def main(lang:String, in_file:String, out_file:String) {
+  def main(lang:String, in_file:String, out_file:String) = {
     /**
     Enter the language ("es"/"en") and the input and output paths
 
