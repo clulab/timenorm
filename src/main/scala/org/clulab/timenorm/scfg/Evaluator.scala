@@ -46,9 +46,17 @@ object Evaluator {
     /** Obtains the content from the input file as timex and value lists */
 
     // Turn input file to a list of lines
-    val content = Source.fromFile(inFile).getLines.toList
+    val content = {
+      val source = Source.fromFile(inFile)
+      try {
+        source.getLines.toList
+      }
+      finally {
+        source.close()
+      }
+    }
     // Obtain the standard line length from the first DCT
-    val stdLineLength = content(0).split("\t").length
+    val stdLineLength = content.head.split("\t").length
 
     val timexList = ListBuffer[String]()
     val goldList = ListBuffer[String]()
@@ -84,9 +92,9 @@ object Evaluator {
 
     // Select the parser for the desired grammar depending on the language
     val parser = lang match {
-      case "es" => TemporalExpressionParser.es
-      case "en" => TemporalExpressionParser.en
-      case "it" => TemporalExpressionParser.it
+      case "es" => TemporalExpressionParser.es()
+      case "en" => TemporalExpressionParser.en()
+      case "it" => TemporalExpressionParser.it()
     }
 
     val normList = ListBuffer[String]()
@@ -146,23 +154,29 @@ object Evaluator {
     // Parse the timex with respect to its anchor
     parser.parse(timex, anchor) match {
       // If the parser fails, return an empty string as normalization
-      case Failure(temporal) =>
-        "-"
+      case Failure(_) => "-"
       // If the parser successes, return the normalization of the timex
-      case Success(temporal) =>
-        temporal.timeMLValue
+      case Success(temporal) => temporal.timeMLValue
+    }
+  }
+
+  def compareAndWrite(outFile: String, timexList: List[String],
+      goldList: List[String], normList: List[String]): (Int, Int) = {
+    // Create the output writer
+    val printWriter = new PrintWriter(new File(outFile))
+    try {
+      compareAndWrite(printWriter, timexList, goldList, normList)
+    }
+    finally {
+      printWriter.close()
     }
   }
 
 
-  def compareAndWrite(outFile: String, timexList: List[String],
+  def compareAndWrite(printWriter: PrintWriter, timexList: List[String],
       goldList: List[String], normList: List[String]): (Int, Int) = {
-    /** Writes the results on the output file, in "{timex}\t{gold}\t{norm}"
+    /** Writes the results to the printWriter, in "{timex}\t{gold}\t{norm}"
     format, and counts the number of timexes and correct normalizations */
-
-    // Create the output writer
-    val printWriter = new PrintWriter(new File(outFile))
-
     var goldCounter = 0
     var normCounter = 0
 
@@ -171,11 +185,11 @@ object Evaluator {
       val timex = timexList(i)
       val gold = goldList(i)
       val norm = normList(i)
-      println(s"${timex}\t${gold}\t${norm}")
+      println(s"$timex\t$gold\t$norm")
 
       // If this is a timex, write the data and sum a gold value
       if (timex != "") {
-        printWriter.println(s"${timex}\t${gold}\t${norm}")
+        printWriter.println(s"$timex\t$gold\t$norm")
         goldCounter += 1
         // If timex exists in corpus and normalization is equal to gold,
         // sum a correct norm value
@@ -183,9 +197,8 @@ object Evaluator {
       }
       // If this is a doc separator, write a newline
       else
-        printWriter.println
+        printWriter.println()
     }
-    printWriter.close()
     (goldCounter, normCounter)
   }
 }
