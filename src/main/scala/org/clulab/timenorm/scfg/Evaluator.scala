@@ -71,28 +71,25 @@ object Evaluator {
       case "it" => TemporalExpressionParser.it()
     }
 
-    val normList = ListBuffer[String]()
     var dctTimex = ""
-
-    for (timex <- timexList) {
+    val normList = timexList.map { timex =>
       // If this is a timex (is not a doc separator):
-      if (timex != "") {
+      if (timex.nonEmpty) {
         println(timex)
         // If this is the first timex in a doc, consider it a DCT
-        if (dctTimex == "") {
+        if (dctTimex.isEmpty)
           dctTimex = timex
-        }
         // Normalize the timex and append the normalization
-        val value = normalize(parser, timex, dctTimex)
-        normList += value
+        normalize(parser, timex, dctTimex)
       }
       // If this is a doc separator, empty the DCT timex and append ""
       else {
         dctTimex = ""
-        normList += ""
+        ""
       }
     }
-    normList.toList
+
+    normList
   }
 
   def normalize(parser: TemporalExpressionParser, timex: String, dctTimex: String): String = {
