@@ -499,7 +499,7 @@ class ReadersTest extends FunSuite with TypesSuite {
           SimpleInterval.of(1998, 12, 17),
           SimpleInterval.of(1998, 12, 18),
           SimpleInterval.of(1999, 12, 17),
-          SimpleInterval.of(1999, 12, 18),
+          SimpleInterval.of(1999, 12, 18)
         ))
         assert(union.charSpan === Some((0,18)))
         assert(day18.following(dct.end).next === SimpleInterval.of(1998, 12, 18))
