@@ -7,3 +7,7 @@ project/
 .project
 .metadata/
 *.iml
+
+.bloop/
+.metals/
+.vscode/
