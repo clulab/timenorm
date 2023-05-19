@@ -9,5 +9,6 @@ project/
 *.iml
 
 .bloop/
+.bsp/
 .metals/
 .vscode/
