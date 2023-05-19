@@ -4,7 +4,7 @@ This is a fork of the [TimeNorm SCFG](https://github.com/clulab/timenorm) normal
 
 The project is related to [XTN Multilingual Timex Detection and Normalization](https://github.com/NGEscribano/XTN-timexes/tree/main), as described in
 
-> Nayla Escribano, German Rigau and Rodrigo Agerri. 2023. [A Modular Approach for Multilingual Timex Detection and Normalization using Deep Learning and Grammar-based methods](https://arxiv.org/abs/2304.14221). arXiv:2304.14221v1.
+> Nayla Escribano, German Rigau and Rodrigo Agerri. 2023. [A modular approach for multilingual timex detection and normalization using deep learning and grammar-based methods](https://www.sciencedirect.com/science/article/pii/S0950705123003623?via%3Dihub). In Knowledge-Based Systems, 110612, ISSN 0950-7051, https://doi.org/10.1016/j.knosys.2023.110612.
 
 ## Preparing the environment for using TimeNorm SCFG
 
@@ -44,7 +44,7 @@ res0: String = 2012-W51
 
 ## How to normalize multiple timexes
 
-To normalize and evaluate multiple timexes from a file, use the `Evaluator`. Input file must be in "timex  \[type]  gold_value" tab-separated format, timexes from different documents should be separated by newlines and the anchor has to be the first timex of each set of document timexes.
+To normalize and evaluate multiple timexes from a file, use the `Evaluator`. Input file must be in "timex  \[type]  gold_value" tab-separated format, timexes from different documents should be separated by newlines and the anchor has to be the first timex of each set of document timexes. Files in the `datasets` repository can be used as input files for testing.
 
 ```scala
 scala> val evaluator = Evaluator
