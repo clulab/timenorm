@@ -12,7 +12,19 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
 
   private val parser = new TemporalNeuralParser()
   private val Array(dct: Interval) = parser.parse("2018-07-06")
-  private val batch = parser.parseBatch(
+
+  def parseBatchWithMargin(textWithMargin: String, spans: Array[(Int, Int)], textCreationTime: Interval): Array[Array[TimeExpression]] = {
+    val text = textWithMargin
+        .stripMargin
+        .trim
+        // The text is coming directly from the source code.  Tools like git may have
+        // adjusted the line endings in the source file, particularly for Windows.
+        .replace("\r\n", "\n")
+
+    parser.parseBatch(text, spans, textCreationTime)
+  }
+
+  private val batch = parseBatchWithMargin(
     """
       |2018-10-10
       |January
@@ -34,7 +46,7 @@ class TemporalNeuralParserTest extends FunSuite with BeforeAndAfterAll with Type
       |until next December
       |from May 2016 to March 2017
       |between May 2016 and March 2017
-    """.stripMargin.trim,
+    """,
     Array(
       (0, 10),    // 2018-10-10
       (11, 18),   // January
