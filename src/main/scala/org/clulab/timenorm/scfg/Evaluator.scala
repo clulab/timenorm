@@ -45,44 +45,14 @@ object Evaluator {
   def getContent(inFile: String): (List[String], List[String]) = {
     /** Obtains the content from the input file as timex and value lists */
 
-    // Turn input file to a list of lines
-    val content = {
-      val source = Source.fromFile(inFile)
-      try {
-        source.getLines.toList
-      }
-      finally {
-        source.close()
-      }
-    }
-    // Obtain the standard line length from the first DCT
-    val stdLineLength = content.head.split("\t").length
-
-    val timexList = ListBuffer[String]()
-    val goldList = ListBuffer[String]()
-
-    for (line <- content) {
-      // If line is not a doc separator (indicated by empty string):
-      if (line != "") {
-        // If line length equals the standard, get the timex and its gold value
-        if (line.split("\t").length == stdLineLength) {
-          timexList += line.split("\t").head
-          goldList += line.split("\t").last
-        }
-        // If this is a detected timex absent in the evaluation corpus, get the
-        // timex but append "" as gold normalization
-        else {
-          timexList += line.split("\t").head
-          goldList += "-"
-        }
-      }
-      // Otherwise, add empty strings to mark end of document timexes
-      else {
-        timexList += ""
-        goldList += ""
-      }
-    }
-    (timexList.toList, goldList.toList)
+    val source = Source.fromFile(inFile)
+    val content = source.getLines.toList.map { line =>
+      val split = line.split('\t')
+      (split.lift(0).getOrElse(""), split.lift(2).getOrElse(""))
+    }.unzip
+    source.close()
+    println(content)
+    content
   }
 
 
