@@ -96,16 +96,22 @@ object Evaluator {
     /** Normalizes a timex according to the parser and the DCT timex.
     DCTs are normalized with respect to themselves */
 
-    val fullDctTimex = dctTimex + (
-      if (dctTimex.contains('T'))
-        if (dctTimex.count(_ == ':') >= 2) ""
-        else ":00" // Add missing seconds.
-      else
-        "T00:00:00" // Add missing time.
-    )
-    val Array(year, month, day, hour, minute, second) =
-        fullDctTimex.replace('T', '-').replace(':', '-').split('-').map(_.toInt)
-    val anchor = TimeSpan.of(year, month, day, hour, minute, second)
+    val anchor = if (dctTimex.contains('T')) {
+      val Array(year, month, day, hour, minute, second) =
+          (dctTimex + (if (dctTimex.count(_ == ':') >= 2) "" else ":00")) // Add missing seconds.
+              .replace('T', '-')
+              .replace(':', '-')
+              .split('-')
+              .map(_.toInt)
+      TimeSpan.of(year, month, day, hour, minute, second)
+    }
+    else {
+      val Array(year, month, day) =
+          dctTimex
+              .split('-')
+              .map(_.toInt)
+      TimeSpan.of(year, month, day)
+    }
 
     // Parse the timex with respect to its anchor
     parser.parse(timex, anchor) match {
