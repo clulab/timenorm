@@ -1,7 +1,8 @@
 package org.clulab.timenorm.scfg
 
 import scala.collection.mutable.ListBuffer
-import scala.util.{Success, Failure}, scala.io.Source
+import scala.io.Source
+import scala.util.{Success, Failure}
 
 import java.io._
 
@@ -35,26 +36,29 @@ object Evaluator {
 
     // Print the final statistics
     println(f"""\n
-                |Number of timexes (also DCTs): $sumGold%6d
-                |Correct normalizations:        $sumNorm%6d
-                |Incorrect normalizations:      $sumErrors%6d
-                |Accuracy:                      $accuracy%6.2f\n""".stripMargin)
+        |Number of timexes (also DCTs): $sumGold%6d
+        |Correct normalizations:        $sumNorm%6d
+        |Incorrect normalizations:      $sumErrors%6d
+        |Accuracy:                      $accuracy%6.2f\n""".stripMargin)
   }
-
 
   def getContent(inFile: String): (List[String], List[String]) = {
     /** Obtains the content from the input file as timex and value lists */
 
     val source = Source.fromFile(inFile)
-    val content = source.getLines.toList.map { line =>
+    val lines = try {
+      source.getLines.toList
+    }
+    finally {
+      source.close()
+    }
+    val content = lines.map { line =>
       val split = line.split('\t')
       (split.lift(0).getOrElse(""), split.lift(2).getOrElse(""))
     }.unzip
-    source.close()
     println(content)
     content
   }
-
 
   def getNormalizations(lang: String, timexList: List[String]): List[String] = {
     /** Processes the data, sends timexes and DCTs to the normalizer and returns
@@ -90,7 +94,6 @@ object Evaluator {
     }
     normList.toList
   }
-
 
   def normalize(parser: TemporalExpressionParser, timex: String, dctTimex: String): String = {
     /** Normalizes a timex according to the parser and the DCT timex.
@@ -142,33 +145,32 @@ object Evaluator {
     }
   }
 
-
   def compareAndWrite(printWriter: PrintWriter, timexList: List[String],
       goldList: List[String], normList: List[String]): (Int, Int) = {
     /** Writes the results to the printWriter, in "{timex}\t{gold}\t{norm}"
     format, and counts the number of timexes and correct normalizations */
-    var goldCounter = 0
-    var normCounter = 0
+
+    def next(current: Int, condition: Boolean): Int = if (condition) current + 1 else current
 
     // Iterate over timex list and get each timex, gold and norm set
-    for (i <- timexList.indices) {
-      val timex = timexList(i)
-      val gold = goldList(i)
-      val norm = normList(i)
+    val goldAndNormCounters = (timexList, goldList, normList).zipped.foldLeft(0, 0) { case ((goldCounter, normCounter), (timex, gold, norm)) =>
       println(s"$timex\t$gold\t$norm")
-
-      // If this is a timex, write the data and sum a gold value
-      if (timex != "") {
+      val (isGold, isNorm) = if (timex.nonEmpty) {
+        // If this is a timex, write the data
         printWriter.println(s"$timex\t$gold\t$norm")
-        goldCounter += 1
+        // If this is a timex, sum a gold value
         // If timex exists in corpus and normalization is equal to gold,
         // sum a correct norm value
-        if (gold != "-" && norm == gold) {normCounter += 1}
+        (true, gold != "-" && norm == gold)
       }
-      // If this is a doc separator, write a newline
-      else
+      else {
+        // If this is a doc separator, write a newline
         printWriter.println()
+        (false, false)
+      }
+
+      (next(goldCounter, isGold), next(normCounter, isNorm))
     }
-    (goldCounter, normCounter)
+    goldAndNormCounters
   }
 }
