@@ -1,10 +1,9 @@
 package org.clulab.timenorm.scfg
 
-import scala.collection.mutable.ListBuffer
-import scala.io.Source
-import scala.util.{Success, Failure}
-
-import java.io._
+import scala.io.{Codec, Source}
+import scala.util.{Failure, Success}
+import java.io.File
+import java.io.PrintWriter
 
 object Evaluator {
   /**
@@ -45,7 +44,7 @@ object Evaluator {
   def getContent(inFile: String): (List[String], List[String]) = {
     /** Obtains the content from the input file as timex and value lists */
 
-    val source = Source.fromFile(inFile)
+    val source = Source.fromFile(inFile)(Codec.UTF8)
     val lines = try {
       source.getLines.toList
     }
@@ -114,7 +113,7 @@ object Evaluator {
   def compareAndWrite(outFile: String, timexList: List[String],
       goldList: List[String], normList: List[String]): (Int, Int) = {
     // Create the output writer
-    val printWriter = new PrintWriter(new File(outFile))
+    val printWriter = new PrintWriter(new File(outFile), Codec.UTF8.toString)
     try {
       compareAndWrite(printWriter, timexList, goldList, normList)
     }
