@@ -96,9 +96,9 @@ object Evaluator {
     DCTs are normalized with respect to themselves */
 
     val anchor = dctTimex.replace('T', '-').replace(':', '-').split('-').map(_.toInt) match {
+      case Array(year, month, day) => TimeSpan.of(year, month, day)
       case Array(year, month, day, hour, minute, second) => TimeSpan.of(year, month, day, hour, minute, second)
       case Array(year, month, day, hour, minute) => TimeSpan.of(year, month, day, hour, minute, 0)
-      case Array(year, month, day) => TimeSpan.of(year, month, day)
     }
 
     // Parse the timex with respect to its anchor
