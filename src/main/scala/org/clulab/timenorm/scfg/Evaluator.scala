@@ -70,20 +70,20 @@ object Evaluator {
       case "it" => TemporalExpressionParser.it()
     }
 
-    var dctTimex = ""
+    var dctTimeSpanOpt: Option[TimeSpan] = None
     val normList = timexList.map { timex =>
       // If this is a timex (is not a doc separator):
       if (timex.nonEmpty) {
         println(timex)
         // If this is the first timex in a doc, consider it a DCT
-        if (dctTimex.isEmpty)
-          dctTimex = timex
+        if (dctTimeSpanOpt.isEmpty)
+          dctTimeSpanOpt = Some(mkTimeSpan(timex))
         // Normalize the timex and append the normalization
-        normalize(parser, timex, dctTimex)
+        normalize(parser, timex, dctTimeSpanOpt.get)
       }
       // If this is a doc separator, empty the DCT timex and append ""
       else {
-        dctTimex = ""
+        dctTimeSpanOpt = None
         ""
       }
     }
@@ -91,18 +91,22 @@ object Evaluator {
     normList
   }
 
-  def normalize(parser: TemporalExpressionParser, timex: String, dctTimex: String): String = {
-    /** Normalizes a timex according to the parser and the DCT timex.
-    DCTs are normalized with respect to themselves */
-
-    val anchor = dctTimex.replace('T', '-').replace(':', '-').split('-').map(_.toInt) match {
+  def mkTimeSpan(timex: String): TimeSpan = {
+    val timeSpan = timex.replace('T', '-').replace(':', '-').split('-').map(_.toInt) match {
       case Array(year, month, day) => TimeSpan.of(year, month, day)
       case Array(year, month, day, hour, minute, second) => TimeSpan.of(year, month, day, hour, minute, second)
       case Array(year, month, day, hour, minute) => TimeSpan.of(year, month, day, hour, minute, 0)
     }
 
+    timeSpan
+  }
+
+  def normalize(parser: TemporalExpressionParser, timex: String, dctTimeSpan: TimeSpan): String = {
+    /** Normalizes a timex according to the parser and the DCT TimeSpan.
+    DCTs are normalized with respect to themselves */
+
     // Parse the timex with respect to its anchor
-    parser.parse(timex, anchor) match {
+    parser.parse(timex, dctTimeSpan) match {
       // If the parser fails, return an empty string as normalization
       case Failure(_) => "-"
       // If the parser successes, return the normalization of the timex
