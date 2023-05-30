@@ -1,0 +1,1609 @@
+1989-10-30	DATE	1989-10-30
+September	DATE	1989-09
+this month	DATE	1989-10
+now	DATE	PRESENT_REF
+past years	DATE	PAST_REF
+these days	DATE	PRESENT_REF
+1987	DATE	1987
+Eight trading days	DURATION	P8D
+Oct. 12	DATE	1989-10-12
+the day	DATE	1989-10-12
+Three days	DURATION	P3D
+Friday	DATE	1989-10-27
+Friday	DATE	1989-10-27
+the week	DATE	1989-WXX
+Friday	DATE	1989-10-27
+Friday	DATE	1989-10-27
+October	DATE	1989-10
+now	DATE	PRESENT_REF
+Thursday	DATE	1989-10-26
+two to three weeks	DURATION	P2W
+third-quarter	DATE	1989-Q3
+last year	DATE	1988
+the 1988 quarter	DATE	1988-Q3
+
+1989-11-02	DATE	1989-11-02
+the six months	DURATION	P6M
+Oct. 1	DATE	1989-10-01
+the latest period	DATE	1989-Q3
+1988	DATE	1998
+this year	DATE	1989
+last year	DATE	1988
+yesterday	DATE	1989-11-01
+a year earlier	DATE	1988-11-02
+
+1989-10-26	DATE	1989-10-26
+the fiscal first quarter	DATE	1989-Q1
+the quarter	DURATION	P1Q
+Sept. 29	DATE	1989-09-29
+a year earlier	DATE	1988-QX
+the 1988 period	DATE	1988-Q1
+this month	DATE	1989-10
+the quarter	DURATION	1989-Q1
+April	DATE	1988-04
+the quarter	DATE	1989-Q1
+April	DATE	1989-04
+the summer	DATE	1989-SU
+its fourth quarter	DATE	1989-Q4
+June 30	DATE	1989-06-30
+this year	DATE	1989
+the fiscal year	DURATION	P1Y
+Recently	DATE	PAST_REF
+early next year	DATE	1990
+
+1998-04-02T22:52:00	TIME	1998-04-02T22:52:00
+Thursday	DATE	1998-04-02
+the last five years	DURATION	P5Y
+recent months	DURATION	PXM
+last year	DATE	1997
+1993	DATE	1993
+Tuesday	DATE	1998-03-31
+
+1998-02-16	DATE	1998-02-16
+last week	DATE	1998-W07
+
+1989-10-30	DATE	1989-10-30
+six months	DURATION	P6M
+the year	DATE	1989
+June	DATE	1989-06
+March	DATE	1989-03
+this year	DATE	1989-10-30
+the first nine months	DURATION	P9M
+the year	DATE	1989
+recently	DATE	PAST_REF
+Friday	DATE	1989-10-27
+1987	DATE	1987
+Sept. 29	DATE	1989-09-29
+this year	DATE	1989
+
+1989-10-30	DATE	1989-10-30
+months ago	DURATION	PXM
+soon	DATE	FUTURE_REF
+now	DATE	PRESENT_REF
+five-year	DURATION	P5Y
+that time	DURATION	P5Y
+this year	DATE	1989
+next year	DATE	1990
+recent	DATE	PAST_REF
+1990	DATE	1990
+a good part of 1990	DATE	1990
+next year	DATE	1990
+recent months	DURATION	PXM
+January	DATE	1990-01
+Last week	DATE	1989-WXX
+third-quarter	DATE	1989-Q3
+the first nine months	DURATION	P9M
+recently	DATE	PAST_REF
+several quarters	DURATION	PXQ
+recently	DATE	PAST_REF
+the end of 1990	DATE	1990
+this past spring	DATE	1989-SP
+
+1989-10-30	DATE	1989-10-30
+March 15, 2007	DATE	2007-03-15
+
+1989-11-01	DATE	1989-11-01
+third-quarter	DATE	1989-Q3
+the quarter	DATE	1989-Q3
+Sept. 30	DATE	1989-09-30
+the year-ago quarter	DATE	1988-Q3
+year-ago	DATE	1988-Q3
+the third quarter	DATE	1989-Q3
+
+1989-11-01	DATE	1989-11-01
+the year	DURATION	P1Y
+March 31	DATE	1989-03-31
+currently	DATE	PRESENT_REF
+
+1998-04-24T21:49:00	TIME	1998-04-24T21:49:00
+Saturday, April 25	DATE	1998-04-25
+this week	DATE	1998-W17
+two years ago	DATE	1996
+current	DATE	PRESENT_REF
+
+1998-02-27T08:02:00	TIME	1998-02-27T08:02:00
+Friday	DATE	1998-02-27
+1988	DATE	1988
+1995	DATE	1995
+1971	DATE	1971
+
+1989-10-27	DATE	1989-10-27
+Last week	DATE	1989-WXX
+the past two months	DURATION	P2M
+the past two months	DURATION	P2M
+recent	DATE	PAST_REF
+the weeks ahead	DURATION	PXW
+recent years	DATE	PAST_REF
+the past two months	DURATION	P2M
+last week	DATE	1989-WXX
+week	DATE	1989-WXX
+last month	DATE	1989-09
+every month	SET	P1M
+the last three years	DURATION	P3Y
+this month	DATE	1989-10
+early September	DATE	1989-09
+Friday Oct. 13	DATE	1989-10-13
+now	DATE	PRESENT_REF
+the past two months	DURATION	P2M
+this year	DATE	1989
+August	DATE	1989-08
+The last two months	DURATION	P2M
+this year	DATE	1989
+Oct. 19	DATE	1989-10-19
+this year	DATE	1989
+Oct. 19	DATE	1989-10-19
+now	DATE	PRESENT_REF
+recent weeks and months	DATE	PAST_REF
+
+1998-02-27	DATE	1998-02-27
+last month	DATE	1998-01
+nineteen ninety-six	DATE	1996
+January nineteen ninety-seven	DATE	1997-01
+last month	DATE	1998-01
+Now	DATE	PRESENT_REF
+nineteen ninety-seven	DATE	1997
+this week	DATE	1998-WXX
+
+1989-10-26	DATE	1989-10-26
+third quarter	DATE	1989-Q3
+the year-ago period	DATE	1988-Q3
+the quarter	DATE	1989-Q3
+
+1989-11-02	DATE	1989-11-02
+27-year	DURATION	P27Y
+six months	DURATION	P6M
+several-year	DURATION	PXY
+now	DATE	PRESENT_REF
+
+1998-02-27T08:09:00	TIME	1998-02-27T08:09:00
+Friday	DATE	1998-02-27
+more than four hours	DURATION	PT4H
+Friday	DATE	1998-02-27
+November 1995	DATE	1995-11
+
+1989-10-30	DATE	1989-10-30
+Friday	DATE	1989-10-27
+the quarter	DATE	1989-Q2
+July 31	DATE	1989-07-31
+
+1998-03-06T13:19:00	TIME	1998-03-06T13:19:00
+Friday	DATE	1998-03-06
+nearly two months	DURATION	P2M
+10-hour	DURATION	PT10H
+Previously	DATE	PAST_REF
+Thursday	DATE	1998-03-05
+over a week	DURATION	P1W
+Jan. 13	DATE	1998-01-13
+daily	SET	XXXX-XX-XX
+Friday	DATE	1998-03-06
+Feb. 23	DATE	1998-02-23
+Thursday	DATE	1998-03-05
+Thursday	DATE	1998-03-05
+Friday	DATE	1998-03-06
+next week	DATE	1998-W11
+1990	DATE	1990
+
+1989-10-26	DATE	1989-10-26
+Dec. 15	DATE	1989-12-15
+Nov. 17	DATE	1989-11-17
+yesterday	DATE	1989-10-25
+
+1989-11-01	DATE	1989-11-01
+early next year	DATE	1990
+
+1998-02-13	DATE	1998-02-13
+the future	DATE	FUTURE_REF
+less than one hour	DURATION	PT1H
+Thursday	DATE	1998-02-12
+today	DATE	1998-02-13
+the day	DATE	1998-02-13
+Friday	DATE	1998-02-13
+now	DATE	PRESENT_REF
+next week	DATE	1998-WXX
+
+1989-10-30	DATE	1989-10-30
+Dec. 7	DATE	1989-12-07
+Nov. 30	DATE	1989-11-30
+then	DATE	1989-11-30
+Friday	DATE	1989-10-27
+
+1989-11-02	DATE	1989-11-02
+Nov. 20	DATE	1989-11-20
+yesterday	DATE	1989-11-01
+already	DATE	PRESENT_REF
+Nov. 10	DATE	1989-11-10
+
+1989-10-27	DATE	1989-10-27
+last June	DATE	1989-06
+soon	DATE	FUTURE_REF
+this week	DATE	1989-WXX
+recent	DATE	PAST_REF
+last month	DATE	1989-09
+a three-year period	DURATION	P3Y
+1985	DATE	1985
+1987	DATE	1987
+
+1989-10-30	DATE	1989-10-30
+Friday	DATE	1989-10-27
+the third quarter	DATE	1989-Q3
+next year	DATE	1990
+the quarter	DATE	1989-Q3
+the year-earlier quarter	DATE	1988-Q3
+a month ago	DATE	1989-09
+the quarter	DATE	1989-Q3
+future quarters	DATE	FUTURE_REF
+the quarter	DATE	1989-Q3
+the end of the year	DATE	1989
+the quarter	DATE	1989-Q3
+the past several quarters	DATE	PAST_REF
+every quarter	SET	P1Q
+next year	DATE	1990
+the near term	DATE	FUTURE_REF
+this year	DATE	1989
+this year	DATE	1989
+last year	DATE	1988
+Friday	DATE	1989-10-27
+the first nine months	DURATION	P9M
+a year	DATE	1988
+the fourth quarter	DATE	1989-Q4
+next year	DATE	1990
+next year	DATE	1990
+next year	DATE	1990
+Friday	DATE	1989-10-27
+
+1998-02-19T08:02:00	TIME	1998-02-19T08:02:00
+Thursday	DATE	1998-02-19
+almost two years ago	DURATION	P2Y
+the next two weeks	DURATION	P2W
+March 1996	DATE	1996-03
+11th century	DATE	10
+January this year	DATE	1998-01
+weeks or months	DURATION	PXW
+March 26, 1996	DATE	1996-03-26
+22 months	DURATION	P22M
+Thursday	DATE	1998-02-19
+last year	DATE	1997
+now	DATE	PRESENT_REF
+a week	DURATION	P1W
+the late 1970s	DATE	197
+mid-1996	DATE	1996
+June last year	DATE	1997-06
+July last year	DATE	1997-06
+
+1989-10-26	DATE	1989-10-26
+days	DURATION	PXD
+summer	DATE	1989-SU
+now	DATE	PRESENT_REF
+at least the past 18 months	DURATION	P18M
+third-quarter	DATE	1989-Q3
+last month	DATE	1989-09
+the last half of 1989	DATE	1989-H2
+1990	DATE	1990
+yesterday	DATE	1989-10-25
+1989	DATE	1989
+the last half of the '80s	DATE	198
+the mid-1990s	DATE	199
+the current year	DATE	1989
+yesterday	DATE	1989-10-25
+1990	DATE	1990
+third-quarter	DATE	1989-Q3
+last year	DATE	1988
+
+1989-11-01	DATE	1989-11-01
+the third quarter	DATE	1989-Q3
+the third quarter	DURATION	1989-Q3
+a year ago	DATE	1988-Q3
+The latest period	DATE	1989-Q3
+the near future	DATE	FUTURE_REF
+
+1990-08-16T20:41	TIME	1990-08-16T20:41
+Thursday	DATE	1990-08-16
+two-week	DURATION	P2W
+two-hour	DURATION	PT2H
+Thursday	DATE	1990-08-16
+now	DATE	PRESENT_REF
+Aug. 2	DATE	1990-08-02
+Thursday	DATE	1990-08-16
+a fairly lengthy period	DURATION	PXX
+now	DATE	PRESENT_REF
+now	DATE	PRESENT_REF
+A day earlier	DURATION	P1D
+this week	DATE	1990-W33
+Wednesday	DATE	1990-08-15
+Thursday	DATE	1990-08-16
+September	DATE	1990-09
+Thursday	DATE	1990-08-16
+
+1989-10-26	DATE	1989-10-26
+third quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+third-quarter	DATE	1989-Q3
+year-earlier	DATE	1988-Q3
+the latest period	DATE	1989-QX
+second	SET	XXXX-Q2
+fourth quarters	SET	XXXX-Q4
+the current quarter	DATE	1989-Q4
+
+1989-11-02	DATE	1989-11-02
+5 p.m. EST Nov. 9	TIME	1989-11-09T17:00
+Nov. 6	DATE	1989-11-06
+
+1989-11-02	DATE	1989-11-02
+fourth-quarter	DURATION	1989-Q4
+a year earlier	DATE	1988-Q4
+the latest period	DATE	1989-Q4
+last year	DATE	1988-Q4
+the year	DATE	1989
+Sept. 30	DATE	1989-09-30
+This year	DATE	1989
+the full year	DATE	1989
+recent	DATE	PAST_REF
+the next year or so	DATE	1990
+fourth-quarter	DATE	1989-Q4
+the year	DATE	1989
+yesterday	DATE	1989-11-01
+
+1989-10-27	DATE	1989-10-27
+last April	DATE	1989-04
+yesterday	DATE	1989-10-26
+at least 30 days	DURATION	P30D
+August 1988	DATE	1988-08
+
+1989-11-01	DATE	1989-11-01
+the third quarter	DATE	1989-Q3
+Sept. 30	DATE	1989-09-30
+the corresponding period last year	DATE	1988-Q3
+This quarter	DATE	1989-Q3
+this year's third quarter	DATE	1989-Q3
+last year	DATE	1988
+last year's quarter	DATE	1988-Q3
+
+1989-10-26	DATE	1989-10-26
+the third quarter	DATE	1989-Q3
+the 1988 third quarter	DATE	1988-Q3
+
+1989-11-02	DATE	1989-11-02
+one-year term	DURATION	P1Y
+an additional year	DURATION	P1Y
+
+1989-10-30	DATE	1989-10-30
+Friday	DATE	1989-10-27
+last Thursday	DATE	1989-10-26
+Nov. 6	DATE	1989-11-06
+Nov. 16	DATE	1989-11-16
+Friday evening	TIME	1989-10-27TEV
+mid-November	DATE	1989-11
+last week	DATE	1989-WXX
+Thursday	DATE	1989-10-26
+Thursday	DATE	1989-10-26
+
+1989-11-02	DATE	1989-11-02
+December	DATE	1989-12
+
+1989-10-30	DATE	1989-10-30
+Oct. 15, 1999	DATE	1999-10-15
+
+1989-10-30	DATE	1989-10-30
+now	DATE	PRESENT_REF
+
+1998-01-14	DATE	1998-01-14
+today	DATE	1998-01-14
+a minute and a half	DURATION	PT1M30S
+
+1989-11-02	DATE	1989-11-02
+Previously	DATE	PAST_REF
+the first two years	DURATION	P2Y
+five years	DATE	1994
+
+1998-03-03	DATE	1998-03-03
+two day	DURATION	P2D
+this year	DATE	1998
+early Tuesday	DATE	1998-03-03
+two day	DURATION	P2D
+two days	DURATION	P2D
+
+1989-10-30	DATE	1989-10-30
+Friday	DATE	1989-10-27
+Oct. 15, 1999	DATE	1999-10-15
+Thursday	DATE	1989-10-26
+Nov. 1, 2009	DATE	2009-11-01
+1999	DATE	1999
+10-year	DURATION	P10Y
+Nov. 17, 1992	DATE	1992-11-17
+
+1989-10-30	DATE	1989-10-30
+the short term	DATE	FUTURE_REF
+Friday	DATE	1989-10-27
+earlier this month	DATE	1989-10
+1994 or later	DATE	1994
+the weekend	DATE	1989-W43-WE
+June 1994	DATE	1994-06
+five years	DURATION	P5Y
+1990	DATE	1990
+1991	DATE	1991
+1988	DATE	1988
+1990	DATE	1990
+now	DATE	PRESENT_REF
+Friday	DATE	1989-10-27
+1984	DATE	1984
+
+1989-11-02	DATE	1989-11-02
+yesterday	DATE	1989-11-01
+
+1989-10-30	DATE	1989-10-30
+the past	DATE	PAST_REF
+from time to time	DATE	FUTURE_REF
+Sept. 14	DATE	1989-09-14
+Thursday	DATE	1989-10-26
+Friday	DATE	1989-10-27
+recently	DATE	PAST_REF
+May	DATE	1989-05
+February	DATE	1990-02
+early September	DATE	1989-09
+July	DATE	1989-07
+recent	DATE	PAST_REF
+Earlier this month	DATE	1989-10
+the next four years	DURATION	P4Y
+the nine months	DURATION	P9M
+
+1989-10-30	DATE	1989-10-30
+fourth quarter	DATE	1989-Q4
+yesterday	DATE	1989-10-29
+1988	DATE	1988
+1989	DATE	1989
+next year	DATE	1990
+1988	DATE	1988
+
+1989-11-02	DATE	1989-11-02
+Jan. 2	DATE	1990-01-02
+Dec. 15	DATE	1989-12-15
+third-quarter	DATE	1989-Q3
+the year-ago quarter	DATE	1988-Q3
+
+1998-01-21	DATE	1998-01-21
+today	DATE	1998-01-21
+nineteen seventy-nine	DATE	1979
+centuries	DURATION	PXC
+more than two thousand years	DURATION	P2L
+a few minutes	DURATION	PXM
+
+1989-11-01	DATE	1989-11-01
+Oct. 23	DATE	1989-10-23
+about two years ago	DURATION	P2Y
+the 20th century	DATE	19XX
+
+1989-10-26	DATE	1989-10-26
+the latest fiscal year	DATE	1988
+1985	DATE	1985
+the past two years	DURATION	P2Y
+the six months	DURATION	P6M
+Aug. 12	DATE	1989-08-12
+a year earlier	DATE	1988-08-12
+Last month	DATE	1989-09
+
+1989-11-01	DATE	1989-11-01
+Earlier this month	DATE	1989-11
+
+1998-01-20	DATE	1998-01-20
+this week	DATE	1998-W04
+today	DATE	1998-01-20
+now	DATE	PRESENT_REF
+today	DATE	1998-01-20
+Today	DATE	1998-01-20
+now	DATE	PRESENT_REF
+
+1989-10-26	DATE	1989-10-26
+the third quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+The latest quarter	DATE	1989-Q3
+the nine months	DURATION	P9M
+a year earlier	DATE	1988-Q3
+the year-earlier nine months	DURATION	P9M
+third-quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+the next couple of years	DURATION	P2Y
+the third quarter	DATE	1989-Q3
+yesterday	DATE	1989-10-25
+
+1989-11-02	DATE	1989-11-02
+the third quarter	DATE	1989-Q3
+year-earlier	DATE	1988-Q3
+the nine months	DURATION	P9M
+year-earlier	DATE	1988
+
+1989-10-30	DATE	1989-10-30
+third-quarter	DATE	1989-Q3
+Last year	DATE	1988
+year-earlier	DATE	1988
+nearly two weeks ago	DATE	1989-WXX
+fourth-quarter	DATE	1989-Q4
+Friday	DATE	1989-10-27
+the latest quarter	DATE	1989-Q3
+last year	DATE	1988-Q3
+nearly three years	DURATION	P3Y
+Third-quarter	DATE	1989-Q3
+August	DATE	1989-08
+the nine months	DURATION	P9M
+last year	DATE	1988
+
+1998-03-03	DATE	1998-03-03
+Tomorrow	DATE	1998-03-04
+now	DATE	PRESENT_REF
+tomorrow	DATE	1998-03-04
+Now	DATE	PRESENT_REF
+one day	DATE	FUTURE_REF
+
+1989-11-01	DATE	1989-11-01
+yesterday	DATE	1989-10-31
+
+1989-11-02	DATE	1989-11-02
+early this week	DATE	1989-W44
+the next three quarters	DURATION	P9M
+the first nine months	DURATION	P9M
+recent quarters	DURATION	PXM
+
+1989-10-26	DATE	1989-10-26
+third-quarter	DATE	1989-Q3
+A year ago	DATE	1988
+yesterday	DATE	1989-10-25
+within 18 months	DURATION	P18M
+
+1998-03-08T06:26:00	TIME	1998-03-08T06:26:00
+Sunday	DATE	1998-03-08
+recent days	DATE	PAST_REF
+
+1989-10-30	DATE	1989-10-30
+Dec. 7	DATE	1989-12-07
+Friday	DATE	1989-10-27
+1989	DATE	1989
+early November	DATE	1989-11
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+third-quarter	DATE	1989-Q3
+the third quarter	DATE	1989-Q3
+the third quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+Third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+
+1989-10-26	DATE	1989-10-26
+this month	DATE	1989-10
+a later date	DATE	FUTURE_REF
+early 1991	DATE	1991
+this month	DATE	1989-10
+
+1989-10-26	DATE	1989-10-26
+
+1989-10-27	DATE	1989-10-27
+months	DURATION	PXM
+January	DATE	1989-01
+A few days	DURATION	PXD
+March	DATE	1989-03
+The following month	DATE	1989-04
+early this month	DATE	1989-10
+yesterday	DATE	1989-10-26
+
+1989-10-27	DATE	1989-10-27
+the third quarter	DATE	1989-Q3
+mid-November	DATE	1989-11
+December	DATE	1988-12
+the comparable year-ago quarter	DATE	1988-Q2
+second quarter	DATE	1988-Q2
+Oct. 31	DATE	1988-10-31
+that quarter	DATE	1988-Q2
+
+1998-02-27T07:56:00	TIME	1998-02-27T07:56:00
+Friday	DATE	1998-02-27
+February 1947	DATE	1947-02
+
+1989-11-02	DATE	1989-11-02
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+future	DATE	FUTURE_REF
+1990	DATE	1990
+currently	DATE	PRESENT_REF
+the quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+
+1989-10-27	DATE	1989-10-27
+
+1998-02-27T08:13:00	TIME	1998-02-27T08:13:00
+Friday	DATE	1998-02-27
+nearly four years ago	DATE	1994
+April 6, 1994	DATE	1994-04-06
+2 1/2 years	DURATION	P2Y6M
+a year	DURATION	P1Y
+
+1989-10-30	DATE	1989-10-30
+5 p.m. EST, Nov. 6	TIME	1989-11-06T17
+midnight Friday	TIME	1989-10-27T24
+last Friday	DATE	1989-10-27
+Sept. 26	DATE	1989-09-26
+Friday	DATE	1989-10-27
+Late last week	DATE	1989-WXX
+
+1989-10-27	DATE	1989-10-27
+the third quarter	DATE	1989-Q3
+the year-earlier quarter	DATE	1988-Q3
+last June	DATE	1989-06
+earlier this month	DATE	1989-10
+the nine months	DURATION	P9M
+the year-earlier period	DURATION	P9M
+
+1989-11-02	DATE	1989-11-02
+mid-afternoon yesterday	TIME	1989-11-01TAF
+Dec. 10	DATE	1989-12-10
+already	DATE	PRESENT_REF
+
+1989-10-31	DATE	1989-10-31
+yesterday	DATE	1989-10-30
+Dec. 15	DATE	1989-12-15
+the fiscal year	DURATION	P1Y
+Jan. 31	DATE	1989-01-31
+1992	DATE	1992
+currently	DATE	PRESENT_REF
+
+1989-10-30	DATE	1989-10-30
+September	DATE	1989-09
+third-quarter	DATE	1989-Q3
+this fall	DATE	1989-FA
+future	DATE	FUTURE_REF
+this week	DATE	1989-WXX
+the past year	DATE	1988
+the third quarter	DATE	1989-Q3
+
+1989-10-30	DATE	1989-10-30
+around Nov. 1	DATE	1989-11-01
+30-day	DURATION	P30D
+Dec. 31, 1994	DATE	1994-12-31
+the end of 1994	DATE	1994
+the next 12 to 18 months	DURATION	PXM
+currently	DATE	PRESENT_REF
+
+1989-11-02	DATE	1989-11-02
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+last month	DATE	1989-10
+fourth-quarter	DATE	1989-Q4
+the latest quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+last year	DATE	1988-Q3
+the first nine months	DURATION	P9M
+the 1988 period	DATE	1988
+year-ago	DATE	1988
+the 1988 second quarter	DATE	1988-Q2
+
+1989-11-01	DATE	1989-11-01
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+a flat second quarter	DATE	1989-Q2
+the year-earlier period	DATE	1988-Q3
+the 1989 period	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+the first nine months	DURATION	P9M
+
+1989-11-02	DATE	1989-11-02
+today	DATE	1989-11-02
+the end of November	TIME	1989-11
+currently	DATE	PRESENT_REF
+previously	TIME	PAST_REF
+
+1989-11-01	DATE	1989-11-01
+Jan. 3	DATE	1990-01-03
+Nov. 16	DATE	1989-11-16
+the fourth quarter	DATE	1989-Q4
+Aug. 26	DATE	1989-08-26
+A year earlier	DATE	1988-11-01
+
+1989-10-26	DATE	1989-10-26
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+earlier this year	DATE	1989
+yesterday	DATE	1989-10-25
+
+1998-01-15	DATE	1998-01-15
+nineteen ninety-one	DATE	1991
+nineteen ninety-six	DATE	1996
+Now	DATE	PRESENT_REF
+
+1998-02-13	DATE	1998-02-13
+today	DATE	1998-02-13
+
+1991-12-03	DATE	1991-12-03
+Monday	DATE	1991-12-02
+Wednesday	DATE	1991-11-27
+Monday	DATE	1991-12-02
+last week	DATE	1991-W48
+Monday	DATE	1991-12-02
+Sunday	DATE	1991-12-01
+
+1990-08-15T13:37	TIME	1990-08-15T13:37
+today	DATE	1990-08-15
+today	DATE	1990-08-15
+Tuesday	DATE	1990-08-14
+today	DATE	1990-08-15
+today	DATE	1990-08-15
+some time	DURATION	PXM
+now	DATE	PRESENT_REF
+Friday	DATE	1990-08-10
+August 1988	DATE	1988-08
+eight-year	DURATION	P8Y
+Aug. 2	DATE	1990-08-02
+up to 180 days	DURATION	P180D
+Tuesday	DATE	1990-08-14
+today	DATE	1990-08-15
+today	DATE	1990-08-15
+today	DATE	1990-08-15
+Tuesday	DATE	1990-08-14
+now	DATE	PRESENT_REF
+Aug. 6	DATE	1990-08-06
+Tuesday	DATE	1990-08-07
+today	DATE	1990-08-15
+Tuesday	DATE	1990-08-07
+Monday	DATE	1990-08-06
+Thursday	DATE	1990-08-09
+today	DATE	1990-08-15
+this crucial moment	DATE	PRESENT_REF
+Tuesday	DATE	1990-08-07
+Tuesday	DATE	1990-08-07
+now	DATE	PRESENT_REF
+today	DATE	1990-08-15
+eighth day	DATE	1990-08-15
+now	DATE	PRESENT_REF
+weeks	DURATION	PXW
+
+1989-10-27	DATE	1989-10-27
+this year	DATE	1989
+current	DATE	PRESENT_REF
+Sept. 30	DATE	1989-09-30
+Earlier this month	DATE	1989-10
+
+1989-10-26	DATE	1989-10-26
+Feb. 1	DATE	1990-02-01
+recently	DATE	PAST_REF
+now	DATE	PRESENT_REF
+Quarterly	DURATION	P3M
+this year	DATE	1989
+1988	DATE	1988
+1987	DATE	1987
+this year's third quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+Sept. 30	DATE	1989-09-30
+this year	DATE	1989
+1990	DATE	1990
+1974	DATE	1974
+Feb. 1	DATE	1990-02-01
+
+1989-10-26	DATE	1989-10-26
+the fiscal first quarter	DATE	1989-Q1
+last spring	DATE	1988-SP
+the quarter	DATE	1989-QX
+Sept. 30	DATE	1989-09-30
+a year earlier	DATE	1988-09-30
+the quarter	DATE	1989-QX
+now	DATE	PRESENT_REF
+the quarter	DATE	1989-QX
+third-quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+Year-earlier	DATE	1988-Q3
+the nine months	DURATION	P9M
+a year earlier	DATE	1988
+
+1998-02-13T15:44:00	TIME	1998-02-13T15:44:00
+Friday	DATE	1998-02-13
+Friday	DATE	1998-02-13
+10 p.m. Wednesday	TIME	1998-02-11T22:00
+noon Thursday	TIME	1998-02-12T12:00
+recent years	DURATION	PXY
+
+1989-11-02	DATE	1989-11-02
+one day	DURATION	P1D
+yesterday	DATE	1989-11-01
+
+1998-01-08	DATE	1998-01-08
+week	DURATION	P1W
+the last twenty four hours	DURATION	P1D
+five year	DURATION	P5Y
+four year	DURATION	P4Y
+Now	DATE	PRESENT_REF
+October	DATE	1997-10
+now	DATE	PRESENT_REF
+the past three months	DURATION	P3M
+ten years	DURATION	P10Y
+a couple of years	DURATION	P2Y
+
+1989-11-02	DATE	1989-11-02
+third-quarter	DATE	1989-Q3
+A year earlier	DATE	1988-Q3
+
+1989-10-30	DATE	1989-10-30
+as soon as possible	DATE	FUTURE_REF
+Earlier this year	DATE	1989
+
+1990-08-13	DATE	1990-08-13
+yesterday	DATE	1990-08-12
+23-year	DURATION	P23Y
+yesterday	DATE	1990-08-12
+yesterday	DATE	1990-08-12
+Friday	DATE	1990-08-10
+yesterday	DATE	1990-08-12
+yesterday	DATE	1990-08-12
+the weekend	DATE	1990-W32-WE
+now	DATE	PRESENT_REF
+the end of the month	DATE	1990-08-30
+the past	DATE	PAST_REF
+the weekend	DATE	1990-W32-WE
+a few days	DURATION	PXD
+March	DATE	1990-03
+
+1989-10-30	DATE	1989-10-30
+last year	DATE	1988
+last December	DATE	1988-12
+February	DATE	1990-02
+February	DATE	1989-02
+Friday	DATE	1989-10-27
+Friday	DATE	1989-10-27
+
+1989-10-27	DATE	1989-10-27
+today	DATE	1989-10-27
+later this year	DATE	1989-11-01
+the third quarter of 1984	DATE	1984-Q3
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+
+1998-03-22T14:57:00	TIME	1998-03-22T14:57:00
+Sunday	DATE	1998-03-22
+8-month-old	DURATION	P8M
+Monday	DATE	1998-03-23
+Feb. 20	DATE	1998-02-20
+Sunday	DATE	1998-03-22
+May	DATE	1998-05
+two weeks ago	DATE	1998-03-08
+10 days ago	DATE	1998-03-12
+last week	DATE	1998-W12
+February	DATE	1998-02
+Sunday	DATE	1998-03-22
+1972	DATE	1972
+Sunday	DATE	1998-02-22
+the past three summers	SET	XXXX-SU
+each July	SET	XXXX-07
+this summer	DATE	1998-SU
+this summer	DATE	1998-SU
+Earlier Sunday	DATE	1998-03-22
+
+1989-11-02	DATE	1989-11-02
+the third quarter	DATE	1989-Q3
+a year ago	DATE	1988
+the latest quarter	DATE	1989-Q3
+Last year	DATE	1988
+
+1989-10-26	DATE	1989-10-26
+third-quarter	DATE	1989-Q3
+the year-earlier quarter	DATE	1988-Q3
+the latest quarter	DATE	1989-Q3
+June 1989	DATE	1989-06
+
+1989-10-30	DATE	1989-10-30
+June	DATE	1989-06
+around year end	DATE	1989-12
+
+1989-10-30	DATE	1989-10-30
+currently	DATE	PRESENT_REF
+fourth-quarter	DATE	1989-Q4
+the year	DURATION	P1Y
+Aug. 31	DATE	1989-08-31
+last year	DATE	1988
+1988	DATE	1988
+earlier this year	DATE	1989
+
+1989-10-26	DATE	1989-10-26
+90 days	DURATION	P90D
+
+1991-02-25	DATE	1991-02-25
+late yesterday	DATE	1991-02-24
+yesterday	DATE	1991-02-24
+the weekend	DATE	1991-W08-WE
+Feb. 11	DATE	1991-02-11
+a week or so ago	DATE	1991-02-18
+Saturday night	TIME	1991-02-23TNI
+a week	DURATION	P1W
+noon Saturday	TIME	1991-02-16T12:00
+last August	DATE	1990-08
+a week	DURATION	P1W
+the four days	DURATION	P4D
+nearly an hour	DURATION	PT1H
+Saturday night	TIME	1991-02-16TNI
+the first hours	DURATION	PTXH
+the next few days	DURATION	PXD
+eight-year	DURATION	P8Y
+
+1989-10-26	DATE	1989-10-26
+the third quarter	DATE	1989-Q3
+the quarter a year ago	DATE	1988-Q3
+the latest quarter	DATE	1989-QX
+a year earlier	DATE	1988-QX
+recent years	DATE	PAST_REF
+the nine months	DURATION	P9M
+a year earlier	DATE	1988
+Sept. 30	DATE	1989-09-30
+June 30	DATE	1989-06-30
+1994	DATE	1994
+now	DATE	PRESENT_REF
+five years	DURATION	P5Y
+August	DATE	1989-08
+the past two weeks	DURATION	P2W
+Oct. 9	DATE	1989-10-09
+year's end	DATE	1989
+Sept. 30	DATE	1989-09-30
+
+1989-11-01	DATE	1989-11-01
+the third quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+August	DATE	1989-08
+yesterday	DATE	1989-10-31
+this summer	DATE	1989-SU
+a year ago	DATE	1988-11
+third-quarter	DATE	1989-Q3
+a year	DATE	1988-Q3
+
+1998-03-31	DATE	1998-03-31
+two	DURATION	P2D
+six days	DURATION	P6D
+several years	DURATION	PXY
+a year or two	DATE	FUTURE_REF
+the years	DURATION	PXY
+the early years	DURATION	PXY
+each year	SET	P1Y
+five months ago	DATE	1997-10
+five months	DURATION	P5M
+
+1989-11-02	DATE	1989-11-02
+yesterday	DATE	1989-11-01
+this week	DATE	1989-W44
+Tuesday	DATE	1989-10-31
+
+1989-11-02	DATE	1989-11-02
+currently	DATE	PRESENT_REF
+yesterday	DATE	1989-11-01
+
+1998-05-01T09:13:00	DATE	1998-05-01T09:13:00
+the future	DATE	FUTURE_REF
+
+1989-10-30	DATE	1989-10-30
+the third quarter	DATE	1989-Q3
+the quarter	DATE	1989-Q3
+the year-ago third quarter	DATE	1988-Q3
+the next two years	DURATION	P2Y
+fiscal 1989	DATE	1989
+
+1998-06-26T07:07:00	TIME	1998-06-26T07:07:00
+Friday	DATE	1998-06-26
+1995	DATE	1995
+recently	DATE	PAST_REF
+this September	DATE	1998-09
+
+1989-10-26	DATE	1989-10-26
+Nov. 22	DATE	1989-11-22
+last May	DATE	1989-05
+Last April	DATE	1989-04
+two years	DURATION	P2Y
+yesterday	DATE	1989-10-25
+
+1989-11-01	DATE	1989-11-01
+three years	DURATION	P3Y
+each month	SET	P1M
+
+1989-10-27	DATE	1989-10-27
+Nov. 1, 2004	DATE	2004-11-01
+yesterday	DATE	1989-10-26
+
+1989-11-01	DATE	1989-11-01
+now	DATE	PRESENT_REF
+last year	DATE	1988
+
+1989-10-27	DATE	1989-10-27
+Dec. 1	DATE	1989-12-01
+Nov. 10	DATE	1989-11-10
+1989	DATE	1989
+1990 and beyond	DATE	1990
+yesterday	DATE	1989-10-26
+
+1989-10-25	DATE	1989-10-25
+last year	DATE	1988
+
+1989-10-30	DATE	1989-10-30
+Nov. 16	DATE	1989-11-16
+March 1, 2011	DATE	2011-03-01
+Friday	DATE	1989-10-27
+last Monday	DATE	1989-10-23
+
+1989-10-30	DATE	1989-10-30
+Friday	DATE	1989-10-27
+overnight	TIME	1989-10-26TNI
+the previous Friday	DATE	1989-10-20
+Oct. 13	DATE	1989-10-13
+current	DATE	PRESENT_REF
+Thursday	DATE	1989-10-26
+the week	DATE	1989-WXX
+two-week	DURATION	P2W
+Friday	DATE	1989-10-27
+one day	DURATION	P1D
+this week	DATE	1989-W44
+Monday	DATE	1989-10-30
+Friday	DATE	1989-10-27
+Thursday	DATE	1989-10-26
+recent	DATE	PAST_REF
+Friday	DATE	1989-10-27
+the morning	TIME	1989-10-27TMO
+day	DURATION	P1D
+November	DATE	1989-11
+this week	DATE	1989-W44
+Friday	DATE	1989-10-27
+the week	DATE	1989-WXX
+Friday	DATE	1989-10-27
+the past five days	DURATION	P5D
+a week	DURATION	P1W
+Friday	DATE	1989-10-27
+Friday	DATE	1989-10-27
+the weekend	DATE	1989-W44-WE
+last week	DATE	1989-W43
+year-end	DATE	1988-12-31
+
+1998-03-05	DATE	1998-03-05
+this coming Sunday, March eighth	DATE	1998-03-08
+twenty years	DURATION	P20Y
+the past twenty years	DURATION	P20Y
+today	DATE	PRESENT_REF
+
+1989-10-27	DATE	1989-10-27
+today	DATE	1989-10-27
+Nov. 17	DATE	1989-11-17
+Jan. 1, 1990	DATE	1990-01-01
+
+1989-10-26	DATE	1989-10-26
+yesterday	DATE	1989-10-25
+Oct. 31	DATE	1989-10-31
+five years ago	DATE	1984
+last year	DATE	1988
+third-quarter	DATE	1989-Q3
+the year-ago period	DATE	1988-Q3
+
+1989-10-27	DATE	1989-10-27
+the third quarter	DATE	1989-Q3
+Aug. 21	DATE	1989-08-21
+the third quarter	DATE	1989-Q3
+the year-earlier third quarter	DATE	1988-Q3
+June	DATE	1989-06
+Nov. 1	DATE	1989-11-01
+
+1998-02-27T08:17:00	TIME	1998-02-27T08:17:00
+Friday	DATE	1998-02-27
+centuries	DURATION	PXE
+last May	DATE	1997-05
+at least 20 more years	DURATION	P20Y
+Last year	DATE	1997
+the past	DATE	PAST_REF
+four-day	DURATION	P4D
+10-year	DURATION	P10Y
+last year	DATE	1997
+1996	DATE	1996
+Friday	DATE	1998-02-27
+
+1989-10-27	DATE	1989-10-27
+last week	DATE	1989-W42
+yet	DATE	PRESENT_REF
+yesterday	DATE	1989-10-26
+Tuesday	DATE	1989-10-24
+yesterday	DATE	1989-10-26
+Tuesday	DATE	1989-10-24
+yesterday	DATE	1989-10-26
+Dec. 31, 1990	DATE	1990-12-31
+the next 14 months	DURATION	P14M
+1984	DATE	1984
+current	DATE	PRESENT_REF
+1988	DATE	1988
+This week	DATE	1989-WXX
+Tuesday	DATE	1989-10-24
+
+1989-10-26	DATE	1989-10-26
+
+1998-01-20	DATE	1998-01-20
+today	DATE	1998-01-20
+last night	TIME	1998-01-19TNI
+now	DATE	PRESENT_REF
+
+1989-10-26	DATE	1989-10-26
+next year	DATE	1990
+the next three years	DURATION	P3Y
+1988	DATE	1988
+1983	DATE	1983
+the past 20 months	DURATION	P20M
+years	DURATION	PXY
+this year	DATE	1989
+about a decade	DURATION	P1E
+the 1990s	DURATION	199
+recently	DATE	PAST_REF
+soon	DATE	FUTURE_REF
+last year	DATE	1988
+the fourth quarter	DATE	1989-Q4
+1990	DATE	1990
+this year	DATE	1989
+
+1989-11-02	DATE	1989-11-02
+
+1989-11-01	DATE	1989-11-01
+Earlier yesterday	DATE	1989-10-31
+last week	DATE	1989-WXX
+Monday	DATE	1989-11-06
+
+1989-10-31	DATE	1989-10-31
+Earlier this year	DATE	1989
+last week	DATE	1989-W43
+
+1989-11-02	DATE	1989-11-02
+fourth quarter	DATE	1998-Q4
+Sept. 30	DATE	1989-09
+the fiscal year	DATE	1989
+fiscal 1988	DATE	1989
+
+1989-11-02	DATE	1989-11-02
+once	DATE	PAST_REF
+the early 1980s	DATE	198
+1983	DATE	1983
+1985	DATE	1985
+July 1988	DATE	1988-07
+
+1989-10-27	DATE	1989-10-27
+this month	DATE	1989-10
+late yesterday	DATE	1989-10-26
+the year	DURATION	P1Y
+July 2	DATE	1989-07-02
+
+1989-11-01	DATE	1989-11-01
+last Wednesday	DATE	1989-10-25
+
+1989-10-30	DATE	1989-10-30
+now	DATE	PRESENT_REF
+current	DATE	PRESENT_REF
+1993	DATE	1993
+current	DATE	PRESENT_REF
+this year	DATE	1989
+soon	DATE	FUTURE_REF
+right now	DATE	PRESENT_REF
+recently	DATE	PAST_REF
+Friday	DATE	1989-10-27
+this year	DATE	1989
+the next two years or so	DURATION	P2Y
+1989	DATE	1989
+next year	DATE	1990
+next year	DATE	1990
+recent weeks	DURATION	PXW
+Last Friday	DATE	1989-10-27
+recently	DATE	PAST_REF
+1992	DATE	1992
+the full year	DATE	1989
+Last year	DATE	1988
+third-quarter	DATE	1989-Q3
+the latest quarter	DATE	1989-Q3
+
+1998-01-20	DATE	1998-01-20
+nearly forty years	DURATION	P40Y
+this evening	TIME	1998-01-20TEV
+
+1998-03-04	DATE	1998-03-04
+today	DATE	1998-03-04
+December	DATE	1998-12
+twenty years	DURATION	P20Y
+now	DATE	PRESENT_REF
+now	DATE	PRESENT_REF
+
+1989-10-26	DATE	1989-10-26
+the third quarter	DATE	1989-Q3
+yesterday	DATE	1989-10-25
+this morning	TIME	1989-10-26TMO
+year end	DATE	1989
+a year ago	DATE	1988-10
+the nine months	DURATION	P9M
+a year earlier	DATE	1988
+the first nine months	DURATION	P9M
+third-quarter	DATE	1989-Q3
+the nine months	DURATION	P9M
+the latest nine months	DURATION	P9M
+a year earlier	DATE	1988
+the end of 1990	DATE	1990
+
+1998-01-11	DATE	1998-01-11
+the next several days	DURATION	PXD
+Yesterday	DATE	1998-01-10
+today	DATE	1998-01-11
+today	DATE	1998-01-11
+a while	DURATION	PXX
+
+1998-03-03	DATE	1998-03-03
+the past year	DATE	1997
+More recently	DATE	PAST_REF
+last year	DATE	1997
+the nineties	DATE	199
+this year	DATE	1998
+a year	SET	P1Y
+the year two thousand	DATE	2000
+last year	DATE	1997
+now	DATE	PRESENT_REF
+the past	DATE	PAST_REF
+
+1989-10-30	DATE	1989-10-30
+Aug. 26	DATE	1989-08-26
+Oct. 20	DATE	1989-10-20
+Aug. 10, 1988	DATE	1988-08-10
+18 months	DURATION	P18M
+two-year	DURATION	P2Y
+
+1998-05-01	DATE	1998-05-01
+next week	DATE	1998-W19
+Monday	DATE	1998-05-04
+
+1989-11-02	DATE	1989-11-02
+each of the past three years	DURATION	P3Y
+recently	DATE	PAST_REF
+52-week	DURATION	P52W
+yesterday	DATE	1989-11-01
+last year	DATE	1988
+
+1989-10-27	DATE	1989-10-27
+currently	DATE	PRESENT_REF
+
+1989-11-02	DATE	1989-11-02
+now	DATE	PRESENT_REF
+January	DATE	1990-01
+early 1990	DATE	1990
+
+1998-02-06T22:29:00	TIME	1998-02-06T22:29:00
+Friday	DATE	1998-02-06
+Thursday	DATE	1998-02-05
+Friday	DATE	1998-02-06
+Thursday	DATE	1998-02-05
+Thursday	DATE	1998-02-05
+the past few weeks	DURATION	PXW
+Friday	DATE	1998-02-06
+Friday	DATE	1998-02-06
+today	DATE	1998-02-06
+this morning	TIME	1998-02-06TMO
+
+1989-11-02	DATE	1989-11-02
+Nov. 13	DATE	1989-11-13
+March	DATE	1989-03
+third-quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+Sept. 27, 1989	DATE	1989-11-27
+yesterday	DATE	1989-11-01
+
+1989-11-02	DATE	1989-11-02
+fourth-quarter	DURATION	1989-Q4
+two-year	DURATION	P2Y
+yesterday	DATE	1989-11-01
+earlier this year	DATE	1989
+two-year	DURATION	P2Y
+Earlier	DATE	PAST_REF
+
+1989-10-30	DATE	1989-10-30
+Friday	DATE	1989-10-27
+the year	DURATION	P1Y
+tomorrow	DATE	1989-10-31
+currently	DATE	PRESENT_REF
+this year	DATE	1989
+recent years	DATE	PXY
+recent years	DATE	PAST_REF
+the future	DATE	FUTURE_REF
+1980	DATE	1980
+September	DATE	1989-09
+Last month	DATE	1989-09
+
+1989-10-27	DATE	1989-10-27
+Dec. 7	DATE	1989-12-07
+Nov. 22	DATE	1989-11-22
+yesterday	DATE	1989-10-26
+
+1989-11-02	DATE	1989-11-02
+now	DATE	PRESENT_REF
+1988	DATE	1988
+that year	DATE	1988
+
+1989-11-02	DATE	1989-11-02
+Tuesday	DATE	1989-10-31
+this month	DATE	1989-11
+Monday	DATE	1989-11-06
+
+1989-10-26	DATE	1989-10-26
+Nov. 8	DATE	1989-11-08
+Sept. 30	DATE	1989-09-30
+yesterday	DATE	1989-10-25
+
+1998-02-12T01:58:00	TIME	1998-02-12T01:58:00
+Thursday evening	TIME	1998-02-12TEV
+around 7:15 p.m.	TIME	1998-02-12T19:15
+a few years ago	DATE	199X
+
+1989-11-02	DATE	1989-11-02
+the year	DURATION	P1Y
+June 30, 1990	DATE	1990-06-30
+the current fiscal year	DATE	1989
+fiscal 1989	DATE	1989
+fiscal 1989	DATE	1989
+yesterday	DATE	1989-11-01
+
+1989-10-27	DATE	1989-10-27
+sometime next year	DATE	1990-XX-XX
+last week	DATE	1989-WXX
+Friday	DATE	1989-10-27
+last week	DATE	1989-WXX
+early next year	DATE	1990
+yesterday	DATE	1989-10-26
+Wednesday	DATE	1989-10-25
+Yesterday	DATE	1989-10-26
+third-quarter	DATE	1989-Q3
+next week	DATE	1989-WXX
+late September	DATE	1989-09
+Monday	DATE	1989-10-23
+Nov. 6	DATE	1989-11-06
+several years	DURATION	PXY
+last April	DATE	1989-04
+early next year	DATE	1990
+the next few years	DURATION	PXY
+
+1998-03-06	DATE	1998-03-06
+the second day	DATE	1998-03-06
+mid afternoon	TIME	1998-03-06TAF
+the future	DATE	FUTURE_REF
+
+1998-01-26	DATE	1998-01-26
+the fourth quarter	DURATION	1997-Q4
+now	DATE	PRESENT_REF
+today	DATE	1998-01-26
+
+1998-02-06T22:19:00	TIME	1998-02-06T22:19:00
+January	DATE	1998-01
+Friday	DATE	1998-02-06
+last month	DATE	1998-01
+last month	DATE	1998-01
+last month	DATE	1998-01
+hourly	SET	PT1H
+a year earlier	DATE	1997
+the last decade	DATE	198
+coming months	DATE	FUTURE_REF
+Aug. 6	DATE	1997-08-06
+30-year	DURATION	P30Y
+January	DATE	1998-01
+last fall	DATE	1997-FA
+Friday	DATE	1998-02-06
+December	DATE	1997-12
+the last four months	DURATION	P4M
+the last three months	DURATION	P3M
+the first nine months	DURATION	P9M
+1997	DATE	1997
+the last few months	DATE	PAST_REF
+Friday	DATE	1998-02-06
+January	DATE	1998-01
+last month	DATE	1998-01
+December	DATE	1997-12
+two decades	DURATION	P20Y
+January	DATE	1998-01
+
+1998-03-01T14:11:00	TIME	1998-03-01T14:11:00
+Sunday	DATE	1998-03-01
+Sunday	DATE	1998-03-01
+1978	DATE	1978
+Friday	DATE	1998-02-27
+Sunday	DATE	1998-03-01
+today	DATE	1998-03-01
+1985	DATE	1985
+Last week	DATE	1998-W08
+last year	DURATION	1997
+last February	DATE	1997-02
+Sunday	DATE	1998-03-01
+last week	DATE	1998-W08
+last week	DATE	1998-W08
+Sunday	DATE	1998-03-01
+nearly two years	DURATION	P2Y
+six weeks ago	DATE	1998-W02
+the time	DATE	PAST_REF
+
+1989-10-26	DATE	1989-10-26
+third-quarter	DATE	1989-Q3
+two-year	DURATION	P2Y
+the fourth quarter	DATE	1989-Q4
+first two quarters of 1990	DATE	1990-H1
+coming quarters	DATE	FUTURE_REF
+the third quarter of 1990	DATE	1990-Q3
+year-ago period	DATE	1988-Q3
+Third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-10-26
+a year ago	DATE	1988-10-26
+June 1	DATE	1990-06-01
+the fourth quarter	DATE	1989-Q4
+the early summer	DATE	1989-SU
+third-quarter	DATE	1989-Q3
+the year-ago quarter	DATE	1988-Q3
+now	DATE	PRESENT_REF
+fiscal second-quarter	DATE	1989-Q2
+quarter	DATE	1989-QX
+Sept. 30	DATE	1989-09-30
+a year ago	DATE	1988-QX
+The latest period	DATE	1989-Q2
+Last year	DATE	1988-Q2
+
+1998-02-23	DATE	1998-02-23
+Now	DATE	PRESENT_REF
+the middle of October	DATE	1997-10
+today	DATE	1998-02-23
+the winter of nineteen ninety-four	DATE	1994-WI
+the last two weeks	DURATION	P2W
+
+1989-10-26	DATE	1989-10-26
+Aug. 9	DATE	1989-08-09
+then current	DATE	PAST_REF
+the fiscal-first quarter	DATE	1989-Q1
+Sept. 30	DATE	1989-09-30
+a year ago	DATE	1988-Q1
+a year earlier	DATE	1988-Q1
+
+1998-02-05	DATE	1998-02-05
+now	DATE	PRESENT_REF
+
+1998-02-13T14:35:00	TIME	1998-02-13T14:35:00
+August	DATE	1998-08
+a month	DURATION	P1M
+current	DATE	PRESENT_REF
+Friday	DATE	1998-02-13
+Monday	SET	XXXX-WXX-1TNI
+Tuesday nights	SET	XXXX-WXX-2TNI
+March 30	DATE	1998-03-30
+each Thursday	SET	XXXX-WXX-4
+August 6	DATE	1998-08-06
+
+1998-04-18T06:07:00	TIME	1998-04-18T06:07:00
+Saturday	DATE	1998-04-18
+May 26, 1980	DATE	1980-05-26
+six days	DURATION	P6D
+October 1984	DATE	1984-10
+May 22, 1995	DATE	1995-05-22
+the following year	DATE	1996
+December	DATE	1997-12
+
+1998-02-22	DATE	1998-02-22
+three hour	DURATION	PT3H
+today	DATE	1998-02-22
+later this afternoon	TIME	1998-02-22TAF
+no more than sixty days	DURATION	P60D
+
+1989-10-27	DATE	1989-10-27
+third-quarter	DATE	1989-Q3
+yesterday	DATE	1989-10-26
+Wednesday	DATE	1989-10-25
+Later yesterday	DATE	1989-10-26
+the third quarter	DATE	1989-Q3
+third-quarter	DATE	1989-Q3
+yesterday	DATE	1989-10-26
+the third quarter	DATE	1989-Q3
+the fourth quarter	DATE	1989-Q4
+coming weeks	DURATION	PXW
+30-year	DURATION	P30Y
+Wednesday	DATE	1989-10-25
+Wednesday	DATE	1989-10-25
+
+1989-10-26	DATE	1989-10-26
+
+1989-11-02	DATE	1989-11-02
+third-quarter	DATE	1989-Q3
+year-earlier	DATE	1988-Q3
+the quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+
+1989-11-02	DATE	1989-11-02
+the end of this week	DATE	1989-W44
+1993	DATE	1993
+Nov. 21	DATE	1989-11-21
+
+1989-10-30	DATE	1989-10-30
+
+1989-10-31	DATE	1989-10-31
+next year's first quarter	DATE	1990-Q1
+the year	DURATION	P1Y
+March 31	DATE	1989-03-31
+last year	DATE	1988
+
+1998-02-13T14:26:00	TIME	1998-02-13T14:26:00
+210 years	DURATION	P210Y
+Friday	DATE	1998-02-13
+next year	DATE	1999
+Friday	DATE	1998-02-13
+2000	DATE	2000
+several years ago	DATE	PAST_REF
+this year	DATE	1998
+1901	DATE	1901
+20th century	DATE	19
+almost a hundred years	DURATION	P100Y
+1996	DATE	1996
+
+1998-02-05	DATE	1998-02-05
+today	DATE	1998-02-05
+now	DATE	PRESENT_REF
+this September	DATE	1998-09
+the year two thousand	DATE	2000
+now	DATE	PRESENT_REF
+
+1989-10-27	DATE	1989-10-27
+Tuesday	DATE	1989-10-31
+1989	DATE	1989
+last year	DATE	1988
+this year	DATE	1989
+last	DATE	1988
+next year	DATE	1990
+the past 20 years	DURATION	P20Y
+1987	DATE	1987
+now	DATE	PRESENT_REF
+Monday	DATE	1989-10-23
+July 1	DATE	1989-07-01
+this year	DATE	1989
+
+1989-10-27	DATE	1989-10-27
+the past two quarters	DURATION	P2Q
+recently	DATE	PAST_REF
+Yesterday	DATE	1989-10-26
+the beginning of October	DATE	1989-10
+
+1989-10-26	DATE	1989-10-26
+third-quarter	DATE	1989-Q3
+a year ago	DATE	1988-Q3
+the year-earlier period	DATE	1988-Q3
+the latest quarter	DATE	1989-Q3
+this year	DATE	1989
+several months	DURATION	PXM
+current	DATE	PRESENT_REF
+April	DATE	1989-04
+a year	SET	P1Y
+yesterday	DATE	1989-10-25
+the latest quarter	DATE	1989-Q3
+a year earlier	DATE	1988-Q3
+a year ago	DATE	1988-Q3
+earlier in the year	DATE	1989
+the third quarter	DATE	1989-Q3
+the quarter	DATE	1989-Q3
+the nine months	DURATION	P9M
+a year earlier	DATE	1988-Q3
+Dec. 14	DATE	1989-12-14
+Nov. 15	DATE	1989-11-15
+January	DATE	1990-01
+Dec. 21	DATE	1989-12-21
+
+1989-11-02	DATE	1989-11-02
+year-end	DATE	1989-12-31
+
+1989-10-27	DATE	1989-10-27
+Nov. 9	DATE	1989-11-09
+currently	DATE	PRESENT_REF
+Oct. 31	DATE	1989-10-31
+yesterday	DATE	1989-10-26
+annually	SET	XXXX
+

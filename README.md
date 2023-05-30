@@ -117,7 +117,7 @@ scala> import org.clulab.timenorm.scfg._, scala.util.Success
 import org.clulab.timenorm.scfg._
 import scala.util.Success
 
-scala> val parser = TemporalExpressionParser.en // English and Italian available
+scala> val parser = TemporalExpressionParser.en // English, Italian, and also Spanish are available.
 parser: org.clulab.timenorm.scfg.TemporalExpressionParser = org.clulab.timenorm.scfg.TemporalExpressionParser@d653e41
 
 scala> val Success(temporal) = parser.parse("two weeks ago", TimeSpan.of(2013, 1, 4))
@@ -126,3 +126,7 @@ temporal: org.clulab.timenorm.scfg.Temporal = TimeSpan(2012-12-17T00:00Z,2012-12
 scala> temporal.timeMLValue
 res0: String = 2012-W51
 ```
+
+### Languages
+
+The `TemporalExpressionParser` is available in three languages: English (en), Italian (it), Spanish (es).  The last is thanks to contributions of [@NGEscribano ](https://github.com/NGEscribano) from the [timenorm-es](https://github.com/NGEscribano/timenorm-es) project which includes additional helpful information in its [Spanish TimeNorm](https://github.com/NGEscribano/timenorm-es#readme) document.

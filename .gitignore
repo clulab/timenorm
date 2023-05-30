@@ -1,5 +1,4 @@
 target/
-project/
 .cache
 .idea
 .settings/
@@ -7,3 +6,9 @@ project/
 .project
 .metadata/
 *.iml
+
+.bloop/
+.bsp/
+.metals/
+.vscode/
+metals.sbt

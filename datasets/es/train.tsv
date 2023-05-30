@@ -1,0 +1,1444 @@
+2001-02-01	DATE	2001-02-01
+futuro	DATE	FUTURE_REF
+
+2002-01-02	DATE	2002-01-02
+mañana	DATE	2002-01-03
+el viernes	DATE	2002-01-04
+hoy	DATE	2002-01-02
+el día 8	DATE	2002-01-08
+
+2000-09-03	DATE	2000-09-03
+
+2000-10-01	DATE	2000-10-01
+ahora	DATE	PRESENT_REF
+
+2001-01-02	DATE	2001-01-02
+
+1999-02-02	DATE	1999-02-02
+años	DURATION	PXY
+65 años	DURATION	P65Y
+57 años	DURATION	P57Y
+
+2000-12-02	DATE	2000-12-02
+ayer	DATE	2000-12-01
+estos momentos	DATE	PRESENT_REF
+10 años	DURATION	P10Y
+1998	DATE	1998
+cuatro años	DURATION	P4Y
+cuatro años	DURATION	P4Y
+1994	DATE	1994
+ahora	DATE	PRESENT_REF
+ayer	DATE	2000-12-01
+el año próximo	DATE	2001
+
+1998-12-01	DATE	1998-12-01
+este año	DATE	1998
+ayer	DATE	1998-11-30
+10 años	DURATION	P10Y
+
+1999-07-01	DATE	1999-07-01
+pasado	DATE	PAST_REF
+ayer	DATE	1999-06-30
+ayer	DATE	1999-06-30
+este año	DATE	1999
+momentáneo	DATE	PRESENT_REF
+el pasado Sábado	DATE	1999-06-26
+
+2000-02-02	DATE	2000-02-02
+ayer	DATE	2000-02-01
+dos días	DURATION	P2D
+ayer	DATE	2000-02-01
+su 107 mes	DURATION	P107M
+1999	DATE	1999
+actual	DATE	PRESENT_REF
+
+1998-12-01	DATE	1998-12-01
+ahora	DATE	PRESENT_REF
+hace tiempo	DURATION	PXM
+El próximo Lunes	DATE	1998-12-07
+mensual	SET	P1M
+dos días	DURATION	P2D
+momento	DATE	PRESENT_REF
+Navidad	DATE	1998-12-25
+del Sábado	DATE	1998-11-28
+futuro	DATE	FUTURE_REF
+Ayer	DATE	1998-11-30
+del Sábado	DATE	1998-12-05
+ahora	DATE	PRESENT_REF
+ayer	DATE	1998-11-30
+
+2001-04-02	DATE	2001-04-02
+hoy	DATE	2001-04-02
+el próximo 2 de mayo	DATE	2001-05-02
+del 7	DATE	2001-09-07
+al 11 de septiembre	DATE	2001-09-11
+
+2000-06-01	DATE	2000-06-01
+1999	DATE	1999
+anuales	SET	P1Y
+la década de los noventa	DATE	199
+Actualmente	DATE	PRESENT_REF
+al año	SET	P1Y
+al año	SET	P1Y
+el 5	DATE	2000-06-05
+el 6 de junio	DATE	2000-06-06
+la última semana	DATE	2000-W22
+hoy, jueves	DATE	2000-06-01
+del próximo domingo	DATE	2000-06-04
+ayer, miércoles	DATE	2000-05-31
+la semana pasada	DATE	2000-W21
+hoy	DATE	2000-06-01
+hoy	DATE	2000-06-01
+
+2000-07-15	DATE	2000-07-15
+mañana	DATE	2000-07-16
+del 2002	DATE	2002
+cada día	SET	P1D
+hoy	DATE	2000-07-15
+Ahora	DATE	PRESENT_REF
+mañana, domingo	DATE	2000-07-16
+las 08.00 hora local	TIME	2000-07-16T08:00
+13.00 gmt	TIME	2000-07-16T13:00Z
+el jueves venidero	DATE	2000-07-20
+el próximo 25 de julio	DATE	2000-07-25
+
+2000-06-01	DATE	2000-06-01
+hoy	DATE	2000-06-01
+el 9	DATE	2000-06-09
+10 de junio	DATE	2000-06-10
+la próxima semana	DATE	2000-W23
+hace más de 30 años	DATE	1970
+hoy	DATE	2000-06-01
+hace 14 días	DATE	2000-05-18
+hoy	DATE	2000-06-01
+el lunes	DATE	2000-05-29
+20 de mayo	DATE	2000-05-20
+Ayer	DATE	2000-05-31
+el lunes pasado	DATE	2000-05-22
+unos tres años	DURATION	P3Y
+la fecha	DATE	2000-06-01
+hoy jueves	DATE	2000-06-01
+esta noche	TIME	2000-06-01TNI
+las 8.15	TIME	2000-06-01T08:15
+07.15 gmt	TIME	2000-06-01T07:15Z
+este semestre	DATE	2000-H2
+el martes pasado	DATE	2000-05-30
+ayer	DATE	2000-05-31
+20 minutos	DURATION	PT20M
+el pasado domingo	DATE	2000-05-28
+
+1998-12-02	DATE	1998-12-02
+ayer	DATE	1998-12-01
+del pasado sábado	DATE	1998-11-28
+el día inaugural	DATE	1998-11-28
+el primer día	DATE	XXXX-XX-XX
+ayer	DATE	1998-12-01
+el año próximo	DATE	1999
+
+2000-04-16	DATE	2000-04-16
+cinco meses	DURATION	P5M
+mensual	SET	P1M
+hoy	DATE	2000-04-16
+ahora	DATE	PRESENT_REF
+al final del año próximo	DATE	2001
+varios meses	DURATION	PXM
+diario	SET	P1D
+la jornada anterior	DATE	XXXX-XX-XX
+el futuro	DATE	FUTURE_REF
+la actualidad	DATE	PRESENT_REF
+mayo	DATE	2000-05
+
+2000-12-14	DATE	2000-12-14
+los próximos meses	DURATION	PXM
+dos años	DURATION	P2Y
+junio pasado	DATE	2000-06
+hoy, jueves	DATE	2000-12-14
+dos años	DURATION	P2Y
+unos meses	DURATION	PXM
+ayer	DATE	2000-12-13
+ayer	DATE	2000-12-13
+futuras	DATE	FUTURE_REF
+cada seis meses	SET	P6M
+
+2001-01-03	DATE	2001-01-03
+las seis de la mañana de ayer	TIME	2001-01-02T06:00
+las 11.45 horas	TIME	2001-01-02T11:45
+
+2000-03-13	DATE	2000-03-13
+hoy	DATE	2000-03-13
+ayer, domingo	DATE	2000-03-12
+el pasado sábado	DATE	2000-03-11
+este siglo	DATE	20
+17 meses	DURATION	P17M
+el pasado 2 de marzo	DATE	2000-03-02
+las próximas horas	DURATION	PTXH
+los próximos cuatro años	DURATION	P4Y
+
+2001-07-02	DATE	2001-07-02
+
+2001-03-02	DATE	2001-03-02
+el 2000	DATE	2000
+los últimos días	DURATION	PXD
+el 2000	DATE	2000
+ahora	DATE	PRESENT_REF
+
+2001-08-02	DATE	2001-08-02
+dos años y tres meses	DURATION	P2Y3M
+finales de septiembre de 1998	DATE	1998-09
+varios meses	DURATION	PXM
+
+2002-01-03	DATE	2002-01-03
+mañana	DATE	2002-01-04
+Al día	DATE	2001-09-12
+del imborrable 11 de septiembre	DATE	2001-09-11
+mañana	DATE	2002-01-04
+dos semanas y media	DURATION	P2.5W
+del 11 de septiembre	DATE	2001-09-11
+El día 12	DATE	2001-09-12
+ese día	DATE	2001-09-12
+esos momentos	DATE	PAST_REF
+el 12 de septiembre	DATE	2001-09-12
+un par de horas	DURATION	PT2H
+ahora	DATE	PRESENT_REF
+ahí	DATE	PAST_REF
+
+2002-03-01	DATE	2002-03-01
+Ayer	DATE	2002-02-28
+el pasado año	DATE	2001
+hoy	DATE	PRESENT_REF
+El día anterior	DATE	2002-02-27
+el año pasado	DATE	2001
+
+2000-12-14	DATE	2000-12-14
+hoy	DATE	2000-12-14
+1934-1940	DATE	1934
+los años 1988	DATE	1988
+1994	DATE	1994
+2000	DATE	2000
+hace casi 100 días	DATE	2000-09-XX
+1989	DATE	1989
+30 horas	DURATION	PT30H
+el pasado 10 de diciembre	DATE	2000-12-10
+este año	DATE	2000
+ahora	DATE	PRESENT_REF
+
+2000-06-01	DATE	2000-06-01
+hace 16 meses	DATE	1999-02
+el momento	DATE	PAST_REF
+el 28 de mayo	DATE	2000-05-28
+el pasado jueves	DATE	2000-05-25
+entonces	DATE	PAST_REF
+la nueva fecha	DATE	XXXX-XX-XX
+el 16	DATE	2000-06-16
+el 25 de junio	DATE	2000-06-25
+mañana, viernes	DATE	2000-06-02
+hace unos días	DURATION	PXD
+el pasado lunes	DATE	2000-05-29
+
+2000-07-14	DATE	2000-07-14
+mañana	DATE	2000-07-15
+1995	DATE	1995
+los últimos meses	DURATION	PXM
+más de un año	DURATION	P1Y
+dos días	DURATION	P2D
+hace diez años	DATE	1990
+principios de este año	DATE	2000
+1990	DATE	1990
+pocos días después.	DURATION	PXD
+los últimos meses	DURATION	PXM
+años	DURATION	PXY
+
+2000-12-02	DATE	2000-12-02
+recién	DATE	PAST_REF
+
+2000-02-02	DATE	2000-02-02
+ayer	DATE	2000-02-01
+este año	DATE	2000
+los próximos tres años	DURATION	P3Y
+este año	DATE	2000
+los tres siguientes	DURATION	P3Y
+octubre	DATE	1999-10
+
+2000-10-16	DATE	2000-10-16
+hoy, lunes	DATE	2000-10-16
+años	DURATION	PXY
+los últimos nueve años	DURATION	P9Y
+1990	DATE	1990
+1999	DATE	1999
+diaria	SET	P1D
+1999	DATE	1999
+1990	DATE	1990
+Actualmente	DATE	PRESENT_REF
+
+2001-12-01	DATE	2001-12-01
+hoy	DATE	2001-12-01
+Ayer	DATE	2001-11-30
+este mes	DATE	2001-12
+
+1999-06-02	DATE	1999-06-02
+
+2001-10-01	DATE	2001-10-01
+del día 3	DATE	2001-10-03
+al 5	DATE	2001-10-05
+
+2000-01-19	DATE	2000-01-19
+65 años	DURATION	P65Y
+del 24 de enero	DATE	2000-01-24
+del 3 de enero	DATE	2000-01-03
+este mes	DATE	2000-01
+1991	DATE	1991
+hace sólo unas semanas	DURATION	PXW
+del pasado día 3	DATE	2000-01-03
+diez años	DURATION	P10Y
+el 3 de enero	DATE	2000-01-03
+un mes	DURATION	P1M
+la " Primavera croata " de 1971	DATE	1971-SP
+un año	DURATION	P1Y
+aquel entonces	DATE	PAST_REF
+cuatro	DURATION	P4Y
+hoy	DATE	PRESENT_REF
+1991	DATE	1991
+el período	DURATION	PXY
+1992	DATE	1992
+1994	DATE	1994
+1994	DATE	1994
+hace diez años	DATE	1990
+el 3 de enero	DATE	2000-01-03
+
+2002-03-01	DATE	2002-03-01
+actual	DATE	PRESENT_REF
+ayer	DATE	2002-02-28
+del 7 de marzo	DATE	2002-03-07
+ayer	DATE	2002-02-28
+72 años	DURATION	P72Y
+actuales	DATE	PRESENT_REF
+del 7 de marzo	DATE	2002-03-07
+la semana pasada	DATE	2002-W08
+
+2001-02-02	DATE	2001-02-02
+
+2002-05-02	DATE	2002-05-02
+el siglo XIX	DATE	18
+
+2000-04-01	DATE	2000-04-01
+muchos años	DURATION	PXY
+antaño	DATE	PAST_REF
+hace meses	DURATION	PXM
+cada año	SET	P1Y
+
+2000-01-17	DATE	2000-01-17
+próximas	DATE	FUTURE_REF
+hoy	DATE	2000-01-17
+hoy	DATE	2000-01-17
+el periodo que falta	DURATION	PXM
+
+2000-01-02	DATE	2000-01-02
+
+2001-08-01	DATE	2001-08-01
+ayer	DATE	2001-07-31
+
+2001-02-02	DATE	2001-02-02
+la actualidad	DATE	PRESENT_REF
+
+2000-12-01	DATE	2000-12-01
+hoy	DATE	2000-12-01
+ahora	DATE	PRESENT_REF
+Cuatro meses	DURATION	P4M
+
+2000-04-15	DATE	2000-04-15
+hoy	DATE	2000-04-15
+recién	DATE	PAST_REF
+esta semana	DATE	2000-W15
+una década	DURATION	P10Y
+los cuatro días	DURATION	P4D
+hace más de 100 años	DATE	1900
+del pasado	DATE	PAST_REF
+el segundo semestre de este año	DATE	2000-H2
+unos dos meses	DURATION	P2M
+septiembre próximo	DATE	2000-09
+
+2000-03-02	DATE	2000-03-02
+un ratito	DURATION	PTXM
+
+1999-12-02	DATE	1999-12-02
+estos días	DATE	PRESENT_REF
+próximo	DATE	FUTURE_REF
+estos días	DATE	PRESENT_REF
+más de un año	DURATION	P1Y
+ayer	DATE	1999-12-01
+El día	DATE	FUTURE_REF
+ayer	DATE	1999-12-01
+un día después	DURATION	P1D
+el 2000	DATE	2000
+
+1999-05-01	DATE	1999-05-01
+hoy	DATE	1999-05-01
+las 35 horas	DURATION	PT35H
+hoy	DATE	1999-05-01
+del Primero de Mayo	DATE	1999-05-01
+esta mañana	TIME	1999-05-01TMO
+un día	DURATION	P1D
+las 11 de la mañana	TIME	1999-05-01T11:00
+las 11.30 horas	TIME	1999-05-01T11:30
+El Primero de Mayo	DATE	1999-05-01
+este año	DATE	1999
+El Primero de Mayo	DATE	1999-05-01
+las 35 horas	DURATION	PT35H
+semanales	SET	P1W
+1998	DATE	1998
+1998	DATE	1998
+un año	DATE	1998
+ayer	DATE	1999-04-30
+este momento	DATE	PRESENT_REF
+hace dos años	DATE	1997
+
+1999-12-02	DATE	1999-12-02
+ayer	DATE	1999-12-01
+al menos dos meses	DURATION	P2M
+
+1999-07-02	DATE	1999-07-02
+el primer tercio	DURATION	P33Y
+este siglo	DATE	19
+actual	DATE	PRESENT_REF
+los últimos años	DURATION	PXY
+hoy	DATE	PRESENT_REF
+hoy por hoy	DATE	PRESENT_REF
+hoy por hoy	DATE	PRESENT_REF
+los próximos meses	DURATION	PXM
+
+2001-10-01	DATE	2001-10-01
+el 2002	DATE	2002
+
+2000-04-17	DATE	2000-04-17
+hoy lunes	DATE	2000-04-17
+febrero	DATE	2000-02
+hoy	DATE	2000-04-17
+septiembre de l999	DATE	1999-09
+hoy	DATE	2000-04-17
+un año	DURATION	P1Y
+
+2001-06-01	DATE	2001-06-01
+
+2002-01-03	DATE	2002-01-03
+
+2000-06-02	DATE	2000-06-02
+hoy	DATE	2000-06-02
+reciente	DATE	PAST_REF
+el siglo XXI	DATE	20
+el siglo	DATE	20
+hoy	DATE	2000-06-02
+futura	DATE	FUTURE_REF
+un largo periodo	DURATION	PXY
+hoy	DATE	2000-06-02
+esta tarde	TIME	2000-06-02TAF
+1997	DATE	1997
+1986	DATE	1986
+
+1998-12-02	DATE	1998-12-02
+ayer	DATE	1998-12-01
+varias jornadas	DURATION	PXD
+dos días	DURATION	P2D
+hace tiempo	DURATION	PXM
+
+2000-10-13	DATE	2000-10-13
+el próximo 19 de octubre	DATE	2000-10-19
+hoy	DATE	2000-10-13
+reciente	DATE	PAST_REF
+el pasado 2 de octubre	DATE	2000-10-02
+pasada	DATE	PAST_REF
+diarios	SET	P1D
+15 años	DURATION	P15Y
+uno	DURATION	P1Y
+anual	SET	P1Y
+1980	DATE	1980
+diarios	SET	P1D
+
+1999-12-02	DATE	1999-12-02
+46 años	DURATION	P46Y
+próxima	DATE	FUTURE_REF
+el 2001	DATE	2001
+
+2001-09-01	DATE	2001-09-01
+del año que viene	DATE	2002
+minutos 43	DURATION	PT1M
+45	DURATION	PT1M
+los cinco últimos años	DURATION	P5Y
+este miércoles	DATE	2001-09-05
+hoy	DATE	2001-09-01
+
+2002-02-02	DATE	2002-02-02
+los últimos años	DURATION	PXY
+una tarde navideña	TIME	XXXX-12-25TAF
+algún día	DATE	FUTURE_REF
+años después	DURATION	PXY
+
+1999-12-02	DATE	1999-12-02
+ayer	DATE	1999-12-01
+
+2000-02-01	DATE	2000-02-01
+ayer	DATE	2000-01-31
+el momento	DATE	PRESENT_REF
+ayer	DATE	2000-01-31
+10 años	DURATION	P10Y
+ayer	DATE	2000-01-31
+ayer	DATE	2000-01-31
+horas	DURATION	PTXH
+mensuales	SET	P1M
+40 horas	DURATION	PT40H
+mensuales	SET	P1M
+las 15	DURATION	PT15H
+
+2002-03-02	DATE	2002-03-02
+este año	DATE	2002
+un año	DATE	2002
+
+2000-08-17	DATE	2000-08-17
+el uno de agosto	DATE	2000-08-01
+mañana, viernes	DATE	2000-08-18
+la próxima semana	DATE	2000-W34
+los primeros días de agosto	DATE	2000-08
+
+1999-07-01	DATE	1999-07-01
+el momento	DATE	PRESENT_REF
+finales del pasado mes de mayo	DATE	1999-05
+otoño	DATE	1999-FA
+la actualidad	DATE	PRESENT_REF
+del mediodía	TIME	TMI
+principios del pasado mes de mayo	DATE	1999-05
+entonces	DATE	PAST_REF
+
+1999-06-01	DATE	1999-06-01
+hoy	DATE	1999-06-01
+el día 13	DATE	1999-06-13
+esta noche	TIME	1999-06-01TNI
+el día 13	DATE	1999-06-13
+diciembre de 1997	DATE	1997-12
+cuatro horas	DURATION	PT4H
+el pasado viernes	DATE	1999-05-28
+pasado	DATE	PAST_REF
+todo el rato	DURATION	PTXH
+muchos años antes	DURATION	PXY
+varios años	DURATION	PXY
+14 años	DURATION	P14Y
+
+2000-06-01	DATE	2000-06-01
+del 2 de julio próximo	DATE	2000-07-02
+los últimos dos meses	DURATION	P2M
+el pasado lunes	DATE	2000-05-29
+Los últimos dos meses	DURATION	P2M
+esta semana	DATE	2000-W22
+los últimos días	DURATION	PXD
+el pasado lunes	DATE	2000-05-29
+El 25 de abril pasado	DATE	2000-04-25
+el pasado 26 de mayo	DATE	2000-05-26
+un mes	DURATION	P1M
+Hace dos semanas	DATE	2000-W20
+71 años	DURATION	P71Y
+más reciente	DATE	PAST_REF
+actual	DATE	PRESENT_REF
+seis años	DURATION	P6Y
+del 1 de diciembre próximo	DATE	2000-12-01
+anoche	TIME	2000-05-31TNI
+los 64 años	DURATION	P64Y
+hoy, jueves	DATE	2000-06-01
+1971	DATE	1971
+1989	DATE	1989
+35 años	DURATION	P35Y
+
+2001-04-01	DATE	2001-04-01
+
+2000-12-02	DATE	2000-12-02
+el 4 de enero	DATE	2001-01-04
+
+1999-05-01	DATE	1999-05-01
+el primer trimestre	DATE	1999-Q1
+enero	DATE	1998-01
+marzo de 1998	DATE	1998-03
+marzo	DATE	1999-03
+1997	DATE	1997
+
+2000-03-14	DATE	2000-03-14
+hoy	DATE	2000-03-14
+ahora	DATE	PRESENT_REF
+esta mañana	TIME	2000-03-14TMO
+los cuatro pasados años	DURATION	P4Y
+el 12 de marzo	DATE	2000-03-12
+
+2001-02-02	DATE	2001-02-02
+ahora	DATE	PRESENT_REF
+
+2001-07-02	DATE	2001-07-02
+marzo de 1959	DATE	1959-03
+
+2000-10-17	DATE	2000-10-17
+hoy	DATE	2000-10-17
+hoy	DATE	2000-10-17
+la segunda jornada	DURATION	P1D
+toda la semana	DURATION	P1W
+hoy	DATE	2000-10-17
+hoy	DATE	2000-10-17
+del viernes pasado	DATE	2000-10-13
+el momento	DATE	PRESENT_REF
+la semana pasada	DATE	2000-W41
+hoy	DATE	2000-10-17
+la semana próxima	DATE	2000-W43
+ahora	DATE	PRESENT_REF
+2001	DATE	2001
+
+2001-04-02	DATE	2001-04-02
+
+1999-12-02	DATE	1999-12-02
+el 2000	DATE	2000
+el año en curso	DATE	1999
+el 2000	DATE	2000
+ayer	DATE	1999-12-01
+el 2001	DATE	2001
+ayer	DATE	1999-12-01
+del 2000	DATE	2000
+un día después	DURATION	P1D
+los 100 primeros días	DURATION	P100D
+el 2000	DATE	2000
+el primer cuatrimestre	DATE	2000-T1
+enero	DATE	2000-01
+el 2000	DATE	2000
+la actualidad	DATE	PRESENT_REF
+anual	SET	P1Y
+1999	DATE	1999
+este año	DATE	1999
+tres años	DURATION	P3Y
+anuales	SET	P1Y
+menos de tres años	DURATION	P3Y
+septiembre	DATE	1999-09
+dos	DURATION	P2Y
+tres años	DURATION	P3Y
+el 2000	DATE	2000
+uno	DURATION	P1Y
+dos años	DURATION	P2Y
+el 2001	DATE	2001
+
+2000-12-16	DATE	2000-12-16
+hace un año	DATE	1990
+hoy	DATE	2000-12-16
+noviembre pasado	DATE	2000-11
+catorce meses	DURATION	P14M
+1997	DATE	1997
+esa fecha	DATE	1997
+marzo próximo	DATE	2001-03
+al año	SET	P1Y
+junio	DATE	2000-06
+
+1999-07-02	DATE	1999-07-02
+
+2000-05-31	DATE	2000-05-31
+hoy	DATE	2000-05-31
+trece horas	DURATION	PT13H
+el próximo lunes	DATE	2000-06-05
+1 de enero del 2001	DATE	2001-01-01
+bimensuales	SET	P2M
+18 meses	DURATION	P18M
+cinco años	DURATION	P5Y
+ocho	DURATION	P8M
+doce meses	DURATION	P12M
+cuatro meses	DURATION	P4M
+hoy	DATE	2000-05-31
+hoy	DATE	2000-05-31
+
+2000-02-15	DATE	2000-02-15
+hoy	DATE	2000-02-15
+hace tiempo	DURATION	PXM
+Ahora	DATE	PRESENT_REF
+ayer	DATE	2000-02-14
+Hoy	DATE	PRESENT_REF
+hoy	DATE	2000-02-15
+ahora	DATE	PRESENT_REF
+hoy	DATE	2000-02-15
+
+2000-11-17	DATE	2000-11-17
+el próximo lunes	DATE	2000-11-20
+hoy, viernes	DATE	2000-11-17
+el próximo lunes	DATE	2000-11-20
+El mismo día	DATE	2000-11-20
+la tarde	TIME	2000-11-20TAF
+la mañana	TIME	2000-11-20TMO
+hoy	DATE	2000-11-17
+el pasado septiembre	DATE	2000-09
+el lunes	DATE	2000-11-20
+un año	DURATION	P1Y
+los próximos años	DURATION	PXY
+
+2000-02-01	DATE	2000-02-01
+
+2001-10-01	DATE	2001-10-01
+seis meses	DURATION	P6M
+
+2000-06-01	DATE	2000-06-01
+mayo de 1999	DATE	1999-05
+el lunes pasado	DATE	2000-05-29
+el 19 de mayo	DATE	2000-05-19
+las últimas semanas	DURATION	PXW
+hoy jueves	DATE	2000-06-01
+hoy	DATE	2000-06-01
+un tiempo	DURATION	PXM
+este miércoles	DATE	2000-05-31
+el miércoles	DATE	2000-05-31
+el miércoles	DATE	2000-05-31
+
+2001-08-01	DATE	2001-08-01
+del siglo XVIII	DATE	17
+recién	DATE	PAST_REF
+ayer	DATE	2001-07-31
+los últimos meses	DURATION	PXM
+un año	DURATION	P1Y
+
+1999-09-02	DATE	1999-09-02
+hace ya muchos meses	DURATION	PXM
+ahora	DATE	PRESENT_REF
+del año	DATE	2000
+ahora	DATE	PRESENT_REF
+del pasado	DATE	PAST_REF
+actual	DATE	PRESENT_REF
+la época anterior	DATE	PAST_REF
+un tiempo	DURATION	PXY
+Ahora	DATE	PRESENT_REF
+un momento o en otro	DATE	PAST_REF
+un decenio	DURATION	P10Y
+este invierno	DATE	2000-WI
+
+1999-04-01	DATE	1999-04-01
+un minuto	DURATION	PT1M
+hace un par de meses	DATE	1999-02
+el primer minuto	DURATION	PT1M
+el último minuto	DURATION	PT1M
+
+2000-08-01	DATE	2000-08-01
+ahora	DATE	PRESENT_REF
+
+1999-10-01	DATE	1999-10-01
+ayer	DATE	1999-09-30
+recientemente	DATE	PAST_REF
+1987	DATE	1987
+1998	DATE	1998
+anual	SET	P1Y
+
+2000-11-16	DATE	2000-11-16
+hoy	DATE	2000-11-16
+hoy	DATE	2000-11-16
+1969	DATE	1969
+1997	DATE	1997
+hace 25 años	DATE	1975
+1998	DATE	1998
+el último trimestre de 1999	DATE	1999-Q4
+hace dos años	DATE	1998
+cualquier momento	DATE	FUTURE_REF
+el año 2006	DATE	2006
+
+2002-02-02	DATE	2002-02-02
+La jornada de ayer	DATE	2002-02-01
+víspera	DATE	2002-02-01
+la noche	TIME	2002-02-01TNI
+
+1999-02-02	DATE	1999-02-02
+18 años	DURATION	P18Y
+el mes de septiembre del 2001	DATE	2001-09
+La jornada	DATE	1999-XX-XX
+los últimos días	DURATION	PXD
+las últimas semanas	DURATION	PXW
+noche	SET	PTNI
+noche	SET	PTNI
+ayer	DATE	1999-02-01
+el próximo Jueves	DATE	1999-02-04
+
+2000-10-13	DATE	2000-10-13
+hoy	DATE	2000-10-13
+largo plazo	DATE	FUTURE_REF
+próxima	DATE	FUTURE_REF
+los días 15	DATE	2001-03-15
+16 de marzo del 2001	DATE	2001-03-16
+
+2000-06-14	DATE	2000-06-14
+próxima	DATE	FUTURE_REF
+un año más	DURATION	P1Y
+un año más	DURATION	P1Y
+del año que le resta	DURATION	P1Y
+pasada	DATE	PAST_REF
+un segundo año	DURATION	P1Y
+el próximo día 9 de julio	DATE	2000-07-09
+26 años	DURATION	P26Y
+
+2000-09-16	DATE	2000-09-16
+hoy	DATE	2000-09-16
+hoy, sábado	DATE	2000-09-16
+2000	DATE	2000
+2006	DATE	2006
+ese tiempo	DURATION	P6Y
+ahora	DATE	PRESENT_REF
+actual	DATE	PRESENT_REF
+largo plazo	DATE	FUTURE_REF
+
+1999-02-02	DATE	1999-02-02
+1996	DATE	1996
+2006	DATE	2006
+ayer	DATE	1999-02-01
+el pasado 29 de enero	DATE	1999-01-29
+1996	DATE	1996
+1998	DATE	1998
+2000	DATE	2000
+2002	DATE	2002
+2004	DATE	2004
+el 2006	DATE	2006
+ayer	DATE	1999-02-01
+ayer	DATE	1999-02-01
+esta noche	TIME	1999-02-02TNI
+21.30	TIME	1999-02-02T21:30
+ayer	DATE	1999-02-01
+ayer	DATE	1999-02-01
+un momento	DATE	PRESENT_REF
+ahora	DATE	PRESENT_REF
+este Jueves	DATE	1999-02-04
+38 años	DURATION	P38Y
+ahora	DATE	PRESENT_REF
+ayer	DATE	1999-02-01
+una semana más	DURATION	P1W
+
+1999-01-03	DATE	1999-01-03
+recientemente	DATE	PAST_REF
+17.35	TIME	1999-01-03T17:35
+
+2001-05-02	DATE	2001-05-02
+1997	DATE	1997
+los fines de semana	SET	XXXX-WXX-WE
+
+2000-12-15	DATE	2000-12-15
+el pasado octubre	DATE	2000-10
+hoy	DATE	2000-12-15
+
+2002-04-02	DATE	2002-04-02
+ayer	DATE	2002-04-01
+
+2002-05-02	DATE	2002-05-02
+anoche	TIME	2002-05-01TNI
+
+2000-06-08	DATE	2000-06-08
+el 26 de mayo	DATE	2000-05-26
+hoy	DATE	2000-06-08
+el 19 de mayo	DATE	2000-05-19
+anoche	TIME	2000-06-07TNI
+ocho meses	DURATION	P8M
+anuales	SET	P1Y
+
+2000-07-02	DATE	2000-07-02
+20 meses	DURATION	P20M
+
+2002-09-02	DATE	2002-09-02
+un año	DATE	2002
+más de 20 años	DURATION	P20Y
+hace 38 años	DATE	1964
+los 80	DATE	198
+un día	DATE	PAST_REF
+todo el verano pasado	DATE	2001-SU
+
+2000-02-15	DATE	2000-02-15
+del 6	DATE	2000-04-06
+al 9 de abril	DATE	2000-04-09
+recientemente	DATE	PAST_REF
+los últimos cinco minutos	DURATION	PT5M
+actual	DATE	PRESENT_REF
+
+2001-02-01	DATE	2001-02-01
+ayer	DATE	2001-01-31
+futuro	DATE	FUTURE_REF
+
+2001-09-02	DATE	2001-09-02
+
+1999-10-01	DATE	1999-10-01
+hoy	DATE	1999-10-01
+del 2000	DATE	2000
+Mañana	DATE	1999-10-02
+ayer	DATE	1999-09-30
+mayo del 2000	DATE	2000-05
+un día antes	DURATION	P1D
+Hoy	DATE	1999-10-01
+invierno	DATE	1999-WI
+actual	DATE	PRESENT_REF
+ayer	DATE	1999-09-30
+ahora	DATE	PRESENT_REF
+ayer	DATE	1999-09-30
+ayer	DATE	1999-09-30
+mañana	DATE	1999-10-02
+18.45 horas	TIME	1999-10-02T18:45
+
+1999-05-02	DATE	1999-05-02
+la madrugada	TIME	TMO
+actual	DATE	PRESENT_REF
+
+2002-04-02	DATE	2002-04-02
+los 101 años	DURATION	P101Y
+
+2002-04-02	DATE	2002-04-02
+1982	DATE	1982
+Ahora	DATE	PRESENT_REF
+
+2000-01-03	DATE	2000-01-03
+hoy	DATE	2000-01-03
+los últimos años	DURATION	PXY
+años	DURATION	PXY
+al año	SET	P1Y
+1998	DATE	1998
+1999	DATE	1999
+1999	DATE	1999
+1998	DATE	1998
+el 2000	DATE	2000
+1997	DATE	1997
+1998	DATE	1998
+el año pasado	DATE	1999
+junio pasado	DATE	1999-06
+septiembre de 1999	DATE	1999-09
+ese año	DATE	1999
+el pasado viernes	DATE	1999-12-31
+los próximos tres meses	DURATION	P3M
+los próximos tres meses	DURATION	P3M
+1992	DATE	1992
+mayo de 1999	DATE	1999-05
+Meses antes	DURATION	PXM
+1992	DATE	1992
+hoy	DATE	PRESENT_REF
+hoy	DATE	2000-01-03
+
+2001-02-01	DATE	2001-02-01
+
+2000-03-15	DATE	2000-03-15
+hoy, miércoles	DATE	2000-03-15
+la actualidad	DATE	PRESENT_REF
+hoy	DATE	2000-03-15
+varios minutos	DURATION	PTXM
+tres	DURATION	P3W
+cuatro semanas	DURATION	P4W
+tres	DURATION	P3D
+cuatro días	DURATION	P4D
+1999	DATE	1999
+cada día	SET	P1D
+este año	DATE	2000
+su momento	DATE	PAST_REF
+ahora	DATE	PRESENT_REF
+
+2001-05-02	DATE	2001-05-02
+reciente	DATE	PAST_REF
+
+1999-12-02	DATE	1999-12-02
+ayer	DATE	1999-12-01
+
+2000-06-08	DATE	2000-06-08
+1989	DATE	1989
+35 años	DURATION	P35Y
+Días después	DURATION	PXD
+el 10 de noviembre de 1989	DATE	1989-11-10
+dos meses más tarde	DURATION	P2M
+del 10 de junio de 1990	DATE	1990-06-10
+el 14 de diciembre de 1989	DATE	1989-12-14
+hacía tiempo	DURATION	PXY
+el 6 de julio de 1990	DATE	1990-07-06
+hoy	DATE	2000-06-08
+el pasado domingo	DATE	2000-06-04
+esta tarde	TIME	2000-06-08TAF
+hace 150 años	DATE	1850
+Hace escasamente un mes	DATE	2000-05-08
+
+1999-10-01	DATE	1999-10-01
+45 minutos	DURATION	PT45M
+ahora	DATE	PRESENT_REF
+los minutos finales	DURATION	PTXM
+ahora mismo	DATE	PRESENT_REF
+
+2000-07-01	DATE	2000-07-01
+el mínimo tiempo	DURATION	PTXS
+hoy	DATE	2000-07-01
+un día	DATE	2000-07-01
+estos últimos días	DURATION	PXD
+ayer	DATE	2000-06-30
+el año pasado	DATE	1999
+hoy	DATE	2000-07-01
+hace un año	DATE	1999
+hoy	DATE	2000-07-01
+1999	DATE	1999
+un año	DURATION	P1Y
+1997	DATE	1997
+menos de cinco segundos	DURATION	PT5S
+1.20 minutos	DURATION	PT1M20S
+ayer	DATE	2000-06-30
+
+2000-07-15	DATE	2000-07-15
+hoy	DATE	2000-07-15
+hoy, sábado	DATE	2000-07-15
+cuatro días	DURATION	P4D
+esta semana	DATE	2000-W28
+dos horas	DURATION	PT2H
+este domingo	DATE	2000-07-16
+la madrugada de hoy sábado	TIME	2000-07-15TMO
+hoy	DATE	2000-07-15
+el domingo	DATE	2000-07-16
+
+1999-04-01	DATE	1999-04-01
+el 20 de marzo de 1994	DATE	1994-03-20
+ahora	DATE	PRESENT_REF
+
+1999-05-01	DATE	1999-05-01
+marzo	DATE	1999-03
+el pasado mes	DATE	1999-04
+diciembre	DATE	1998-12
+Febrero	DATE	1999-02
+este periodo	DURATION	P3M
+ese mismo periodo	DURATION	P3M
+
+2000-06-02	DATE	2000-06-02
+los años 30	DATE	193
+
+2001-03-01	DATE	2001-03-01
+las fechas	SET	PXD
+
+2000-05-15	DATE	2000-05-15
+hoy	DATE	2000-05-15
+mañana, martes	DATE	2000-05-16
+hoy	DATE	2000-05-15
+El sábado	DATE	2000-05-13
+al día de hoy	DATE	2000-05-15
+hoy	DATE	2000-05-15
+hoy	DATE	2000-05-15
+mañana	DATE	2000-05-16
+1961	DATE	1961
+hoy	DATE	2000-05-15
+las 12:00 horas locales	TIME	2000-05-15T12:00
+16:00 GMT	TIME	2000-05-15T16:00Z
+la mañana del miércoles	TIME	2000-05-17TMO
+hoy	DATE	2000-05-15
+horas tempranas	TIME	2000-05-15TMO
+el jueves	DATE	2000-05-18
+una hora	DURATION	PT1H
+la mañana	TIME	2000-05-16TMO
+1996	DATE	1996
+las primeras horas de la mañana	TIME	TMO
+la tarde	TIME	TAF
+las 6:00 horas locales	TIME	T06:00
+10:00 GMT	TIME	T10:00Z
+dos horas y 30 minutos	DURATION	PT2H30M
+una hora más	DURATION	PT1H
+las 9:30 hora local	TIME	T09:30
+13:30 GMT	TIME	T13:30Z
+mañana	DATE	2000-05-16
+93 años	DURATION	P93Y
+
+2002-01-02	DATE	2002-01-02
+
+2002-05-01	DATE	2002-05-01
+ayer	DATE	2002-04-30
+
+2000-04-16	DATE	2000-04-16
+ahora	DATE	PRESENT_REF
+ahora	DATE	PRESENT_REF
+el sábado	DATE	2000-04-15
+diez días	DURATION	P10D
+más de un año	DURATION	P1Y
+el 13 de marzo de 1999	DATE	1999-03-13
+el 29 de octubre de 1994	DATE	1994-10-29
+un mes	DURATION	P1M
+presente	DATE	PRESENT_REF
+hace una semana	DATE	2000-W14
+casi tres meses	DURATION	P3M
+demasiado tiempo	DURATION	PXW
+
+1999-05-01	DATE	1999-05-01
+marzo	DATE	1999-03
+el primer trimestre de 1998	DATE	1998-Q1
+el mismo periodo de 1999	DATE	1999-Q1
+
+2000-07-13	DATE	2000-07-13
+hoy	DATE	2000-07-13
+ayer	DATE	2000-07-12
+ayer	DATE	2000-07-12
+del pasado viernes	DATE	2000-07-07
+el próximo año	DATE	2001
+hoy	DATE	2000-07-13
+futura	DATE	FUTURE_REF
+hace un mes	DATE	2000-06
+futuro	DATE	FUTURE_REF
+actual	DATE	PRESENT_REF
+pasada	DATE	PAST_REF
+el 19 de mayo	DATE	2000-05-19
+hoy jueves	DATE	2000-07-13
+días	DURATION	PXD
+
+2000-02-13	DATE	2000-02-13
+34 años	DURATION	P34Y
+el pasado año	DATE	1999
+1988	DATE	1988
+próximos	DATE	FUTURE_REF
+
+2002-01-03	DATE	2002-01-03
+esta semana	DATE	2002-W01
+más de un año	DURATION	P1Y
+una temporada	DURATION	P1Y
+este mediodía	DATE	2002-01-03TMI
+próximas	DATE	FUTURE_REF
+entonces	DATE	PAST_REF
+esta noche mismo	DATE	2002-01-03TNI
+del año	DATE	2002
+
+2000-01-02	DATE	2000-01-02
+este año	DATE	2000
+un mismo año	DURATION	P1Y
+1999	DATE	1999
+
+2001-05-01	DATE	2001-05-01
+Mayo	DATE	2001-05
+Junio	DATE	2001-06
+Meses excitantes	DURATION	P2M
+Primero de Mayo	DATE	2001-05-01
+2 de mayo	DATE	2001-05-02
+dos años seguidos	DURATION	P2Y
+su segundo año	DURATION	P1Y
+del Sábado	DATE	2001-05-05
+
+2001-05-02	DATE	2001-05-02
+1899-1986	DURATION	P87Y
+este verano	DATE	2001-SU
+el mes de noviembre de 1999	DATE	1999-11
+antiguo	DATE	PAST_REF
+menos de un mes	DURATION	P1M
+principios de siglo	DATE	19
+1918	DATE	1918
+las décadas de los años 20	DATE	192
+30	DATE	193
+el momento	DATE	PRESENT_REF
+
+1999-07-01	DATE	1999-07-01
+el 6 de septiembre	DATE	1999-09-06
+un segundo	DURATION	PT1S
+próximo	DATE	FUTURE_REF
+ayer	DATE	1999-06-30
+el 6 de septiembre	DATE	1999-09-06
+noviembre de este año	DATE	1999-11
+abril del 2000	DATE	2000-04
+
+2002-05-02	DATE	2002-05-02
+Actualmente	DATE	PRESENT_REF
+mitad del 2003	DATE	2003
+el 2000	DATE	2000
+
+1999-04-01	DATE	1999-04-01
+pasada	DATE	PAST_REF
+
+2000-04-01	DATE	2000-04-01
+próximas	DATE	FUTURE_REF
+ayer	DATE	2000-03-31
+ayer	DATE	2000-03-31
+ayer	DATE	2000-03-31
+ayer	DATE	2000-03-31
+próximos	DATE	FUTURE_REF
+el día de ayer	DATE	2000-03-31
+futuro	DATE	FUTURE_REF
+un poco	DURATION	PXM
+un buen rato	DURATION	PTXM
+el mismo punto	DATE	PAST_REF
+el mismo día	DATE	1999-12-01
+hace unos cuatro meses	DURATION	P4M
+cada día	SET	P1D
+
+1999-05-01	DATE	1999-05-01
+ayer	DATE	1999-04-30
+al mes	SET	P1M
+
+2001-11-01	DATE	2001-11-01
+16 días	DURATION	P16D
+
+2001-12-02	DATE	2001-12-02
+1983	DATE	1983
+la primavera de 1983	DATE	1983-SP
+un par de años	DATE	1985-SP
+15 años	DURATION	P15Y
+Ahora	DATE	PRESENT_REF
+hace dos meses	DATE	2001-10
+
+1999-02-02	DATE	1999-02-02
+Ayer	DATE	1999-02-01
+el pasado año	DATE	1998
+cuatro días	DURATION	P4D
+25 minutos	DURATION	PT25M
+siete minutos	DURATION	PT7M
+más de dos minutos	DURATION	PT2M
+quedaba tiempo	DURATION	PTXM
+el año	DATE	1999
+
+2000-04-15	DATE	2000-04-15
+hoy	DATE	2000-04-15
+1989	DATE	1989
+ahora	DATE	PRESENT_REF
+
+2001-01-03	DATE	2001-01-03
+un mes de Febrero	DATE	2001-02
+unos días	DURATION	PXD
+ayer	DATE	2001-01-02
+hoy mismo	DATE	2001-01-03
+
+2001-08-02	DATE	2001-08-02
+
+1999-06-01	DATE	1999-06-01
+la última media hora	DURATION	PT0.5H
+ayer	DATE	1999-05-31
+todo el año	DATE	1999
+lo que va	DURATION	P5M
+año	DATE	1999
+
+2000-08-19	DATE	2000-08-19
+la noche del viernes pasado	TIME	2000-08-18TNI
+hoy	DATE	2000-08-19
+el pasado 31 de diciembre	DATE	1999-12-31
+
+2000-07-01	DATE	2000-07-01
+hoy	DATE	2000-07-01
+finales del año	DATE	2000
+este año	DATE	2000
+septiembre del 2001	DATE	2001-09
+del pasado	DATE	PAST_REF
+el año pasado	DATE	1999
+fines de 1999	DATE	1999
+el primer trimestre del presente año	DATE	2000-Q1
+1996	DATE	1996
+actuales	DATE	PRESENT_REF
+del fin del año	DATE	2000
+los últimos dos años	DURATION	P2Y
+el jueves	DATE	2000-06-29
+
+2000-06-02	DATE	2000-06-02
+El otro día	DATE	2000-XX-XX
+no hace mucho	DURATION	PXM
+Ahora	DATE	PRESENT_REF
+
+2002-02-02	DATE	2002-02-02
+el próximo martes	DATE	2002-02-05
+al 25 de abril	DATE	2002-04-25
+un día después	DATE	2002-04-26
+
+2001-12-02	DATE	2001-12-02
+centenaria	DURATION	P100Y
+cada noche	SET	PTNI
+el viernes pasado	DATE	2001-11-30
+el Medievo	DATE	14
+el siglo XV	DATE	14
+ahora	DATE	PRESENT_REF
+1976	DATE	1976
+30 años	DURATION	P30Y
+28	DURATION	P28Y
+ahora	DATE	PRESENT_REF
+62 años	DURATION	P62Y
+Hacía muchos años	DURATION	PXY
+24 años	DURATION	P24Y
+33	DURATION	P33Y
+hace cinco años	DATE	1996
+ahora	DATE	PRESENT_REF
+48 años	DURATION	P48Y
+ahora	DATE	PRESENT_REF
+
+2001-06-02	DATE	2001-06-02
+40 años	DURATION	P40Y
+el Jueves	DATE	2001-05-31
+la tarde	TIME	2001-05-31TAF
+
+2001-05-02	DATE	2001-05-02
+
+2000-05-02	DATE	2000-05-02
+20.00	TIME	2000-05-02T20:00
+
+1999-07-01	DATE	1999-07-01
+esta noche	TIME	1999-07-01TNI
+22.30 horas	TIME	1999-07-01T22:30
+ayer	DATE	1999-06-30
+hoy	DATE	1999-07-01
+16 años	DURATION	P16Y
+recientemente	DATE	PAST_REF
+del próximo mes de septiembre	DATE	1999-09
+próximo	DATE	FUTURE_REF
+
+2000-03-16	DATE	2000-03-16
+hoy	DATE	2000-03-16
+del próximo sábado	DATE	2000-03-18
+la actualidad	DATE	PRESENT_REF
+Ultimamente	DATE	PAST_REF
+Ahora	DATE	PRESENT_REF
+
+2000-04-01	DATE	2000-04-01
+un mes	DATE	2000-04
+mañana	DATE	2000-04-02
+mañana	DATE	2000-04-02
+ahora	DATE	PRESENT_REF
+este año	DATE	2000
+un mes	DURATION	P1M
+
+2000-06-15	DATE	2000-06-15
+recién	DATE	PAST_REF
+28 años	DURATION	P28Y
+el 21 de junio	DATE	2000-06-21
+tres años	DURATION	P3Y
+el próximo lunes	DATE	2000-06-19
+
+2000-01-20	DATE	2000-01-20
+seis años	DURATION	P6Y
+del primer trienio	DURATION	P3Y
+20 años	DURATION	P20Y
+tres	DURATION	P3Y
+anual	SET	P1Y
+actualmente	DATE	PRESENT_REF
+tres años	DURATION	P3Y
+
+2000-08-17	DATE	2000-08-17
+hoy, jueves	DATE	2000-08-17
+mayo	DATE	2000-05
+junio	DATE	2000-06
+los próximos seis meses	DURATION	P6M
+1999	DATE	1999
+
+1999-05-01	DATE	1999-05-01
+enero	DATE	1999-01
+Entonces	DATE	PAST_REF
+entonces	DATE	PAST_REF
+esta tarde	TIME	1999-05-01TAF
+mañana	DATE	1999-05-02
+ahora	DATE	PRESENT_REF
+estos días	DATE	PRESENT_REF
+
+2000-01-19	DATE	2000-01-19
+años	DURATION	PXY
+anual	SET	P1Y
+diaria	SET	P1D
+el 2004	DATE	2004
+
+2001-04-01	DATE	2001-04-01
+ayer	DATE	2001-03-31
+ayer	DATE	2001-03-31
+pasada la una de la tarde	TIME	2001-03-31T13:00
+una hora después	DURATION	PT1H
+cuatro horas	DURATION	PT4H
+hace unos días	DURATION	PXD
+los últimos días	DURATION	PXD
+
+2000-06-01	DATE	2000-06-01
+estos días	DATE	PRESENT_REF
+este fin de semana	DATE	2000-W22-WE
+hoy	DATE	2000-06-01
+la Ascensión	DATE	2000-06-01
+Día del Padre	DATE	2000-06-01
+Día Internacional del niño	DATE	2000-06-01
+anual	SET	P1Y
+del viernes	DATE	2000-06-02
+hoy	DATE	2000-06-01
+cinco días	DURATION	P5D
+El sábado	DATE	2000-06-03
+esta tarde	TIME	2000-06-01TAF
+1948	DATE	1948
+su Día Mundial	DATE	2000-06-01
+estos días	DATE	PRESENT_REF
+anualmente	SET	P1Y
+varios días	DURATION	PXD
+estos días	DATE	PRESENT_REF
+
+2000-02-16	DATE	2000-02-16
+hoy	DATE	2000-02-16
+el 30 de abril de 1999	DATE	1999-04-30
+el 16 de julio de 1998	DATE	1998-07-16
+la semana próxima	DATE	2000-W08
+el próximo 15 de marzo	DATE	2000-03-15
+31 años	DURATION	P31Y
+el 20 de mayo de 1996	DATE	1996-05-20
+ese mismo día	DATE	1996-05-20
+siete años	DURATION	P7Y
+hoy	DATE	2000-02-16
+el pasado 5 de octubre	DATE	1999-10-05
+siete años	DURATION	P7Y
+1996	DATE	1996
+ese mismo día	DATE	1999-10-05
+nueve años	DURATION	P9Y
+el 6 de noviembre de 1997	DATE	1997-11-06
+
+2000-11-16	DATE	2000-11-16
+hoy	DATE	2000-11-16
+hoy	DATE	2000-11-16
+octubre pasado	DATE	2000-10
+los últimos cinco años	DURATION	P5Y
+este año	DATE	2000
+El pasado 6 de noviembre	DATE	2000-11-06
+cinco días	DURATION	P5D
+el momento	DATE	PRESENT_REF
+
+2000-08-17	DATE	2000-08-17
+hoy	DATE	2000-08-17
+del 5 de enero de 2001,	DATE	2001-01-05
+del 10 de octubre próximo	DATE	2000-10-10
+1993	DATE	1993
+entonces	DATE	PAST_REF
+1999	DATE	1999
+
+2000-05-16	DATE	2000-05-16
+hoy martes	DATE	2000-05-16
+93 años	DURATION	P93Y
+49 años	DURATION	P49Y
+Los cuatro meses	DURATION	P4M
+los quince minutos	DURATION	PT15M
+el pasado 29 de abril	DATE	2000-04-29
+las últimas horas	DURATION	PTXH
+ayer	DATE	2000-05-15
+pocas horas antes	DURATION	PTXH
+las fechas precedentes	DURATION	PXD
+todos los días	SET	P1D
+1997	DATE	1997
+las últimas semanas	DURATION	PXW
+las 06.00 hora local	TIME	2000-05-16T06:00
+10.00 GMT	TIME	2000-05-16T10:00Z
+las 18.00 hora local	TIME	2000-05-16T18:00
+22.00 GMT	TIME	2000-05-16T22:00Z
+hoy	DATE	2000-05-16
+1996	DATE	1996
+las primeras horas de la mañana	TIME	TMO
+la tarde	TIME	TAF
+las 06.00 horas	TIME	T06:00
+dos horas y 30 minutos	DURATION	PT2H30M
+una hora más	DURATION	PT1H
+las 09.30 hora local	TIME	T09:30
+13.30 GMT	TIME	T13:30Z
+
+2001-04-01	DATE	2001-04-01
+
+2000-02-14	DATE	2000-02-14
+hoy, lunes	DATE	2000-02-14
+los cuatro años	DURATION	P4Y
+del 12 de marzo	DATE	2000-03-12
+los cuatro años	DURATION	P4Y
+estos cuatro años	DURATION	P4Y
+el futuro	DATE	FUTURE_REF
+hoy	DATE	PRESENT_REF
+ahora	DATE	PRESENT_REF
+
+1999-12-01	DATE	1999-12-01
+nocturna	TIME	TNI
+del presente	DATE	PRESENT_REF
+
+2002-03-01	DATE	2002-03-01
+del 2	DATE	2002-04-02
+al 28 de abril próximos	DATE	2002-04-28
+20 años	DURATION	P20Y
+
+2002-05-02	DATE	2002-05-02
+
+2000-06-01	DATE	2000-06-01
+el futuro	DATE	FUTURE_REF
+La semana pasada	DATE	2000-W21
+1998	DATE	1998
+el 3 de abril	DATE	2000-04-03
+próxima	DATE	FUTURE_REF
+muchos meses	DURATION	PXM
+hoy	DATE	2000-06-01
+otro mal mes	DURATION	P1M
+ayer	DATE	2000-05-31
+este año	DATE	2000
+mayo	DATE	2000-05
+el año	DATE	2000
+mayo	DATE	2000-05
+este mismo año 2000	DATE	2000
+

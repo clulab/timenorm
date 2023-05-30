@@ -4,7 +4,7 @@ version := "1.0.5"
 
 scalaVersion := "2.12.8"
 crossScalaVersions := List("2.11.12", "2.12.8", "2.13.0")
-scalacOptions := Seq("-unchecked", "-deprecation")
+scalacOptions := Seq("-unchecked") // , "-deprecation") // Check Scala 2.13 periodically.
 
 libraryDependencies ++= {
   val luceneVer = "6.6.6"
