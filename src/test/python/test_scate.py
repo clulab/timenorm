@@ -224,7 +224,6 @@ def test_this():
     assert scate.This(interval, month).isoformat() == "2016-07-01T00:00:00 2016-08-01T00:00:00"
     assert scate.This(interval, scate.Season.SUMMER).isoformat() == "2016-06-01T00:00:00 2016-09-01T00:00:00"
     assert scate.This(interval, scate.Season.WINTER).isoformat() == "2016-12-01T00:00:00 2017-03-01T00:00:00"
-    print("HERE!")
     assert scate.This(interval, scate.DayPart.NIGHT).isoformat() == "2016-07-01T00:00:00 2016-07-01T06:00:00"
 
 
