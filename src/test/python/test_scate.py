@@ -98,6 +98,7 @@ def test_n():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
     day = scate.RepeatingUnit(scate.Unit.DAY)
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
 
     assert [x.isoformat() for x in scate.N(scate.Last, interval, may, 3)] == \
            [f"{y}-05-01T00:00:00 {y}-06-01T00:00:00" for y in [2001, 2000, 1999]]
@@ -114,6 +115,9 @@ def test_n():
     next_3_days_included = scate.N(scate.Next, interval, day, 3, kwargs=dict(interval_included=True))
     assert [x.isoformat() for x in next_3_days_included] == \
            [f"2002-03-{d}T00:00:00 2002-03-{d+1}T00:00:00" for d in [23, 24, 25]]
+
+    assert [x.isoformat() for x in scate.N(scate.Nth, scate.Year(1997), month, 9, kwargs=dict(index=1))] == \
+           [scate.Interval.of(1997, i + 1).isoformat() for i in range(9)]
 
 
 def test_next():

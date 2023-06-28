@@ -494,11 +494,22 @@ class N:
         kwargs = dict(self.kwargs)
         kwargs["interval"] = self.interval
         kwargs["offset"] = self.offset
-        interval = self.interval_op_class(**kwargs)
-        yield interval
-        if "interval_included" in kwargs:
-            kwargs.pop("interval_included")
-        for i in range(self.n - 1):
-            kwargs["interval"] = interval
-            interval = self.interval_op_class(**kwargs)
-            yield interval
+
+        # Last and Next are applied N times
+        if self.interval_op_class in {Last, Next}:
+            for i in range(self.n):
+                interval = self.interval_op_class(**kwargs)
+                yield interval
+                kwargs["interval"] = interval
+                if i == 0 and "interval_included" in kwargs:
+                    kwargs.pop("interval_included")
+
+        # Nth is applied with its index increasing N times
+        elif self.interval_op_class is Nth:
+            index = kwargs["index"]
+            for index in range(index, index + self.n):
+                kwargs["index"] = index
+                yield self.interval_op_class(**kwargs)
+
+        else:
+            raise NotImplementedError
