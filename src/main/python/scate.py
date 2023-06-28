@@ -491,8 +491,14 @@ class N:
     kwargs: dict = dataclasses.field(default_factory=dict)
 
     def __iter__(self):
-        interval = self.interval_op_class(self.interval, self.offset, **self.kwargs)
+        kwargs = dict(self.kwargs)
+        kwargs["interval"] = self.interval
+        kwargs["offset"] = self.offset
+        interval = self.interval_op_class(**kwargs)
         yield interval
+        if "interval_included" in kwargs:
+            kwargs.pop("interval_included")
         for i in range(self.n - 1):
-            interval = self.interval_op_class(interval, self.offset)
+            kwargs["interval"] = interval
+            interval = self.interval_op_class(**kwargs)
             yield interval
