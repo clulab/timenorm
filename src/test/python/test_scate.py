@@ -100,23 +100,23 @@ def test_n():
     day = scate.RepeatingUnit(scate.Unit.DAY)
     month = scate.RepeatingUnit(scate.Unit.MONTH)
 
-    assert [x.isoformat() for x in scate.N(scate.Last, interval, may, 3)] == \
+    assert [x.isoformat() for x in scate.LastN(interval, may, 3)] == \
            [f"{y}-05-01T00:00:00 {y}-06-01T00:00:00" for y in [2001, 2000, 1999]]
-    assert [x.isoformat() for x in scate.N(scate.Next, interval, may, 3)] == \
+    assert [x.isoformat() for x in scate.NextN(interval, may, 3)] == \
            [f"{y}-05-01T00:00:00 {y}-06-01T00:00:00" for y in [2004, 2005, 2006]]
 
-    assert [x.isoformat() for x in scate.N(scate.Last, interval, day, 5)] == \
+    assert [x.isoformat() for x in scate.LastN(interval, day, 5)] == \
            [f"2002-03-{d}T00:00:00 2002-03-{d + 1}T00:00:00" for d in [21, 20, 19, 18, 17]]
-    assert [x.isoformat() for x in scate.N(scate.Next, interval, day, 5)] == \
+    assert [x.isoformat() for x in scate.NextN(interval, day, 5)] == \
            [f"2003-05-{d}T00:00:00 2003-05-{d + 1}T00:00:00" for d in [11, 12, 13, 14, 15]]
 
-    last_day_included = scate.N(scate.Last, interval, day, 1, kwargs=dict(interval_included=True))
+    last_day_included = scate.LastN(interval, day, 1, interval_included=True)
     assert [x.isoformat() for x in last_day_included] == ["2003-05-09T00:00:00 2003-05-10T00:00:00"]
-    next_3_days_included = scate.N(scate.Next, interval, day, 3, kwargs=dict(interval_included=True))
+    next_3_days_included = scate.NextN(interval, day, 3, interval_included=True)
     assert [x.isoformat() for x in next_3_days_included] == \
            [f"2002-03-{d}T00:00:00 2002-03-{d+1}T00:00:00" for d in [23, 24, 25]]
 
-    assert [x.isoformat() for x in scate.N(scate.Nth, scate.Year(1997), month, 9, kwargs=dict(index=1))] == \
+    assert [x.isoformat() for x in scate.NthN(scate.Year(1997), month, index=1, n=9)] == \
            [scate.Interval.of(1997, i + 1).isoformat() for i in range(9)]
 
 

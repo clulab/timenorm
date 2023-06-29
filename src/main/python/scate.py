@@ -1,8 +1,10 @@
+import collections.abc
 import dataclasses
 import datetime
 import dateutil.relativedelta
 import dateutil.rrule
 import enum
+import typing
 
 
 @dataclasses.dataclass
@@ -483,33 +485,40 @@ class Nth(IntervalOp):
 
 
 @dataclasses.dataclass
-class N:
-    interval_op_class: type
+class _N(collections.abc.Iterable[Interval]):
     interval: Interval
     offset: Offset
     n: int
-    kwargs: dict = dataclasses.field(default_factory=dict)
+    interval_included: bool = False
+    base_class: type = None
+
+    def __iter__(self) -> typing.Iterator[Interval]:
+        interval = self.interval
+        interval_included = self.interval_included
+        for i in range(self.n):
+            interval = self.base_class(interval, self.offset, interval_included)
+            yield interval
+            if i == 0:
+                interval_included = False
+
+
+@dataclasses.dataclass
+class LastN(_N):
+    base_class: type = Last
+
+
+@dataclasses.dataclass
+class NextN(_N):
+    base_class: type = Next
+
+
+@dataclasses.dataclass
+class NthN(collections.abc.Iterable[Interval]):
+    interval: Interval
+    offset: Offset
+    index: int
+    n: int
 
     def __iter__(self):
-        kwargs = dict(self.kwargs)
-        kwargs["interval"] = self.interval
-        kwargs["offset"] = self.offset
-
-        # Last and Next are applied N times
-        if self.interval_op_class in {Last, Next}:
-            for i in range(self.n):
-                interval = self.interval_op_class(**kwargs)
-                yield interval
-                kwargs["interval"] = interval
-                if i == 0 and "interval_included" in kwargs:
-                    kwargs.pop("interval_included")
-
-        # Nth is applied with its index increasing N times
-        elif self.interval_op_class is Nth:
-            index = kwargs["index"]
-            for index in range(index, index + self.n):
-                kwargs["index"] = index
-                yield self.interval_op_class(**kwargs)
-
-        else:
-            raise NotImplementedError
+        for index in range(self.index, self.index + self.n):
+            yield Nth(self.interval, self.offset, index)
