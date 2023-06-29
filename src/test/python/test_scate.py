@@ -274,6 +274,43 @@ def test_nth():
         scate.Nth(interval, may, 2, from_end=True)
 
 
+def test_these():
+
+    # These(Tue 1 Feb, Fri) => Fri 4 Feb
+    interval_tue = scate.Interval.fromisoformat("2005-02-01T03:22 2005-02-02T00:00")
+    friday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR)
+    assert [x.isoformat() for x in scate.These(interval_tue, friday)] == \
+           [scate.Interval.of(2005, 2, 4).isoformat()]
+
+    # These(Sat 8 Mar until Fri 14 Mar, Fri) => Fri 7 Mar, Fri 14 Mar
+    interval_week_sat = scate.Interval.fromisoformat("2003-03-08 2003-03-14")
+    assert [x.isoformat() for x in scate.These(interval_week_sat, friday)] == \
+           [scate.Interval.of(2003, 3, x).isoformat() for x in [7, 14]]
+
+    # These(Thu 10 Mar until Thu 17 Mar, Fri) => Fri 11 Apr, Fri 18 Apr
+    interval_week_thu = scate.Interval.fromisoformat("2003-04-10 2003-04-17")
+    assert [x.isoformat() for x in scate.These(interval_week_thu, friday)] == \
+           [scate.Interval.of(2003, 4, x).isoformat() for x in [11, 18]]
+
+    # These(22 Mar 2002 until 10 Feb 2003, Mar) => Mar 2002, Mar 2003
+    interval_11_months = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-02-10T22:10:20")
+    march = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 3)
+    assert [x.isoformat() for x in scate.These(interval_11_months, march)] == \
+           [scate.Interval.of(x, 3).isoformat() for x in [2002, 2003]]
+
+    # These(Thu 10 Mar until Thu 17 Mar, Mar) => Mar 2003
+    assert [x.isoformat() for x in scate.These(interval_week_thu, march)] == \
+           [scate.Interval.of(2003, 3).isoformat()]
+
+    # These(22 Mar 2002 until 10 Feb 2003, Fri) => ... 48 Fridays ...
+    assert len(list(scate.These(interval_11_months, friday))) == 48
+
+    # These(Tue 1 Feb, Week) => Mon 31 Jan through Sun 6 Feb
+    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    assert [x.isoformat() for x in scate.These(interval_tue, week)] == \
+           ["2005-01-31T00:00:00 2005-02-07T00:00:00"]
+
+
 def test_truncate():
     date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
     assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"
@@ -289,6 +326,9 @@ def test_truncate():
     assert scate.Unit.SECOND.truncate(date).isoformat() == "2026-05-03T01:07:35"
     assert scate.Unit.MILLISECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001000"
     assert scate.Unit.MICROSECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001111"
+
+    date = datetime.datetime.fromisoformat("2005-01-01 00:00:00")
+    assert scate.Unit.WEEK.truncate(date).isoformat() == "2004-12-27T00:00:00"
 
 
 def test_repeating_unit():

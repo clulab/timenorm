@@ -86,8 +86,11 @@ class Unit(enum.Enum):
             dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
         elif self is Unit.WEEK:
             timetuple = dt.timetuple()
-            week_start = datetime.date.fromordinal(timetuple.tm_yday - timetuple.tm_wday)
+            diff = timetuple.tm_yday - timetuple.tm_wday
+            week_start = datetime.date.fromordinal(diff if diff >= 1 else diff + 7)
             dt = datetime.datetime(dt.year, week_start.month, week_start.day, 0, 0)
+            if diff < 1:
+                dt = dt + dateutil.relativedelta.relativedelta(days=-7)
         elif self is Unit.MONTH:
             dt = datetime.datetime(dt.year, dt.month, 1, 0, 0)
         elif self is Unit.QUARTER_YEAR:
@@ -519,6 +522,27 @@ class NthN(collections.abc.Iterable[Interval]):
     index: int
     n: int
 
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[Interval]:
         for index in range(self.index, self.index + self.n):
             yield Nth(self.interval, self.offset, index)
+
+
+@dataclasses.dataclass
+class These(collections.abc.Iterable[Interval]):
+    interval: Interval
+    offset: Offset
+
+    def __post_init__(self):
+        if isinstance(self.offset, RepeatingField):
+            range_unit = self.offset.field.range
+        else:
+            range_unit = self.offset.unit
+        start = range_unit.truncate(self.interval.start)
+        _, end = range_unit.truncate(self.interval.end) + RepeatingUnit(range_unit)
+        self.interval = Interval(start, end)
+
+    def __iter__(self) -> typing.Iterator[Interval]:
+        interval = self.interval.start + self.offset
+        while interval.end <= self.interval.end:
+            yield interval
+            interval = interval.end + self.offset
