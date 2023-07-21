@@ -538,7 +538,9 @@ class These(collections.abc.Iterable[Interval]):
         else:
             range_unit = self.offset.unit
         start = range_unit.truncate(self.interval.start)
-        _, end = range_unit.truncate(self.interval.end) + RepeatingUnit(range_unit)
+        end = range_unit.truncate(self.interval.end)
+        if end != self.interval.end:
+            _, end = end + RepeatingUnit(range_unit)
         self.interval = Interval(start, end)
 
     def __iter__(self) -> typing.Iterator[Interval]:

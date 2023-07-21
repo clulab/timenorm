@@ -287,7 +287,7 @@ def test_these():
     assert [x.isoformat() for x in scate.These(interval_week_sat, friday)] == \
            [scate.Interval.of(2003, 3, x).isoformat() for x in [7, 14]]
 
-    # These(Thu 10 Mar until Thu 17 Mar, Fri) => Fri 11 Apr, Fri 18 Apr
+    # These(Thu 10 Apr until Thu 17 Apr, Fri) => Fri 11 Apr, Fri 18 Apr
     interval_week_thu = scate.Interval.fromisoformat("2003-04-10 2003-04-17")
     assert [x.isoformat() for x in scate.These(interval_week_thu, friday)] == \
            [scate.Interval.of(2003, 4, x).isoformat() for x in [11, 18]]
@@ -298,7 +298,7 @@ def test_these():
     assert [x.isoformat() for x in scate.These(interval_11_months, march)] == \
            [scate.Interval.of(x, 3).isoformat() for x in [2002, 2003]]
 
-    # These(Thu 10 Mar until Thu 17 Mar, Mar) => Mar 2003
+    # These(Thu 10 Apr until Thu 17 Apr, Mar) => Mar 2003
     assert [x.isoformat() for x in scate.These(interval_week_thu, march)] == \
            [scate.Interval.of(2003, 3).isoformat()]
 
@@ -309,6 +309,20 @@ def test_these():
     week = scate.RepeatingUnit(scate.Unit.WEEK)
     assert [x.isoformat() for x in scate.These(interval_tue, week)] == \
            ["2005-01-31T00:00:00 2005-02-07T00:00:00"]
+
+    # These(Thu 10 Apr until Thu 17 Apr, Mar) => Mar 2003
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    assert [x.isoformat() for x in scate.These(interval_week_thu, month)] == \
+           [scate.Interval.of(2003, 4).isoformat()]
+
+    # These(22 Mar 2002 until 10 Feb 2003, Year) => 2002, 2003
+    year = scate.RepeatingUnit(scate.Unit.YEAR)
+    assert [x.isoformat() for x in scate.These(interval_11_months, year)] == \
+           [scate.Year(x).isoformat() for x in [2002, 2003]]
+
+    # These(Thu 10 Apr until Thu 17 Apr, day) => ... 7 days ...
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    assert len(list(scate.These(interval_week_thu, day))) == 7
 
 
 def test_truncate():
