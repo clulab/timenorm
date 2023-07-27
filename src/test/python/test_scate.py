@@ -149,6 +149,17 @@ def test_day_parts():
     assert (interval - scate.DayPart.NIGHT).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
 
 
+def test_union():
+    interval = scate.Interval.fromisoformat("2003-01-01T00:00 2003-01-30T00:00")
+    feb = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 2)
+    day20 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 20)
+    union = scate.Union([feb, day20])
+    assert (interval - union).isoformat() == "2002-12-20T00:00:00 2002-12-21T00:00:00"
+    assert (interval - union - union).isoformat() == "2002-11-20T00:00:00 2002-11-21T00:00:00"
+    assert (interval + union).isoformat() == "2003-02-01T00:00:00 2003-03-01T00:00:00"
+    assert (interval + union + union).isoformat() == "2003-03-20T00:00:00 2003-03-21T00:00:00"
+
+
 def test_year():
     assert scate.Year(1985).isoformat() == "1985-01-01T00:00:00 1986-01-01T00:00:00"
     assert scate.Year(198, 1).isoformat() == "1980-01-01T00:00:00 1990-01-01T00:00:00"

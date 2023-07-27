@@ -243,16 +243,16 @@ class RepeatingField(Offset):
         self._one_base = self.field.base.relativedelta(1)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
+        other = self.field.base.truncate(other)
         # rrule requires a starting point even when going backwards,
         # so start at twice the expected range
         dtstart = other - 2 * self._one_range
         ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
-        ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
 
     def __radd__(self, other: datetime.datetime) -> Interval:
+        other = self.field.base.truncate(other)
         ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other)
-        ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
 
 
@@ -339,6 +339,20 @@ class DayPart:
         rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
         start_rrule_kwargs=dict(byhour=0),
         end_rrule_kwargs=dict(byhour=6))
+
+
+@dataclasses.dataclass
+class Union(Offset):
+    offsets: typing.Iterable[Offset]
+
+    def __post_init__(self):
+        self.unit = min((o.unit for o in self.offsets), key=lambda unit: unit._n)
+
+    def __rsub__(self, other: datetime.datetime) -> Interval:
+        return max((other - offset for offset in self.offsets), key=lambda i: i.end)
+
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        return min((other + offset for offset in self.offsets), key=lambda i: i.start)
 
 
 @dataclasses.dataclass
