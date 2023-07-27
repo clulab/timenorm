@@ -12,20 +12,24 @@ def test_interval():
     assert scate.Interval.of(1985, 6, 17, 23, 0).isoformat() == "1985-06-17T23:00:00 1985-06-17T23:01:00"
 
 
-def test_year():
-    assert scate.Year(1985).isoformat() == "1985-01-01T00:00:00 1986-01-01T00:00:00"
-    assert scate.Year(198, 1).isoformat() == "1980-01-01T00:00:00 1990-01-01T00:00:00"
-    assert scate.Year(17, 2).isoformat() == "1700-01-01T00:00:00 1800-01-01T00:00:00"
+def test_unit_truncate():
+    date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
+    assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"
+    assert scate.Unit.QUARTER_CENTURY.truncate(date).isoformat() == "2025-01-01T00:00:00"
+    assert scate.Unit.DECADE.truncate(date).isoformat() == "2020-01-01T00:00:00"
+    assert scate.Unit.YEAR.truncate(date).isoformat() == "2026-01-01T00:00:00"
+    assert scate.Unit.QUARTER_YEAR.truncate(date).isoformat() == "2026-04-01T00:00:00"
+    assert scate.Unit.MONTH.truncate(date).isoformat() == "2026-05-01T00:00:00"
+    assert scate.Unit.WEEK.truncate(date).isoformat() == "2026-04-27T00:00:00"
+    assert scate.Unit.DAY.truncate(date).isoformat() == "2026-05-03T00:00:00"
+    assert scate.Unit.HOUR.truncate(date).isoformat() == "2026-05-03T01:00:00"
+    assert scate.Unit.MINUTE.truncate(date).isoformat() == "2026-05-03T01:07:00"
+    assert scate.Unit.SECOND.truncate(date).isoformat() == "2026-05-03T01:07:35"
+    assert scate.Unit.MILLISECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001000"
+    assert scate.Unit.MICROSECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001111"
 
-
-def test_year_suffix():
-    assert scate.YearSuffix(scate.Year(1903), 37, 2).isoformat() == scate.Interval.of(1937).isoformat()
-    assert scate.YearSuffix(scate.Year(2016), 418, 3).isoformat() == scate.Interval.of(2418).isoformat()
-    assert scate.YearSuffix(scate.Year(132, 1), 85, 2).isoformat() == scate.Interval.of(1385).isoformat()
-    assert scate.YearSuffix(scate.Year(23, 2), 22, 2).isoformat() == scate.Interval.of(2322).isoformat()
-    assert scate.YearSuffix(scate.Year(1903), 3, 1, 1).isoformat() == "1930-01-01T00:00:00 1940-01-01T00:00:00"
-    assert scate.YearSuffix(scate.Year(132, 1), 8, 1, 1).isoformat() == "1380-01-01T00:00:00 1390-01-01T00:00:00"
-    assert scate.YearSuffix(scate.Year(132, 1), 240, 3, 1).isoformat() == "2400-01-01T00:00:00 2410-01-01T00:00:00"
+    date = datetime.datetime.fromisoformat("2005-01-01 00:00:00")
+    assert scate.Unit.WEEK.truncate(date).isoformat() == "2004-12-27T00:00:00"
 
 
 def test_period():
@@ -50,6 +54,115 @@ def test_sum():
 
     assert (dt + period_sum2).end.isoformat() == "2003-09-12T00:00:00"
     assert (dt - period_sum2).start.isoformat() == "1997-03-08T00:00:00"
+
+
+def test_repeating_unit():
+    century = scate.RepeatingUnit(scate.Unit.CENTURY)
+    decade = scate.RepeatingUnit(scate.Unit.DECADE)
+    year = scate.RepeatingUnit(scate.Unit.YEAR)
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+
+    interval = scate.Interval.of(2000, 1, 1)
+    assert (interval - year).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
+    assert (interval - year - year).isoformat() == "1998-01-01T00:00:00 1999-01-01T00:00:00"
+    assert (interval + day).isoformat() == "2000-01-02T00:00:00 2000-01-03T00:00:00"
+    assert (interval + day + day).isoformat() == "2000-01-03T00:00:00 2000-01-04T00:00:00"
+
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    assert (interval - month).isoformat() == scate.Interval.of(2002, 2).isoformat()
+    assert (interval - month - month).isoformat() == scate.Interval.of(2002, 1).isoformat()
+    assert (interval + month).isoformat() == scate.Interval.of(2003, 6).isoformat()
+    assert (interval + month + month).isoformat() == scate.Interval.of(2003, 7).isoformat()
+    assert (interval - century).isoformat() == "1900-01-01T00:00:00 2000-01-01T00:00:00"
+    assert (interval + century).isoformat() == "2100-01-01T00:00:00 2200-01-01T00:00:00"
+    assert (interval - decade).isoformat() == "1990-01-01T00:00:00 2000-01-01T00:00:00"
+    assert (interval + decade).isoformat() == "2010-01-01T00:00:00 2020-01-01T00:00:00"
+    # March 11, 2002 is a Monday
+    assert (interval - week).isoformat() == "2002-03-11T00:00:00 2002-03-18T00:00:00"
+    # May 12, 2003 is a Monday
+    assert (interval + week).isoformat() == "2003-05-12T00:00:00 2003-05-19T00:00:00"
+
+    interval = scate.Interval.fromisoformat("2001-02-12T03:03 2001-02-14T22:00")
+    assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
+    assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 15).isoformat()
+
+    interval = scate.Interval.fromisoformat("2001-02-12 2001-02-14")
+    assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
+    assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 14).isoformat()
+
+    # December 31, 2012 is a Monday
+    interval = scate.Interval.of(2013, 1, 8)
+    assert (interval - week).isoformat() == "2012-12-31T00:00:00 2013-01-07T00:00:00"
+
+
+def test_repeating_field():
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    assert (interval - may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
+    assert (interval - may - may).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
+    assert (interval + may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
+    assert (interval + may + may).isoformat() == "2005-05-01T00:00:00 2005-06-01T00:00:00"
+
+    day29 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 29)
+    assert (interval - day29).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
+    assert (interval - day29 - day29).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
+    assert (interval + day29).isoformat() == "2003-05-29T00:00:00 2003-05-30T00:00:00"
+    assert (interval + day29 + day29).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
+
+    # make sure that preceding and following are strict (no overlap allowed)
+    nov = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11)
+    interval = scate.Interval.of(1989, 11, 2)
+    assert (interval - nov).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
+    assert (interval + nov).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
+
+    day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
+    interval = scate.Interval.of(1980, 3, 1)
+    assert (interval + day31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
+    interval = scate.Interval.of(2000, 2, 15)
+    assert (interval + day31).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
+    assert (interval - day31).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
+
+
+def test_seasons():
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    assert (interval + scate.Season.SPRING).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"
+    assert (interval - scate.Season.SPRING).isoformat() == "2001-03-01T00:00:00 2001-06-01T00:00:00"
+    assert (interval + scate.Season.SUMMER).isoformat() == "2003-06-01T00:00:00 2003-09-01T00:00:00"
+    assert (interval - scate.Season.SUMMER).isoformat() == "2001-06-01T00:00:00 2001-09-01T00:00:00"
+    assert (interval + scate.Season.FALL).isoformat() == "2003-09-01T00:00:00 2003-12-01T00:00:00"
+    assert (interval - scate.Season.FALL).isoformat() == "2001-09-01T00:00:00 2001-12-01T00:00:00"
+    assert (interval + scate.Season.WINTER).isoformat() == "2003-12-01T00:00:00 2004-03-01T00:00:00"
+    assert (interval - scate.Season.WINTER).isoformat() == "2001-12-01T00:00:00 2002-03-01T00:00:00"
+
+
+def test_day_parts():
+    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
+    assert (interval + scate.DayPart.MORNING).isoformat() == "2003-05-11T06:00:00 2003-05-11T12:00:00"
+    assert (interval - scate.DayPart.MORNING).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
+    assert (interval + scate.DayPart.AFTERNOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
+    assert (interval - scate.DayPart.AFTERNOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
+    assert (interval + scate.DayPart.EVENING).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"
+    assert (interval - scate.DayPart.EVENING).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
+    assert (interval + scate.DayPart.NIGHT).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
+    assert (interval - scate.DayPart.NIGHT).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
+
+
+def test_year():
+    assert scate.Year(1985).isoformat() == "1985-01-01T00:00:00 1986-01-01T00:00:00"
+    assert scate.Year(198, 1).isoformat() == "1980-01-01T00:00:00 1990-01-01T00:00:00"
+    assert scate.Year(17, 2).isoformat() == "1700-01-01T00:00:00 1800-01-01T00:00:00"
+
+
+def test_year_suffix():
+    assert scate.YearSuffix(scate.Year(1903), 37, 2).isoformat() == scate.Interval.of(1937).isoformat()
+    assert scate.YearSuffix(scate.Year(2016), 418, 3).isoformat() == scate.Interval.of(2418).isoformat()
+    assert scate.YearSuffix(scate.Year(132, 1), 85, 2).isoformat() == scate.Interval.of(1385).isoformat()
+    assert scate.YearSuffix(scate.Year(23, 2), 22, 2).isoformat() == scate.Interval.of(2322).isoformat()
+    assert scate.YearSuffix(scate.Year(1903), 3, 1, 1).isoformat() == "1930-01-01T00:00:00 1940-01-01T00:00:00"
+    assert scate.YearSuffix(scate.Year(132, 1), 8, 1, 1).isoformat() == "1380-01-01T00:00:00 1390-01-01T00:00:00"
+    assert scate.YearSuffix(scate.Year(132, 1), 240, 3, 1).isoformat() == "2400-01-01T00:00:00 2410-01-01T00:00:00"
 
 
 def test_last():
@@ -323,116 +436,3 @@ def test_these():
     # These(Thu 10 Apr until Thu 17 Apr, day) => ... 7 days ...
     day = scate.RepeatingUnit(scate.Unit.DAY)
     assert len(list(scate.These(interval_week_thu, day))) == 7
-
-
-def test_truncate():
-    date = datetime.datetime(2026, 5, 3, 1, 7, 35, 1111)
-    assert scate.Unit.CENTURY.truncate(date).isoformat() == "2000-01-01T00:00:00"
-    assert scate.Unit.QUARTER_CENTURY.truncate(date).isoformat() == "2025-01-01T00:00:00"
-    assert scate.Unit.DECADE.truncate(date).isoformat() == "2020-01-01T00:00:00"
-    assert scate.Unit.YEAR.truncate(date).isoformat() == "2026-01-01T00:00:00"
-    assert scate.Unit.QUARTER_YEAR.truncate(date).isoformat() == "2026-04-01T00:00:00"
-    assert scate.Unit.MONTH.truncate(date).isoformat() == "2026-05-01T00:00:00"
-    assert scate.Unit.WEEK.truncate(date).isoformat() == "2026-04-27T00:00:00"
-    assert scate.Unit.DAY.truncate(date).isoformat() == "2026-05-03T00:00:00"
-    assert scate.Unit.HOUR.truncate(date).isoformat() == "2026-05-03T01:00:00"
-    assert scate.Unit.MINUTE.truncate(date).isoformat() == "2026-05-03T01:07:00"
-    assert scate.Unit.SECOND.truncate(date).isoformat() == "2026-05-03T01:07:35"
-    assert scate.Unit.MILLISECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001000"
-    assert scate.Unit.MICROSECOND.truncate(date).isoformat() == "2026-05-03T01:07:35.001111"
-
-    date = datetime.datetime.fromisoformat("2005-01-01 00:00:00")
-    assert scate.Unit.WEEK.truncate(date).isoformat() == "2004-12-27T00:00:00"
-
-
-def test_repeating_unit():
-    century = scate.RepeatingUnit(scate.Unit.CENTURY)
-    decade = scate.RepeatingUnit(scate.Unit.DECADE)
-    year = scate.RepeatingUnit(scate.Unit.YEAR)
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
-    week = scate.RepeatingUnit(scate.Unit.WEEK)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
-
-    interval = scate.Interval.of(2000, 1, 1)
-    assert (interval - year).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
-    assert (interval - year - year).isoformat() == "1998-01-01T00:00:00 1999-01-01T00:00:00"
-    assert (interval + day).isoformat() == "2000-01-02T00:00:00 2000-01-03T00:00:00"
-    assert (interval + day + day).isoformat() == "2000-01-03T00:00:00 2000-01-04T00:00:00"
-
-    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    assert (interval - month).isoformat() == scate.Interval.of(2002, 2).isoformat()
-    assert (interval - month - month).isoformat() == scate.Interval.of(2002, 1).isoformat()
-    assert (interval + month).isoformat() == scate.Interval.of(2003, 6).isoformat()
-    assert (interval + month + month).isoformat() == scate.Interval.of(2003, 7).isoformat()
-    assert (interval - century).isoformat() == "1900-01-01T00:00:00 2000-01-01T00:00:00"
-    assert (interval + century).isoformat() == "2100-01-01T00:00:00 2200-01-01T00:00:00"
-    assert (interval - decade).isoformat() == "1990-01-01T00:00:00 2000-01-01T00:00:00"
-    assert (interval + decade).isoformat() == "2010-01-01T00:00:00 2020-01-01T00:00:00"
-    # March 11, 2002 is a Monday
-    assert (interval - week).isoformat() == "2002-03-11T00:00:00 2002-03-18T00:00:00"
-    # May 12, 2003 is a Monday
-    assert (interval + week).isoformat() == "2003-05-12T00:00:00 2003-05-19T00:00:00"
-
-    interval = scate.Interval.fromisoformat("2001-02-12T03:03 2001-02-14T22:00")
-    assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
-    assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 15).isoformat()
-
-    interval = scate.Interval.fromisoformat("2001-02-12 2001-02-14")
-    assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
-    assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 14).isoformat()
-
-    # December 31, 2012 is a Monday
-    interval = scate.Interval.of(2013, 1, 8)
-    assert (interval - week).isoformat() == "2012-12-31T00:00:00 2013-01-07T00:00:00"
-
-
-def test_repeating_field():
-    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    assert (interval - may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
-    assert (interval - may - may).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
-    assert (interval + may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
-    assert (interval + may + may).isoformat() == "2005-05-01T00:00:00 2005-06-01T00:00:00"
-
-    day29 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 29)
-    assert (interval - day29).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
-    assert (interval - day29 - day29).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
-    assert (interval + day29).isoformat() == "2003-05-29T00:00:00 2003-05-30T00:00:00"
-    assert (interval + day29 + day29).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
-
-    # make sure that preceding and following are strict (no overlap allowed)
-    nov = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11)
-    interval = scate.Interval.of(1989, 11, 2)
-    assert (interval - nov).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
-    assert (interval + nov).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
-
-    day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
-    interval = scate.Interval.of(1980, 3, 1)
-    assert (interval + day31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
-    interval = scate.Interval.of(2000, 2, 15)
-    assert (interval + day31).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
-    assert (interval - day31).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
-
-
-def test_seasons():
-    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    assert (interval + scate.Season.SPRING).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"
-    assert (interval - scate.Season.SPRING).isoformat() == "2001-03-01T00:00:00 2001-06-01T00:00:00"
-    assert (interval + scate.Season.SUMMER).isoformat() == "2003-06-01T00:00:00 2003-09-01T00:00:00"
-    assert (interval - scate.Season.SUMMER).isoformat() == "2001-06-01T00:00:00 2001-09-01T00:00:00"
-    assert (interval + scate.Season.FALL).isoformat() == "2003-09-01T00:00:00 2003-12-01T00:00:00"
-    assert (interval - scate.Season.FALL).isoformat() == "2001-09-01T00:00:00 2001-12-01T00:00:00"
-    assert (interval + scate.Season.WINTER).isoformat() == "2003-12-01T00:00:00 2004-03-01T00:00:00"
-    assert (interval - scate.Season.WINTER).isoformat() == "2001-12-01T00:00:00 2002-03-01T00:00:00"
-
-
-def test_day_parts():
-    interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    assert (interval + scate.DayPart.MORNING).isoformat() == "2003-05-11T06:00:00 2003-05-11T12:00:00"
-    assert (interval - scate.DayPart.MORNING).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
-    assert (interval + scate.DayPart.AFTERNOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
-    assert (interval - scate.DayPart.AFTERNOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
-    assert (interval + scate.DayPart.EVENING).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"
-    assert (interval - scate.DayPart.EVENING).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
-    assert (interval + scate.DayPart.NIGHT).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
-    assert (interval - scate.DayPart.NIGHT).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"

@@ -168,35 +168,6 @@ class Field(enum.Enum):
             raise NotImplementedError
 
 
-@dataclasses.dataclass
-class Year(Interval):
-    digits: int
-    n_missing_digits: int = 0
-    start: datetime.datetime = dataclasses.field(init=False)
-    end: datetime.datetime = dataclasses.field(init=False)
-
-    def __post_init__(self):
-        duration_in_years = 10 ** self.n_missing_digits
-        self.start = datetime.datetime(year=self.digits * duration_in_years, month=1, day=1)
-        self.end = self.start + dateutil.relativedelta.relativedelta(years=duration_in_years)
-
-
-@dataclasses.dataclass
-class YearSuffix(Interval):
-    interval: Interval
-    last_digits: int
-    n_suffix_digits: int
-    n_missing_digits: int = 0
-    start: datetime.datetime = dataclasses.field(init=False)
-    end: datetime.datetime = dataclasses.field(init=False)
-    
-    def __post_init__(self):
-        divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
-        multiplier = 10 ** self.n_suffix_digits
-        digits = self.interval.start.year // divider * multiplier + self.last_digits
-        self.start, self.end = Year(digits, self.n_missing_digits)
-
-
 class Offset:
     unit: Unit
 
@@ -252,7 +223,7 @@ class RepeatingUnit(Offset):
     def __rsub__(self, other: datetime.datetime) -> Interval:
         end = self.unit.truncate(other)
         return Interval(end - self._one_unit, end)
-    
+
     def __radd__(self, other: datetime.datetime) -> Interval:
         start = self.unit.truncate(other)
         if start < other:
@@ -278,7 +249,7 @@ class RepeatingField(Offset):
         ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
         ldt = self.field.base.truncate(ldt)
         return Interval(ldt, ldt + self._one_base)
-    
+
     def __radd__(self, other: datetime.datetime) -> Interval:
         ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other)
         ldt = self.field.base.truncate(ldt)
@@ -368,6 +339,35 @@ class DayPart:
         rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
         start_rrule_kwargs=dict(byhour=0),
         end_rrule_kwargs=dict(byhour=6))
+
+
+@dataclasses.dataclass
+class Year(Interval):
+    digits: int
+    n_missing_digits: int = 0
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        duration_in_years = 10 ** self.n_missing_digits
+        self.start = datetime.datetime(year=self.digits * duration_in_years, month=1, day=1)
+        self.end = self.start + dateutil.relativedelta.relativedelta(years=duration_in_years)
+
+
+@dataclasses.dataclass
+class YearSuffix(Interval):
+    interval: Interval
+    last_digits: int
+    n_suffix_digits: int
+    n_missing_digits: int = 0
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
+        multiplier = 10 ** self.n_suffix_digits
+        digits = self.interval.start.year // divider * multiplier + self.last_digits
+        self.start, self.end = Year(digits, self.n_missing_digits)
 
 
 @dataclasses.dataclass
