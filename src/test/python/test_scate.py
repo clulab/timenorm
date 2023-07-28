@@ -159,6 +159,24 @@ def test_union():
     assert (interval + union).isoformat() == "2003-02-01T00:00:00 2003-03-01T00:00:00"
     assert (interval + union + union).isoformat() == "2003-03-20T00:00:00 2003-03-21T00:00:00"
 
+    interval = scate.Interval.fromisoformat("2011-07-02T00:00 2011-07-31T00:00")
+    day = scate.RepeatingUnit(scate.Unit.DAY)
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    union = scate.Union([day, month])
+    assert (interval - union).isoformat() == "2011-07-01T00:00:00 2011-07-02T00:00:00"
+    assert (interval - union - union).isoformat() == "2011-06-01T00:00:00 2011-07-01T00:00:00"
+    assert (interval + union).isoformat() == "2011-07-31T00:00:00 2011-08-01T00:00:00"
+    assert (interval + union + union).isoformat() == "2011-08-01T00:00:00 2011-09-01T00:00:00"
+
+    # NOTE: In 2001, June 20 and July 25 are Mondays
+    interval = scate.Interval.fromisoformat("2011-07-01T00:00 2011-07-19T00:00")
+    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    union = scate.Union([week, day20])
+    assert (interval - union).isoformat() == "2011-06-20T00:00:00 2011-06-27T00:00:00"
+    assert (interval - union - union).isoformat() == "2011-06-13T00:00:00 2011-06-20T00:00:00"
+    assert (interval + union).isoformat() == "2011-07-20T00:00:00 2011-07-21T00:00:00"
+    assert (interval + union + union).isoformat() == "2011-07-25T00:00:00 2011-08-01T00:00:00"
+
 
 def test_year():
     assert scate.Year(1985).isoformat() == "1985-01-01T00:00:00 1986-01-01T00:00:00"

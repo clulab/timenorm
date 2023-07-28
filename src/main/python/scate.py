@@ -349,10 +349,12 @@ class Union(Offset):
         self.unit = min((o.unit for o in self.offsets), key=lambda unit: unit._n)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        return max((other - offset for offset in self.offsets), key=lambda i: i.end)
+        return max((other - offset for offset in self.offsets),
+                   key=lambda i: (i.end, i.end - i.start))
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        return min((other + offset for offset in self.offsets), key=lambda i: i.start)
+        return min((other + offset for offset in self.offsets),
+                   key=lambda i: (i.start, i.start - i.end))
 
 
 @dataclasses.dataclass
