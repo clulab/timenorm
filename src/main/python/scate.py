@@ -358,6 +358,20 @@ class Union(Offset):
 
 
 @dataclasses.dataclass
+class Intersection(Offset):
+    offsets: typing.Iterable[Offset]
+
+    def __post_init__(self):
+        pass
+
+    def __rsub__(self, other: datetime.datetime) -> Interval:
+        raise NotImplementedError
+
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        raise NotImplementedError
+
+
+@dataclasses.dataclass
 class Year(Interval):
     digits: int
     n_missing_digits: int = 0

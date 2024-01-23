@@ -178,6 +178,20 @@ def test_union():
     assert (interval + union + union).isoformat() == "2011-07-25T00:00:00 2011-08-01T00:00:00"
 
 
+def test_intersection():
+    interval = scate.Year(2016)
+    jan_fri_13 = scate.Intersection([
+        scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR),
+        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
+        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 1),
+    ])
+
+    assert (interval - jan_fri_13).isoformat() == "2012-01-13T00:00:00 2012-01-14T00:00:00"
+    assert (interval - jan_fri_13 - jan_fri_13).isoformat() == "2006-01-13T00:00:00 2006-01-14T00:00:00"
+    assert (interval + jan_fri_13).isoformat() == "2072-01-13T00:00:00 2017-01-14T00:00:00"
+    assert (interval + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
+
+
 def test_year():
     assert scate.Year(1985).isoformat() == "1985-01-01T00:00:00 1986-01-01T00:00:00"
     assert scate.Year(198, 1).isoformat() == "1980-01-01T00:00:00 1990-01-01T00:00:00"
