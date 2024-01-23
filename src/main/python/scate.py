@@ -387,7 +387,8 @@ class Intersection(Offset):
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         other = self._min_unit.truncate(other)
-        ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other)
+        # we need to allow start == other, so move other back the smallest amount possible
+        ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other - Unit.MICROSECOND.relativedelta(1))
         return Interval(ldt, ldt + self._min_unit.relativedelta(1))
 
 

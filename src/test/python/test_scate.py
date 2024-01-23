@@ -179,17 +179,62 @@ def test_union():
 
 
 def test_intersection():
-    interval = scate.Year(2016)
+    # Friday the 13ths 2012 - 2023:
+    # Friday, January 13, 2012
+    # Friday, April 13, 2012
+    # Friday, July 13, 2012
+    # Friday, September 13, 2013
+    # Friday, December 13, 2013
+    # Friday, June 13, 2014
+    # Friday, February 13, 2015
+    # Friday, March 13, 2015
+    # Friday, November 13, 2015
+    # Friday, May 13, 2016
+    # Friday, January 13, 2017
+    # Friday, October 13, 2017
+    # Friday, April 13, 2018
+    # Friday, July 13, 2018
+    # Friday, September 13, 2019
+    # Friday, December 13, 2019
+    # Friday, March 13, 2020
+    # Friday, November 13, 2020
+    # Friday, August 13, 2021
+    # Friday, May 13, 2022
+    # Friday, January 13, 2023
+    # Friday, October 13, 2023
+
+    y2016 = scate.Year(2016)
     jan_fri_13 = scate.Intersection([
         scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR),
         scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
         scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 1),
     ])
 
-    assert (interval - jan_fri_13).isoformat() == "2012-01-13T00:00:00 2012-01-14T00:00:00"
-    assert (interval - jan_fri_13 - jan_fri_13).isoformat() == "2006-01-13T00:00:00 2006-01-14T00:00:00"
-    assert (interval + jan_fri_13).isoformat() == "2017-01-13T00:00:00 2017-01-14T00:00:00"
-    assert (interval + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
+    assert (y2016 - jan_fri_13).isoformat() == "2012-01-13T00:00:00 2012-01-14T00:00:00"
+    assert (y2016 - jan_fri_13 - jan_fri_13).isoformat() == "2006-01-13T00:00:00 2006-01-14T00:00:00"
+    assert (y2016 + jan_fri_13).isoformat() == "2017-01-13T00:00:00 2017-01-14T00:00:00"
+    assert (y2016 + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
+
+    fri_13_hours = scate.Intersection([
+        scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR),
+        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
+        scate.RepeatingUnit(scate.Unit.HOUR),
+    ])
+
+
+    assert (y2016 - fri_13_hours).isoformat() == "2015-11-13T23:00:00 2015-11-14T00:00:00"
+    assert (y2016 - fri_13_hours - fri_13_hours).isoformat() == "2015-11-13T22:00:00 2015-11-13T23:00:00"
+    interval = y2016
+    for _ in range(25):
+        interval -= fri_13_hours
+    assert interval.isoformat() == "2015-03-13T23:00:00 2015-03-14T00:00:00"
+    assert (y2016 + fri_13_hours).isoformat() == "2017-01-13T00:00:00 2017-01-13T01:00:00"
+    assert (y2016 + fri_13_hours + fri_13_hours).isoformat() == "2017-01-13T01:00:00 2017-01-13T02:00:00"
+    interval = y2016
+    for _ in range(25):
+        interval += fri_13_hours
+    assert interval.isoformat() == "2017-10-13T00:00:00 2017-10-13T01:00:00"
+
 
 
 def test_year():
