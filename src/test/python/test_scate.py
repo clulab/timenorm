@@ -188,7 +188,7 @@ def test_intersection():
 
     assert (interval - jan_fri_13).isoformat() == "2012-01-13T00:00:00 2012-01-14T00:00:00"
     assert (interval - jan_fri_13 - jan_fri_13).isoformat() == "2006-01-13T00:00:00 2006-01-14T00:00:00"
-    assert (interval + jan_fri_13).isoformat() == "2072-01-13T00:00:00 2017-01-14T00:00:00"
+    assert (interval + jan_fri_13).isoformat() == "2017-01-13T00:00:00 2017-01-14T00:00:00"
     assert (interval + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
 
 

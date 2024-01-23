@@ -362,13 +362,33 @@ class Intersection(Offset):
     offsets: typing.Iterable[Offset]
 
     def __post_init__(self):
-        pass
+        self._rrule_kwargs = {}
+        units = []
+        for offset in self.offsets:
+            if isinstance(offset, RepeatingField):
+                self._rrule_kwargs |= offset._rrule_kwargs
+                units.append(offset.field.base)
+                units.append(offset.field.range)
+            elif isinstance(offset, RepeatingUnit):
+                self._rrule_kwargs |= offset.unit.rrule_kwargs()
+                units.append(offset.unit)
+            else:
+                raise NotImplementedError
+        self._min_unit = min(units, key=lambda u: u._n)
+        self._max_unit = max(units, key=lambda u: u._n)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        raise NotImplementedError
+        other = self._min_unit.truncate(other)
+        # rrule requires a starting point even when going backwards,
+        # HACK: start at 100 times the expected range
+        dtstart = other - 100 * self._max_unit.relativedelta(1)
+        ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
+        return Interval(ldt, ldt + self._min_unit.relativedelta(1))
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        raise NotImplementedError
+        other = self._min_unit.truncate(other)
+        ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other)
+        return Interval(ldt, ldt + self._min_unit.relativedelta(1))
 
 
 @dataclasses.dataclass
