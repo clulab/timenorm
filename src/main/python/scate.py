@@ -383,12 +383,16 @@ class Intersection(Offset):
         # HACK: start at 100 times the expected range
         dtstart = other - 100 * self._max_unit.relativedelta(1)
         ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
+        if ldt is None:
+            raise ValueError(f"found no {self.offsets} preceding {other}")
         return Interval(ldt, ldt + self._min_unit.relativedelta(1))
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         other = self._min_unit.truncate(other)
         # we need to allow start == other, so move other back the smallest amount possible
         ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other - Unit.MICROSECOND.relativedelta(1))
+        if ldt is None:
+            raise ValueError(f"found no {self.offsets} following {other}")
         return Interval(ldt, ldt + self._min_unit.relativedelta(1))
 
 

@@ -221,7 +221,6 @@ def test_intersection():
         scate.RepeatingUnit(scate.Unit.HOUR),
     ])
 
-
     assert (y2016 - fri_13_hours).isoformat() == "2015-11-13T23:00:00 2015-11-14T00:00:00"
     assert (y2016 - fri_13_hours - fri_13_hours).isoformat() == "2015-11-13T22:00:00 2015-11-13T23:00:00"
     interval = y2016
@@ -235,6 +234,19 @@ def test_intersection():
         interval += fri_13_hours
     assert interval.isoformat() == "2017-10-13T00:00:00 2017-10-13T01:00:00"
 
+    mar31 = scate.Intersection([
+        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 3),
+        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31),
+    ])
+    date = datetime.datetime.fromisoformat("1980-01-01T00:00:00")
+    assert (date + mar31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
+
+    apr31 = scate.Intersection([
+        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 4),
+        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31),
+    ])
+    with pytest.raises(ValueError):
+        date + apr31
 
 
 def test_year():
