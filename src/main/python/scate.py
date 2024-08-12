@@ -363,19 +363,23 @@ class Intersection(Offset):
 
     def __post_init__(self):
         self._rrule_kwargs = {}
-        units = []
+        units = {}
         for offset in self.offsets:
             if isinstance(offset, RepeatingField):
                 self._rrule_kwargs |= offset._rrule_kwargs
-                units.append(offset.field.base)
-                units.append(offset.field.range)
+                units[offset.field.base] = offset
+                units[offset.field.range] = offset
             elif isinstance(offset, RepeatingUnit):
                 self._rrule_kwargs |= offset.unit.rrule_kwargs()
-                units.append(offset.unit)
+                units[offset.unit] = offset
+            elif isinstance(offset, RRuleOffset):
+                self._rrule_kwargs |= offset.rrule_kwargs
+                units[offset.unit] = offset
             else:
                 raise NotImplementedError
         self._min_unit = min(units, key=lambda u: u._n)
         self._max_unit = max(units, key=lambda u: u._n)
+        self._min_offset = units[self._min_unit]
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         other = self._min_unit.truncate(other)
@@ -385,7 +389,7 @@ class Intersection(Offset):
         ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
         if ldt is None:
             raise ValueError(f"found no {self.offsets} preceding {other}")
-        return Interval(ldt, ldt + self._min_unit.relativedelta(1))
+        return (ldt + self._min_unit.relativedelta(1)) - self._min_offset
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         other = self._min_unit.truncate(other)
@@ -393,7 +397,7 @@ class Intersection(Offset):
         ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other - Unit.MICROSECOND.relativedelta(1))
         if ldt is None:
             raise ValueError(f"found no {self.offsets} following {other}")
-        return Interval(ldt, ldt + self._min_unit.relativedelta(1))
+        return (ldt - Unit.MICROSECOND.relativedelta(1)) + self._min_offset
 
 
 @dataclasses.dataclass

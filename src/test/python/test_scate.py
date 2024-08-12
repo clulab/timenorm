@@ -248,6 +248,16 @@ def test_intersection():
     with pytest.raises(ValueError):
         date + apr31
 
+    i20120301 = scate.Interval.of(2012, 3, 1)
+    eve31 = scate.Intersection([
+        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31),
+        scate.DayPart.EVENING,
+    ])
+
+    assert (i20120301 - eve31).isoformat() == "2012-01-31T18:00:00 2012-02-01T00:00:00"
+    assert (i20120301 + eve31).isoformat() == "2012-03-31T18:00:00 2012-04-01T00:00:00"
+    assert (i20120301 + eve31 + eve31).isoformat() == "2012-05-31T18:00:00 2012-06-01T00:00:00"
+
 
 def test_year():
     assert scate.Year(1985).isoformat() == "1985-01-01T00:00:00 1986-01-01T00:00:00"
