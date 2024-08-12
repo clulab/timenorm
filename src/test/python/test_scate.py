@@ -546,3 +546,46 @@ def test_these():
     # These(Thu 10 Apr until Thu 17 Apr, day) => ... 7 days ...
     day = scate.RepeatingUnit(scate.Unit.DAY)
     assert len(list(scate.These(interval_week_thu, day))) == 7
+
+
+def test_misc():
+    # PRI19980216.2000.0170 (349,358) last week
+    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    assert scate.Last(scate.Interval.of(1998, 2, 16), week).isoformat() == \
+           "1998-02-09T00:00:00 1998-02-16T00:00:00"
+
+    # APW19980322.0749 (988,994) Monday
+    monday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.MO)
+    assert scate.Next(scate.Interval.of(1998, 3, 22, 14, 57), monday).isoformat() == \
+           "1998-03-23T00:00:00 1998-03-24T00:00:00"
+
+    # APW19990206.0090 (767,781) Thursday night
+    thursday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.TH)
+    thursday_night = scate.Intersection([thursday, scate.DayPart.NIGHT])
+    assert scate.Last(scate.Interval.of(1999, 2, 6, 6, 22, 26), thursday_night).isoformat() == \
+           "1999-02-05T00:00:00 1999-02-05T06:00:00"
+
+    # wsj_0124 (450,457) Nov. 13
+    nov13 = scate.Intersection([
+        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11),
+        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
+    ])
+    assert scate.Next(scate.Interval.of(1989, 11, 2), nov13).isoformat() == \
+        scate.Interval.of(1989, 11, 13).isoformat()
+    assert scate.Last(scate.Interval.of(1989, 11, 14), nov13).isoformat() == \
+        scate.Interval.of(1989, 11, 13).isoformat()
+    assert scate.Next(scate.Interval.of(1989, 11, 12), nov13).isoformat() == \
+        scate.Interval.of(1989, 11, 13).isoformat()
+
+    # NYT19980206.0460 (2979,3004) first nine months of 1997
+    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    assert [x.isoformat() for x in scate.NthN(scate.Year(1997), month, 1, 9)] == \
+        [scate.Interval.of(1997, m).isoformat() for m in range(1, 10)]
+
+    # wsj_0346 (889,894) year ended March 31
+    march = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 3)
+    day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
+    march31 = scate.Intersection([march, day31])
+    year = scate.Period(scate.Unit.YEAR, 1)
+    assert scate.Last(scate.Last(scate.Interval.of(1989, 11, 1), march31), year).isoformat() == \
+            "1988-03-31T00:00:00 1989-03-31T00:00:00"
