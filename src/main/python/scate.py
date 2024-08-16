@@ -266,64 +266,61 @@ class Repeating(Offset):
         return start + self.period
 
 
-class Season:
-    # Defined as "meterological seasons"
-    # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
-    SPRING = Repeating(
-        unit=Unit.MONTH,
-        range=Unit.YEAR,
-        value=3,
-        n_units=3)
+# Defined as "meterological seasons"
+# https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
+SPRING = Repeating(
+    unit=Unit.MONTH,
+    range=Unit.YEAR,
+    value=3,
+    n_units=3)
 
-    SUMMER = Repeating(
-        unit=Unit.MONTH,
-        range=Unit.YEAR,
-        value=6,
-        n_units=3)
+SUMMER = Repeating(
+    unit=Unit.MONTH,
+    range=Unit.YEAR,
+    value=6,
+    n_units=3)
 
-    FALL = AUTUMN = Repeating(
-        unit=Unit.MONTH,
-        range=Unit.YEAR,
-        value=9,
-        n_units=3)
+FALL = AUTUMN = Repeating(
+    unit=Unit.MONTH,
+    range=Unit.YEAR,
+    value=9,
+    n_units=3)
 
-    WINTER = Repeating(
-        unit=Unit.MONTH,
-        range=Unit.YEAR,
-        value=12,
-        n_units=3)
+WINTER = Repeating(
+    unit=Unit.MONTH,
+    range=Unit.YEAR,
+    value=12,
+    n_units=3)
 
+# defined as used in forecasts
+# https://www.weather.gov/bgm/forecast_terms
+MORNING = Repeating(
+    unit=Unit.HOUR,
+    range=Unit.DAY,
+    value=6,
+    n_units=6)
 
-class DayPart:
-    # defined as used in forecasts
-    # https://www.weather.gov/bgm/forecast_terms
-    MORNING = Repeating(
-        unit=Unit.HOUR,
-        range=Unit.DAY,
-        value=6,
-        n_units=6)
+AFTERNOON = Repeating(
+    unit=Unit.HOUR,
+    range=Unit.DAY,
+    value=12,
+    n_units=6)
 
-    AFTERNOON = Repeating(
-        unit=Unit.HOUR,
-        range=Unit.DAY,
-        value=12,
-        n_units=6)
+NOON = Repeating(
+    unit=Unit.MINUTE,
+    rrule_kwargs=dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
 
-    NOON = Repeating(
-        unit=Unit.MINUTE,
-        rrule_kwargs=dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
+EVENING = Repeating(
+    unit=Unit.HOUR,
+    range=Unit.DAY,
+    value=18,
+    n_units=6)
 
-    EVENING = Repeating(
-        unit=Unit.HOUR,
-        range=Unit.DAY,
-        value=18,
-        n_units=6)
-
-    NIGHT = Repeating(
-        unit=Unit.HOUR,
-        range=Unit.DAY,
-        value=0,
-        n_units=6)
+NIGHT = Repeating(
+    unit=Unit.HOUR,
+    range=Unit.DAY,
+    value=0,
+    n_units=6)
 
 
 @dataclasses.dataclass
