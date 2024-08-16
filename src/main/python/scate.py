@@ -209,6 +209,8 @@ class Repeating(Offset):
         else:
             self.rrule_kwargs |= self.range.rrule_kwargs()
             match (self.unit, self.range):
+                case (Unit.MINUTE, Unit.HOUR):
+                    rrule_by = "byminute"
                 case (Unit.HOUR, Unit.DAY):
                     rrule_by = "byhour"
                 case (Unit.DAY, Unit.WEEK):
@@ -290,6 +292,10 @@ class DayPart:
         range=Unit.DAY,
         value=12,
         n_units=6)
+
+    NOON = Repeating(
+        unit=Unit.MINUTE,
+        rrule_kwargs=dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
 
     EVENING = Repeating(
         unit=Unit.HOUR,

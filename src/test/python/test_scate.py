@@ -143,6 +143,8 @@ def test_day_parts():
     assert (interval - scate.DayPart.MORNING).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
     assert (interval + scate.DayPart.AFTERNOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
     assert (interval - scate.DayPart.AFTERNOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
+    assert (interval + scate.DayPart.NOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T12:01:00"
+    assert (interval - scate.DayPart.NOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T12:01:00"
     assert (interval + scate.DayPart.EVENING).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"
     assert (interval - scate.DayPart.EVENING).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
     assert (interval + scate.DayPart.NIGHT).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
@@ -257,6 +259,14 @@ def test_intersection():
     assert (i20120301 - eve31).isoformat() == "2012-01-31T18:00:00 2012-02-01T00:00:00"
     assert (i20120301 + eve31).isoformat() == "2012-03-31T18:00:00 2012-04-01T00:00:00"
     assert (i20120301 + eve31 + eve31).isoformat() == "2012-05-31T18:00:00 2012-06-01T00:00:00"
+
+    m11d25noon = scate.Intersection([
+        scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=11),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=25),
+        scate.DayPart.NOON,
+    ])
+    assert (scate.Interval.of(2000, 11, 25, 12, 1) + m11d25noon).isoformat() == \
+           "2001-11-25T12:00:00 2001-11-25T12:01:00"
 
 
 def test_year():
@@ -452,6 +462,9 @@ def test_this():
     assert scate.This(interval, scate.Season.SUMMER).isoformat() == "2016-06-01T00:00:00 2016-09-01T00:00:00"
     assert scate.This(interval, scate.Season.WINTER).isoformat() == "2016-12-01T00:00:00 2017-03-01T00:00:00"
     assert scate.This(interval, scate.DayPart.NIGHT).isoformat() == "2016-07-01T00:00:00 2016-07-01T06:00:00"
+
+    interval = scate.Interval.fromisoformat("2016-07-01T10:00:00 2016-07-01T11:00:00")
+    assert scate.This(interval, scate.DayPart.NOON).isoformat() == "2016-07-01T12:00:00 2016-07-01T12:01:00"
 
 
 def test_between():
