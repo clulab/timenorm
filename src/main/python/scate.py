@@ -5,6 +5,7 @@ import dateutil.relativedelta
 import dateutil.rrule
 import enum
 import typing
+import xml.etree.ElementTree as ET
 
 
 @dataclasses.dataclass
@@ -351,6 +352,13 @@ class Intersection(Offset):
         periods = []
         rrule_periods = []
         non_rrule_periods = []
+        offsets = []
+        for offset in self.offsets:
+            if isinstance(offset, Intersection):
+                offsets.extend(offset.offsets)
+            else:
+                offsets.append(offset)
+        self.offsets = offsets
         for offset in self.offsets:
             periods.append(offset.period)
             if offset.rrule_kwargs:
@@ -619,3 +627,60 @@ class These(collections.abc.Iterable[Interval]):
         while interval.end <= self.interval.end:
             yield interval
             interval = interval.end + self.offset
+
+
+def from_xml(elem: ET.Element):
+    id_to_entity = {}
+    id_to_ids = {}
+    for entity in elem.findall(".//entity"):
+        entity_id = entity.findtext("id")
+        id_to_entity[entity_id] = entity
+        id_to_ids[entity_id] = set()
+        for prop in entity.find("properties"):
+            if prop.text and '@' in prop.text:
+                id_to_ids[entity_id].add(prop.text)
+
+    # topological sort
+    sorted_ids = {}
+    while id_to_ids:
+        for key in list(id_to_ids):
+            if not id_to_ids[key]:
+                id_to_ids.pop(key)
+                sorted_ids[key] = True
+        for key, values in id_to_ids.items():
+            id_to_ids[key] -= sorted_ids.keys()
+
+    id_to_obj = {}
+    for entity_id in sorted_ids:
+        entity = id_to_entity[entity_id]
+        sub_interval_id = entity.findtext("properties/Sub-Interval")
+        match entity.findtext("type"):
+            case "Year":
+                year_str = entity.findtext("properties/Value")
+                obj = Year(int(year_str))
+                if sub_interval_id:
+                    obj = This(obj, id_to_obj.pop(sub_interval_id))
+            case "Month-Of-Year":
+                month_str = entity.findtext("properties/Type")
+                month_int = datetime.datetime.strptime(month_str, '%B').month
+                obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
+                if sub_interval_id:
+                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
+            case "Day-Of-Month":
+                day_str = entity.findtext("properties/Value")
+                obj = Repeating(Unit.DAY, Unit.MONTH, value=int(day_str))
+                if sub_interval_id:
+                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
+            case "Part-Of-Day":
+                match entity.findtext("properties/Type"):
+                    case "Noon":
+                        obj = NOON
+                    case other:
+                        raise NotImplementedError(other)
+                if sub_interval_id:
+                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
+            case other:
+                raise NotImplementedError(other)
+
+        id_to_obj[entity_id] = obj
+    return list(id_to_obj.values())
