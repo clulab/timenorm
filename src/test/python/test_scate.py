@@ -57,12 +57,12 @@ def test_sum():
 
 
 def test_repeating_unit():
-    century = scate.RepeatingUnit(scate.Unit.CENTURY)
-    decade = scate.RepeatingUnit(scate.Unit.DECADE)
-    year = scate.RepeatingUnit(scate.Unit.YEAR)
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
-    week = scate.RepeatingUnit(scate.Unit.WEEK)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    century = scate.Repeating(scate.Unit.CENTURY)
+    decade = scate.Repeating(scate.Unit.DECADE)
+    year = scate.Repeating(scate.Unit.YEAR)
+    month = scate.Repeating(scate.Unit.MONTH)
+    week = scate.Repeating(scate.Unit.WEEK)
+    day = scate.Repeating(scate.Unit.DAY)
 
     interval = scate.Interval.of(2000, 1, 1)
     assert (interval - year).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
@@ -99,25 +99,25 @@ def test_repeating_unit():
 
 def test_repeating_field():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
     assert (interval - may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
     assert (interval - may - may).isoformat() == "2000-05-01T00:00:00 2000-06-01T00:00:00"
     assert (interval + may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
     assert (interval + may + may).isoformat() == "2005-05-01T00:00:00 2005-06-01T00:00:00"
 
-    day29 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 29)
+    day29 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=29)
     assert (interval - day29).isoformat() == "2002-01-29T00:00:00 2002-01-30T00:00:00"
     assert (interval - day29 - day29).isoformat() == "2001-12-29T00:00:00 2001-12-30T00:00:00"
     assert (interval + day29).isoformat() == "2003-05-29T00:00:00 2003-05-30T00:00:00"
     assert (interval + day29 + day29).isoformat() == "2003-06-29T00:00:00 2003-06-30T00:00:00"
 
     # make sure that preceding and following are strict (no overlap allowed)
-    nov = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11)
+    nov = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=11)
     interval = scate.Interval.of(1989, 11, 2)
     assert (interval - nov).isoformat() == "1988-11-01T00:00:00 1988-12-01T00:00:00"
     assert (interval + nov).isoformat() == "1990-11-01T00:00:00 1990-12-01T00:00:00"
 
-    day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
+    day31 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=31)
     interval = scate.Interval.of(1980, 3, 1)
     assert (interval + day31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
     interval = scate.Interval.of(2000, 2, 15)
@@ -151,8 +151,8 @@ def test_day_parts():
 
 def test_union():
     interval = scate.Interval.fromisoformat("2003-01-01T00:00 2003-01-30T00:00")
-    feb = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 2)
-    day20 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 20)
+    feb = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=2)
+    day20 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=20)
     union = scate.Union([feb, day20])
     assert (interval - union).isoformat() == "2002-12-20T00:00:00 2002-12-21T00:00:00"
     assert (interval - union - union).isoformat() == "2002-11-20T00:00:00 2002-11-21T00:00:00"
@@ -160,8 +160,8 @@ def test_union():
     assert (interval + union + union).isoformat() == "2003-03-20T00:00:00 2003-03-21T00:00:00"
 
     interval = scate.Interval.fromisoformat("2011-07-02T00:00 2011-07-31T00:00")
-    day = scate.RepeatingUnit(scate.Unit.DAY)
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    day = scate.Repeating(scate.Unit.DAY)
+    month = scate.Repeating(scate.Unit.MONTH)
     union = scate.Union([day, month])
     assert (interval - union).isoformat() == "2011-07-01T00:00:00 2011-07-02T00:00:00"
     assert (interval - union - union).isoformat() == "2011-06-01T00:00:00 2011-07-01T00:00:00"
@@ -170,7 +170,7 @@ def test_union():
 
     # NOTE: In 2001, June 20 and July 25 are Mondays
     interval = scate.Interval.fromisoformat("2011-07-01T00:00 2011-07-19T00:00")
-    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    week = scate.Repeating(scate.Unit.WEEK)
     union = scate.Union([week, day20])
     assert (interval - union).isoformat() == "2011-06-20T00:00:00 2011-06-27T00:00:00"
     assert (interval - union - union).isoformat() == "2011-06-13T00:00:00 2011-06-20T00:00:00"
@@ -205,9 +205,9 @@ def test_intersection():
 
     y2016 = scate.Year(2016)
     jan_fri_13 = scate.Intersection([
-        scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR),
-        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
-        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 1),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.WEEK, value=dateutil.rrule.FR),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=13),
+        scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=1),
     ])
 
     assert (y2016 - jan_fri_13).isoformat() == "2012-01-13T00:00:00 2012-01-14T00:00:00"
@@ -216,9 +216,9 @@ def test_intersection():
     assert (y2016 + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
 
     fri_13_hours = scate.Intersection([
-        scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR),
-        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
-        scate.RepeatingUnit(scate.Unit.HOUR),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.WEEK, value=dateutil.rrule.FR),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=13),
+        scate.Repeating(scate.Unit.HOUR),
     ])
 
     assert (y2016 - fri_13_hours).isoformat() == "2015-11-13T23:00:00 2015-11-14T00:00:00"
@@ -235,22 +235,22 @@ def test_intersection():
     assert interval.isoformat() == "2017-10-13T00:00:00 2017-10-13T01:00:00"
 
     mar31 = scate.Intersection([
-        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 3),
-        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31),
+        scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=3),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=31),
     ])
     date = datetime.datetime.fromisoformat("1980-01-01T00:00:00")
     assert (date + mar31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
 
     apr31 = scate.Intersection([
-        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 4),
-        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31),
+        scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=4),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=31),
     ])
     with pytest.raises(ValueError):
         date + apr31
 
     i20120301 = scate.Interval.of(2012, 3, 1)
     eve31 = scate.Intersection([
-        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=31),
         scate.DayPart.EVENING,
     ])
 
@@ -286,9 +286,9 @@ def test_last():
     assert scate.Last(year, period_sum).isoformat() == "1996-10-01T00:00:00 2000-01-01T00:00:00"
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    friday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
+    friday = scate.Repeating(scate.Unit.DAY, scate.Unit.WEEK, value=dateutil.rrule.FR)
+    day = scate.Repeating(scate.Unit.DAY)
     assert scate.Last(interval, may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
     assert scate.Last(interval, day).isoformat() == "2002-03-21T00:00:00 2002-03-22T00:00:00"
     assert scate.Last(scate.Interval.of(2017, 7, 7), day).isoformat() == \
@@ -310,18 +310,18 @@ def test_last():
            "2017-06-30T00:00:00 2017-07-01T00:00:00"
 
     # January 2nd is the first Monday of 2017
-    last_week = scate.Last(scate.Interval.of(2017, 1, 9), scate.RepeatingUnit(scate.Unit.WEEK))
+    last_week = scate.Last(scate.Interval.of(2017, 1, 9), scate.Repeating(scate.Unit.WEEK))
     assert last_week.isoformat() == "2017-01-02T00:00:00 2017-01-09T00:00:00"
 
-    assert scate.Last(interval, scate.RepeatingUnit(scate.Unit.QUARTER_YEAR)).isoformat() == \
+    assert scate.Last(interval, scate.Repeating(scate.Unit.QUARTER_YEAR)).isoformat() == \
         "2001-10-01T00:00:00 2002-01-01T00:00:00"
 
 
 def test_n():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
+    day = scate.Repeating(scate.Unit.DAY)
+    month = scate.Repeating(scate.Unit.MONTH)
 
     assert [x.isoformat() for x in scate.LastN(interval, may, 3)] == \
            [f"{y}-05-01T00:00:00 {y}-06-01T00:00:00" for y in [2001, 2000, 1999]]
@@ -357,12 +357,12 @@ def test_next():
     assert scate.Next(year3, period3).isoformat() == "2001-01-01T00:00:00 2004-04-01T00:00:00"
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
+    day = scate.Repeating(scate.Unit.DAY)
     assert scate.Next(interval, may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
     assert scate.Next(interval, day).isoformat() == "2003-05-11T00:00:00 2003-05-12T00:00:00"
     # January 2nd is the first Monday of 2017
-    next_week = scate.Next(scate.Interval.of(2017, 1, 8), scate.RepeatingUnit(scate.Unit.WEEK))
+    next_week = scate.Next(scate.Interval.of(2017, 1, 8), scate.Repeating(scate.Unit.WEEK))
     assert next_week.isoformat() == "2017-01-09T00:00:00 2017-01-16T00:00:00"
     assert scate.Next(interval, may, interval_included=True).isoformat() == \
            "2002-05-01T00:00:00 2002-06-01T00:00:00"
@@ -385,8 +385,8 @@ def test_before():
            "2017-07-11T00:00:00 2017-07-18T00:00:00"
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
+    day = scate.Repeating(scate.Unit.DAY)
     assert scate.Before(interval, may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
     assert scate.Before(interval, may, interval_included=True).isoformat() == \
            "2002-05-01T00:00:00 2002-06-01T00:00:00"
@@ -417,8 +417,8 @@ def test_after():
            "2000-04-10T12:00:00 2000-05-10T12:00:00"
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
+    day = scate.Repeating(scate.Unit.DAY)
 
     assert scate.After(interval, may).isoformat() == "2004-05-01T00:00:00 2004-06-01T00:00:00"
     assert scate.After(interval, may, interval_included=True).isoformat() == \
@@ -440,14 +440,14 @@ def test_this():
     assert scate.This(interval, period2).isoformat() == "2000-12-29T12:00:00 2001-01-03T12:00:00"
 
     interval = scate.Year(2016)
-    april = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 4)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    april = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=4)
+    day = scate.Repeating(scate.Unit.DAY)
     assert scate.This(interval, april).isoformat() == "2016-04-01T00:00:00 2016-05-01T00:00:00"
     with pytest.raises(ValueError):
         scate.This(interval, day)
 
     interval = scate.Interval.fromisoformat("2016-07-01T00:00:00 2016-07-02T00:00:00")
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    month = scate.Repeating(scate.Unit.MONTH)
     assert scate.This(interval, month).isoformat() == "2016-07-01T00:00:00 2016-08-01T00:00:00"
     assert scate.This(interval, scate.Season.SUMMER).isoformat() == "2016-06-01T00:00:00 2016-09-01T00:00:00"
     assert scate.This(interval, scate.Season.WINTER).isoformat() == "2016-12-01T00:00:00 2017-03-01T00:00:00"
@@ -483,9 +483,9 @@ def test_nth():
         scate.Nth(y2001, year, 2)
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    quarter_year = scate.RepeatingUnit(scate.Unit.QUARTER_YEAR)
-    may = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 5)
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    quarter_year = scate.Repeating(scate.Unit.QUARTER_YEAR)
+    may = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=5)
+    day = scate.Repeating(scate.Unit.DAY)
     assert scate.Nth(y2001, quarter_year, 4).isoformat() == "2001-10-01T00:00:00 2002-01-01T00:00:00"
     assert scate.Nth(interval, may, 1).isoformat() == "2002-05-01T00:00:00 2002-06-01T00:00:00"
     assert scate.Nth(interval, may, 1, from_end=True).isoformat() == "2002-05-01T00:00:00 2002-06-01T00:00:00"
@@ -501,7 +501,7 @@ def test_these():
 
     # These(Tue 1 Feb, Fri) => Fri 4 Feb
     interval_tue = scate.Interval.fromisoformat("2005-02-01T03:22 2005-02-02T00:00")
-    friday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.FR)
+    friday = scate.Repeating(scate.Unit.DAY, scate.Unit.WEEK, value=dateutil.rrule.FR)
     assert [x.isoformat() for x in scate.These(interval_tue, friday)] == \
            [scate.Interval.of(2005, 2, 4).isoformat()]
 
@@ -517,7 +517,7 @@ def test_these():
 
     # These(22 Mar 2002 until 10 Feb 2003, Mar) => Mar 2002, Mar 2003
     interval_11_months = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-02-10T22:10:20")
-    march = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 3)
+    march = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=3)
     assert [x.isoformat() for x in scate.These(interval_11_months, march)] == \
            [scate.Interval.of(x, 3).isoformat() for x in [2002, 2003]]
 
@@ -529,48 +529,48 @@ def test_these():
     assert len(list(scate.These(interval_11_months, friday))) == 48
 
     # These(Tue 1 Feb, Week) => Mon 31 Jan through Sun 6 Feb
-    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    week = scate.Repeating(scate.Unit.WEEK)
     assert [x.isoformat() for x in scate.These(interval_tue, week)] == \
            ["2005-01-31T00:00:00 2005-02-07T00:00:00"]
 
     # These(Thu 10 Apr until Thu 17 Apr, Mar) => Mar 2003
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    month = scate.Repeating(scate.Unit.MONTH)
     assert [x.isoformat() for x in scate.These(interval_week_thu, month)] == \
            [scate.Interval.of(2003, 4).isoformat()]
 
     # These(22 Mar 2002 until 10 Feb 2003, Year) => 2002, 2003
-    year = scate.RepeatingUnit(scate.Unit.YEAR)
+    year = scate.Repeating(scate.Unit.YEAR)
     assert [x.isoformat() for x in scate.These(interval_11_months, year)] == \
            [scate.Year(x).isoformat() for x in [2002, 2003]]
 
     # These(Thu 10 Apr until Thu 17 Apr, day) => ... 7 days ...
-    day = scate.RepeatingUnit(scate.Unit.DAY)
+    day = scate.Repeating(scate.Unit.DAY)
     assert len(list(scate.These(interval_week_thu, day))) == 7
 
 
 def test_misc():
     # PRI19980216.2000.0170 (349,358) last week
-    week = scate.RepeatingUnit(scate.Unit.WEEK)
+    week = scate.Repeating(scate.Unit.WEEK)
     assert scate.Last(scate.Interval.of(1998, 2, 16), week).isoformat() == \
            "1998-02-09T00:00:00 1998-02-16T00:00:00"
 
     # APW19980322.0749 (988,994) Monday
-    monday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.MO)
+    monday = scate.Repeating(scate.Unit.DAY, scate.Unit.WEEK, value=dateutil.rrule.MO)
     assert scate.Next(scate.Interval.of(1998, 3, 22, 14, 57), monday).isoformat() == \
            "1998-03-23T00:00:00 1998-03-24T00:00:00"
 
     # APW19990206.0090 (767,781) Thursday night
     # NOTE: as written, this is the night early on Thursday (1999-02-04)
     # to get the night early on Friday (1999-02-05), a Next would be needed
-    thursday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.TH)
+    thursday = scate.Repeating(scate.Unit.DAY, scate.Unit.WEEK, value=dateutil.rrule.TH)
     thursday_night = scate.Intersection([thursday, scate.DayPart.NIGHT])
     assert scate.Last(scate.Interval.of(1999, 2, 6, 6, 22, 26), thursday_night).isoformat() == \
            "1999-02-04T00:00:00 1999-02-04T06:00:00"
 
     # wsj_0124 (450,457) Nov. 13
     nov13 = scate.Intersection([
-        scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 11),
-        scate.RepeatingField(scate.Field.DAY_OF_MONTH, 13),
+        scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=11),
+        scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=13),
     ])
     assert scate.Next(scate.Interval.of(1989, 11, 2), nov13).isoformat() == \
         scate.Interval.of(1989, 11, 13).isoformat()
@@ -580,13 +580,13 @@ def test_misc():
         scate.Interval.of(1989, 11, 13).isoformat()
 
     # NYT19980206.0460 (2979,3004) first nine months of 1997
-    month = scate.RepeatingUnit(scate.Unit.MONTH)
+    month = scate.Repeating(scate.Unit.MONTH)
     assert [x.isoformat() for x in scate.NthN(scate.Year(1997), month, 1, 9)] == \
         [scate.Interval.of(1997, m).isoformat() for m in range(1, 10)]
 
     # wsj_0346 (889,894) year ended March 31
-    march = scate.RepeatingField(scate.Field.MONTH_OF_YEAR, 3)
-    day31 = scate.RepeatingField(scate.Field.DAY_OF_MONTH, 31)
+    march = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=3)
+    day31 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=31)
     march31 = scate.Intersection([march, day31])
     year = scate.Period(scate.Unit.YEAR, 1)
     assert scate.Last(scate.Last(scate.Interval.of(1989, 11, 1), march31), year).isoformat() == \

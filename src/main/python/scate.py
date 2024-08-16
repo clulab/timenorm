@@ -147,28 +147,6 @@ class Unit(enum.Enum):
         return interval
 
 
-class Field(enum.Enum):
-    HOUR_OF_DAY = (Unit.HOUR, Unit.DAY, "byhour")
-    DAY_OF_WEEK = (Unit.DAY, Unit.WEEK, "byweekday")
-    DAY_OF_MONTH = (Unit.DAY, Unit.MONTH, "bymonthday")
-    DAY_OF_YEAR = (Unit.DAY, Unit.YEAR, "byyearday")
-    WEEK_OF_MONTH = (Unit.WEEK, Unit.MONTH, None)
-    WEEK_OF_YEAR = (Unit.WEEK, Unit.YEAR, "byweekno")
-    MONTH_OF_YEAR = (Unit.MONTH, Unit.YEAR, "bymonth")
-    QUARTER_OF_YEAR = (Unit.QUARTER_YEAR, Unit.YEAR, None)
-
-    def __init__(self, base, range, rrule_by):
-        self.base = base
-        self.range = range
-        self._rrule_by = rrule_by
-
-    def rrule_kwargs(self, value):
-        if self._rrule_by is not None:
-            return {self._rrule_by: value}
-        else:
-            raise NotImplementedError
-
-
 class Offset:
     unit: Unit
 
@@ -214,9 +192,38 @@ class Sum(Offset):
         return Interval(start, other)
 
 
+@dataclasses.dataclass
 class Repeating(Offset):
-    period: Period
-    rrule_kwargs: dict
+    unit: Unit
+    range: Unit = None
+    value: int = dataclasses.field(default=None, kw_only=True)
+    n_units: int = dataclasses.field(default=1, kw_only=True)
+    rrule_kwargs: dict = dataclasses.field(default_factory=dict, kw_only=True)
+
+    def __post_init__(self):
+        self.period = Period(self.unit, self.n_units)
+        if self.range is None:
+            self.range = self.unit
+        elif self.value is None:
+            raise ValueError(f"value=None is not allowed for range={self.range}")
+        else:
+            self.rrule_kwargs |= self.range.rrule_kwargs()
+            match (self.unit, self.range):
+                case (Unit.HOUR, Unit.DAY):
+                    rrule_by = "byhour"
+                case (Unit.DAY, Unit.WEEK):
+                    rrule_by = "byweekday"
+                case (Unit.DAY, Unit.MONTH):
+                    rrule_by = "bymonthday"
+                case (Unit.DAY, Unit.YEAR):
+                    rrule_by = "byyearday"
+                case (Unit.WEEK, Unit.YEAR):
+                    rrule_by = "byweekno"
+                case (Unit.MONTH, Unit.YEAR):
+                    rrule_by = "bymonth"
+                case _:
+                    raise NotImplementedError
+            self.rrule_kwargs[rrule_by] = self.value
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         other = self.unit.truncate(other)
@@ -241,47 +248,30 @@ class Repeating(Offset):
         return start + self.period
 
 
-@dataclasses.dataclass
-class RepeatingUnit(Repeating):
-    unit: Unit
-
-    def __post_init__(self):
-        self.period = Period(self.unit, 1)
-        self.rrule_kwargs = {}
-
-
-@dataclasses.dataclass
-class RepeatingField(Repeating):
-    field: Field
-    value: int
-    n_units: int = 1
-
-    def __post_init__(self):
-        self.unit = self.field.base
-        self.period = Period(self.field.base, self.n_units)
-        self.rrule_kwargs = self.field.range.rrule_kwargs() | self.field.rrule_kwargs(self.value)
-
-
 class Season:
     # Defined as "meterological seasons"
     # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
-    SPRING = RepeatingField(
-        field=Field.MONTH_OF_YEAR,
+    SPRING = Repeating(
+        unit=Unit.MONTH,
+        range=Unit.YEAR,
         value=3,
         n_units=3)
 
-    SUMMER = RepeatingField(
-        field=Field.MONTH_OF_YEAR,
+    SUMMER = Repeating(
+        unit=Unit.MONTH,
+        range=Unit.YEAR,
         value=6,
         n_units=3)
 
-    FALL = AUTUMN = RepeatingField(
-        field=Field.MONTH_OF_YEAR,
+    FALL = AUTUMN = Repeating(
+        unit=Unit.MONTH,
+        range=Unit.YEAR,
         value=9,
         n_units=3)
 
-    WINTER = RepeatingField(
-        field=Field.MONTH_OF_YEAR,
+    WINTER = Repeating(
+        unit=Unit.MONTH,
+        range=Unit.YEAR,
         value=12,
         n_units=3)
 
@@ -289,23 +279,27 @@ class Season:
 class DayPart:
     # defined as used in forecasts
     # https://www.weather.gov/bgm/forecast_terms
-    MORNING = RepeatingField(
-        field=Field.HOUR_OF_DAY,
+    MORNING = Repeating(
+        unit=Unit.HOUR,
+        range=Unit.DAY,
         value=6,
         n_units=6)
 
-    AFTERNOON = RepeatingField(
-        field=Field.HOUR_OF_DAY,
+    AFTERNOON = Repeating(
+        unit=Unit.HOUR,
+        range=Unit.DAY,
         value=12,
         n_units=6)
 
-    EVENING = RepeatingField(
-        field=Field.HOUR_OF_DAY,
+    EVENING = Repeating(
+        unit=Unit.HOUR,
+        range=Unit.DAY,
         value=18,
         n_units=6)
 
-    NIGHT = RepeatingField(
-        field=Field.HOUR_OF_DAY,
+    NIGHT = Repeating(
+        unit=Unit.HOUR,
+        range=Unit.DAY,
         value=0,
         n_units=6)
 
@@ -453,7 +447,7 @@ class Before(IntervalOp):
     interval_included: bool = False
 
     def __post_init__(self):
-        if isinstance(self.offset, (RepeatingUnit, RepeatingField)):
+        if isinstance(self.offset, Repeating):
             start = self.interval.end if self.interval_included else self.interval.start
             for i in range(self.n - 1):
                 start = (start - self.offset).start
@@ -473,7 +467,7 @@ class After(IntervalOp):
     interval_included: bool = False
 
     def __post_init__(self):
-        if isinstance(self.offset, (RepeatingUnit, RepeatingField)):
+        if isinstance(self.offset, Repeating):
             end = self.interval.start if self.interval_included else self.interval.end
             for i in range(self.n - 1):
                 end = (end + self.offset).end
@@ -495,12 +489,8 @@ class This(Interval):
     end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
-        if isinstance(self.offset, (RepeatingUnit, RepeatingField)):
-            if isinstance(self.offset, RepeatingField):
-                range_unit = self.offset.field.range
-            else:
-                range_unit = self.offset.unit
-            start = range_unit.truncate(self.interval.start)
+        if isinstance(self.offset, Repeating):
+            start = self.offset.range.truncate(self.interval.start)
             self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
             if (self.end + self.offset).end < self.interval.end:
                 raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
@@ -588,14 +578,14 @@ class These(collections.abc.Iterable[Interval]):
     offset: Offset
 
     def __post_init__(self):
-        if isinstance(self.offset, RepeatingField):
-            range_unit = self.offset.field.range
+        if isinstance(self.offset, Repeating):
+            range_unit = self.offset.range
         else:
             range_unit = self.offset.unit
         start = range_unit.truncate(self.interval.start)
         end = range_unit.truncate(self.interval.end)
         if end != self.interval.end:
-            _, end = end + RepeatingUnit(range_unit)
+            _, end = end + Repeating(range_unit)
         self.interval = Interval(start, end)
 
     def __iter__(self) -> typing.Iterator[Interval]:
