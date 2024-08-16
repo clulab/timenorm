@@ -54,24 +54,28 @@ class Interval:
 
 
 class Unit(enum.Enum):
-    MICROSECOND = (1, "microseconds", None)
-    MILLISECOND = (2, None, None)
-    SECOND = (3, "seconds", dateutil.rrule.SECONDLY)
-    MINUTE = (4, "minutes", dateutil.rrule.MINUTELY)
-    HOUR = (5, "hours", dateutil.rrule.HOURLY)
-    DAY = (6, "days", dateutil.rrule.DAILY)
-    WEEK = (7, "weeks", dateutil.rrule.WEEKLY)
-    MONTH = (8, "months", dateutil.rrule.MONTHLY)
-    QUARTER_YEAR = (9, None, None)
-    YEAR = (10, "years", dateutil.rrule.YEARLY)
-    DECADE = (11, None, None)
-    QUARTER_CENTURY = (12, None, None)
-    CENTURY = (13, None, None)
+    MICROSECOND = (1, "microseconds")
+    MILLISECOND = (2, None)
+    SECOND = (3, "seconds")
+    MINUTE = (4, "minutes")
+    HOUR = (5, "hours")
+    DAY = (6, "days")
+    WEEK = (7, "weeks")
+    MONTH = (8, "months")
+    QUARTER_YEAR = (9, None)
+    YEAR = (10, "years")
+    DECADE = (11, None)
+    QUARTER_CENTURY = (12, None)
+    CENTURY = (13, None)
 
-    def __init__(self, n, relativedelta_name, rrule_freq):
+    def __init__(self, n, relativedelta_name):
         self._n = n
         self._relativedelta_name = relativedelta_name
-        self._rrule_freq = rrule_freq
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self._n < other._n
+        return NotImplemented
 
     def truncate(self, dt: datetime.datetime) -> datetime.datetime:
         if self is Unit.MILLISECOND:
@@ -116,12 +120,6 @@ class Unit(enum.Enum):
             return dateutil.relativedelta.relativedelta(**{Unit.YEAR._relativedelta_name: 10 * n})
         elif self is Unit.QUARTER_YEAR:
             return dateutil.relativedelta.relativedelta(**{Unit.MONTH._relativedelta_name: 3 * n})
-        else:
-            raise NotImplementedError
-
-    def rrule_kwargs(self):
-        if self._rrule_freq is not None:
-            return {"freq": self._rrule_freq}
         else:
             raise NotImplementedError
 
@@ -177,7 +175,7 @@ class Sum(Offset):
     periods: list[Period]
 
     def __post_init__(self):
-        self.unit = max(self.periods, key=lambda p: p.unit._n).unit
+        self.unit = max(self.periods, key=lambda p: p.unit).unit
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         end = other
@@ -207,7 +205,25 @@ class Repeating(Offset):
         elif self.value is None:
             raise ValueError(f"value=None is not allowed for range={self.range}")
         else:
-            self.rrule_kwargs |= self.range.rrule_kwargs()
+            match self.range:
+                case Unit.SECOND:
+                    rrule_freq = dateutil.rrule.SECONDLY
+                case Unit.MINUTE:
+                    rrule_freq = dateutil.rrule.MINUTELY
+                case Unit.HOUR:
+                    rrule_freq = dateutil.rrule.HOURLY
+                case Unit.DAY:
+                    rrule_freq = dateutil.rrule.DAILY
+                case Unit.WEEK:
+                    rrule_freq = dateutil.rrule.WEEKLY
+                case Unit.MONTH:
+                    rrule_freq = dateutil.rrule.MONTHLY
+                case Unit.YEAR:
+                    rrule_freq = dateutil.rrule.YEARLY
+                case _:
+                    raise NotImplementedError
+            self.rrule_kwargs["freq"] = rrule_freq
+
             match (self.unit, self.range):
                 case (Unit.MINUTE, Unit.HOUR):
                     rrule_by = "byminute"
@@ -315,7 +331,7 @@ class Union(Offset):
     offsets: typing.Iterable[Offset]
 
     def __post_init__(self):
-        self.unit = min((o.unit for o in self.offsets), key=lambda unit: unit._n)
+        self.unit = min(o.unit for o in self.offsets)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         return max((other - offset for offset in self.offsets),
@@ -344,9 +360,9 @@ class Intersection(Offset):
                 rrule_periods.append(offset.period)
             else:
                 non_rrule_periods.append(offset.period)
-        self.min_period = min(periods, default=None, key=lambda p: p.unit._n)
-        self.rrule_period = min(rrule_periods, default=None, key=lambda p: p.unit._n)
-        self.non_rrule_period = min(non_rrule_periods, default=None, key=lambda p: p.unit._n)
+        self.min_period = min(periods, default=None, key=lambda p: p.unit)
+        self.rrule_period = min(rrule_periods, default=None, key=lambda p: p.unit)
+        self.non_rrule_period = min(non_rrule_periods, default=None, key=lambda p: p.unit)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         start = self.min_period.unit.truncate(other)
