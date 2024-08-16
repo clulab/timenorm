@@ -148,6 +148,7 @@ class Unit(enum.Enum):
 
 
 class Field(enum.Enum):
+    HOUR_OF_DAY = (Unit.HOUR, Unit.DAY, "byhour")
     DAY_OF_WEEK = (Unit.DAY, Unit.WEEK, "byweekday")
     DAY_OF_MONTH = (Unit.DAY, Unit.MONTH, "bymonthday")
     DAY_OF_YEAR = (Unit.DAY, Unit.YEAR, "byyearday")
@@ -213,132 +214,100 @@ class Sum(Offset):
         return Interval(start, other)
 
 
-@dataclasses.dataclass
-class RepeatingUnit(Offset):
-    unit: Unit
-
-    def __post_init__(self):
-        self._one_unit = self.unit.relativedelta(1)
+class Repeating(Offset):
+    period: Period
+    rrule_kwargs: dict
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        end = self.unit.truncate(other)
-        return Interval(end - self._one_unit, end)
+        other = self.unit.truncate(other)
+        if self.rrule_kwargs:
+            # HACK: rrule requires a starting point even when going backwards so use a big one
+            dtstart = other - Unit.YEAR.relativedelta(100)
+            min_end = other - self.period.unit.relativedelta(self.period.n)
+            start = dateutil.rrule.rrule(dtstart=dtstart, **self.rrule_kwargs).before(min_end, inc=True)
+            if start is None:
+                raise ValueError(f"between {dtstart} and {min_end} there is no {self.rrule_kwargs}")
+            interval = start + self.period
+        else:
+            interval = other - self.period
+        return interval
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         start = self.unit.truncate(other)
-        if start < other:
-            start += self._one_unit
-        return Interval(start, start + self._one_unit)
+        if self.rrule_kwargs:
+            start = dateutil.rrule.rrule(dtstart=start, **self.rrule_kwargs).after(other)
+        elif start < other:
+            start += self.period.unit.relativedelta(self.period.n)
+        return start + self.period
 
 
 @dataclasses.dataclass
-class RepeatingField(Offset):
+class RepeatingUnit(Repeating):
+    unit: Unit
+
+    def __post_init__(self):
+        self.period = Period(self.unit, 1)
+        self.rrule_kwargs = {}
+
+
+@dataclasses.dataclass
+class RepeatingField(Repeating):
     field: Field
     value: int
+    n_units: int = 1
 
     def __post_init__(self):
         self.unit = self.field.base
-        self._rrule_kwargs = self.field.range.rrule_kwargs() | self.field.rrule_kwargs(self.value)
-        self._one_range = self.field.range.relativedelta(1)
-        self._one_base = self.field.base.relativedelta(1)
-
-    def __rsub__(self, other: datetime.datetime) -> Interval:
-        other = self.field.base.truncate(other)
-        # rrule requires a starting point even when going backwards,
-        # so start at twice the expected range
-        dtstart = other - 2 * self._one_range
-        ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
-        return Interval(ldt, ldt + self._one_base)
-
-    def __radd__(self, other: datetime.datetime) -> Interval:
-        other = self.field.base.truncate(other)
-        ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other)
-        return Interval(ldt, ldt + self._one_base)
-
-
-@dataclasses.dataclass
-class RRuleOffset(Offset):
-    unit: Unit
-    rrule_kwargs: dict
-    start_rrule_kwargs: dict
-    end_rrule_kwargs: dict
-
-    def __post_init__(self):
-        self._one_unit = self.unit.relativedelta(1)
-        self._one_micro = Unit.MICROSECOND.relativedelta(1)
-        self.start_rrule_kwargs.update(self.rrule_kwargs)
-        self.end_rrule_kwargs.update(self.rrule_kwargs)
-
-    def __rsub__(self, other: datetime.datetime) -> Interval:
-        # rrule requires a starting point even when going backwards,
-        # so start at twice the expected range
-        dtstart = other - 2 * self._one_unit
-        end = dateutil.rrule.rrule(dtstart=dtstart, **self.end_rrule_kwargs).before(other)
-        start = dateutil.rrule.rrule(dtstart=dtstart, **self.start_rrule_kwargs).before(end)
-        return Interval(start, end)
-
-    def __radd__(self, other: datetime.datetime) -> Interval:
-        # we need to allow start == other, so move other back the smallest amount possible
-        other -= self._one_micro
-        start = dateutil.rrule.rrule(dtstart=other, **self.start_rrule_kwargs).after(other)
-        end = dateutil.rrule.rrule(dtstart=start, **self.end_rrule_kwargs).after(start)
-        return Interval(start, end)
+        self.period = Period(self.field.base, self.n_units)
+        self.rrule_kwargs = self.field.range.rrule_kwargs() | self.field.rrule_kwargs(self.value)
 
 
 class Season:
     # Defined as "meterological seasons"
     # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
-    SPRING = RRuleOffset(
-        unit=Unit.YEAR,
-        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
-        start_rrule_kwargs=dict(bymonth=3),
-        end_rrule_kwargs=dict(bymonth=6))
+    SPRING = RepeatingField(
+        field=Field.MONTH_OF_YEAR,
+        value=3,
+        n_units=3)
 
-    SUMMER = RRuleOffset(
-        unit=Unit.YEAR,
-        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
-        start_rrule_kwargs=dict(bymonth=6),
-        end_rrule_kwargs=dict(bymonth=9))
+    SUMMER = RepeatingField(
+        field=Field.MONTH_OF_YEAR,
+        value=6,
+        n_units=3)
 
-    FALL = AUTUMN = RRuleOffset(
-        unit=Unit.YEAR,
-        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
-        start_rrule_kwargs=dict(bymonth=9),
-        end_rrule_kwargs=dict(bymonth=12))
+    FALL = AUTUMN = RepeatingField(
+        field=Field.MONTH_OF_YEAR,
+        value=9,
+        n_units=3)
 
-    WINTER = RRuleOffset(
-        unit=Unit.YEAR,
-        rrule_kwargs=dict(bymonthday=1, byhour=0, byminute=0, bysecond=0, freq=dateutil.rrule.DAILY),
-        start_rrule_kwargs=dict(bymonth=12),
-        end_rrule_kwargs=dict(bymonth=3))
+    WINTER = RepeatingField(
+        field=Field.MONTH_OF_YEAR,
+        value=12,
+        n_units=3)
 
 
 class DayPart:
     # defined as used in forecasts
     # https://www.weather.gov/bgm/forecast_terms
-    MORNING = RRuleOffset(
-        unit=Unit.DAY,
-        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
-        start_rrule_kwargs=dict(byhour=6),
-        end_rrule_kwargs=dict(byhour=12))
+    MORNING = RepeatingField(
+        field=Field.HOUR_OF_DAY,
+        value=6,
+        n_units=6)
 
-    AFTERNOON = RRuleOffset(
-        unit=Unit.DAY,
-        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
-        start_rrule_kwargs=dict(byhour=12),
-        end_rrule_kwargs=dict(byhour=18))
+    AFTERNOON = RepeatingField(
+        field=Field.HOUR_OF_DAY,
+        value=12,
+        n_units=6)
 
-    EVENING = RRuleOffset(
-        unit=Unit.DAY,
-        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
-        start_rrule_kwargs=dict(byhour=18),
-        end_rrule_kwargs=dict(byhour=0))
+    EVENING = RepeatingField(
+        field=Field.HOUR_OF_DAY,
+        value=18,
+        n_units=6)
 
-    NIGHT = RRuleOffset(
-        unit=Unit.DAY,
-        rrule_kwargs=dict(byminute=0, bysecond=0, freq=dateutil.rrule.HOURLY),
-        start_rrule_kwargs=dict(byhour=0),
-        end_rrule_kwargs=dict(byhour=6))
+    NIGHT = RepeatingField(
+        field=Field.HOUR_OF_DAY,
+        value=0,
+        n_units=6)
 
 
 @dataclasses.dataclass
@@ -359,45 +328,68 @@ class Union(Offset):
 
 @dataclasses.dataclass
 class Intersection(Offset):
-    offsets: typing.Iterable[Offset]
+    offsets: typing.Iterable[Repeating]
 
     def __post_init__(self):
-        self._rrule_kwargs = {}
-        units = {}
+        if not self.offsets:
+            raise ValueError(f"{self.__class__.__name__} offsets cannot be empty")
+        self.rrule_kwargs = {}
+        periods = []
+        rrule_periods = []
+        non_rrule_periods = []
         for offset in self.offsets:
-            if isinstance(offset, RepeatingField):
-                self._rrule_kwargs |= offset._rrule_kwargs
-                units[offset.field.base] = offset
-                units[offset.field.range] = offset
-            elif isinstance(offset, RepeatingUnit):
-                self._rrule_kwargs |= offset.unit.rrule_kwargs()
-                units[offset.unit] = offset
-            elif isinstance(offset, RRuleOffset):
-                self._rrule_kwargs |= offset.rrule_kwargs
-                units[offset.unit] = offset
+            periods.append(offset.period)
+            if offset.rrule_kwargs:
+                self.rrule_kwargs |= offset.rrule_kwargs
+                rrule_periods.append(offset.period)
             else:
-                raise NotImplementedError
-        self._min_unit = min(units, key=lambda u: u._n)
-        self._max_unit = max(units, key=lambda u: u._n)
-        self._min_offset = units[self._min_unit]
+                non_rrule_periods.append(offset.period)
+        self.min_period = min(periods, default=None, key=lambda p: p.unit._n)
+        self.rrule_period = min(rrule_periods, default=None, key=lambda p: p.unit._n)
+        self.non_rrule_period = min(non_rrule_periods, default=None, key=lambda p: p.unit._n)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        other = self._min_unit.truncate(other)
-        # rrule requires a starting point even when going backwards,
-        # HACK: start at 100 times the expected range
-        dtstart = other - 100 * self._max_unit.relativedelta(1)
-        ldt = dateutil.rrule.rrule(dtstart=dtstart, **self._rrule_kwargs).before(other)
-        if ldt is None:
-            raise ValueError(f"found no {self.offsets} preceding {other}")
-        return (ldt + self._min_unit.relativedelta(1)) - self._min_offset
+        start = self.min_period.unit.truncate(other)
+        if self.rrule_period is not None:
+            # HACK: rrule requires a starting point even when going backwards.
+            # So we use a big one, but this is inefficient
+            dtstart = start - Unit.YEAR.relativedelta(100)
+            while True:
+                # find the start and interval using the rrule
+                start = dateutil.rrule.rrule(dtstart=dtstart, **self.rrule_kwargs).before(start, inc=True)
+                if start is None:
+                    raise ValueError(f"no {self.rrule_kwargs} between {dtstart} and {start}")
+                interval = start + self.rrule_period
+
+                # subtract off any non-rrule period
+                if self.non_rrule_period is not None:
+                    interval = start - self.non_rrule_period
+
+                    # if outside the valid range of the rrule, move back in
+                    if interval.start < self.rrule_period.unit.truncate(start):
+                        interval = Interval(
+                            interval.start + self.rrule_period.unit.relativedelta(self.rrule_period.n),
+                            interval.end + self.rrule_period.unit.relativedelta(self.rrule_period.n))
+
+                # start is guaranteed to be before other by rrule, but end is not
+                if interval.end <= other:
+                    break
+                start -= Unit.MICROSECOND.relativedelta(1)
+        elif self.non_rrule_period is not None:
+            interval = start - self.non_rrule_period
+        else:
+            raise ValueError(f"{self.rrule_period} and {self.non_rrule_period} are both None")
+        return interval
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        other = self._min_unit.truncate(other)
-        # we need to allow start == other, so move other back the smallest amount possible
-        ldt = dateutil.rrule.rrule(dtstart=other, **self._rrule_kwargs).after(other - Unit.MICROSECOND.relativedelta(1))
-        if ldt is None:
-            raise ValueError(f"found no {self.offsets} following {other}")
-        return (ldt - Unit.MICROSECOND.relativedelta(1)) + self._min_offset
+        start = self.min_period.unit.truncate(other)
+        if start < other:
+            start += self.min_period.unit.relativedelta(self.min_period.n)
+        if self.rrule_period is not None:
+            start = dateutil.rrule.rrule(dtstart=start, **self.rrule_kwargs).after(start, inc=True)
+            if start is None:
+                raise ValueError(f"no {self.rrule_kwargs} between {start} and {other}")
+        return start + self.min_period
 
 
 @dataclasses.dataclass
@@ -503,9 +495,13 @@ class This(Interval):
     end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
-        if isinstance(self.offset, (RepeatingUnit, RepeatingField, RRuleOffset)):
-            start = self.offset.unit.truncate(self.interval.start)
-            self.start, self.end = start + self.offset
+        if isinstance(self.offset, (RepeatingUnit, RepeatingField)):
+            if isinstance(self.offset, RepeatingField):
+                range_unit = self.offset.field.range
+            else:
+                range_unit = self.offset.unit
+            start = range_unit.truncate(self.interval.start)
+            self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
             if (self.end + self.offset).end < self.interval.end:
                 raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
         elif isinstance(self.offset, Period):

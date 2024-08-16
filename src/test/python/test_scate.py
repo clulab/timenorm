@@ -560,10 +560,12 @@ def test_misc():
            "1998-03-23T00:00:00 1998-03-24T00:00:00"
 
     # APW19990206.0090 (767,781) Thursday night
+    # NOTE: as written, this is the night early on Thursday (1999-02-04)
+    # to get the night early on Friday (1999-02-05), a Next would be needed
     thursday = scate.RepeatingField(scate.Field.DAY_OF_WEEK, dateutil.rrule.TH)
     thursday_night = scate.Intersection([thursday, scate.DayPart.NIGHT])
     assert scate.Last(scate.Interval.of(1999, 2, 6, 6, 22, 26), thursday_night).isoformat() == \
-           "1999-02-05T00:00:00 1999-02-05T06:00:00"
+           "1999-02-04T00:00:00 1999-02-04T06:00:00"
 
     # wsj_0124 (450,457) Nov. 13
     nov13 = scate.Intersection([
