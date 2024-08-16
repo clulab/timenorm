@@ -329,6 +329,7 @@ class Union(Offset):
 
     def __post_init__(self):
         self.unit = min(o.unit for o in self.offsets)
+        self.range = max(o.unit for o in self.offsets)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         return max((other - offset for offset in self.offsets),
@@ -360,6 +361,8 @@ class Intersection(Offset):
         self.min_period = min(periods, default=None, key=lambda p: p.unit)
         self.rrule_period = min(rrule_periods, default=None, key=lambda p: p.unit)
         self.non_rrule_period = min(non_rrule_periods, default=None, key=lambda p: p.unit)
+        self.unit = self.min_period.unit
+        self.range = max(periods, default=None, key=lambda p: p.unit).unit
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         start = self.min_period.unit.truncate(other)
@@ -466,18 +469,20 @@ class Before(IntervalOp):
     interval_included: bool = False
 
     def __post_init__(self):
-        if isinstance(self.offset, Repeating):
+        if isinstance(self.offset, (Repeating, Union, Intersection)):
             start = self.interval.end if self.interval_included else self.interval.start
             for i in range(self.n - 1):
                 start = (start - self.offset).start
             self.start, self.end = start - self.offset
-        elif self.interval_included:
-            raise ValueError("interval_included=True cannot be used with Periods")
-        else:
+        elif isinstance(self.offset, (Period, Sum)):
+            if self.interval_included:
+                raise ValueError("interval_included=True cannot be used with Periods")
             self.start, self.end = self.interval
             for i in range(self.n):
                 self.start = (self.start - self.offset).start
                 self.end = (self.end - self.offset).start
+        else:
+            raise NotImplementedError
 
 
 @dataclasses.dataclass
@@ -486,18 +491,20 @@ class After(IntervalOp):
     interval_included: bool = False
 
     def __post_init__(self):
-        if isinstance(self.offset, Repeating):
+        if isinstance(self.offset, (Repeating, Union, Intersection)):
             end = self.interval.start if self.interval_included else self.interval.end
             for i in range(self.n - 1):
                 end = (end + self.offset).end
             self.start, self.end = end + self.offset
-        elif self.interval_included:
-            raise ValueError("interval_included=True cannot be used with Periods")
-        else:
+        elif isinstance(self.offset, (Period, Sum)):
+            if self.interval_included:
+                raise ValueError("interval_included=True cannot be used with Periods")
             self.start, self.end = self.interval
             for i in range(self.n):
                 self.start = (self.start + self.offset).end
                 self.end = (self.end + self.offset).end
+        else:
+            raise NotImplementedError
 
 
 @dataclasses.dataclass
@@ -508,12 +515,12 @@ class This(Interval):
     end: datetime.datetime = dataclasses.field(init=False)
 
     def __post_init__(self):
-        if isinstance(self.offset, Repeating):
+        if isinstance(self.offset, (Repeating, Union, Intersection)):
             start = self.offset.range.truncate(self.interval.start)
             self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
             if (self.end + self.offset).end < self.interval.end:
                 raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
-        elif isinstance(self.offset, Period):
+        elif isinstance(self.offset, (Period, Sum)):
             self.start, self.end = self.offset.expand(self.interval)
         else:
             raise NotImplementedError
