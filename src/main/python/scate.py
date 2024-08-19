@@ -655,32 +655,38 @@ def from_xml(elem: ET.Element):
         entity = id_to_entity[entity_id]
         sub_interval_id = entity.findtext("properties/Sub-Interval")
         entity_type = entity.findtext("type")
-        match entity_type:
-            case "Year":
-                year_str = entity.findtext("properties/Value")
-                obj = Year(int(year_str))
-                if sub_interval_id:
-                    obj = This(obj, id_to_obj.pop(sub_interval_id))
-            case "Month-Of-Year":
-                month_str = entity.findtext("properties/Type")
-                month_int = datetime.datetime.strptime(month_str, '%B').month
+        prop_value = entity.findtext("properties/Value")
+        prop_type = entity.findtext("properties/Type")
+
+        # create objects from <entity> elements
+        match (entity_type, prop_type):
+            case ("Year", _):
+                obj = Year(int(prop_value))
+            case ("Month-Of-Year", _):
+                month_int = datetime.datetime.strptime(prop_type, '%B').month
                 obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
-            case "Day-Of-Month":
-                day_str = entity.findtext("properties/Value")
-                obj = Repeating(Unit.DAY, Unit.MONTH, value=int(day_str))
-            case "Part-Of-Day":
-                match entity.findtext("properties/Type"):
-                    case "Noon":
-                        obj = NOON
-                    case other:
-                        raise NotImplementedError(other)
+            case ("Day-Of-Month", _):
+                obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
+            case ("Part-Of-Day", "Noon"):
+                obj = NOON
             case other:
                 raise NotImplementedError(other)
 
-        match entity_type:
-            case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day":
-                if sub_interval_id:
-                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
+        # add spans to objects
+        obj.span = tuple(int(x) for x in entity.findtext("span").split(","))
 
+        # create additional objects as necessary for sub-intervals
+        if sub_interval_id:
+            sub_interval = id_to_obj.pop(sub_interval_id)
+            start, end = obj.span
+            sub_start, sub_end = sub_interval.span
+            match entity_type:
+                case "Year":
+                    obj = This(obj, sub_interval)
+                case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day":
+                    obj = Intersection([obj, sub_interval])
+            obj.span = (min(start, sub_start), max(end, sub_end))
+
+        # add the object to the mapping
         id_to_obj[entity_id] = obj
     return list(id_to_obj.values())

@@ -59,4 +59,9 @@ def test_noon():
     m11 = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=10)
     d25 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=25)
     date = scate.This(y2000, scate.Intersection([m11, d25, scate.NOON]))
-    assert scate.from_xml(ET.fromstring(xml_str)) == [date]
+    [obj] = scate.from_xml(ET.fromstring(xml_str))
+    assert obj == date
+    assert obj.span == (0, 15)
+    assert obj.interval.span == (0, 4)
+    assert obj.offset.span == (5, 15)
+    assert [x.span for x in obj.offset.offsets] == [(5, 7), (8, 10), (11, 15)]
