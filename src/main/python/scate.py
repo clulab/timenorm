@@ -654,7 +654,8 @@ def from_xml(elem: ET.Element):
     for entity_id in sorted_ids:
         entity = id_to_entity[entity_id]
         sub_interval_id = entity.findtext("properties/Sub-Interval")
-        match entity.findtext("type"):
+        entity_type = entity.findtext("type")
+        match entity_type:
             case "Year":
                 year_str = entity.findtext("properties/Value")
                 obj = Year(int(year_str))
@@ -664,23 +665,22 @@ def from_xml(elem: ET.Element):
                 month_str = entity.findtext("properties/Type")
                 month_int = datetime.datetime.strptime(month_str, '%B').month
                 obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
-                if sub_interval_id:
-                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
             case "Day-Of-Month":
                 day_str = entity.findtext("properties/Value")
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(day_str))
-                if sub_interval_id:
-                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
             case "Part-Of-Day":
                 match entity.findtext("properties/Type"):
                     case "Noon":
                         obj = NOON
                     case other:
                         raise NotImplementedError(other)
-                if sub_interval_id:
-                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
             case other:
                 raise NotImplementedError(other)
+
+        match entity_type:
+            case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day":
+                if sub_interval_id:
+                    obj = Intersection([obj, id_to_obj.pop(sub_interval_id)])
 
         id_to_obj[entity_id] = obj
     return list(id_to_obj.values())
