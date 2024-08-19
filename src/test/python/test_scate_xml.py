@@ -123,12 +123,15 @@ def test_noon_super_interval():
     y2000 = scate.Year(2000)
     m11 = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=10)
     d25 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=25)
-    date = scate.This(y2000, scate.Intersection([m11, d25, scate.NOON]))
+    date = scate.This(scate.This(scate.This(y2000, m11), d25), scate.NOON)
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
     [obj] = objects
     assert obj == date
     assert obj.span == (0, 15)
-    assert obj.interval.span == (0, 4)
-    assert obj.offset.span == (5, 15)
-    assert [x.span for x in obj.offset.offsets] == [(5, 7), (8, 10), (11, 15)]
+    assert obj.interval.span == (0, 10)
+    assert obj.offset.span == (11, 15)
+    assert obj.interval.interval.span == (0, 7)
+    assert obj.interval.offset.span == (8, 10)
+    assert obj.interval.interval.interval.span == (0, 4)
+    assert obj.interval.interval.offset.span == (5, 7)
