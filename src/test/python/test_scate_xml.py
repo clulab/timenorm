@@ -63,6 +63,7 @@ def test_noon():
     assert objects == [date]
     [obj] = objects
     assert obj == date
+    assert obj.isoformat() == "2000-10-25T12:00:00 2000-10-25T12:01:00"
     assert obj.span == (0, 15)
     assert obj.interval.span == (0, 4)
     assert obj.offset.span == (5, 15)
@@ -128,6 +129,7 @@ def test_noon_super_interval():
     assert objects == [date]
     [obj] = objects
     assert obj == date
+    assert obj.isoformat() == "2000-10-25T12:00:00 2000-10-25T12:01:00"
     assert obj.span == (0, 15)
     assert obj.interval.span == (0, 10)
     assert obj.offset.span == (11, 15)
