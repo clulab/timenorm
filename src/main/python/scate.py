@@ -638,7 +638,10 @@ def from_xml(elem: ET.Element):
         id_to_ids[entity_id] = set()
         for prop in entity.find("properties"):
             if prop.text and '@' in prop.text:
-                id_to_ids[entity_id].add(prop.text)
+                if prop.tag == 'Super-Interval':
+                    id_to_ids[prop.text].add(entity_id)
+                else:
+                    id_to_ids[entity_id].add(prop.text)
 
     # topological sort
     sorted_ids = {}
@@ -651,9 +654,15 @@ def from_xml(elem: ET.Element):
             id_to_ids[key] -= sorted_ids.keys()
 
     id_to_obj = {}
+    extra_sub_intervals = {}
     for entity_id in sorted_ids:
         entity = id_to_entity[entity_id]
         sub_interval_id = entity.findtext("properties/Sub-Interval")
+        if entity_id in extra_sub_intervals:
+            if sub_interval_id is not None:
+                raise ValueError(f"Sub-Interval {sub_interval_id} with Super-Intervals {extra_sub_intervals}")
+            sub_interval_id = extra_sub_intervals[entity_id]
+        super_interval_id = entity.findtext("properties/Super-Interval")
         entity_type = entity.findtext("type")
         prop_value = entity.findtext("properties/Value")
         prop_type = entity.findtext("properties/Type")
@@ -686,6 +695,10 @@ def from_xml(elem: ET.Element):
                 case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day":
                     obj = Intersection([obj, sub_interval])
             obj.span = (min(start, sub_start), max(end, sub_end))
+
+        # convert super-intervals to sub-intervals and keep track of them
+        if super_interval_id:
+            extra_sub_intervals[super_interval_id] = entity_id
 
         # add the object to the mapping
         id_to_obj[entity_id] = obj
