@@ -301,15 +301,15 @@ MORNING = Repeating(
     value=6,
     n_units=6)
 
+NOON = Repeating(
+    unit=Unit.MINUTE,
+    rrule_kwargs=dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
+
 AFTERNOON = Repeating(
     unit=Unit.HOUR,
     range=Unit.DAY,
     value=12,
     n_units=6)
-
-NOON = Repeating(
-    unit=Unit.MINUTE,
-    rrule_kwargs=dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
 
 EVENING = Repeating(
     unit=Unit.HOUR,
@@ -660,16 +660,16 @@ def from_xml(elem: ET.Element):
         prop_type = entity.findtext("properties/Type")
 
         # create objects from <entity> elements
-        match (entity_type, prop_type):
-            case ("Year", _):
+        match entity_type:
+            case "Year":
                 obj = Year(int(prop_value))
-            case ("Month-Of-Year", _):
+            case "Month-Of-Year":
                 month_int = datetime.datetime.strptime(prop_type, '%B').month
                 obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
-            case ("Day-Of-Month", _):
+            case "Day-Of-Month":
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
-            case ("Part-Of-Day", "Noon"):
-                obj = NOON
+            case "Part-Of-Day" | "Season-Of-Year":
+                obj = globals()[prop_type.upper()]
             case other:
                 raise NotImplementedError(other)
 

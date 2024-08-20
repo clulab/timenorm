@@ -3,6 +3,40 @@ import inspect
 import xml.etree.ElementTree as ET
 
 
+def test_special_repeating():
+    for xml_type, xml_name, scate_obj in [
+            ("Season-Of-Year", "Spring", scate.SPRING),
+            ("Season-Of-Year", "Summer", scate.SUMMER),
+            ("Season-Of-Year", "Fall", scate.FALL),
+            ("Season-Of-Year", "Winter", scate.WINTER),
+            ("Part-Of-Day", "Morning", scate.MORNING),
+            ("Part-Of-Day", "Noon", scate.NOON),
+            ("Part-Of-Day", "Afternoon", scate.AFTERNOON),
+            ("Part-Of-Day", "Evening", scate.EVENING),
+            ("Part-Of-Day", "Night", scate.NIGHT)]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>4@test</id>
+                        <span>11,15</span>
+                        <type>{xml_type}</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Type>{xml_name}</Type>
+                            <Number></Number>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        objs = scate.from_xml(ET.fromstring(xml_str))
+        assert objs == [scate_obj]
+        [obj] = objs
+        assert obj.span == (11, 15)
+
+
+
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>
