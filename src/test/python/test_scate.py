@@ -126,28 +126,28 @@ def test_repeating_field():
 
 def test_seasons():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    assert (interval + scate.SPRING).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"
-    assert (interval - scate.SPRING).isoformat() == "2001-03-01T00:00:00 2001-06-01T00:00:00"
-    assert (interval + scate.SUMMER).isoformat() == "2003-06-01T00:00:00 2003-09-01T00:00:00"
-    assert (interval - scate.SUMMER).isoformat() == "2001-06-01T00:00:00 2001-09-01T00:00:00"
-    assert (interval + scate.FALL).isoformat() == "2003-09-01T00:00:00 2003-12-01T00:00:00"
-    assert (interval - scate.FALL).isoformat() == "2001-09-01T00:00:00 2001-12-01T00:00:00"
-    assert (interval + scate.WINTER).isoformat() == "2003-12-01T00:00:00 2004-03-01T00:00:00"
-    assert (interval - scate.WINTER).isoformat() == "2001-12-01T00:00:00 2002-03-01T00:00:00"
+    assert (interval + scate.Spring()).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"
+    assert (interval - scate.Spring()).isoformat() == "2001-03-01T00:00:00 2001-06-01T00:00:00"
+    assert (interval + scate.Summer()).isoformat() == "2003-06-01T00:00:00 2003-09-01T00:00:00"
+    assert (interval - scate.Summer()).isoformat() == "2001-06-01T00:00:00 2001-09-01T00:00:00"
+    assert (interval + scate.Fall()).isoformat() == "2003-09-01T00:00:00 2003-12-01T00:00:00"
+    assert (interval - scate.Fall()).isoformat() == "2001-09-01T00:00:00 2001-12-01T00:00:00"
+    assert (interval + scate.Winter()).isoformat() == "2003-12-01T00:00:00 2004-03-01T00:00:00"
+    assert (interval - scate.Winter()).isoformat() == "2001-12-01T00:00:00 2002-03-01T00:00:00"
 
 
 def test_day_parts():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
-    assert (interval + scate.MORNING).isoformat() == "2003-05-11T06:00:00 2003-05-11T12:00:00"
-    assert (interval - scate.MORNING).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
-    assert (interval + scate.AFTERNOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
-    assert (interval - scate.AFTERNOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
-    assert (interval + scate.NOON).isoformat() == "2003-05-11T12:00:00 2003-05-11T12:01:00"
-    assert (interval - scate.NOON).isoformat() == "2002-03-21T12:00:00 2002-03-21T12:01:00"
-    assert (interval + scate.EVENING).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"
-    assert (interval - scate.EVENING).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
-    assert (interval + scate.NIGHT).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
-    assert (interval - scate.NIGHT).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
+    assert (interval + scate.Morning()).isoformat() == "2003-05-11T06:00:00 2003-05-11T12:00:00"
+    assert (interval - scate.Morning()).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
+    assert (interval + scate.Afternoon()).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
+    assert (interval - scate.Afternoon()).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
+    assert (interval + scate.Noon()).isoformat() == "2003-05-11T12:00:00 2003-05-11T12:01:00"
+    assert (interval - scate.Noon()).isoformat() == "2002-03-21T12:00:00 2002-03-21T12:01:00"
+    assert (interval + scate.Evening()).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"
+    assert (interval - scate.Evening()).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
+    assert (interval + scate.Night()).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
+    assert (interval - scate.Night()).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
 
 
 def test_union():
@@ -252,7 +252,7 @@ def test_intersection():
     i20120301 = scate.Interval.of(2012, 3, 1)
     eve31 = scate.Intersection([
         scate.Repeating(scate.DAY, scate.MONTH, value=31),
-        scate.EVENING,
+        scate.Evening(),
     ])
 
     assert (i20120301 - eve31).isoformat() == "2012-01-31T18:00:00 2012-02-01T00:00:00"
@@ -262,7 +262,7 @@ def test_intersection():
     m11d25noon = scate.Intersection([
         scate.Repeating(scate.MONTH, scate.YEAR, value=11),
         scate.Repeating(scate.DAY, scate.MONTH, value=25),
-        scate.NOON,
+        scate.Noon(),
     ])
     assert (scate.Interval.of(2000, 11, 25, 12, 1) + m11d25noon).isoformat() == \
            "2001-11-25T12:00:00 2001-11-25T12:01:00"
@@ -462,12 +462,12 @@ def test_this():
     interval = scate.Interval.fromisoformat("2016-07-01T00:00:00 2016-07-02T00:00:00")
     month = scate.Repeating(scate.MONTH)
     assert scate.This(interval, month).isoformat() == "2016-07-01T00:00:00 2016-08-01T00:00:00"
-    assert scate.This(interval, scate.SUMMER).isoformat() == "2016-06-01T00:00:00 2016-09-01T00:00:00"
-    assert scate.This(interval, scate.WINTER).isoformat() == "2016-12-01T00:00:00 2017-03-01T00:00:00"
-    assert scate.This(interval, scate.NIGHT).isoformat() == "2016-07-01T00:00:00 2016-07-01T06:00:00"
+    assert scate.This(interval, scate.Summer()).isoformat() == "2016-06-01T00:00:00 2016-09-01T00:00:00"
+    assert scate.This(interval, scate.Winter()).isoformat() == "2016-12-01T00:00:00 2017-03-01T00:00:00"
+    assert scate.This(interval, scate.Night()).isoformat() == "2016-07-01T00:00:00 2016-07-01T06:00:00"
 
     interval = scate.Interval.fromisoformat("2016-07-01T10:00:00 2016-07-01T11:00:00")
-    assert scate.This(interval, scate.NOON).isoformat() == "2016-07-01T12:00:00 2016-07-01T12:01:00"
+    assert scate.This(interval, scate.Noon()).isoformat() == "2016-07-01T12:00:00 2016-07-01T12:01:00"
 
 
 def test_between():
@@ -579,7 +579,7 @@ def test_misc():
     # NOTE: as written, this is the night early on Thursday (1999-02-04)
     # to get the night early on Friday (1999-02-05), a Next would be needed
     thursday = scate.Repeating(scate.DAY, scate.WEEK, value=scate.THURSDAY)
-    thursday_night = scate.Intersection([thursday, scate.NIGHT])
+    thursday_night = scate.Intersection([thursday, scate.Night()])
     assert scate.Last(scate.Interval.of(1999, 2, 6, 6, 22, 26), thursday_night).isoformat() == \
            "1999-02-04T00:00:00 1999-02-04T06:00:00"
 

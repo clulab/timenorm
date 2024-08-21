@@ -4,16 +4,16 @@ import xml.etree.ElementTree as ET
 
 
 def test_special_repeating():
-    for xml_type, xml_name, scate_obj in [
-            ("Season-Of-Year", "Spring", scate.SPRING),
-            ("Season-Of-Year", "Summer", scate.SUMMER),
-            ("Season-Of-Year", "Fall", scate.FALL),
-            ("Season-Of-Year", "Winter", scate.WINTER),
-            ("Part-Of-Day", "Morning", scate.MORNING),
-            ("Part-Of-Day", "Noon", scate.NOON),
-            ("Part-Of-Day", "Afternoon", scate.AFTERNOON),
-            ("Part-Of-Day", "Evening", scate.EVENING),
-            ("Part-Of-Day", "Night", scate.NIGHT)]:
+    for xml_type, xml_name, cls in [
+            ("Season-Of-Year", "Spring", scate.Spring),
+            ("Season-Of-Year", "Summer", scate.Summer),
+            ("Season-Of-Year", "Fall", scate.Fall),
+            ("Season-Of-Year", "Winter", scate.Winter),
+            ("Part-Of-Day", "Morning", scate.Morning),
+            ("Part-Of-Day", "Noon", scate.Noon),
+            ("Part-Of-Day", "Afternoon", scate.Afternoon),
+            ("Part-Of-Day", "Evening", scate.Evening),
+            ("Part-Of-Day", "Night", scate.Night)]:
         xml_str = inspect.cleandoc(f"""
             <data>
                 <annotations>
@@ -31,9 +31,7 @@ def test_special_repeating():
                 </annotations>
             </data>""")
         objs = scate.from_xml(ET.fromstring(xml_str))
-        assert objs == [scate_obj]
-        [obj] = objs
-        assert obj.span == (11, 15)
+        assert objs == [cls(span=(11, 15))]
 
 
 def test_noon():
@@ -88,19 +86,14 @@ def test_noon():
                 </entity>
             </annotations>
         </data>""")
-    y2000 = scate.Year(2000)
-    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10)
-    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25)
-    date = scate.This(y2000, scate.Intersection([m11, d25, scate.NOON]))
+    y2000 = scate.Year(2000, span=(0, 4))
+    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10, span=(5, 7))
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(8, 10))
+    noon = scate.Noon(span=(11, 15))
+    date = scate.This(y2000, scate.Intersection([m11, d25, noon]), span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
-    [obj] = objects
-    assert obj == date
-    assert obj.isoformat() == "2000-10-25T12:00:00 2000-10-25T12:01:00"
-    assert obj.span == (0, 15)
-    assert obj.interval.span == (0, 4)
-    assert obj.offset.span == (5, 15)
-    assert [x.span for x in obj.offset.offsets] == [(5, 7), (8, 10), (11, 15)]
+    assert [o.isoformat() for o in objects] == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
 
 
 def test_noon_super_interval():
@@ -154,22 +147,16 @@ def test_noon_super_interval():
                 </entity>
             </annotations>
         </data>""")
-    y2000 = scate.Year(2000)
-    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10)
-    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25)
-    date = scate.This(scate.This(scate.This(y2000, m11), d25), scate.NOON)
+    y2000 = scate.Year(2000, span=(0, 4))
+    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10, span=(5, 7))
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(8, 10))
+    noon = scate.Noon(span=(11, 15))
+    this_y2000_m11 = scate.This(y2000, m11, span=(0, 7))
+    this_y2000_m11_d25 = scate.This(this_y2000_m11, d25, span=(0, 10))
+    date = scate.This(this_y2000_m11_d25, noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
-    [obj] = objects
-    assert obj == date
-    assert obj.isoformat() == "2000-10-25T12:00:00 2000-10-25T12:01:00"
-    assert obj.span == (0, 15)
-    assert obj.interval.span == (0, 10)
-    assert obj.offset.span == (11, 15)
-    assert obj.interval.interval.span == (0, 7)
-    assert obj.interval.offset.span == (8, 10)
-    assert obj.interval.interval.interval.span == (0, 4)
-    assert obj.interval.interval.offset.span == (5, 7)
+    assert [o.isoformat() for o in objects] == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
 
 
 def test_after_december_2017():
@@ -214,12 +201,13 @@ def test_after_december_2017():
                 </entity>
             </annotations>
         </data>""")
-    ref_dec_2017 = scate.This(scate.Year(2017), scate.Repeating(scate.MONTH, scate.YEAR, value=12))
-    ref_after_dec_2017 = scate.After(ref_dec_2017, None)
+    y2017 = scate.Year(2017, span=(15, 19))
+    m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(6, 14))
+    ref_dec_2017 = scate.This(y2017, m12, span=(6, 19))
+    ref_after_dec_2017 = scate.After(ref_dec_2017, None, span=(0, 19))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [ref_dec_2017, ref_after_dec_2017]
-    [dec_2017, after_dec_2017] = objects
-    assert after_dec_2017.span == (0, 19)
-    assert dec_2017.span == after_dec_2017.interval.span == (6, 19)
-    assert dec_2017.interval.span == (15, 19)
-    assert dec_2017.offset.span == (6, 14)
+    assert [o.isoformat() for o in objects] == [
+        "2017-12-01T00:00:00 2018-01-01T00:00:00",
+        "2018-01-01T00:00:00 ..."
+    ]

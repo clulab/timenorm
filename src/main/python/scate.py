@@ -175,6 +175,7 @@ class Offset:
 class Period(Offset):
     unit: Unit
     n: int
+    span: (int, int) = None
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         return Interval(other, other + self.unit.relativedelta(self.n))
@@ -189,6 +190,7 @@ class Period(Offset):
 @dataclasses.dataclass
 class Sum(Offset):
     periods: list[Period]
+    span: (int, int) = None
 
     def __post_init__(self):
         self.unit = max(self.periods, key=lambda p: p.unit).unit
@@ -213,6 +215,7 @@ class Repeating(Offset):
     value: int = dataclasses.field(default=None, kw_only=True)
     n_units: int = dataclasses.field(default=1, kw_only=True)
     rrule_kwargs: dict = dataclasses.field(default_factory=dict, kw_only=True)
+    span: (int, int) = None
 
     def __post_init__(self):
         self.period = Period(self.unit, self.n_units)
@@ -284,64 +287,83 @@ class Repeating(Offset):
 
 # Defined as "meterological seasons"
 # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
-SPRING = Repeating(
-    unit=Unit.MONTH,
-    range=Unit.YEAR,
-    value=3,
-    n_units=3)
+@dataclasses.dataclass
+class Spring(Repeating):
+    unit: Unit = Unit.MONTH
+    range: Unit = Unit.YEAR
+    value: int = 3
+    n_units: int = 3
 
-SUMMER = Repeating(
-    unit=Unit.MONTH,
-    range=Unit.YEAR,
-    value=6,
-    n_units=3)
 
-FALL = AUTUMN = Repeating(
-    unit=Unit.MONTH,
-    range=Unit.YEAR,
-    value=9,
-    n_units=3)
+@dataclasses.dataclass
+class Summer(Repeating):
+    unit: Unit = Unit.MONTH
+    range: Unit = Unit.YEAR
+    value: int = 6
+    n_units: int = 3
 
-WINTER = Repeating(
-    unit=Unit.MONTH,
-    range=Unit.YEAR,
-    value=12,
-    n_units=3)
+
+@dataclasses.dataclass
+class Fall(Repeating):
+    unit: Unit = Unit.MONTH
+    range: Unit = Unit.YEAR
+    value: int = 9
+    n_units: int = 3
+
+
+@dataclasses.dataclass
+class Winter(Repeating):
+    unit: Unit = Unit.MONTH
+    range: Unit = Unit.YEAR
+    value: int = 12
+    n_units: int = 3
+
 
 # defined as used in forecasts
 # https://www.weather.gov/bgm/forecast_terms
-MORNING = Repeating(
-    unit=Unit.HOUR,
-    range=Unit.DAY,
-    value=6,
-    n_units=6)
+@dataclasses.dataclass
+class Morning(Repeating):
+    unit: Unit = Unit.HOUR
+    range: Unit = Unit.DAY
+    value: int = 6
+    n_units: int = 6
 
-NOON = Repeating(
-    unit=Unit.MINUTE,
-    rrule_kwargs=dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
 
-AFTERNOON = Repeating(
-    unit=Unit.HOUR,
-    range=Unit.DAY,
-    value=12,
-    n_units=6)
+@dataclasses.dataclass
+class Noon(Repeating):
+    unit: Unit = Unit.MINUTE
+    rrule_kwargs: dict = dataclasses.field(
+        default_factory=lambda: dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
 
-EVENING = Repeating(
-    unit=Unit.HOUR,
-    range=Unit.DAY,
-    value=18,
-    n_units=6)
 
-NIGHT = Repeating(
-    unit=Unit.HOUR,
-    range=Unit.DAY,
-    value=0,
-    n_units=6)
+@dataclasses.dataclass
+class Afternoon(Repeating):
+    unit: Unit = Unit.HOUR
+    range: Unit = Unit.DAY
+    value: int = 12
+    n_units: int = 6
+
+
+@dataclasses.dataclass
+class Evening(Repeating):
+    unit: Unit = Unit.HOUR
+    range: Unit = Unit.DAY
+    value: int = 18
+    n_units: int = 6
+
+
+@dataclasses.dataclass
+class Night(Repeating):
+    unit: Unit = Unit.HOUR
+    range: Unit = Unit.DAY
+    value: int = 0
+    n_units: int = 6
 
 
 @dataclasses.dataclass
 class Union(Offset):
     offsets: typing.Iterable[Offset]
+    span: (int, int) = None
 
     def __post_init__(self):
         self.unit = min(o.unit for o in self.offsets)
@@ -437,6 +459,7 @@ class Year(Interval):
     n_missing_digits: int = 0
     start: datetime.datetime = dataclasses.field(init=False)
     end: datetime.datetime = dataclasses.field(init=False)
+    span: (int, int) = None
 
     def __post_init__(self):
         duration_in_years = 10 ** self.n_missing_digits
@@ -452,6 +475,7 @@ class YearSuffix(Interval):
     n_missing_digits: int = 0
     start: datetime.datetime = dataclasses.field(init=False)
     end: datetime.datetime = dataclasses.field(init=False)
+    span: (int, int) = None
 
     def __post_init__(self):
         divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
@@ -471,6 +495,7 @@ class IntervalOp(Interval):
 @dataclasses.dataclass
 class Last(IntervalOp):
     interval_included: bool = False
+    span: (int, int) = None
 
     def __post_init__(self):
         start = self.interval.end if self.interval_included else self.interval.start
@@ -480,6 +505,7 @@ class Last(IntervalOp):
 @dataclasses.dataclass
 class Next(IntervalOp):
     interval_included: bool = False
+    span: (int, int) = None
 
     def __post_init__(self):
         end = self.interval.start if self.interval_included else self.interval.end
@@ -490,6 +516,7 @@ class Next(IntervalOp):
 class Before(IntervalOp):
     n: int = 1
     interval_included: bool = False
+    span: (int, int) = None
 
     def __post_init__(self):
         if isinstance(self.offset, (Repeating, Union, Intersection)):
@@ -515,6 +542,7 @@ class Before(IntervalOp):
 class After(IntervalOp):
     n: int = 1
     interval_included: bool = False
+    span: (int, int) = None
 
     def __post_init__(self):
         if isinstance(self.offset, (Repeating, Union, Intersection)):
@@ -542,6 +570,7 @@ class This(Interval):
     offset: Offset
     start: datetime.datetime = dataclasses.field(init=False)
     end: datetime.datetime = dataclasses.field(init=False)
+    span: (int, int) = None
 
     def __post_init__(self):
         if isinstance(self.offset, (Repeating, Union, Intersection)):
@@ -563,6 +592,7 @@ class Between(Interval):
     end_included: bool = False
     start: datetime.datetime = dataclasses.field(init=False)
     end: datetime.datetime = dataclasses.field(init=False)
+    span: (int, int) = None
 
     def __post_init__(self):
         self.start = self.start_interval.start if self.start_included else self.start_interval.end
@@ -577,6 +607,7 @@ class Between(Interval):
 class Nth(IntervalOp):
     index: int
     from_end: bool = False
+    span: (int, int) = None
 
     def __post_init__(self):
         offset = self.interval.end if self.from_end else self.interval.start
@@ -608,11 +639,13 @@ class _N(collections.abc.Iterable[Interval]):
 @dataclasses.dataclass
 class LastN(_N):
     base_class: type = Last
+    span: (int, int) = None
 
 
 @dataclasses.dataclass
 class NextN(_N):
     base_class: type = Next
+    span: (int, int) = None
 
 
 @dataclasses.dataclass
@@ -621,6 +654,7 @@ class NthN(collections.abc.Iterable[Interval]):
     offset: Offset
     index: int
     n: int
+    span: (int, int) = None
 
     def __iter__(self) -> typing.Iterator[Interval]:
         for index in range(self.index, self.index + self.n):
@@ -631,6 +665,7 @@ class NthN(collections.abc.Iterable[Interval]):
 class These(collections.abc.Iterable[Interval]):
     interval: Interval
     offset: Offset
+    span: (int, int) = None
 
     def __post_init__(self):
         if isinstance(self.offset, Repeating):
@@ -694,7 +729,7 @@ def from_xml(elem: ET.Element):
             case "Day-Of-Month":
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
             case "Part-Of-Day" | "Season-Of-Year":
-                obj = globals()[prop_type.upper()]
+                obj = globals()[prop_type]()
             case "After":
                 match prop_interval_type:
                     case "Link":
