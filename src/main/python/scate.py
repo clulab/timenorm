@@ -148,6 +148,19 @@ class Unit(enum.Enum):
         return interval
 
 
+# allow e.g., scate.DAY instead of scate.Unit.DAY
+globals().update(Unit.__members__)
+
+# reference commonly needed dateutil values
+MONDAY = dateutil.rrule.MO
+TUESDAY = dateutil.rrule.TU
+WEDNESDAY = dateutil.rrule.WE
+THURSDAY = dateutil.rrule.TH
+FRIDAY = dateutil.rrule.FR
+SATURDAY = dateutil.rrule.SA
+SUNDAY = dateutil.rrule.SU
+
+
 class Offset:
     unit: Unit
 

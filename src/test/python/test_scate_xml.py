@@ -89,8 +89,8 @@ def test_noon():
             </annotations>
         </data>""")
     y2000 = scate.Year(2000)
-    m11 = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=10)
-    d25 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=25)
+    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10)
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25)
     date = scate.This(y2000, scate.Intersection([m11, d25, scate.NOON]))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
@@ -155,8 +155,8 @@ def test_noon_super_interval():
             </annotations>
         </data>""")
     y2000 = scate.Year(2000)
-    m11 = scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=10)
-    d25 = scate.Repeating(scate.Unit.DAY, scate.Unit.MONTH, value=25)
+    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10)
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25)
     date = scate.This(scate.This(scate.This(y2000, m11), d25), scate.NOON)
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
@@ -214,7 +214,7 @@ def test_after_december_2017():
                 </entity>
             </annotations>
         </data>""")
-    ref_dec_2017 = scate.This(scate.Year(2017), scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=12))
+    ref_dec_2017 = scate.This(scate.Year(2017), scate.Repeating(scate.MONTH, scate.YEAR, value=12))
     ref_after_dec_2017 = scate.After(ref_dec_2017, None)
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [ref_dec_2017, ref_after_dec_2017]
