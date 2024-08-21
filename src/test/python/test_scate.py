@@ -406,6 +406,8 @@ def test_before():
            "2003-05-09T00:00:00 2003-05-10T00:00:00"
     assert scate.Before(interval, day, 20).isoformat() == "2002-03-02T00:00:00 2002-03-03T00:00:00"
 
+    assert scate.Before(interval, None).isoformat() == "... 2002-03-22T11:30:30"
+
 
 def test_after():
     year = scate.Period(scate.Unit.YEAR, 1)
@@ -438,6 +440,8 @@ def test_after():
     assert scate.After(interval, day, interval_included=True).isoformat() == \
            "2002-03-23T00:00:00 2002-03-24T00:00:00"
     assert scate.After(interval, day, 11).isoformat() == "2003-05-21T00:00:00 2003-05-22T00:00:00"
+
+    assert scate.After(interval, None).isoformat() == "2003-05-10T22:10:20 ..."
 
 
 def test_this():

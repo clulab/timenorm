@@ -36,7 +36,6 @@ def test_special_repeating():
         assert obj.span == (11, 15)
 
 
-
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>
@@ -171,3 +170,56 @@ def test_noon_super_interval():
     assert obj.interval.offset.span == (8, 10)
     assert obj.interval.interval.interval.span == (0, 4)
     assert obj.interval.interval.offset.span == (5, 7)
+
+
+def test_after_december_2017():
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>0@e@Doc9@gold</id>
+                    <span>0,5</span>
+                    <type>After</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Semantics>Interval-Not-Included</Semantics>
+                        <!-- comment -->
+                        <Interval-Type>Link</Interval-Type>
+                        <Interval>1@e@Doc9@gold</Interval>
+                        <Period></Period>
+                        <Repeating-Interval></Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>1@e@Doc9@gold</id>
+                    <span>6,14</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>December</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                        <Super-Interval>2@e@Doc9@gold</Super-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>2@e@Doc9@gold</id>
+                    <span>15,19</span>
+                    <type>Year</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>2017</Value>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    ref_dec_2017 = scate.This(scate.Year(2017), scate.Repeating(scate.Unit.MONTH, scate.Unit.YEAR, value=12))
+    ref_after_dec_2017 = scate.After(ref_dec_2017, None)
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [ref_dec_2017, ref_after_dec_2017]
+    [dec_2017, after_dec_2017] = objects
+    assert after_dec_2017.span == (0, 19)
+    assert dec_2017.span == after_dec_2017.interval.span == (6, 19)
+    assert dec_2017.interval.span == (15, 19)
+    assert dec_2017.offset.span == (6, 14)

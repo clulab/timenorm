@@ -14,7 +14,9 @@ class Interval:
     end: datetime.datetime
 
     def isoformat(self):
-        return f"{self.start.isoformat()} {self.end.isoformat()}"
+        start_str = "..." if self.start is None else self.start.isoformat()
+        end_str = "..." if self.end is None else self.end.isoformat()
+        return f"{start_str} {end_str}"
 
     def __len__(self):
         return 2
@@ -449,8 +451,8 @@ class YearSuffix(Interval):
 class IntervalOp(Interval):
     interval: Interval
     offset: Offset
-    start: datetime.datetime = dataclasses.field(init=False)
-    end: datetime.datetime = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False)
+    end: datetime.datetime | None = dataclasses.field(init=False)
 
 
 @dataclasses.dataclass
@@ -489,6 +491,9 @@ class Before(IntervalOp):
             for i in range(self.n):
                 self.start = (self.start - self.offset).start
                 self.end = (self.end - self.offset).start
+        elif self.offset is None:
+                self.start = None
+                self.end = self.interval.start
         else:
             raise NotImplementedError
 
@@ -511,6 +516,9 @@ class After(IntervalOp):
             for i in range(self.n):
                 self.start = (self.start + self.offset).end
                 self.end = (self.end + self.offset).end
+        elif self.offset is None:
+            self.start = self.interval.end
+            self.end = None
         else:
             raise NotImplementedError
 
@@ -658,8 +666,12 @@ def from_xml(elem: ET.Element):
         entity_type = entity.findtext("type")
         prop_value = entity.findtext("properties/Value")
         prop_type = entity.findtext("properties/Type")
+        prop_interval_type = entity.findtext("properties/Interval-Type")
+        prop_interval = entity.findtext("properties/Interval")
+        prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
 
         # create objects from <entity> elements
+        spans = []
         match entity_type:
             case "Year":
                 obj = Year(int(prop_value))
@@ -670,17 +682,30 @@ def from_xml(elem: ET.Element):
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type.upper()]
+            case "After":
+                match prop_interval_type:
+                    case "Link":
+                        interval = id_to_obj[prop_interval]
+                    case other:
+                        raise NotImplementedError(other)
+                spans.append(interval.span)
+                if prop_offset:
+                    offset = id_to_obj[prop_offset]
+                    spans.append(offset.span)
+                else:
+                    offset = None
+                obj = After(interval, offset)
             case other:
                 raise NotImplementedError(other)
 
         # add spans to objects
-        obj.span = tuple(int(x) for x in entity.findtext("span").split(","))
+        obj.span = obj.trigger_span = tuple(int(x) for x in entity.findtext("span").split(","))
+        spans.append(obj.span)
 
         # create additional objects as necessary for sub-intervals
         if sub_interval_id:
             sub_interval = id_to_obj.pop(sub_interval_id)
-            start, end = obj.span
-            sub_start, sub_end = sub_interval.span
+            spans.append(sub_interval.span)
             match entity_type:
                 case "Year":
                     obj = This(obj, sub_interval)
@@ -688,13 +713,11 @@ def from_xml(elem: ET.Element):
                     obj = Intersection([obj, sub_interval])
                 case other:
                     raise NotImplementedError(other)
-            obj.span = (min(start, sub_start), max(end, sub_end))
 
-        # convert super-intervals to sub-intervals and keep track of them
+        # create additional objects as necessary for super-intervals
         if super_interval_id:
             super_interval = id_to_obj.pop(super_interval_id)
-            start, end = obj.span
-            super_start, super_end = super_interval.span
+            spans.append(super_interval.span)
             match super_interval:
                 case Year() | This():
                     obj = This(super_interval, obj)
@@ -702,7 +725,8 @@ def from_xml(elem: ET.Element):
                     obj = Intersection([super_interval, obj])
                 case other:
                     raise NotImplementedError(other)
-            obj.span = (min(start, super_start), max(end, super_end))
+
+        obj.span = (min(start for start, _ in spans), max(end for _, end in spans))
 
         # add the object to the mapping
         id_to_obj[entity_id] = obj
