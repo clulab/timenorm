@@ -685,11 +685,14 @@ class These(collections.abc.Iterable[Interval]):
             interval = interval.end + self.offset
 
 
-def from_xml(elem: ET.Element):
+def from_xml(elem: ET.Element, doc_time: Interval = None):
     id_to_entity = {}
     id_to_ids = {}
     for entity in elem.findall(".//entity"):
         entity_id = entity.findtext("id")
+        if entity_id in id_to_entity:
+            other = id_to_entity[entity_id]
+            raise ValueError(f"duplicate id {entity_id} on {ET.tostring(entity)} and {ET.tostring(other)}")
         id_to_entity[entity_id] = entity
         id_to_ids[entity_id] = set()
         for prop in entity.find("properties"):
@@ -714,12 +717,34 @@ def from_xml(elem: ET.Element):
         entity_type = entity.findtext("type")
         prop_value = entity.findtext("properties/Value")
         prop_type = entity.findtext("properties/Type")
+
+        # for X(interval, offset) operators, find interval object and offset object
+        spans = []
         prop_interval_type = entity.findtext("properties/Interval-Type")
         prop_interval = entity.findtext("properties/Interval")
         prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
+        match entity_type:
+            case "Last" | "Next" | "Before" | "After" | "This" | "Nth" | "LastN" | "NextN" | "NthN" | "These":
+                match prop_interval_type:
+                    case "Link":
+                        interval = id_to_obj[prop_interval]
+                    case "DocTime":
+                        if doc_time is None:
+                            raise ValueError(f"doc_time required for {ET.tostring(entity)}")
+                        interval = doc_time
+                    case other:
+                        raise NotImplementedError(other)
+                if interval.__class__ is not Interval:  # raw Interval has no span attribute
+                    spans.append(interval.span)
+                if prop_offset:
+                    offset = id_to_obj.get(prop_offset)
+                    spans.append(offset.span)
+                else:
+                    offset = None
+            case _:
+                interval = offset = None
 
         # create objects from <entity> elements
-        spans = []
         match entity_type:
             case "Year":
                 obj = Year(int(prop_value))
@@ -730,18 +755,13 @@ def from_xml(elem: ET.Element):
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
+            case "Last":
+                obj = Last(interval, offset)
+            case "Next":
+                obj = Next(interval, offset)
+            case "Before":
+                obj = Before(interval, offset)
             case "After":
-                match prop_interval_type:
-                    case "Link":
-                        interval = id_to_obj[prop_interval]
-                    case other:
-                        raise NotImplementedError(other)
-                spans.append(interval.span)
-                if prop_offset:
-                    offset = id_to_obj[prop_offset]
-                    spans.append(offset.span)
-                else:
-                    offset = None
                 obj = After(interval, offset)
             case other:
                 raise NotImplementedError(other)

@@ -211,3 +211,55 @@ def test_after_december_2017():
         "2017-12-01T00:00:00 2018-01-01T00:00:00",
         "2018-01-01T00:00:00 ..."
     ]
+
+
+def test_last_december_25():
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>0@e@Doc9@gold</id>
+                    <span>0,4</span>
+                    <type>Last</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Semantics>Interval-Not-Included</Semantics>
+                        <Interval-Type>DocTime</Interval-Type>
+                        <Interval></Interval>
+                        <Period></Period>
+                        <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>1@e@Doc9@gold</id>
+                    <span>5,13</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>December</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>2@e@Doc9@gold</id>
+                    <span>14,16</span>
+                    <type>Day-Of-Month</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>25</Value>
+                        <Modifier></Modifier>
+                        <Super-Interval>1@e@Doc9@gold</Super-Interval>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    doc_time = scate.Interval.of(2018, 2, 6, 22, 19)
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(14, 16))
+    m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(5, 13))
+    m12d25 = scate.Intersection([m12, d25])
+    last = scate.Last(doc_time, m12d25, span=(0, 16))
+    objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
+    assert objects == [m12d25, last]
+    assert [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects] == \
+           [None, "2017-12-25T00:00:00 2017-12-26T00:00:00"]
