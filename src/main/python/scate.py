@@ -381,6 +381,7 @@ class Union(Offset):
 @dataclasses.dataclass
 class Intersection(Offset):
     offsets: typing.Iterable[Repeating]
+    span: (int, int) = None
 
     def __post_init__(self):
         if not self.offsets:

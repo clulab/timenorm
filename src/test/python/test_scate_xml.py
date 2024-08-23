@@ -191,7 +191,8 @@ def test_noon():
     m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10, span=(5, 7))
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(8, 10))
     noon = scate.Noon(span=(11, 15))
-    date = scate.This(y2000, scate.Intersection([m11, d25, noon]), span=(0, 15))
+    m11d25noon = scate.Intersection([m11, d25, noon], span=(5, 15))
+    date = scate.This(y2000, m11d25noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
     assert _isoformat(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
@@ -358,8 +359,94 @@ def test_last_december_25():
     doc_time = scate.Interval.of(2018, 2, 6, 22, 19)
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(14, 16))
     m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(5, 13))
-    m12d25 = scate.Intersection([m12, d25])
-    last = scate.Last(doc_time, m12d25, span=(0, 16))
+    m12d25 = scate.Intersection([m12, d25], span=(5, 16))
+    op = scate.Last(doc_time, m12d25, span=(0, 16))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
-    assert objects == [m12d25, last]
+    assert objects == [m12d25, op]
     assert _isoformat(objects) == [None, "2017-12-25T00:00:00 2017-12-26T00:00:00"]
+
+
+def test_this_december_25():
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>0@e@Doc9@gold</id>
+                    <span>0,4</span>
+                    <type>This</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Interval-Type>DocTime</Interval-Type>
+                        <Interval></Interval>
+                        <Period></Period>
+                        <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>1@e@Doc9@gold</id>
+                    <span>5,13</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>December</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>2@e@Doc9@gold</id>
+                    <span>14,16</span>
+                    <type>Day-Of-Month</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>25</Value>
+                        <Modifier></Modifier>
+                        <Super-Interval>1@e@Doc9@gold</Super-Interval>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    doc_time = scate.Interval.of(2018, 2, 6, 22, 19)
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(14, 16))
+    m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(5, 13))
+    m12d25 = scate.Intersection([m12, d25], span=(5, 16))
+    op = scate.This(doc_time, m12d25, span=(0, 16))
+    objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
+    assert objects == [m12d25, op]
+    assert _isoformat(objects) == [None, "2018-12-25T00:00:00 2018-12-26T00:00:00"]
+
+
+def test_november_17():
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>1@e@Doc9@gold</id>
+                    <span>0,8</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>November</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>2@e@Doc9@gold</id>
+                    <span>9,11</span>
+                    <type>Day-Of-Month</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>17</Value>
+                        <Modifier></Modifier>
+                        <Super-Interval>1@e@Doc9@gold</Super-Interval>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    d25 = scate.Repeating(scate.DAY, scate.MONTH, value=17, span=(9, 11))
+    m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=11, span=(0, 8))
+    m12d25 = scate.Intersection([m11, d25], span=(0, 11))
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [m12d25]
+    assert _isoformat(objects) == [None]
