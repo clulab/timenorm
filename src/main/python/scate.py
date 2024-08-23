@@ -724,7 +724,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
         prop_interval = entity.findtext("properties/Interval")
         prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
         match entity_type:
-            case "Last" | "Next" | "Before" | "After" | "This" | "Nth" | "LastN" | "NextN" | "NthN" | "These":
+            case "Last" | "Next" | "Before" | "After" | "This" | "NthFromStart" | "NthFromEnd":
                 match prop_interval_type:
                     case "Link":
                         interval = id_to_obj[prop_interval]
@@ -753,6 +753,9 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
             case "Day-Of-Month":
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
+            case "Day-Of-Week":
+                day_int = globals()[prop_type.upper()]
+                obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
             case "Last":
@@ -763,6 +766,12 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 obj = Before(interval, offset)
             case "After":
                 obj = After(interval, offset)
+            case "This":
+                obj = This(interval, offset)
+            case "NthFromEnd":
+                obj = Nth(interval, offset, index=int(prop_value), from_end=True)
+            case "NthFromStart":
+                obj = Nth(interval, offset, index=int(prop_value), from_end=False)
             case other:
                 raise NotImplementedError(other)
 

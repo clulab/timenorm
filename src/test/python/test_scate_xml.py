@@ -34,6 +34,104 @@ def test_special_repeating():
         assert objs == [cls(span=(11, 15))]
 
 
+def test_interval_offset_operators():
+    for xml_type, cls, iso in [
+            ("After", scate.After, "2025-02-01T00:00:00 2025-03-01T00:00:00"),
+            ("Before", scate.Before, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
+            ("Last", scate.Last, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
+            ("Next", scate.Next, "2025-02-01T00:00:00 2025-03-01T00:00:00"),
+            ("This", scate.This, "2024-02-01T00:00:00 2024-03-01T00:00:00")]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>0@e@Doc9@gold</id>
+                        <span>1,5</span>
+                        <type>{xml_type}</type>
+                        <parentsType>Operator</parentsType>
+                        <properties>
+                            <Interval-Type>DocTime</Interval-Type>
+                            <Interval></Interval>
+                            <Period></Period>
+                            <Repeating-Interval>1@e@Doc9@gold</Repeating-Interval>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>1@e@Doc9@gold</id>
+                        <span>6,14</span>
+                        <type>Month-Of-Year</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Type>February</Type>
+                            <Number></Number>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        doc_time = scate.Interval.of(2024, 8, 23)
+        feb = scate.Repeating(scate.MONTH, scate.YEAR, value=2, span=(6, 14))
+        op = cls(doc_time, feb, span=(1, 14))
+        objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
+        assert objects == [feb, op]
+        assert [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects] == \
+               [None, iso]
+
+
+def test_nth_operators():
+    for xml_type, from_end, iso in [
+            ("NthFromEnd", True, "2024-12-12T00:00:00 2024-12-13T00:00:00"),     # 3rd from last Thursday in 2024
+            ("NthFromStart", False, "2024-01-18T00:00:00 2024-01-19T00:00:00"),  # 3rd Thursday in 2024
+    ]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>0@e@Doc9@gold</id>
+                        <span>1,5</span>
+                        <type>{xml_type}</type>
+                        <parentsType>Operator</parentsType>
+                        <properties>
+                            <Interval-Type>Link</Interval-Type>
+                            <Interval>2@e@Doc9@gold</Interval>
+                            <Value>3</Value>
+                            <Period></Period>
+                            <Repeating-Interval>1@e@Doc9@gold</Repeating-Interval>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>2@e@Doc9@gold</id>
+                        <span>15,19</span>
+                        <type>Year</type>
+                        <parentsType>Interval</parentsType>
+                        <properties>
+                            <Value>2024</Value>
+                            <Sub-Interval></Sub-Interval>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>1@e@Doc9@gold</id>
+                        <span>6,14</span>
+                        <type>Day-Of-Week</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Type>Thursday</Type>
+                            <Number></Number>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        y2024 = scate.Year(2024, span=(15, 19))
+        thu = scate.Repeating(scate.DAY, scate.WEEK, value=scate.THURSDAY, span=(6, 14))
+        nth = scate.Nth(y2024, thu, index=3, from_end=from_end, span=(1, 19))
+        objects = scate.from_xml(ET.fromstring(xml_str))
+        assert objects == [y2024, thu, nth]
+        assert [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects] == \
+               [y2024.isoformat(), None, iso]
+
+
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>
