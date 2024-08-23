@@ -3,6 +3,10 @@ import inspect
 import xml.etree.ElementTree as ET
 
 
+def _isoformat(objects: list[scate.Interval | scate.Offset]):
+    return [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects]
+
+
 def test_special_repeating():
     for xml_type, xml_name, cls in [
             ("Season-Of-Year", "Spring", scate.Spring),
@@ -359,7 +363,3 @@ def test_last_december_25():
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
     assert objects == [m12d25, last]
     assert _isoformat(objects) == [None, "2017-12-25T00:00:00 2017-12-26T00:00:00"]
-
-
-def _isoformat(objects: list[scate.Interval | scate.Offset]):
-    return [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects]
