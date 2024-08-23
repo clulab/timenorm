@@ -30,8 +30,9 @@ def test_special_repeating():
                     </entity>
                 </annotations>
             </data>""")
-        objs = scate.from_xml(ET.fromstring(xml_str))
-        assert objs == [cls(span=(11, 15))]
+        objects = scate.from_xml(ET.fromstring(xml_str))
+        assert objects == [cls(span=(11, 15))]
+        assert _isoformat(objects) == [None]
 
 
 def test_interval_offset_operators():
@@ -74,8 +75,7 @@ def test_interval_offset_operators():
         op = cls(doc_time, feb, span=(1, 14))
         objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
         assert objects == [feb, op]
-        assert [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects] == \
-               [None, iso]
+        assert _isoformat(objects) == [None, iso]
 
 
 def test_nth_operators():
@@ -128,8 +128,7 @@ def test_nth_operators():
         nth = scate.Nth(y2024, thu, index=3, from_end=from_end, span=(1, 19))
         objects = scate.from_xml(ET.fromstring(xml_str))
         assert objects == [y2024, thu, nth]
-        assert [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects] == \
-               [y2024.isoformat(), None, iso]
+        assert _isoformat(objects) == [y2024.isoformat(), None, iso]
 
 
 def test_noon():
@@ -191,7 +190,7 @@ def test_noon():
     date = scate.This(y2000, scate.Intersection([m11, d25, noon]), span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
-    assert [o.isoformat() for o in objects] == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
+    assert _isoformat(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
 
 
 def test_noon_super_interval():
@@ -254,7 +253,7 @@ def test_noon_super_interval():
     date = scate.This(this_y2000_m11_d25, noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
-    assert [o.isoformat() for o in objects] == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
+    assert _isoformat(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
 
 
 def test_after_december_2017():
@@ -305,7 +304,7 @@ def test_after_december_2017():
     ref_after_dec_2017 = scate.After(ref_dec_2017, None, span=(0, 19))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [ref_dec_2017, ref_after_dec_2017]
-    assert [o.isoformat() for o in objects] == [
+    assert _isoformat(objects) == [
         "2017-12-01T00:00:00 2018-01-01T00:00:00",
         "2018-01-01T00:00:00 ..."
     ]
@@ -359,5 +358,8 @@ def test_last_december_25():
     last = scate.Last(doc_time, m12d25, span=(0, 16))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
     assert objects == [m12d25, last]
-    assert [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects] == \
-           [None, "2017-12-25T00:00:00 2017-12-26T00:00:00"]
+    assert _isoformat(objects) == [None, "2017-12-25T00:00:00 2017-12-26T00:00:00"]
+
+
+def _isoformat(objects: list[scate.Interval | scate.Offset]):
+    return [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects]
