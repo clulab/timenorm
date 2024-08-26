@@ -509,7 +509,13 @@ class Next(IntervalOp):
     span: (int, int) = None
 
     def __post_init__(self):
-        end = self.interval.start if self.interval_included else self.interval.end
+        if self.interval_included:
+            end = self.interval.start
+            # to allow repeating intervals to start with our start, subtract a tiny amount
+            if isinstance(self.offset, (Repeating, Union, Intersection)):
+                end -= Unit.MICROSECOND.relativedelta(1)
+        else:
+            end = self.interval.end
         self.start, self.end = end + self.offset
 
 
@@ -547,7 +553,8 @@ class After(IntervalOp):
 
     def __post_init__(self):
         if isinstance(self.offset, (Repeating, Union, Intersection)):
-            end = self.interval.start if self.interval_included else self.interval.end
+            # to allow repeating intervals to overlap start with our start, subtract a tiny amount
+            end = self.interval.start - Unit.MICROSECOND.relativedelta(1) if self.interval_included else self.interval.end
             for i in range(self.n - 1):
                 end = (end + self.offset).end
             self.start, self.end = end + self.offset
@@ -775,14 +782,11 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
-            case "Last":
-                obj = Last(get_interval("Interval"), get_offset())
-            case "Next":
-                obj = Next(get_interval("Interval"), get_offset())
-            case "Before":
-                obj = Before(get_interval("Interval"), get_offset())
-            case "After":
-                obj = After(get_interval("Interval"), get_offset())
+            case "Last" | "Next" | "Before" | "After":
+                obj = globals()[entity_type](
+                    interval=get_interval("Interval"),
+                    offset=get_offset(),
+                    interval_included=get_included("Semantics"))
             case "This":
                 obj = This(get_interval("Interval"), get_offset())
             case "NthFromEnd":

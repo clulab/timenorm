@@ -40,12 +40,18 @@ def test_special_repeating():
 
 
 def test_interval_offset_operators():
-    for xml_type, cls, iso in [
-            ("After", scate.After, "2025-02-01T00:00:00 2025-03-01T00:00:00"),
-            ("Before", scate.Before, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
-            ("Last", scate.Last, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
-            ("Next", scate.Next, "2025-02-01T00:00:00 2025-03-01T00:00:00"),
-            ("This", scate.This, "2024-02-01T00:00:00 2024-03-01T00:00:00")]:
+    doc_time = scate.Interval.of(2024, 2)
+    for xml_type, cls, interval_included, iso in [
+            ("After", scate.After, False, "2025-02-01T00:00:00 2025-03-01T00:00:00"),
+            ("After", scate.After, True, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
+            ("Before", scate.Before, False, "2023-02-01T00:00:00 2023-03-01T00:00:00"),
+            ("Before", scate.Before, True, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
+            ("Last", scate.Last, False, "2023-02-01T00:00:00 2023-03-01T00:00:00"),
+            ("Last", scate.Last, True, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
+            ("Next", scate.Next, False, "2025-02-01T00:00:00 2025-03-01T00:00:00"),
+            ("Next", scate.Next, True, "2024-02-01T00:00:00 2024-03-01T00:00:00"),
+            ("This", scate.This, None, "2024-02-01T00:00:00 2024-03-01T00:00:00")]:
+        semantics = "Interval-Included" if interval_included else "Interval-Not-Included"
         xml_str = inspect.cleandoc(f"""
             <data>
                 <annotations>
@@ -55,6 +61,7 @@ def test_interval_offset_operators():
                         <type>{xml_type}</type>
                         <parentsType>Operator</parentsType>
                         <properties>
+                            <Semantics>{semantics}</Semantics>
                             <Interval-Type>DocTime</Interval-Type>
                             <Interval></Interval>
                             <Period></Period>
@@ -74,12 +81,12 @@ def test_interval_offset_operators():
                     </entity>
                 </annotations>
             </data>""")
-        doc_time = scate.Interval.of(2024, 8, 23)
         feb = scate.Repeating(scate.MONTH, scate.YEAR, value=2, span=(6, 14))
-        op = cls(doc_time, feb, span=(1, 14))
+        kwargs = {} if interval_included is None else dict(interval_included=interval_included)
+        op = cls(doc_time, feb, span=(1, 14), **kwargs)
         objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
         assert objects == [feb, op]
-        assert _isoformat(objects) == [None, iso]
+        assert _isoformat(objects) == [None, iso], f"{xml_type}(interval_included={interval_included})"
 
 
 def test_nth_operators():
