@@ -718,32 +718,48 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
         entity_type = entity.findtext("type")
         prop_value = entity.findtext("properties/Value")
         prop_type = entity.findtext("properties/Type")
-
-        # for X(interval, offset) operators, find interval object and offset object
         spans = []
-        prop_interval_type = entity.findtext("properties/Interval-Type")
-        prop_interval = entity.findtext("properties/Interval")
-        prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
-        match entity_type:
-            case "Last" | "Next" | "Before" | "After" | "This" | "NthFromStart" | "NthFromEnd":
-                match prop_interval_type:
-                    case "Link":
-                        interval = id_to_obj[prop_interval]
-                    case "DocTime":
-                        if doc_time is None:
-                            raise ValueError(f"doc_time required for {ET.tostring(entity)}")
-                        interval = doc_time
-                    case other:
-                        raise NotImplementedError(other)
-                if interval.__class__ is not Interval:  # raw Interval has no span attribute
-                    spans.append(interval.span)
-                if prop_offset:
-                    offset = id_to_obj.get(prop_offset)
-                    spans.append(offset.span)
-                else:
-                    offset = None
-            case _:
-                interval = offset = None
+
+        # helper for managing the multiple interval properties
+        def get_interval(prop_name):
+            prop_interval_type = entity.findtext(f"properties/{prop_name}-Type")
+            prop_interval = entity.findtext(f"properties/{prop_name}")
+            match prop_interval_type:
+                case "Link":
+                    interval = id_to_obj[prop_interval]
+                    if interval.__class__ is not Interval:  # raw Interval has no span attribute
+                        spans.append(interval.span)
+                case "DocTime":
+                    if doc_time is None:
+                        raise ValueError(f"doc_time required for {ET.tostring(entity)}")
+                    interval = doc_time
+                case other_type:
+                    raise NotImplementedError(other_type)
+            return interval
+
+        # helper for managing the multiple offset properties
+        def get_offset():
+            prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
+            if prop_offset:
+                offset = id_to_obj[prop_offset]
+                spans.append(offset.span)
+            else:
+                offset = None
+            return offset
+
+        # helper for managing Included properties
+        def get_included(prop_name):
+            match entity.findtext(f"properties/{prop_name}"):
+                case "Included":
+                    return True
+                case "Not-Included":
+                    return False
+                case "Interval-Included":
+                    return True
+                case "Interval-Not-Included":
+                    return False
+                case other_type:
+                    raise NotImplementedError(other_type)
 
         # create objects from <entity> elements
         match entity_type:
@@ -760,19 +776,26 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
             case "Last":
-                obj = Last(interval, offset)
+                obj = Last(get_interval("Interval"), get_offset())
             case "Next":
-                obj = Next(interval, offset)
+                obj = Next(get_interval("Interval"), get_offset())
             case "Before":
-                obj = Before(interval, offset)
+                obj = Before(get_interval("Interval"), get_offset())
             case "After":
-                obj = After(interval, offset)
+                obj = After(get_interval("Interval"), get_offset())
             case "This":
-                obj = This(interval, offset)
+                obj = This(get_interval("Interval"), get_offset())
             case "NthFromEnd":
-                obj = Nth(interval, offset, index=int(prop_value), from_end=True)
+                obj = Nth(get_interval("Interval"), get_offset(),
+                          index=int(prop_value), from_end=True)
             case "NthFromStart":
-                obj = Nth(interval, offset, index=int(prop_value), from_end=False)
+                obj = Nth(get_interval("Interval"), get_offset(),
+                          index=int(prop_value), from_end=False)
+            case "Between":
+                obj = Between(get_interval("Start-Interval"),
+                              get_interval("End-Interval"),
+                              start_included=get_included("Start-Included"),
+                              end_included=get_included("End-Included"))
             case other:
                 raise NotImplementedError(other)
 

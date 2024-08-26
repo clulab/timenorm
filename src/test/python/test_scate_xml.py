@@ -450,3 +450,82 @@ def test_november_17():
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [m12d25]
     assert _isoformat(objects) == [None]
+
+
+def test_december_2017_to_january_2018():
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>1@e@Doc9@gold</id>
+                    <span>0,8</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>December</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                        <Super-Interval>2@e@Doc9@gold</Super-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>2@e@Doc9@gold</id>
+                    <span>9,13</span>
+                    <type>Year</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>2017</Value>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>3@e@Doc9@gold</id>
+                    <span>14,16</span>
+                    <type>Between</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Start-Interval-Type>Link</Start-Interval-Type>
+                        <Start-Interval>1@e@Doc9@gold</Start-Interval>
+                        <Start-Included>Included</Start-Included>
+                        <End-Interval-Type>Link</End-Interval-Type>
+                        <End-Interval>4@e@Doc9@gold</End-Interval>
+                        <End-Included>Included</End-Included>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>4@e@Doc9@gold</id>
+                    <span>17,24</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>January</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                        <Super-Interval>5@e@Doc9@gold</Super-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>5@e@Doc9@gold</id>
+                    <span>25,29</span>
+                    <type>Year</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>2018</Value>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(0, 8))
+    y2017 = scate.Year(2017, span=(9, 13))
+    m12y2017 = scate.This(y2017, m12, span=(0, 13))
+    m01 = scate.Repeating(scate.MONTH, scate.YEAR, value=1, span=(17, 24))
+    y2018 = scate.Year(2018, span=(25, 29))
+    m01y2018 = scate.This(y2018, m01, span=(17, 29))
+    between = scate.Between(m12y2017, m01y2018, start_included=True, end_included=True, span=(0, 29))
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [m12y2017, m01y2018, between]
+    assert _isoformat(objects) == [
+        "2017-12-01T00:00:00 2018-01-01T00:00:00",
+        "2018-01-01T00:00:00 2018-02-01T00:00:00",
+        "2017-12-01T00:00:00 2018-02-01T00:00:00"]
