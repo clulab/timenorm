@@ -1,4 +1,4 @@
-import collections.abc
+import collections
 import dataclasses
 import datetime
 import dateutil.relativedelta
@@ -695,27 +695,29 @@ class These(collections.abc.Iterable[Interval]):
 
 def from_xml(elem: ET.Element, doc_time: Interval = None):
     id_to_entity = {}
-    id_to_ids = {}
+    id_to_children = {}
+    id_to_n_parents = collections.Counter()
     for entity in elem.findall(".//entity"):
         entity_id = entity.findtext("id")
         if entity_id in id_to_entity:
             other = id_to_entity[entity_id]
             raise ValueError(f"duplicate id {entity_id} on {ET.tostring(entity)} and {ET.tostring(other)}")
         id_to_entity[entity_id] = entity
-        id_to_ids[entity_id] = set()
+        id_to_children[entity_id] = set()
         for prop in entity.find("properties"):
             if prop.text and '@' in prop.text:
-                id_to_ids[entity_id].add(prop.text)
+                id_to_children[entity_id].add(prop.text)
+                id_to_n_parents[prop.text] += 1
 
     # topological sort
     sorted_ids = {}
-    while id_to_ids:
-        for key in list(id_to_ids):
-            if not id_to_ids[key]:
-                id_to_ids.pop(key)
+    while id_to_children:
+        for key in list(id_to_children):
+            if not id_to_children[key]:
+                id_to_children.pop(key)
                 sorted_ids[key] = True
-        for key, values in id_to_ids.items():
-            id_to_ids[key] -= sorted_ids.keys()
+        for key, values in id_to_children.items():
+            id_to_children[key] -= sorted_ids.keys()
 
     id_to_obj = {}
     for entity_id in sorted_ids:
@@ -727,15 +729,23 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
         prop_type = entity.findtext("properties/Type")
         spans = []
 
+        # helper for managing access to id_to_obj
+        def pop(obj_id):
+            obj = id_to_obj[obj_id]
+            id_to_n_parents[obj_id] -= 1
+            if not id_to_n_parents[obj_id]:
+                id_to_obj.pop(obj_id)
+            if obj.__class__ is not Interval:  # raw Interval has no span attribute
+                spans.append(obj.span)
+            return obj
+
         # helper for managing the multiple interval properties
         def get_interval(prop_name):
             prop_interval_type = entity.findtext(f"properties/{prop_name}-Type")
             prop_interval = entity.findtext(f"properties/{prop_name}")
             match prop_interval_type:
                 case "Link":
-                    interval = id_to_obj[prop_interval]
-                    if interval.__class__ is not Interval:  # raw Interval has no span attribute
-                        spans.append(interval.span)
+                    interval = pop(prop_interval)
                 case "DocTime":
                     if doc_time is None:
                         raise ValueError(f"doc_time required for {ET.tostring(entity)}")
@@ -748,8 +758,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
         def get_offset():
             prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
             if prop_offset:
-                offset = id_to_obj[prop_offset]
-                spans.append(offset.span)
+                offset = pop(prop_offset)
             else:
                 offset = None
             return offset
@@ -782,6 +791,9 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
+            case "Union":
+                id_elems = entity.findall("properties/Repeating-Intervals")
+                obj = Union([pop(id_elem.text) for id_elem in id_elems])
             case "Last" | "Next" | "Before" | "After":
                 obj = globals()[entity_type](
                     interval=get_interval("Interval"),
@@ -809,8 +821,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
 
         # create additional objects as necessary for sub-intervals
         if sub_interval_id:
-            sub_interval = id_to_obj.pop(sub_interval_id)
-            spans.append(sub_interval.span)
+            sub_interval = pop(sub_interval_id)
             match entity_type:
                 case "Year":
                     obj = This(obj, sub_interval)
@@ -821,8 +832,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
 
         # create additional objects as necessary for super-intervals
         if super_interval_id:
-            super_interval = id_to_obj.pop(super_interval_id)
-            spans.append(super_interval.span)
+            super_interval = pop(super_interval_id)
             match super_interval:
                 case Year() | This():
                     obj = This(super_interval, obj)
