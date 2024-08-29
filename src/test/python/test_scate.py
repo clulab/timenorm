@@ -95,6 +95,11 @@ def test_repeating_unit():
     interval = scate.Interval.of(2013, 1, 8)
     assert (interval - week).isoformat() == "2012-12-31T00:00:00 2013-01-07T00:00:00"
 
+    interval = scate.Interval.of(2013, 1, 8, 12)
+    days9 = scate.Repeating(scate.DAY, n_units=9)
+    assert (interval + days9).isoformat() == "2013-01-09T00:00:00 2013-01-18T00:00:00"
+    assert (interval - days9).isoformat() == "2012-12-30T00:00:00 2013-01-08T00:00:00"
+
 
 def test_repeating_field():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
@@ -348,8 +353,13 @@ def test_n():
     assert [x.isoformat() for x in next_3_days_included] == \
            [f"2002-03-{d}T00:00:00 2002-03-{d+1}T00:00:00" for d in [23, 24, 25]]
 
+    # the first 9 months in 1997
     assert [x.isoformat() for x in scate.NthN(scate.Year(1997), month, index=1, n=9)] == \
-           [scate.Interval.of(1997, i + 1).isoformat() for i in range(9)]
+           [scate.Interval.of(1997, i).isoformat() for i in range(1, 10)]
+
+    # the third two days in 1997
+    assert [x.isoformat() for x in scate.NthN(scate.Year(1997), day, index=3, n=2)] == \
+           [scate.Interval.of(1997, 1, i).isoformat() for i in range(5, 7)]
 
 
 def test_next():

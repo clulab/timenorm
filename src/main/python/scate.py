@@ -1,6 +1,8 @@
+import abc
 import collections
 import dataclasses
 import datetime
+
 import dateutil.relativedelta
 import dateutil.rrule
 import enum
@@ -13,7 +15,7 @@ class Interval:
     start: datetime.datetime
     end: datetime.datetime
 
-    def isoformat(self):
+    def isoformat(self) -> str:
         start_str = "..." if self.start is None else self.start.isoformat()
         end_str = "..." if self.end is None else self.end.isoformat()
         return f"{start_str} {end_str}"
@@ -75,7 +77,7 @@ class Unit(enum.Enum):
         self._n = n
         self._relativedelta_name = relativedelta_name
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if self.__class__ is other.__class__:
             return self._n < other._n
         return NotImplemented
@@ -112,7 +114,7 @@ class Unit(enum.Enum):
             dt = datetime.datetime(dt.year // 100 * 100, 1, 1, 0, 0)
         return dt
 
-    def relativedelta(self, n):
+    def relativedelta(self, n) -> dateutil.relativedelta.relativedelta:
         if self._relativedelta_name is not None:
             return dateutil.relativedelta.relativedelta(**{self._relativedelta_name: n})
         elif self is Unit.CENTURY:
@@ -281,7 +283,7 @@ class Repeating(Offset):
         if self.rrule_kwargs:
             start = dateutil.rrule.rrule(dtstart=start, **self.rrule_kwargs).after(other)
         elif start < other:
-            start += self.period.unit.relativedelta(self.period.n)
+            start += self.period.unit.relativedelta(1)
         return start + self.period
 
 
@@ -619,6 +621,9 @@ class Nth(IntervalOp):
 
     def __post_init__(self):
         offset = self.interval.end if self.from_end else self.interval.start
+        # to allow repeating intervals to overlap start with our start, subtract a tiny amount
+        if isinstance(self.offset, (Repeating, Union, Intersection)) and not self.from_end:
+            offset -= Unit.MICROSECOND.relativedelta(1)
         for i in range(self.index - 1):
             offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
         self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
@@ -626,8 +631,14 @@ class Nth(IntervalOp):
             raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}")
 
 
+class Intervals(collections.abc.Iterable[Interval], abc.ABC):
+    def isoformats(self) -> collections.abc.Iterator[str]:
+        for interval in self:
+            yield interval.isoformat()
+
+
 @dataclasses.dataclass
-class _N(collections.abc.Iterable[Interval]):
+class _N(Intervals):
     interval: Interval
     offset: Offset
     n: int
@@ -657,16 +668,18 @@ class NextN(_N):
 
 
 @dataclasses.dataclass
-class NthN(collections.abc.Iterable[Interval]):
+class NthN(Intervals):
     interval: Interval
     offset: Offset
     index: int
     n: int
+    from_end: bool = False
     span: (int, int) = None
 
     def __iter__(self) -> typing.Iterator[Interval]:
-        for index in range(self.index, self.index + self.n):
-            yield Nth(self.interval, self.offset, index)
+        start = 1 + (self.index - 1) * self.n
+        for index in range(start, start + self.n):
+            yield Nth(self.interval, self.offset, index, from_end=self.from_end)
 
 
 @dataclasses.dataclass
@@ -694,6 +707,13 @@ class These(collections.abc.Iterable[Interval]):
 
 
 def from_xml(elem: ET.Element, doc_time: Interval = None):
+
+    @dataclasses.dataclass
+    class NOffset:
+        n: int | float
+        offset: Offset = None
+        span: (int, int) = None
+
     id_to_entity = {}
     id_to_children = {}
     id_to_n_parents = collections.Counter()
@@ -727,10 +747,11 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
         entity_type = entity.findtext("type")
         prop_value = entity.findtext("properties/Value")
         prop_type = entity.findtext("properties/Type")
+        prop_number = entity.findtext("properties/Number")
         spans = []
 
         # helper for managing access to id_to_obj
-        def pop(obj_id):
+        def pop(obj_id: str) -> Interval | Offset:
             obj = id_to_obj[obj_id]
             id_to_n_parents[obj_id] -= 1
             if not id_to_n_parents[obj_id]:
@@ -740,7 +761,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
             return obj
 
         # helper for managing the multiple interval properties
-        def get_interval(prop_name):
+        def get_interval(prop_name: str) -> Interval:
             prop_interval_type = entity.findtext(f"properties/{prop_name}-Type")
             prop_interval = entity.findtext(f"properties/{prop_name}")
             match prop_interval_type:
@@ -755,7 +776,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
             return interval
 
         # helper for managing the multiple offset properties
-        def get_offset():
+        def get_offset() -> Offset:
             prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
             if prop_offset:
                 offset = pop(prop_offset)
@@ -764,7 +785,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
             return offset
 
         # helper for managing Included properties
-        def get_included(prop_name):
+        def get_included(prop_name: str) -> bool:
             match entity.findtext(f"properties/{prop_name}"):
                 case "Included":
                     return True
@@ -791,33 +812,54 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
+            case "Calendar-Interval":
+                obj = Repeating(Unit.__members__[prop_type.upper()])
             case "Union":
                 id_elems = entity.findall("properties/Repeating-Intervals")
                 obj = Union([pop(id_elem.text) for id_elem in id_elems])
-            case "Last" | "Next" | "Before" | "After":
-                obj = globals()[entity_type](
-                    interval=get_interval("Interval"),
-                    offset=get_offset(),
-                    interval_included=get_included("Semantics"))
+            case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":
+                cls_name = "Nth" if entity_type.startswith("Nth") else entity_type
+                interval = get_interval("Interval")
+                offset = get_offset()
+                kwargs = {}
+                match cls_name:
+                    case "Last" | "Next" | "Before" | "After":
+                        kwargs["interval_included"] = get_included("Semantics")
+                    case "Nth":
+                        kwargs["index"] = int(prop_value)
+                        kwargs["from_end"] = entity_type == "NthFromEnd"
+                if isinstance(offset, NOffset):
+                    kwargs["n"] = offset.n
+                    cls_name += "N"
+                    offset = offset.offset
+                obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
             case "This":
                 obj = This(get_interval("Interval"), get_offset())
-            case "NthFromEnd":
-                obj = Nth(get_interval("Interval"), get_offset(),
-                          index=int(prop_value), from_end=True)
-            case "NthFromStart":
-                obj = Nth(get_interval("Interval"), get_offset(),
-                          index=int(prop_value), from_end=False)
             case "Between":
                 obj = Between(get_interval("Start-Interval"),
                               get_interval("End-Interval"),
                               start_included=get_included("Start-Included"),
                               end_included=get_included("End-Included"))
+            case "Number":
+                if prop_value == '?':
+                    value = None
+                elif prop_value.isdigit():
+                    value = int(prop_value)
+                else:
+                    value = float(prop_value)
+                obj = NOffset(value)
             case other:
                 raise NotImplementedError(other)
 
         # add spans to objects
         obj.span = obj.trigger_span = tuple(int(x) for x in entity.findtext("span").split(","))
         spans.append(obj.span)
+
+        # if Number property is present, wrap offset with number for later use
+        if prop_number:
+            repeating_n = pop(prop_number)
+            repeating_n.offset = obj
+            obj = repeating_n
 
         # create additional objects as necessary for sub-intervals
         if sub_interval_id:

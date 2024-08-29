@@ -3,8 +3,19 @@ import inspect
 import xml.etree.ElementTree as ET
 
 
-def _isoformat(objects: list[scate.Interval | scate.Offset]):
-    return [o.isoformat() if isinstance(o, scate.Interval) else None for o in objects]
+def _isoformats(objects: list[scate.Interval | scate.Offset]):
+    result = []
+    for o in objects:
+        match o:
+            case scate.Offset():
+                result.append(None)
+            case scate.Interval():
+                result.append(o.isoformat())
+            case scate.Intervals():
+                result.append(list(o.isoformats()))
+            case other:
+                raise NotImplementedError(other)
+    return result
 
 
 def test_special_repeating():
@@ -36,7 +47,7 @@ def test_special_repeating():
             </data>""")
         objects = scate.from_xml(ET.fromstring(xml_str))
         assert objects == [cls(span=(11, 15))]
-        assert _isoformat(objects) == [None]
+        assert _isoformats(objects) == [None]
 
 
 def test_interval_offset_operators():
@@ -86,7 +97,7 @@ def test_interval_offset_operators():
         op = cls(doc_time, feb, span=(1, 14), **kwargs)
         objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
         assert objects == [op]
-        assert _isoformat(objects) == [iso], f"{xml_type}(interval_included={interval_included})"
+        assert _isoformats(objects) == [iso], f"{xml_type}(interval_included={interval_included})"
 
 
 def test_nth_operators():
@@ -139,7 +150,84 @@ def test_nth_operators():
         nth = scate.Nth(y2024, thu, index=3, from_end=from_end, span=(1, 19))
         objects = scate.from_xml(ET.fromstring(xml_str))
         assert objects == [nth]
-        assert _isoformat(objects) == [iso]
+        assert _isoformats(objects) == [iso]
+
+
+def test_n_operators():
+    y2024 = scate.Year(2024, span=(20, 25))
+    mon = scate.Repeating(scate.DAY, scate.WEEK, value=scate.MONDAY, span=(30, 35))
+    kwargs = dict(n=2, interval=y2024, offset=mon, span=(10, 45))
+    for xml_type, obj, isos in [
+            ("NthFromEnd", scate.NthN(index=3, from_end=True, **kwargs), [[
+                "2024-12-02T00:00:00 2024-12-03T00:00:00",  # 5th from last Monday in 2024
+                "2024-11-25T00:00:00 2024-11-26T00:00:00",  # 6th from last Monday in 2024
+            ]]),
+            ("NthFromStart", scate.NthN(index=3, from_end=False, **kwargs), [[
+                "2024-01-29T00:00:00 2024-01-30T00:00:00",  # 5th Monday in 2024
+                "2024-02-05T00:00:00 2024-02-06T00:00:00",  # 6th Monday in 2024
+            ]]),
+            ("Last", scate.LastN(**kwargs), [[
+                "2023-12-25T00:00:00 2023-12-26T00:00:00",  # last Monday in 2023
+                "2023-12-18T00:00:00 2023-12-19T00:00:00",  # 2nd to last Monday in 2023
+            ]]),
+            ("Next", scate.NextN(**kwargs), [[
+                "2025-01-06T00:00:00 2025-01-07T00:00:00",  # 1st Monday in 2025
+                "2025-01-13T00:00:00 2025-01-14T00:00:00",  # 2nd Monday in 2025
+            ]]),
+    ]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>0@e@Doc9@gold</id>
+                        <span>10,15</span>
+                        <type>{xml_type}</type>
+                        <parentsType>Operator</parentsType>
+                        <properties>
+                            <Interval-Type>Link</Interval-Type>
+                            <Interval>3@e@Doc9@gold</Interval>
+                            <Value>3</Value>
+                            <Semantics>Interval-Not-Included</Semantics>
+                            <Period></Period>
+                            <Repeating-Interval>2@e@Doc9@gold</Repeating-Interval>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>3@e@Doc9@gold</id>
+                        <span>20,25</span>
+                        <type>Year</type>
+                        <parentsType>Interval</parentsType>
+                        <properties>
+                            <Value>2024</Value>
+                            <Sub-Interval></Sub-Interval>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>2@e@Doc9@gold</id>
+                        <span>30,35</span>
+                        <type>Day-Of-Week</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Type>Monday</Type>
+                            <Number>1@e@Doc9@gold</Number>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>1@e@Doc9@gold</id>
+                        <span>40,45</span>
+                        <type>Number</type>
+                        <parentsType>Other</parentsType>
+                        <properties>
+                            <Value>2</Value>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        objects = scate.from_xml(ET.fromstring(xml_str))
+        assert objects == [obj]
+        assert _isoformats(objects) == isos
 
 
 def test_noon():
@@ -202,7 +290,7 @@ def test_noon():
     date = scate.This(y2000, m11d25noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
-    assert _isoformat(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
+    assert _isoformats(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
 
 
 def test_noon_super_interval():
@@ -265,7 +353,7 @@ def test_noon_super_interval():
     date = scate.This(this_y2000_m11_d25, noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
-    assert _isoformat(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
+    assert _isoformats(objects) == ["2000-10-25T12:00:00 2000-10-25T12:01:00"]
 
 
 def test_after_december_2017():
@@ -316,7 +404,7 @@ def test_after_december_2017():
     ref_after_dec_2017 = scate.After(ref_dec_2017, None, span=(0, 19))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [ref_after_dec_2017]
-    assert _isoformat(objects) == ["2018-01-01T00:00:00 ..."]
+    assert _isoformats(objects) == ["2018-01-01T00:00:00 ..."]
 
 
 def test_last_december_25():
@@ -367,7 +455,7 @@ def test_last_december_25():
     op = scate.Last(doc_time, m12d25, span=(0, 16))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
     assert objects == [op]
-    assert _isoformat(objects) == ["2017-12-25T00:00:00 2017-12-26T00:00:00"]
+    assert _isoformats(objects) == ["2017-12-25T00:00:00 2017-12-26T00:00:00"]
 
 
 def test_this_december_25():
@@ -417,7 +505,7 @@ def test_this_december_25():
     op = scate.This(doc_time, m12d25, span=(0, 16))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
     assert objects == [op]
-    assert _isoformat(objects) == ["2018-12-25T00:00:00 2018-12-26T00:00:00"]
+    assert _isoformats(objects) == ["2018-12-25T00:00:00 2018-12-26T00:00:00"]
 
 
 def test_november_17():
@@ -453,7 +541,7 @@ def test_november_17():
     m12d25 = scate.Intersection([m11, d25], span=(0, 11))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [m12d25]
-    assert _isoformat(objects) == [None]
+    assert _isoformats(objects) == [None]
 
 
 def test_december_2017_to_january_2018():
@@ -529,7 +617,7 @@ def test_december_2017_to_january_2018():
     between = scate.Between(m12y2017, m01y2018, start_included=True, end_included=True, span=(0, 29))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [between]
-    assert _isoformat(objects) == ["2017-12-01T00:00:00 2018-02-01T00:00:00"]
+    assert _isoformats(objects) == ["2017-12-01T00:00:00 2018-02-01T00:00:00"]
 
 
 def test_december_17_and_18():
@@ -589,7 +677,7 @@ def test_december_17_and_18():
     union = scate.Union([d17m12, d18m12], span=(0, 18))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [union]
-    assert _isoformat(objects) == [None]
+    assert _isoformats(objects) == [None]
     [obj_union] = objects
     assert (scate.Year(2024) + obj_union).isoformat() == \
            "2025-12-17T00:00:00 2025-12-18T00:00:00"
@@ -603,3 +691,62 @@ def test_december_17_and_18():
            "2023-12-17T00:00:00 2023-12-18T00:00:00"
     assert (scate.Year(2024) - obj_union - obj_union - obj_union).isoformat() == \
            "2022-12-18T00:00:00 2022-12-19T00:00:00"
+
+
+def test_first_nine_months_of_1997():
+    # NYT19980206.0460 (2979,3004) first nine months of 1997
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>206@e@NYT19980206.0460@gold</id>
+                    <span>0,5</span>
+                    <type>NthFromStart</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Interval-Type>Link</Interval-Type>
+                        <Interval>209@e@NYT19980206.0460@gold</Interval>
+                        <Value>1</Value>
+                        <Period></Period>
+                        <Repeating-Interval>208@e@NYT19980206.0460@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>207@e@NYT19980206.0460@gold</id>
+                    <span>6,10</span>
+                    <type>Number</type>
+                    <parentsType>Other</parentsType>
+                    <properties>
+                        <Value>9</Value>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>208@e@NYT19980206.0460@gold</id>
+                    <span>11,17</span>
+                    <type>Calendar-Interval</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>Month</Type>
+                        <Number>207@e@NYT19980206.0460@gold</Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>209@e@NYT19980206.0460@gold</id>
+                    <span>21,25</span>
+                    <type>Year</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>1997</Value>
+                        <Sub-Interval></Sub-Interval>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    month = scate.Repeating(scate.MONTH, span=(11, 17))
+    y1997 = scate.Year(1997, span=(21, 25))
+    nth = scate.NthN(y1997, month, index=1, n=9, from_end=False, span=(0, 25))
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [nth]
+    assert _isoformats(objects) == [[scate.Interval.of(1997, i).isoformat() for i in range(1, 10)]]
