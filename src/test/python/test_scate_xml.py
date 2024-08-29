@@ -286,7 +286,8 @@ def test_noon():
     m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10, span=(5, 7))
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(8, 10))
     noon = scate.Noon(span=(11, 15))
-    m11d25noon = scate.Intersection([m11, d25, noon], span=(5, 15))
+    d25noon = scate.Intersection([d25, noon], span=(8, 15))
+    m11d25noon = scate.Intersection([m11, d25noon], span=(5, 15))
     date = scate.This(y2000, m11d25noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
