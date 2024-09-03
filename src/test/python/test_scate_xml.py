@@ -751,3 +751,51 @@ def test_first_nine_months_of_1997():
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [nth]
     assert _isoformats(objects) == [[scate.Interval.of(1997, i).isoformat() for i in range(1, 10)]]
+
+
+def test_last_few_months():
+    # NYT19980206.0460 (3441,3445) last few months
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>210@e@NYT19980206.0460@gold</id>
+                    <span>0,4</span>
+                    <type>Last</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Semantics>Standard</Semantics>
+                        <Interval-Type>DocTime</Interval-Type>
+                        <Interval></Interval>
+                        <Period></Period>
+                        <Repeating-Interval>212@e@NYT19980206.0460@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>211@e@NYT19980206.0460@gold</id>
+                    <span>5,8</span>
+                    <type>Number</type>
+                    <parentsType>Other</parentsType>
+                    <properties>
+                        <Value>?</Value>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>212@e@NYT19980206.0460@gold</id>
+                    <span>9,15</span>
+                    <type>Calendar-Interval</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>Month</Type>
+                        <Number>211@e@NYT19980206.0460@gold</Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    doc_time = scate.Interval.of(1998, 2, 6)
+    month = scate.Repeating(scate.MONTH, span=(9, 15))
+    last_n = scate.LastN(doc_time, month, n=None, span=(0, 15))
+    objects = scate.from_xml(ET.fromstring(xml_str), doc_time=doc_time)
+    assert objects == [last_n]
+    assert _isoformats(objects) == [["... 1998-02-01T00:00:00"]]

@@ -12,8 +12,8 @@ import xml.etree.ElementTree as ET
 
 @dataclasses.dataclass
 class Interval:
-    start: datetime.datetime
-    end: datetime.datetime
+    start: datetime.datetime | None
+    end: datetime.datetime | None
 
     def isoformat(self) -> str:
         start_str = "..." if self.start is None else self.start.isoformat()
@@ -542,8 +542,8 @@ class Before(IntervalOp):
                 self.start = (self.start - self.offset).start
                 self.end = (self.end - self.offset).start
         elif self.offset is None:
-                self.start = None
-                self.end = self.interval.start
+            self.start = None
+            self.end = self.interval.start
         else:
             raise NotImplementedError
 
@@ -646,11 +646,17 @@ class _N(Intervals):
     interval_included: bool = False
     base_class: type = None
 
+    def _adjust_for_n_none(self, interval: Interval):
+        raise NotImplementedError
+
     def __iter__(self) -> typing.Iterator[Interval]:
         interval = self.interval
         interval_included = self.interval_included
-        for i in range(self.n):
+        n = 1 if self.n is None else self.n
+        for i in range(n):
             interval = self.base_class(interval, self.offset, interval_included)
+            if self.n is None:
+                self._adjust_for_n_none(interval)
             yield interval
             if i == 0:
                 interval_included = False
@@ -661,11 +667,17 @@ class LastN(_N):
     base_class: type = Last
     span: (int, int) = None
 
+    def _adjust_for_n_none(self, interval: Interval):
+        interval.start = None
+
 
 @dataclasses.dataclass
 class NextN(_N):
     base_class: type = Next
     span: (int, int) = None
+
+    def _adjust_for_n_none(self, interval: Interval):
+        interval.end = None
 
 
 @dataclasses.dataclass
@@ -678,9 +690,17 @@ class NthN(Intervals):
     span: (int, int) = None
 
     def __iter__(self) -> typing.Iterator[Interval]:
-        start = 1 + (self.index - 1) * self.n
-        for index in range(start, start + self.n):
-            yield Nth(self.interval, self.offset, index, from_end=self.from_end)
+        n = 1 if self.n is None else self.n
+        start = 1 + (self.index - 1) * n
+        for index in range(start, start + n):
+            interval = Nth(self.interval, self.offset, index, from_end=self.from_end)
+            if self.n is None:
+                if self.from_end:
+                    interval.start = None
+                else:
+                    interval.end = None
+            yield interval
+
 
 
 @dataclasses.dataclass
@@ -788,13 +808,9 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
         # helper for managing Included properties
         def get_included(prop_name: str) -> bool:
             match entity.findtext(f"properties/{prop_name}"):
-                case "Included":
+                case "Included" | "Interval-Included":
                     return True
-                case "Not-Included":
-                    return False
-                case "Interval-Included":
-                    return True
-                case "Interval-Not-Included":
+                case "Not-Included" | "Interval-Not-Included" | "Standard":
                     return False
                 case other_type:
                     raise NotImplementedError(other_type)

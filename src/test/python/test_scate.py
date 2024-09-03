@@ -361,6 +361,16 @@ def test_n():
     assert [x.isoformat() for x in scate.NthN(scate.Year(1997), day, index=3, n=2)] == \
            [scate.Interval.of(1997, 1, i).isoformat() for i in range(5, 7)]
 
+    # a few days (n=None)
+    assert list(scate.LastN(interval, day, None).isoformats()) == \
+           ["... 2002-03-22T00:00:00"]
+    assert list(scate.NextN(interval, day, None).isoformats()) == \
+           ["2003-05-11T00:00:00 ..."]
+    assert list(scate.NthN(interval, day, index=1, n=None).isoformats()) == \
+           ["2002-03-23T00:00:00 ..."]
+    assert list(scate.NthN(interval, day, index=1, n=None, from_end=True).isoformats()) == \
+           ["... 2003-05-10T00:00:00"]
+
 
 def test_next():
     year1 = scate.Year(2000)
