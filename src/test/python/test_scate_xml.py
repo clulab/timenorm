@@ -799,3 +799,55 @@ def test_last_few_months():
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time=doc_time)
     assert objects == [last_n]
     assert _isoformats(objects) == [["1998-01-01T00:00:00 1998-02-01T00:00:00", "... 1998-01-01T00:00:00"]]
+
+
+def test_19980331():
+    # test("VOA19980331.1700.1533 (25,29) 19980331")
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>70@e@VOA19980331.1700.1533@gold</id>
+                    <span>0,4</span>
+                    <type>Year</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>1998</Value>
+                        <Sub-Interval>65@e@VOA19980331.1700.1533@gold</Sub-Interval>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>65@e@VOA19980331.1700.1533@gold</id>
+                    <span>4,6</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>March</Type>
+                        <Sub-Interval>61@e@VOA19980331.1700.1533@gold</Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>61@e@VOA19980331.1700.1533@gold</id>
+                    <span>6,8</span>
+                    <type>Day-Of-Month</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>31</Value>
+                        <Sub-Interval></Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    y1998 = scate.Year(1998, span=(0, 4))
+    m3 = scate.Repeating(scate.MONTH, scate.YEAR, value=3, span=(4, 6))
+    d31 = scate.Repeating(scate.DAY, scate.MONTH, value=31, span=(6, 8))
+    m3d31 = scate.Intersection([m3, d31], span=(4, 8))
+    y1998m3d31 = scate.This(y1998, m3d31, span=(0, 8))
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [y1998m3d31]
+    assert _isoformats(objects) == ["1998-03-31T00:00:00 1998-04-01T00:00:00"]
