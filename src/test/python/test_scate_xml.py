@@ -798,4 +798,4 @@ def test_last_few_months():
     last_n = scate.LastN(doc_time, month, n=None, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time=doc_time)
     assert objects == [last_n]
-    assert _isoformats(objects) == [["... 1998-02-01T00:00:00"]]
+    assert _isoformats(objects) == [["1998-01-01T00:00:00 1998-02-01T00:00:00", "... 1998-01-01T00:00:00"]]

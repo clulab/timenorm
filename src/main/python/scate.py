@@ -652,10 +652,10 @@ class _N(Intervals):
     def __iter__(self) -> typing.Iterator[Interval]:
         interval = self.interval
         interval_included = self.interval_included
-        n = 1 if self.n is None else self.n
+        n = 2 if self.n is None else self.n
         for i in range(n):
             interval = self.base_class(interval, self.offset, interval_included)
-            if self.n is None:
+            if self.n is None and i == 1:
                 self._adjust_for_n_none(interval)
             yield interval
             if i == 0:
@@ -690,11 +690,11 @@ class NthN(Intervals):
     span: (int, int) = None
 
     def __iter__(self) -> typing.Iterator[Interval]:
-        n = 1 if self.n is None else self.n
+        n = 2 if self.n is None else self.n
         start = 1 + (self.index - 1) * n
         for index in range(start, start + n):
             interval = Nth(self.interval, self.offset, index, from_end=self.from_end)
-            if self.n is None:
+            if self.n is None and index == start + 1:
                 if self.from_end:
                     interval.start = None
                 else:

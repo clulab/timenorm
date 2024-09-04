@@ -363,13 +363,13 @@ def test_n():
 
     # a few days (n=None)
     assert list(scate.LastN(interval, day, None).isoformats()) == \
-           ["... 2002-03-22T00:00:00"]
+           ["2002-03-21T00:00:00 2002-03-22T00:00:00", "... 2002-03-21T00:00:00"]
     assert list(scate.NextN(interval, day, None).isoformats()) == \
-           ["2003-05-11T00:00:00 ..."]
+           ["2003-05-11T00:00:00 2003-05-12T00:00:00", "2003-05-12T00:00:00 ..."]
     assert list(scate.NthN(interval, day, index=1, n=None).isoformats()) == \
-           ["2002-03-23T00:00:00 ..."]
+           ["2002-03-23T00:00:00 2002-03-24T00:00:00", "2002-03-24T00:00:00 ..."]
     assert list(scate.NthN(interval, day, index=1, n=None, from_end=True).isoformats()) == \
-           ["... 2003-05-10T00:00:00"]
+           ["2003-05-09T00:00:00 2003-05-10T00:00:00", "... 2003-05-09T00:00:00"]
 
 
 def test_next():
