@@ -802,7 +802,7 @@ def test_last_few_months():
 
 
 def test_19980331():
-    # test("VOA19980331.1700.1533 (25,29) 19980331")
+    # VOA19980331.1700.1533 (25,29) 19980331
     xml_str = inspect.cleandoc("""
         <data>
             <annotations>
@@ -851,3 +851,43 @@ def test_19980331():
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [y1998m3d31]
     assert _isoformats(objects) == ["1998-03-31T00:00:00 1998-04-01T00:00:00"]
+
+
+def test_friday():
+    # APW19980306.1001 (1705,1711) Friday
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>117@e@APW19980306.1001@gold</id>
+                    <span>0,6</span>
+                    <type>Day-Of-Week</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>Friday</Type>
+                        <Sub-Interval></Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>118@e@APW19980306.1001@gold</id>
+                    <span>0,6</span>
+                    <type>Last</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Semantics>Interval-Included</Semantics>
+                        <Interval-Type>DocTime</Interval-Type>
+                        <Interval></Interval>
+                        <Period></Period>
+                        <Repeating-Interval>117@e@APW19980306.1001@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    doc_time = scate.Interval.of(1998, 3, 6)
+    fri = scate.Repeating(scate.DAY, scate.WEEK, value=scate.FRIDAY, span=(0, 6))
+    last = scate.Last(doc_time, fri, interval_included=True, span=(0, 6))
+    objects = scate.from_xml(ET.fromstring(xml_str), doc_time=doc_time)
+    assert objects == [last]
+    assert _isoformats(objects) == [doc_time.isoformat()]
