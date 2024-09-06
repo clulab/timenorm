@@ -607,6 +607,20 @@ class Between(Interval):
 
 
 @dataclasses.dataclass
+class Intersection(Interval):
+    intervals: typing.Iterable[Interval]
+    start: datetime.datetime = dataclasses.field(init=False)
+    end: datetime.datetime = dataclasses.field(init=False)
+    span: (int, int) = None
+
+    def __post_init__(self):
+        self.start = max(i.start for i in self.intervals)
+        self.end = min(i.end for i in self.intervals)
+        if self.start >= self.end:
+            raise ValueError(f"{self.start.isoformat()} is not before {self.end.isoformat()}")
+
+
+@dataclasses.dataclass
 class Nth(IntervalOp):
     index: int
     from_end: bool = False
@@ -692,7 +706,6 @@ class NthN(Intervals):
                 else:
                     interval.end = None
             yield interval
-
 
 
 @dataclasses.dataclass

@@ -38,7 +38,7 @@ def test_period():
     assert (date - period).start.isoformat() == "1995-01-01T00:00:00"
 
 
-def test_sum():
+def test_period_sum():
     period1 = scate.Period(scate.YEAR, 1)
     period2 = scate.Period(scate.YEAR, 2)
     period3 = scate.Period(scate.MONTH, 3)
@@ -155,7 +155,7 @@ def test_day_parts():
     assert (interval - scate.Night()).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
 
 
-def test_union():
+def test_offset_union():
     interval = scate.Interval.fromisoformat("2003-01-01T00:00 2003-01-30T00:00")
     feb = scate.Repeating(scate.MONTH, scate.YEAR, value=2)
     day20 = scate.Repeating(scate.DAY, scate.MONTH, value=20)
@@ -184,7 +184,7 @@ def test_union():
     assert (interval + union + union).isoformat() == "2011-07-25T00:00:00 2011-08-01T00:00:00"
 
 
-def test_intersection():
+def test_repeating_intersection():
     # Friday the 13ths 2012 - 2023:
     # Friday, January 13, 2012
     # Friday, April 13, 2012
@@ -504,6 +504,29 @@ def test_between():
     # it's an error for the start interval to be after the end interval
     with pytest.raises(ValueError):
         scate.Between(year2, year1)
+
+
+def test_intersection():
+    assert scate.Intersection([
+        scate.Interval.fromisoformat("1956-08-23T03:35 2023-01-31T23:54"),
+        scate.Interval.fromisoformat("1989-04-23T08:54 2025-01-01T00:00"),
+    ]).isoformat() == "1989-04-23T08:54:00 2023-01-31T23:54:00"
+
+    assert scate.Intersection([
+        scate.Interval.fromisoformat("1800-01-01 2000-01-01"),
+        scate.Interval.fromisoformat("1700-01-01 1950-01-01"),
+        scate.Interval.fromisoformat("1600-01-01 1900-01-01"),
+    ]).isoformat() == "1800-01-01T00:00:00 1900-01-01T00:00:00"
+
+    assert scate.Intersection([
+        scate.Interval.of(1321, 6),
+        scate.Interval.of(1321),
+        scate.Interval.of(1321, 6, 21, 23),
+        scate.Interval.of(1321, 6, 21),
+    ]).isoformat() == "1321-06-21T23:00:00 1321-06-22T00:00:00"
+
+    with pytest.raises(ValueError):
+        scate.Intersection([scate.Interval.of(1998), scate.Interval.of(1999)])
 
 
 def test_nth():
