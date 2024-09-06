@@ -376,10 +376,12 @@ class RepeatingIntersection(Offset):
     offsets: typing.Iterable[Repeating]
     span: (int, int) = None
 
-    def _iter_offsets(self):
+    def _iter_offsets(self) -> typing.Iterator[Repeating]:
         for offset in self.offsets:
             if isinstance(offset, RepeatingIntersection):
                 yield from offset._iter_offsets()
+            elif not isinstance(offset, Repeating):
+                raise NotImplementedError(offset)
             else:
                 yield offset
 
@@ -390,7 +392,6 @@ class RepeatingIntersection(Offset):
         periods = []
         rrule_periods = []
         non_rrule_periods = []
-        offsets = []
         for offset in self._iter_offsets():
             periods.append(offset.period)
             if offset.rrule_kwargs:
