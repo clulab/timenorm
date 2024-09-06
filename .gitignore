@@ -6,9 +6,9 @@ target/
 .project
 .metadata/
 *.iml
-
 .bloop/
 .bsp/
 .metals/
 .vscode/
 metals.sbt
+__pycache__
