@@ -43,13 +43,13 @@ def test_sum():
     period2 = scate.Period(scate.YEAR, 2)
     period3 = scate.Period(scate.MONTH, 3)
     period4 = scate.Period(scate.DAY, 2)
-    period_sum = scate.Sum([period1, period2, period3])
+    period_sum = scate.PeriodSum([period1, period2, period3])
     dt = datetime.datetime(2000, 6, 10, 0, 0, 0, 0)
 
     assert (dt + period_sum).end.isoformat() == "2003-09-10T00:00:00"
     assert (dt - period_sum).start.isoformat() == "1997-03-10T00:00:00"
 
-    period_sum2 = scate.Sum([period4, period_sum])
+    period_sum2 = scate.PeriodSum([period4, period_sum])
 
     assert (dt + period_sum2).end.isoformat() == "2003-09-12T00:00:00"
     assert (dt - period_sum2).start.isoformat() == "1997-03-08T00:00:00"
@@ -159,7 +159,7 @@ def test_union():
     interval = scate.Interval.fromisoformat("2003-01-01T00:00 2003-01-30T00:00")
     feb = scate.Repeating(scate.MONTH, scate.YEAR, value=2)
     day20 = scate.Repeating(scate.DAY, scate.MONTH, value=20)
-    union = scate.Union([feb, day20])
+    union = scate.OffsetUnion([feb, day20])
     assert (interval - union).isoformat() == "2002-12-20T00:00:00 2002-12-21T00:00:00"
     assert (interval - union - union).isoformat() == "2002-11-20T00:00:00 2002-11-21T00:00:00"
     assert (interval + union).isoformat() == "2003-02-01T00:00:00 2003-03-01T00:00:00"
@@ -168,7 +168,7 @@ def test_union():
     interval = scate.Interval.fromisoformat("2011-07-02T00:00 2011-07-31T00:00")
     day = scate.Repeating(scate.DAY)
     month = scate.Repeating(scate.MONTH)
-    union = scate.Union([day, month])
+    union = scate.OffsetUnion([day, month])
     assert (interval - union).isoformat() == "2011-07-01T00:00:00 2011-07-02T00:00:00"
     assert (interval - union - union).isoformat() == "2011-06-01T00:00:00 2011-07-01T00:00:00"
     assert (interval + union).isoformat() == "2011-07-31T00:00:00 2011-08-01T00:00:00"
@@ -177,7 +177,7 @@ def test_union():
     # NOTE: In 2001, June 20 and July 25 are Mondays
     interval = scate.Interval.fromisoformat("2011-07-01T00:00 2011-07-19T00:00")
     week = scate.Repeating(scate.WEEK)
-    union = scate.Union([week, day20])
+    union = scate.OffsetUnion([week, day20])
     assert (interval - union).isoformat() == "2011-06-20T00:00:00 2011-06-27T00:00:00"
     assert (interval - union - union).isoformat() == "2011-06-13T00:00:00 2011-06-20T00:00:00"
     assert (interval + union).isoformat() == "2011-07-20T00:00:00 2011-07-21T00:00:00"
@@ -210,7 +210,7 @@ def test_intersection():
     # Friday, October 13, 2023
 
     y2016 = scate.Year(2016)
-    jan_fri_13 = scate.Intersection([
+    jan_fri_13 = scate.RepeatingIntersection([
         scate.Repeating(scate.DAY, scate.WEEK, value=4),
         scate.Repeating(scate.DAY, scate.MONTH, value=13),
         scate.Repeating(scate.MONTH, scate.YEAR, value=1),
@@ -221,7 +221,7 @@ def test_intersection():
     assert (y2016 + jan_fri_13).isoformat() == "2017-01-13T00:00:00 2017-01-14T00:00:00"
     assert (y2016 + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
 
-    fri_13_hours = scate.Intersection([
+    fri_13_hours = scate.RepeatingIntersection([
         scate.Repeating(scate.DAY, scate.WEEK, value=4),
         scate.Repeating(scate.DAY, scate.MONTH, value=13),
         scate.Repeating(scate.HOUR),
@@ -240,14 +240,14 @@ def test_intersection():
         interval += fri_13_hours
     assert interval.isoformat() == "2017-10-13T00:00:00 2017-10-13T01:00:00"
 
-    mar31 = scate.Intersection([
+    mar31 = scate.RepeatingIntersection([
         scate.Repeating(scate.MONTH, scate.YEAR, value=3),
         scate.Repeating(scate.DAY, scate.MONTH, value=31),
     ])
     date = datetime.datetime.fromisoformat("1980-01-01T00:00:00")
     assert (date + mar31).isoformat() == "1980-03-31T00:00:00 1980-04-01T00:00:00"
 
-    apr31 = scate.Intersection([
+    apr31 = scate.RepeatingIntersection([
         scate.Repeating(scate.MONTH, scate.YEAR, value=4),
         scate.Repeating(scate.DAY, scate.MONTH, value=31),
     ])
@@ -255,7 +255,7 @@ def test_intersection():
         date + apr31
 
     i20120301 = scate.Interval.of(2012, 3, 1)
-    eve31 = scate.Intersection([
+    eve31 = scate.RepeatingIntersection([
         scate.Repeating(scate.DAY, scate.MONTH, value=31),
         scate.Evening(),
     ])
@@ -264,7 +264,7 @@ def test_intersection():
     assert (i20120301 + eve31).isoformat() == "2012-03-31T18:00:00 2012-04-01T00:00:00"
     assert (i20120301 + eve31 + eve31).isoformat() == "2012-05-31T18:00:00 2012-06-01T00:00:00"
 
-    m11d25noon = scate.Intersection([
+    m11d25noon = scate.RepeatingIntersection([
         scate.Repeating(scate.MONTH, scate.YEAR, value=11),
         scate.Repeating(scate.DAY, scate.MONTH, value=25),
         scate.Noon(),
@@ -293,7 +293,7 @@ def test_last():
     period1 = scate.Period(scate.YEAR, 1)
     period2 = scate.Period(scate.YEAR, 2)
     period3 = scate.Period(scate.MONTH, 3)
-    period_sum = scate.Sum([period1, period2, period3])
+    period_sum = scate.PeriodSum([period1, period2, period3])
 
     year = scate.Year(2000)
     assert scate.Last(year, period1).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
@@ -380,9 +380,9 @@ def test_next():
     period2 = scate.Period(scate.WEEK, 2)
     assert scate.Next(date2, period2).isoformat() == "2017-08-17T00:00:00 2017-08-31T00:00:00"
     year3 = scate.Year(2000)
-    period3 = scate.Sum([scate.Period(scate.YEAR, 1),
-                         scate.Period(scate.YEAR, 2),
-                         scate.Period(scate.MONTH, 3)])
+    period3 = scate.PeriodSum([scate.Period(scate.YEAR, 1),
+                               scate.Period(scate.YEAR, 2),
+                               scate.Period(scate.MONTH, 3)])
     assert scate.Next(year3, period3).isoformat() == "2001-01-01T00:00:00 2004-04-01T00:00:00"
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
@@ -399,9 +399,9 @@ def test_next():
 
 def test_before():
     period1 = scate.Period(scate.YEAR, 1)
-    period2 = scate.Sum([period1,
-                         scate.Period(scate.YEAR, 2),
-                         scate.Period(scate.MONTH, 3)])
+    period2 = scate.PeriodSum([period1,
+                               scate.Period(scate.YEAR, 2),
+                               scate.Period(scate.MONTH, 3)])
     period3 = scate.Period(scate.WEEK, 2)
     year = scate.Year(2000)
     assert scate.Before(year, period1).isoformat() == "1999-01-01T00:00:00 2000-01-01T00:00:00"
@@ -431,7 +431,7 @@ def test_before():
 def test_after():
     year = scate.Period(scate.YEAR, 1)
     month = scate.Period(scate.MONTH, 3)
-    year3month3 = scate.Sum([year, scate.Period(scate.YEAR, 2), scate.Period(scate.MONTH, 3)])
+    year3month3 = scate.PeriodSum([year, scate.Period(scate.YEAR, 2), scate.Period(scate.MONTH, 3)])
 
     interval = scate.Year(2000)
     assert scate.After(interval, year).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
@@ -510,7 +510,7 @@ def test_nth():
     y2001 = scate.Year(2001)
     month = scate.Period(scate.MONTH, 1)
     year = scate.Period(scate.YEAR, 1)
-    period = scate.Sum([month, scate.Period(scate.MINUTE, 20)])
+    period = scate.PeriodSum([month, scate.Period(scate.MINUTE, 20)])
     assert scate.Nth(y2001, year, 1).isoformat() == "2001-01-01T00:00:00 2002-01-01T00:00:00"
     assert scate.Nth(y2001, month, 2).isoformat() == "2001-02-01T00:00:00 2001-03-01T00:00:00"
     assert scate.Nth(y2001, month, 2, from_end=True).isoformat() == "2001-11-01T00:00:00 2001-12-01T00:00:00"
@@ -599,12 +599,12 @@ def test_misc():
     # NOTE: as written, this is the night early on Thursday (1999-02-04)
     # to get the night early on Friday (1999-02-05), a Next would be needed
     thursday = scate.Repeating(scate.DAY, scate.WEEK, value=3)
-    thursday_night = scate.Intersection([thursday, scate.Night()])
+    thursday_night = scate.RepeatingIntersection([thursday, scate.Night()])
     assert scate.Last(scate.Interval.of(1999, 2, 6, 6, 22, 26), thursday_night).isoformat() == \
            "1999-02-04T00:00:00 1999-02-04T06:00:00"
 
     # wsj_0124 (450,457) Nov. 13
-    nov13 = scate.Intersection([
+    nov13 = scate.RepeatingIntersection([
         scate.Repeating(scate.MONTH, scate.YEAR, value=11),
         scate.Repeating(scate.DAY, scate.MONTH, value=13),
     ])
@@ -623,7 +623,7 @@ def test_misc():
     # wsj_0346 (889,894) year ended March 31
     march = scate.Repeating(scate.MONTH, scate.YEAR, value=3)
     day31 = scate.Repeating(scate.DAY, scate.MONTH, value=31)
-    march31 = scate.Intersection([march, day31])
+    march31 = scate.RepeatingIntersection([march, day31])
     year = scate.Period(scate.YEAR, 1)
     assert scate.Last(scate.Last(scate.Interval.of(1989, 11, 1), march31), year).isoformat() == \
             "1988-03-31T00:00:00 1989-03-31T00:00:00"

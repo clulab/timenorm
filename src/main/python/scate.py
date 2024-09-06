@@ -181,7 +181,7 @@ class Period(Offset):
 
 
 @dataclasses.dataclass
-class Sum(Offset):
+class PeriodSum(Offset):
     periods: list[Period]
     span: (int, int) = None
 
@@ -354,7 +354,7 @@ class Night(Repeating):
 
 
 @dataclasses.dataclass
-class Union(Offset):
+class OffsetUnion(Offset):
     offsets: typing.Iterable[Offset]
     span: (int, int) = None
 
@@ -372,13 +372,13 @@ class Union(Offset):
 
 
 @dataclasses.dataclass
-class Intersection(Offset):
+class RepeatingIntersection(Offset):
     offsets: typing.Iterable[Repeating]
     span: (int, int) = None
 
     def _iter_offsets(self):
         for offset in self.offsets:
-            if isinstance(offset, Intersection):
+            if isinstance(offset, RepeatingIntersection):
                 yield from offset._iter_offsets()
             else:
                 yield offset
@@ -506,7 +506,7 @@ class Next(IntervalOp):
         if self.interval_included:
             end = self.interval.start
             # to allow repeating intervals to start with our start, subtract a tiny amount
-            if isinstance(self.offset, (Repeating, Union, Intersection)):
+            if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
                 end -= Unit.MICROSECOND.relativedelta(1)
         else:
             end = self.interval.end
@@ -520,12 +520,12 @@ class Before(IntervalOp):
     span: (int, int) = None
 
     def __post_init__(self):
-        if isinstance(self.offset, (Repeating, Union, Intersection)):
+        if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
             start = self.interval.end if self.interval_included else self.interval.start
             for i in range(self.n - 1):
                 start = (start - self.offset).start
             self.start, self.end = start - self.offset
-        elif isinstance(self.offset, (Period, Sum)):
+        elif isinstance(self.offset, (Period, PeriodSum)):
             if self.interval_included:
                 raise ValueError("interval_included=True cannot be used with Periods")
             self.start, self.end = self.interval
@@ -546,13 +546,13 @@ class After(IntervalOp):
     span: (int, int) = None
 
     def __post_init__(self):
-        if isinstance(self.offset, (Repeating, Union, Intersection)):
+        if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
             # to allow repeating intervals to overlap start with our start, subtract a tiny amount
             end = self.interval.start - Unit.MICROSECOND.relativedelta(1) if self.interval_included else self.interval.end
             for i in range(self.n - 1):
                 end = (end + self.offset).end
             self.start, self.end = end + self.offset
-        elif isinstance(self.offset, (Period, Sum)):
+        elif isinstance(self.offset, (Period, PeriodSum)):
             if self.interval_included:
                 raise ValueError("interval_included=True cannot be used with Periods")
             self.start, self.end = self.interval
@@ -575,12 +575,12 @@ class This(Interval):
     span: (int, int) = None
 
     def __post_init__(self):
-        if isinstance(self.offset, (Repeating, Union, Intersection)):
+        if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
             start = self.offset.range.truncate(self.interval.start)
             self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
             if (self.end + self.offset).end < self.interval.end:
                 raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
-        elif isinstance(self.offset, (Period, Sum)):
+        elif isinstance(self.offset, (Period, PeriodSum)):
             self.start, self.end = self.offset.expand(self.interval)
         else:
             raise NotImplementedError
@@ -614,7 +614,7 @@ class Nth(IntervalOp):
     def __post_init__(self):
         offset = self.interval.end if self.from_end else self.interval.start
         # to allow repeating intervals to overlap start with our start, subtract a tiny amount
-        if isinstance(self.offset, (Repeating, Union, Intersection)) and not self.from_end:
+        if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)) and not self.from_end:
             offset -= Unit.MICROSECOND.relativedelta(1)
         for i in range(self.index - 1):
             offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
@@ -824,7 +824,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 obj = Repeating(Unit.__members__[prop_type.upper()])
             case "Union":
                 id_elems = entity.findall("properties/Repeating-Intervals")
-                obj = Union([pop(id_elem.text) for id_elem in id_elems])
+                obj = OffsetUnion([pop(id_elem.text) for id_elem in id_elems])
             case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":
                 cls_name = "Nth" if entity_type.startswith("Nth") else entity_type
                 interval = get_interval("Interval")
@@ -876,7 +876,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 case "Year":
                     obj = This(obj, sub_interval)
                 case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day":
-                    obj = Intersection([obj, sub_interval])
+                    obj = RepeatingIntersection([obj, sub_interval])
                 case other:
                     raise NotImplementedError(other)
 
@@ -887,7 +887,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
                 case Year() | This():
                     obj = This(super_interval, obj)
                 case Repeating():
-                    obj = Intersection([super_interval, obj])
+                    obj = RepeatingIntersection([super_interval, obj])
                 case other:
                     raise NotImplementedError(other)
 

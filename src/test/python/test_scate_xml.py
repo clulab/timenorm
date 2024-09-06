@@ -286,8 +286,8 @@ def test_noon():
     m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=10, span=(5, 7))
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(8, 10))
     noon = scate.Noon(span=(11, 15))
-    d25noon = scate.Intersection([d25, noon], span=(8, 15))
-    m11d25noon = scate.Intersection([m11, d25noon], span=(5, 15))
+    d25noon = scate.RepeatingIntersection([d25, noon], span=(8, 15))
+    m11d25noon = scate.RepeatingIntersection([m11, d25noon], span=(5, 15))
     date = scate.This(y2000, m11d25noon, span=(0, 15))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [date]
@@ -452,7 +452,7 @@ def test_last_december_25():
     doc_time = scate.Interval.of(2018, 2, 6, 22, 19)
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(14, 16))
     m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(5, 13))
-    m12d25 = scate.Intersection([m12, d25], span=(5, 16))
+    m12d25 = scate.RepeatingIntersection([m12, d25], span=(5, 16))
     op = scate.Last(doc_time, m12d25, span=(0, 16))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
     assert objects == [op]
@@ -502,7 +502,7 @@ def test_this_december_25():
     doc_time = scate.Interval.of(2018, 2, 6, 22, 19)
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=25, span=(14, 16))
     m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(5, 13))
-    m12d25 = scate.Intersection([m12, d25], span=(5, 16))
+    m12d25 = scate.RepeatingIntersection([m12, d25], span=(5, 16))
     op = scate.This(doc_time, m12d25, span=(0, 16))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time)
     assert objects == [op]
@@ -539,7 +539,7 @@ def test_november_17():
         </data>""")
     d25 = scate.Repeating(scate.DAY, scate.MONTH, value=17, span=(9, 11))
     m11 = scate.Repeating(scate.MONTH, scate.YEAR, value=11, span=(0, 8))
-    m12d25 = scate.Intersection([m11, d25], span=(0, 11))
+    m12d25 = scate.RepeatingIntersection([m11, d25], span=(0, 11))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [m12d25]
     assert _isoformats(objects) == [None]
@@ -672,10 +672,10 @@ def test_december_17_and_18():
         </data>""")
     m12 = scate.Repeating(scate.MONTH, scate.YEAR, value=12, span=(0, 8))
     d17 = scate.Repeating(scate.DAY, scate.MONTH, value=17, span=(9, 11))
-    d17m12 = scate.Intersection([m12, d17], span=(0, 11))
+    d17m12 = scate.RepeatingIntersection([m12, d17], span=(0, 11))
     d18 = scate.Repeating(scate.DAY, scate.MONTH, value=18, span=(16, 18))
-    d18m12 = scate.Intersection([m12, d18], span=(0, 18))
-    union = scate.Union([d17m12, d18m12], span=(0, 18))
+    d18m12 = scate.RepeatingIntersection([m12, d18], span=(0, 18))
+    union = scate.OffsetUnion([d17m12, d18m12], span=(0, 18))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [union]
     assert _isoformats(objects) == [None]
@@ -846,7 +846,7 @@ def test_19980331():
     y1998 = scate.Year(1998, span=(0, 4))
     m3 = scate.Repeating(scate.MONTH, scate.YEAR, value=3, span=(4, 6))
     d31 = scate.Repeating(scate.DAY, scate.MONTH, value=31, span=(6, 8))
-    m3d31 = scate.Intersection([m3, d31], span=(4, 8))
+    m3d31 = scate.RepeatingIntersection([m3, d31], span=(4, 8))
     y1998m3d31 = scate.This(y1998, m3d31, span=(0, 8))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [y1998m3d31]
