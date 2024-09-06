@@ -211,7 +211,7 @@ def test_intersection():
 
     y2016 = scate.Year(2016)
     jan_fri_13 = scate.Intersection([
-        scate.Repeating(scate.DAY, scate.WEEK, value=scate.FRIDAY),
+        scate.Repeating(scate.DAY, scate.WEEK, value=4),
         scate.Repeating(scate.DAY, scate.MONTH, value=13),
         scate.Repeating(scate.MONTH, scate.YEAR, value=1),
     ])
@@ -222,7 +222,7 @@ def test_intersection():
     assert (y2016 + jan_fri_13 + jan_fri_13).isoformat() == "2023-01-13T00:00:00 2023-01-14T00:00:00"
 
     fri_13_hours = scate.Intersection([
-        scate.Repeating(scate.DAY, scate.WEEK, value=scate.FRIDAY),
+        scate.Repeating(scate.DAY, scate.WEEK, value=4),
         scate.Repeating(scate.DAY, scate.MONTH, value=13),
         scate.Repeating(scate.HOUR),
     ])
@@ -301,7 +301,7 @@ def test_last():
 
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     may = scate.Repeating(scate.MONTH, scate.YEAR, value=5)
-    friday = scate.Repeating(scate.DAY, scate.WEEK, value=scate.FRIDAY)
+    friday = scate.Repeating(scate.DAY, scate.WEEK, value=4)
     day = scate.Repeating(scate.DAY)
     assert scate.Last(interval, may).isoformat() == "2001-05-01T00:00:00 2001-06-01T00:00:00"
     assert scate.Last(interval, day).isoformat() == "2002-03-21T00:00:00 2002-03-22T00:00:00"
@@ -537,7 +537,7 @@ def test_these():
 
     # These(Tue 1 Feb, Fri) => Fri 4 Feb
     interval_tue = scate.Interval.fromisoformat("2005-02-01T03:22 2005-02-02T00:00")
-    friday = scate.Repeating(scate.DAY, scate.WEEK, value=scate.FRIDAY)
+    friday = scate.Repeating(scate.DAY, scate.WEEK, value=4)
     assert [x.isoformat() for x in scate.These(interval_tue, friday)] == \
            [scate.Interval.of(2005, 2, 4).isoformat()]
 
@@ -591,14 +591,14 @@ def test_misc():
            "1998-02-09T00:00:00 1998-02-16T00:00:00"
 
     # APW19980322.0749 (988,994) Monday
-    monday = scate.Repeating(scate.DAY, scate.WEEK, value=scate.MONDAY)
+    monday = scate.Repeating(scate.DAY, scate.WEEK, value=0)
     assert scate.Next(scate.Interval.of(1998, 3, 22, 14, 57), monday).isoformat() == \
            "1998-03-23T00:00:00 1998-03-24T00:00:00"
 
     # APW19990206.0090 (767,781) Thursday night
     # NOTE: as written, this is the night early on Thursday (1999-02-04)
     # to get the night early on Friday (1999-02-05), a Next would be needed
-    thursday = scate.Repeating(scate.DAY, scate.WEEK, value=scate.THURSDAY)
+    thursday = scate.Repeating(scate.DAY, scate.WEEK, value=3)
     thursday_night = scate.Intersection([thursday, scate.Night()])
     assert scate.Last(scate.Interval.of(1999, 2, 6, 6, 22, 26), thursday_night).isoformat() == \
            "1999-02-04T00:00:00 1999-02-04T06:00:00"

@@ -153,15 +153,6 @@ class Unit(enum.Enum):
 # allow e.g., scate.DAY instead of scate.Unit.DAY
 globals().update(Unit.__members__)
 
-# reference commonly needed dateutil values
-MONDAY = dateutil.rrule.MO
-TUESDAY = dateutil.rrule.TU
-WEDNESDAY = dateutil.rrule.WE
-THURSDAY = dateutil.rrule.TH
-FRIDAY = dateutil.rrule.FR
-SATURDAY = dateutil.rrule.SA
-SUNDAY = dateutil.rrule.SU
-
 
 class Offset:
     unit: Unit
@@ -825,7 +816,7 @@ def from_xml(elem: ET.Element, doc_time: Interval = None):
             case "Day-Of-Month":
                 obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
             case "Day-Of-Week":
-                day_int = globals()[prop_type.upper()]
+                day_int = getattr(dateutil.relativedelta, prop_type.upper()[:2]).weekday
                 obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()

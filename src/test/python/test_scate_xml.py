@@ -146,7 +146,7 @@ def test_nth_operators():
                 </annotations>
             </data>""")
         y2024 = scate.Year(2024, span=(15, 19))
-        thu = scate.Repeating(scate.DAY, scate.WEEK, value=scate.THURSDAY, span=(6, 14))
+        thu = scate.Repeating(scate.DAY, scate.WEEK, value=3, span=(6, 14))
         nth = scate.Nth(y2024, thu, index=3, from_end=from_end, span=(1, 19))
         objects = scate.from_xml(ET.fromstring(xml_str))
         assert objects == [nth]
@@ -155,7 +155,7 @@ def test_nth_operators():
 
 def test_n_operators():
     y2024 = scate.Year(2024, span=(20, 25))
-    mon = scate.Repeating(scate.DAY, scate.WEEK, value=scate.MONDAY, span=(30, 35))
+    mon = scate.Repeating(scate.DAY, scate.WEEK, value=0, span=(30, 35))
     kwargs = dict(n=2, interval=y2024, offset=mon, span=(10, 45))
     for xml_type, obj, isos in [
             ("NthFromEnd", scate.NthN(index=3, from_end=True, **kwargs), [[
@@ -886,7 +886,7 @@ def test_friday():
             </annotations>
         </data>""")
     doc_time = scate.Interval.of(1998, 3, 6)
-    fri = scate.Repeating(scate.DAY, scate.WEEK, value=scate.FRIDAY, span=(0, 6))
+    fri = scate.Repeating(scate.DAY, scate.WEEK, value=4, span=(0, 6))
     last = scate.Last(doc_time, fri, interval_included=True, span=(0, 6))
     objects = scate.from_xml(ET.fromstring(xml_str), doc_time=doc_time)
     assert objects == [last]
