@@ -649,4 +649,37 @@ def test_misc():
     march31 = scate.RepeatingIntersection([march, day31])
     year = scate.Period(scate.YEAR, 1)
     assert scate.Last(scate.Last(scate.Interval.of(1989, 11, 1), march31), year).isoformat() == \
-            "1988-03-31T00:00:00 1989-03-31T00:00:00"
+        "1988-03-31T00:00:00 1989-03-31T00:00:00"
+
+
+def test_none_values():
+    date = scate.Interval.of(2016, 10, 18)
+    undef = scate.Interval(None, None)
+    d08 = scate.Repeating(scate.DAY, scate.MONTH, value=8)
+    assert scate.Last(undef, d08).isoformat() == "... ..."
+    assert scate.Next(undef, d08).isoformat() == "... ..."
+    assert scate.Before(undef, d08).isoformat() == "... ..."
+    assert scate.After(undef, d08).isoformat() == "... ..."
+    assert scate.This(undef, d08).isoformat() == "... ..."
+    assert scate.Nth(undef, d08, index=5).isoformat() == "... ..."
+    assert scate.Between(undef, undef).isoformat() == "... ..."
+    assert scate.Intersection([undef, undef]).isoformat() == "... ..."
+    assert list(scate.LastN(undef, d08, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.NextN(undef, d08, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.NthN(undef, d08, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.These(undef, d08).isoformats()) == ["... ..."]
+
+    assert scate.Last(undef, None).isoformat() == "... ..."
+    assert scate.Next(undef, None).isoformat() == "... ..."
+    assert scate.Before(undef, None).isoformat() == "... ..."
+    assert scate.After(undef, None).isoformat() == "... ..."
+    assert scate.This(undef, None).isoformat() == "... ..."
+    assert scate.Nth(undef, None, index=5).isoformat() == "... ..."
+    assert scate.Between(undef, date).isoformat() == "... ..."
+    assert scate.Between(date, undef).isoformat() == "... ..."
+    assert scate.Intersection([undef, date]).isoformat() == "... ..."
+    assert scate.Intersection([date, undef]).isoformat() == "... ..."
+    assert list(scate.LastN(undef, None, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.NextN(undef, None, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.NthN(undef, None, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.These(undef, None).isoformats()) == ["... ..."]
