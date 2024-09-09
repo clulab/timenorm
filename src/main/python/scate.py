@@ -782,8 +782,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         known_intervals = {}
 
     @dataclasses.dataclass
-    class NOffset:
-        n: int | float
+    class Number:
+        value: int | float
         offset: Offset = None
         span: (int, int) = None
 
@@ -825,7 +825,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         spans = []
 
         # helper for managing access to id_to_obj
-        def pop(obj_id: str) -> Interval | Offset:
+        def pop(obj_id: str) -> Interval | Offset | Number:
             obj = id_to_obj[obj_id]
             id_to_n_parents[obj_id] -= 1
             if not id_to_n_parents[obj_id]:
@@ -874,6 +874,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
         # create objects from <entity> elements
         match entity_type:
+            case "Period":
+                obj = Period(Unit.__members__[prop_type.upper()[:-1]], pop(prop_number).value)
             case "Year":
                 obj = Year(int(prop_value))
             case "Month-Of-Year":
@@ -901,8 +903,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     case "Nth":
                         kwargs["index"] = int(prop_value)
                         kwargs["from_end"] = entity_type == "NthFromEnd"
-                if isinstance(offset, NOffset):
-                    kwargs["n"] = offset.n
+                if isinstance(offset, Number):
+                    kwargs["n"] = offset.value
                     cls_name += "N"
                     offset = offset.offset
                 obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
@@ -929,11 +931,14 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     value = int(prop_value)
                 else:
                     value = float(prop_value)
-                obj = NOffset(value)
+                obj = Number(value)
             case "Event":
                 obj = known_intervals.get(trigger_span)
                 if obj is None:
                     obj = Interval(None, None)
+            case "Modifier":
+                # ignore modifiers for now
+                continue
             case other:
                 raise NotImplementedError(other)
 
@@ -942,7 +947,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         spans.append(obj.span)
 
         # if Number property is present, wrap offset with number for later use
-        if prop_number:
+        # skip this for Periods, which directly consume their Number above
+        if prop_number and not isinstance(obj, Period):
             repeating_n = pop(prop_number)
             repeating_n.offset = obj
             obj = repeating_n
