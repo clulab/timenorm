@@ -500,6 +500,9 @@ class Last(IntervalOp):
         if not self.interval.is_defined():
             self.start = None
             self.end = None
+        elif self.offset is None:
+            self.start = None
+            self.end = self.interval.start
         else:
             start = self.interval.end if self.interval_included else self.interval.start
             self.start, self.end = start - self.offset
@@ -513,6 +516,9 @@ class Next(IntervalOp):
     def __post_init__(self):
         if not self.interval.is_defined():
             self.start = None
+            self.end = None
+        elif self.offset is None:
+            self.start = self.interval.end
             self.end = None
         else:
             if self.interval_included:
@@ -592,7 +598,7 @@ class Nth(IntervalOp):
     span: (int, int) = None
 
     def __post_init__(self):
-        if not self.interval.is_defined():
+        if not self.interval.is_defined() or self.offset is None:
             self.start = None
             self.end = None
         else:
@@ -616,7 +622,7 @@ class This(Interval):
     span: (int, int) = None
 
     def __post_init__(self):
-        if not self.interval.is_defined():
+        if not self.interval.is_defined() or self.offset is None:
             self.start = None
             self.end = None
         elif isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
@@ -747,7 +753,7 @@ class These(Intervals):
     span: (int, int) = None
 
     def __post_init__(self):
-        if not self.interval.is_defined():
+        if not self.interval.is_defined() or self.offset is None:
             start = None
             end = None
         else:
