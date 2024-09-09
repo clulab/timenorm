@@ -586,6 +586,28 @@ class After(IntervalOp):
 
 
 @dataclasses.dataclass
+class Nth(IntervalOp):
+    index: int
+    from_end: bool = False
+    span: (int, int) = None
+
+    def __post_init__(self):
+        if not self.interval.is_defined():
+            self.start = None
+            self.end = None
+        else:
+            offset = self.interval.end if self.from_end else self.interval.start
+            # to allow repeating intervals to overlap start with our start, subtract a tiny amount
+            if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)) and not self.from_end:
+                offset -= Unit.MICROSECOND.relativedelta(1)
+            for i in range(self.index - 1):
+                offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
+            self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
+            if self.start < self.interval.start or self.end > self.interval.end:
+                raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}")
+
+
+@dataclasses.dataclass
 class This(Interval):
     interval: Interval
     offset: Offset
@@ -646,28 +668,6 @@ class Intersection(Interval):
             self.end = min((i.end for i in self.intervals if i.end is not None), default=None)
         if self.start is not None and self.end is not None and self.start >= self.end:
             raise ValueError(f"{self.start.isoformat()} is not before {self.end.isoformat()}")
-
-
-@dataclasses.dataclass
-class Nth(IntervalOp):
-    index: int
-    from_end: bool = False
-    span: (int, int) = None
-
-    def __post_init__(self):
-        if not self.interval.is_defined():
-            self.start = None
-            self.end = None
-        else:
-            offset = self.interval.end if self.from_end else self.interval.start
-            # to allow repeating intervals to overlap start with our start, subtract a tiny amount
-            if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)) and not self.from_end:
-                offset -= Unit.MICROSECOND.relativedelta(1)
-            for i in range(self.index - 1):
-                offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
-            self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
-            if self.start < self.interval.start or self.end > self.interval.end:
-                raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}")
 
 
 class Intervals(collections.abc.Iterable[Interval], abc.ABC):
