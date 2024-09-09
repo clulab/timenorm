@@ -875,7 +875,15 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         # create objects from <entity> elements
         match entity_type:
             case "Period":
-                obj = Period(Unit.__members__[prop_type.upper()[:-1]], pop(prop_number).value)
+                if prop_type == "Unknown":
+                    unit = None
+                else:
+                    unit = Unit.__members__[prop_type.upper()[:-1]]
+                if prop_number:
+                    n = pop(prop_number).value
+                else:
+                    n = None
+                obj = Period(unit, n)
             case "Year":
                 obj = Year(int(prop_value))
             case "Month-Of-Year":
@@ -979,4 +987,10 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
         # add the object to the mapping
         id_to_obj[entity_id] = obj
+
+    # remove any Number objects as they're internal implementation details
+    for key in list(id_to_obj):
+        if isinstance(id_to_obj[key], Number):
+            del id_to_obj[key]
+
     return list(id_to_obj.values())

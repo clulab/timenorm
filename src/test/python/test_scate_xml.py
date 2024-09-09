@@ -19,34 +19,39 @@ def _isoformats(objects: list[scate.Interval | scate.Offset]):
 
 
 def test_period():
-    xml_str = inspect.cleandoc(f"""
-        <data>
-            <annotations>
-                <entity>
-                    <id>160@e@sample-3-982-540-2@gold</id>
-                    <span>45,47</span>
-                    <type>Number</type>
-                    <parentsType>Other</parentsType>
-                    <properties>
-                        <Value>59</Value>
-                    </properties>
-                </entity>
-                <entity>
-                    <id>161@e@sample-3-982-540-2@gold</id>
-                    <span>48,52</span>
-                    <type>Period</type>
-                    <parentsType>Duration</parentsType>
-                    <properties>
-                        <Type>Years</Type>
-                        <Number>160@e@sample-3-982-540-2@gold</Number>
-                        <Modifier></Modifier>
-                    </properties>
-                </entity>
-            </annotations>
-        </data>""")
-    objects = scate.from_xml(ET.fromstring(xml_str))
-    assert objects == [scate.Period(scate.YEAR, 59, span=(45, 52))]
-    assert _isoformats(objects) == [None]
+    for prop_type, number_id, unit, n, span in [
+            ("Years", '160@e@sample-3-982-540-2@gold', scate.YEAR, 59, (45, 52)),
+            ("Unknown", '160@e@sample-3-982-540-2@gold', None, 59, (45, 52)),
+            ("Years", '', scate.YEAR, None, (48, 52)),
+            ("Unknown", '', None, None, (48, 52))]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>160@e@sample-3-982-540-2@gold</id>
+                        <span>45,47</span>
+                        <type>Number</type>
+                        <parentsType>Other</parentsType>
+                        <properties>
+                            <Value>59</Value>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>161@e@sample-3-982-540-2@gold</id>
+                        <span>48,52</span>
+                        <type>Period</type>
+                        <parentsType>Duration</parentsType>
+                        <properties>
+                            <Type>{prop_type}</Type>
+                            <Number>{number_id}</Number>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        objects = scate.from_xml(ET.fromstring(xml_str))
+        assert objects == [scate.Period(unit, n, span=span)]
+        assert _isoformats(objects) == [None]
 
 
 def test_special_repeating():
