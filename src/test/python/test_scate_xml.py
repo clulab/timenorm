@@ -111,6 +111,32 @@ def test_special_repeating():
         assert _isoformats(objects) == [None]
 
 
+def test_year():
+    for value, digits, n_missing_digits, iso in [
+            ("1999", 1999, 0, "1999-01-01T00:00:00 2000-01-01T00:00:00"),
+            ("199?", 199, 1, "1990-01-01T00:00:00 2000-01-01T00:00:00"),
+            ("19??", 19, 2, "1900-01-01T00:00:00 2000-01-01T00:00:00"),
+            ("1???", 1, 3, "1000-01-01T00:00:00 2000-01-01T00:00:00")]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>4@test</id>
+                        <span>11,15</span>
+                        <type>Year</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Value>{value}</Value>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        obj = scate.Year(digits, n_missing_digits, span=(11, 15))
+        objects = scate.from_xml(ET.fromstring(xml_str))
+        assert objects == [obj]
+        assert _isoformats(objects) == [iso]
+
+
 def test_interval_offset_operators():
     doc_time = scate.Interval.of(2024, 2)
     for xml_type, cls, interval_included, iso in [

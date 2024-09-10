@@ -901,7 +901,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     n = None
                 obj = Period(unit, n)
             case "Year":
-                obj = Year(int(prop_value))
+                digits = prop_value.rstrip('?')
+                obj = Year(int(digits), len(prop_value) - len(digits))
             case "Month-Of-Year":
                 month_int = datetime.datetime.strptime(prop_type, '%B').month
                 obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
