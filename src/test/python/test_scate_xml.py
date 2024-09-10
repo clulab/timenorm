@@ -291,6 +291,77 @@ def test_n_operators():
         assert _isoformats(objects) == isos
 
 
+def test_sub_interval():
+    xml_str = inspect.cleandoc(f"""
+        <data>
+            <annotations>
+                <entity>
+                    <id>221@e@sample-3-982-540-2@gold</id>
+                    <span>6505,6507</span>
+                    <type>Day-Of-Month</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>28</Value>
+                        <Sub-Interval>224@e@sample-3-982-540-2@gold</Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>222@e@sample-3-982-540-2@gold</id>
+                    <span>6508,6511</span>
+                    <type>Month-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>May</Type>
+                        <Sub-Interval>221@e@sample-3-982-540-2@gold</Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>223@e@sample-3-982-540-2@gold</id>
+                    <span>6512,6516</span>
+                    <type>Year</type>
+                    <parentsType>Interval</parentsType>
+                    <properties>
+                        <Value>2000</Value>
+                        <Sub-Interval>222@e@sample-3-982-540-2@gold</Sub-Interval>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>224@e@sample-3-982-540-2@gold</id>
+                    <span>6517,6519</span>
+                    <type>Hour-Of-Day</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>15</Value>
+                        <AMPM-Of-Day></AMPM-Of-Day>
+                        <Time-Zone></Time-Zone>
+                        <Sub-Interval>225@e@sample-3-982-540-2@gold</Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>225@e@sample-3-982-540-2@gold</id>
+                    <span>6520,6522</span>
+                    <type>Minute-Of-Hour</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>6</Value>
+                        <Sub-Interval></Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert _isoformats(objects) == ["2000-05-28T15:06:00 2000-05-28T15:07:00"]
+
+
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>
