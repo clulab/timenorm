@@ -362,6 +362,55 @@ def test_sub_interval():
     assert _isoformats(objects) == ["2000-05-28T15:06:00 2000-05-28T15:07:00"]
 
 
+def test_am_pm():
+    xml_str = inspect.cleandoc(f"""
+        <data>
+            <annotations>
+                <entity>
+                    <id>794@e@doc0002_CLIN@gold</id>
+                    <span>1128,1129</span>
+                    <type>Hour-Of-Day</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>7</Value>
+                        <AMPM-Of-Day>796@e@doc0002_CLIN@gold</AMPM-Of-Day>
+                        <Time-Zone></Time-Zone>
+                        <Sub-Interval>795@e@doc0002_CLIN@gold</Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>795@e@doc0002_CLIN@gold</id>
+                    <span>1130,1132</span>
+                    <type>Minute-Of-Hour</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Value>30</Value>
+                        <Sub-Interval></Sub-Interval>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>796@e@doc0002_CLIN@gold</id>
+                    <span>1133,1137</span>
+                    <type>AMPM-Of-Day</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>PM</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    h19 = scate.Repeating(scate.HOUR, scate.DAY, value=19, span=(1128, 1129))
+    m30 = scate.Repeating(scate.MINUTE, scate.HOUR, value=30, span=(1130, 1132))
+    h19m30 = scate.RepeatingIntersection([h19, m30], span=(1128, 1137))
+    assert scate.from_xml(ET.fromstring(xml_str)) == [h19m30]
+
+
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>

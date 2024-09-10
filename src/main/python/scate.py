@@ -798,6 +798,11 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         offset: Offset = None
         span: (int, int) = None
 
+    @dataclasses.dataclass
+    class AMPM:
+        value: str
+        span: (int, int) = None
+
     id_to_entity = {}
     id_to_children = {}
     id_to_n_parents = collections.Counter()
@@ -836,7 +841,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         spans = []
 
         # helper for managing access to id_to_obj
-        def pop(obj_id: str) -> Interval | Offset | Repeating | Number:
+        def pop(obj_id: str) -> Interval | Offset | Repeating | Number | AMPM:
             result = id_to_obj[obj_id]
             id_to_n_parents[obj_id] -= 1
             if not id_to_n_parents[obj_id]:
@@ -846,7 +851,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             return result
 
         # helper for ET.findall + text + pop
-        def pop_all_prop(prop_name: str) -> list[Interval | Offset | Repeating | Number]:
+        def pop_all_prop(prop_name: str) -> list[Interval | Offset | Repeating | Number | AMPM]:
             return [pop(e.text) for e in entity.findall(f"properties/{prop_name}") if e.text]
 
         # helper for managing the multiple interval properties
@@ -905,8 +910,20 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             case "Day-Of-Week":
                 day_int = getattr(dateutil.relativedelta, prop_type.upper()[:2]).weekday
                 obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
+            case "AMPM-Of-Day":
+                obj = AMPM(prop_type)
             case "Hour-Of-Day":
-                obj = Repeating(Unit.HOUR, Unit.DAY, value=int(prop_value))
+                hour = int(prop_value)
+                prop_am_pm = entity.findtext("properties/AMPM-Of-Day")
+                if prop_am_pm:
+                    match pop(prop_am_pm).value:
+                        case "AM":
+                            pass
+                        case "PM":
+                            hour += 12
+                        case _:
+                            raise NotImplementedError(ET.tostring(entity))
+                obj = Repeating(Unit.HOUR, Unit.DAY, value=hour)
             case "Minute-Of-Hour":
                 obj = Repeating(Unit.MINUTE, Unit.HOUR, value=int(prop_value))
             case "Second-Of-Minute":
