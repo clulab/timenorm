@@ -616,6 +616,7 @@ def test_none_values():
     date = scate.Interval.of(2016, 10, 18)
     undef = scate.Interval(None, None)
     d08 = scate.Repeating(scate.DAY, scate.MONTH, value=8)
+    pUnk = scate.Period(scate.MONTH, None)
 
     assert scate.Last(undef, d08).isoformat() == "... ..."
     assert scate.Next(undef, d08).isoformat() == "... ..."
@@ -655,6 +656,17 @@ def test_none_values():
     assert list(scate.NextN(date, None, n=3).isoformats()) == ["2016-10-19T00:00:00 ...", "... ...", "... ..."]
     assert list(scate.NthN(date, None, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
     assert list(scate.These(date, None).isoformats()) == ["... ..."]
+
+    assert scate.Last(date, pUnk).isoformat() == "... 2016-10-18T00:00:00"
+    assert scate.Next(date, pUnk).isoformat() == "2016-10-19T00:00:00 ..."
+    assert scate.Before(date, pUnk).isoformat() == "... ..."
+    assert scate.After(date, pUnk).isoformat() == "... ..."
+    assert scate.Nth(date, pUnk, index=5).isoformat() == "... ..."
+    assert scate.This(date, pUnk).isoformat() == "... ..."
+    assert list(scate.LastN(date, pUnk, n=3).isoformats()) == ["... 2016-10-18T00:00:00", "... ...", "... ..."]
+    assert list(scate.NextN(date, pUnk, n=3).isoformats()) == ["2016-10-19T00:00:00 ...", "... ...", "... ..."]
+    assert list(scate.NthN(date, pUnk, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.These(date, pUnk).isoformats()) == ["... ..."]
 
 
 def test_misc():

@@ -170,23 +170,23 @@ class Offset:
 @dataclasses.dataclass
 class Period(Offset):
     unit: Unit
-    n: int
+    n: int | None
     span: (int, int) = None
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        if self.unit is None:
+        if self.unit is None or self.n is None:
             return Interval(other, None)
         else:
             return Interval(other, other + self.unit.relativedelta(self.n))
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        if self.unit is None:
+        if self.unit is None or self.n is None:
             return Interval(None, other)
         else:
             return Interval(other - self.unit.relativedelta(self.n), other)
 
     def expand(self, interval: Interval) -> Interval:
-        if self.unit is None:
+        if self.unit is None or self.n is None:
             return Interval(None, None)
         else:
             return self.unit.expand(interval, self.n)
@@ -620,7 +620,8 @@ class Nth(IntervalOp):
             for i in range(self.index - 1):
                 offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
             self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
-            if self.start < self.interval.start or self.end > self.interval.end:
+            if (self.start is not None and self.start < self.interval.start) or \
+                    (self.end is not None and self.end > self.interval.end):
                 raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}")
 
 
@@ -779,13 +780,22 @@ class These(Intervals):
         self.interval = Interval(start, end)
 
     def __iter__(self) -> typing.Iterator[Interval]:
-        if self.interval.is_defined():
+        # without a start, we can't find anything
+        if self.interval.start is None:
+            yield Interval(None, None)
+        # without an end, we would generate an infinite number of intervals
+        elif self.interval.end is None:
+            yield Interval(None, None)
+        else:
             interval = self.interval.start + self.offset
-            while interval.end <= self.interval.end:
+            while True:
+                if interval.end is None:
+                    yield Interval(None, None)
+                    break
+                if interval.end > self.interval.end:
+                    break
                 yield interval
                 interval = interval.end + self.offset
-        else:
-            yield Interval(None, None)
 
 
 def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = None):
