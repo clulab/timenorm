@@ -951,6 +951,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     cls_name += "N"
                     offset = offset.offset
                 obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
+            case "Two-Digit-Year":
+                obj = YearSuffix(get_interval("Interval"), int(prop_value), 2)
             case "This":
                 obj = This(get_interval("Interval"), get_offset())
             case "Between":
@@ -1007,7 +1009,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         if sub_interval_id:
             sub_interval = pop(sub_interval_id)
             match entity_type:
-                case "Year":
+                case "Year" | "Two-Digit-Year":
                     obj = This(obj, sub_interval)
                 case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day" | \
                      "Hour-Of-Day" | "Minute-Of-Hour" | "Second-Of-Minute":
@@ -1019,7 +1021,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         if super_interval_id:
             super_interval = pop(super_interval_id)
             match super_interval:
-                case Year() | This():
+                case Year() | YearSuffix() | This():
                     obj = This(super_interval, obj)
                 case Repeating():
                     obj = RepeatingIntersection([super_interval, obj])

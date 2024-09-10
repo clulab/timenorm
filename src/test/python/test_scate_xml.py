@@ -137,6 +137,33 @@ def test_year():
         assert _isoformats(objects) == [iso]
 
 
+def test_two_digit_year():
+    for value, iso in [
+            ("84", "1984-01-01T00:00:00 1985-01-01T00:00:00"),
+            ("19", "1919-01-01T00:00:00 1920-01-01T00:00:00")]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>5@test</id>
+                        <span>1704,1706</span>
+                        <type>Two-Digit-Year</type>
+                        <parentsType>Operator</parentsType>
+                        <properties>
+                            <Interval-Type>DocTime</Interval-Type>
+                            <Interval></Interval>
+                            <Value>{value}</Value>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        doc_time = scate.Interval.of(1928, 2, 13)
+        obj = scate.YearSuffix(doc_time, last_digits=int(value), n_suffix_digits=2, span=(1704, 1706))
+        objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={(None, None): doc_time})
+        assert objects == [obj]
+        assert _isoformats(objects) == [iso]
+
+
 def test_interval_offset_operators():
     doc_time = scate.Interval.of(2024, 2)
     for xml_type, cls, interval_included, iso in [
