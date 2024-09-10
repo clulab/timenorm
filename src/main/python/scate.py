@@ -974,11 +974,12 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     value = None
                 elif prop_value.isdigit():
                     value = int(prop_value)
-                elif '-' in prop_value:
-                    # TODO: handle ranges better
-                    value = None
                 else:
-                    value = float(prop_value)
+                    try:
+                        value = float(prop_value)
+                    except ValueError:
+                        # TODO: handle ranges better
+                        value = None
                 obj = Number(value)
             case "Event":
                 obj = known_intervals.get(trigger_span)
