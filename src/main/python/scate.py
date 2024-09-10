@@ -827,17 +827,17 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         spans = []
 
         # helper for managing access to id_to_obj
-        def pop(obj_id: str) -> Interval | Offset | Number:
-            obj = id_to_obj[obj_id]
+        def pop(obj_id: str) -> Interval | Offset | Repeating | Number:
+            result = id_to_obj[obj_id]
             id_to_n_parents[obj_id] -= 1
             if not id_to_n_parents[obj_id]:
                 id_to_obj.pop(obj_id)
-            if obj.__class__ is not Interval:  # raw Interval has no span attribute
-                spans.append(obj.span)
-            return obj
+            if result.__class__ is not Interval:  # raw Interval has no span attribute
+                spans.append(result.span)
+            return result
 
         # helper for ET.findall + text + pop
-        def pop_all_prop(prop_name: str) -> list[Interval | Offset]:
+        def pop_all_prop(prop_name: str) -> list[Interval | Offset | Repeating | Number]:
             return [pop(e.text) for e in entity.findall(f"properties/{prop_name}") if e.text]
 
         # helper for managing the multiple interval properties
@@ -846,23 +846,20 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             prop_interval = entity.findtext(f"properties/{prop_name}")
             match prop_interval_type:
                 case "Link":
-                    interval = pop(prop_interval)
+                    return pop(prop_interval)
+                case "DocTime" if (None, None) in known_intervals:
+                    return known_intervals.get((None, None))
                 case "DocTime":
-                    interval = known_intervals.get((None, None))
-                    if interval is None:
-                        raise ValueError(f"known_intervals[(None, None)] required for {ET.tostring(entity)}")
+                    raise ValueError(f"known_intervals[(None, None)] required for {ET.tostring(entity)}")
+                case "Unknown":
+                    return Interval(None, None)
                 case other_type:
                     raise NotImplementedError(other_type)
-            return interval
 
         # helper for managing the multiple offset properties
         def get_offset() -> Offset:
             prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
-            if prop_offset:
-                offset = pop(prop_offset)
-            else:
-                offset = None
-            return offset
+            return pop(prop_offset) if prop_offset else None
 
         # helper for managing Included properties
         def get_included(prop_name: str) -> bool:
