@@ -941,14 +941,17 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                               start_included=get_included("Start-Included"),
                               end_included=get_included("End-Included"))
             case "Intersection":
-                intervals = pop_all_prop("Intervals")
-                repeating_intervals = pop_all_prop("Repeating-Intervals")
-                if intervals and repeating_intervals:
-                    raise NotImplementedError
-                elif intervals:
-                    obj = Intersection(intervals)
-                else:
-                    obj = RepeatingIntersection(repeating_intervals)
+                match (pop_all_prop("Intervals"), pop_all_prop("Repeating-Intervals")):
+                    case intervals, []:
+                        obj = Intersection(intervals)
+                    case [], repeating_intervals:
+                        obj = RepeatingIntersection(repeating_intervals)
+                    case [interval], [repeating_interval]:
+                        obj = This(interval, repeating_interval)
+                    case [interval], repeating_intervals:
+                        obj = This(interval, RepeatingIntersection(repeating_intervals))
+                    case _:
+                        raise NotImplementedError(ET.tostring(entity))
             case "Number":
                 if prop_value == '?':
                     value = None
@@ -964,8 +967,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 obj = known_intervals.get(trigger_span)
                 if obj is None:
                     obj = Interval(None, None)
-            case "Modifier":
-                # TODO: handle modifiers better
+            case "Modifier" | "Frequency":
+                # TODO: handle modifiers and frequencies
                 continue
             case other:
                 raise NotImplementedError(other)
