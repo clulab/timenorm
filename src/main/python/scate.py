@@ -240,6 +240,8 @@ class Repeating(Offset):
             self.rrule_kwargs["freq"] = rrule_freq
 
             match (self.unit, self.range):
+                case (Unit.SECOND, Unit.MINUTE):
+                    rrule_by = "bysecond"
                 case (Unit.MINUTE, Unit.HOUR):
                     rrule_by = "byminute"
                 case (Unit.HOUR, Unit.DAY):
@@ -894,6 +896,12 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             case "Day-Of-Week":
                 day_int = getattr(dateutil.relativedelta, prop_type.upper()[:2]).weekday
                 obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
+            case "Hour-Of-Day":
+                obj = Repeating(Unit.HOUR, Unit.DAY, value=int(prop_value))
+            case "Minute-Of-Hour":
+                obj = Repeating(Unit.MINUTE, Unit.HOUR, value=int(prop_value))
+            case "Second-Of-Minute":
+                obj = Repeating(Unit.SECOND, Unit.MINUTE, value=int(prop_value))
             case "Part-Of-Day" | "Season-Of-Year":
                 obj = globals()[prop_type]()
             case "Calendar-Interval":

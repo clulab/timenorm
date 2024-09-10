@@ -54,6 +54,31 @@ def test_period():
         assert _isoformats(objects) == [None]
 
 
+def test_repeating_intervals_with_values():
+    for prop_type, unit, range in [
+            ("Day-Of-Month", scate.DAY, scate.MONTH),
+            ("Hour-Of-Day", scate.HOUR, scate.DAY),
+            ("Minute-Of-Hour", scate.MINUTE, scate.HOUR),
+            ("Second-Of-Minute", scate.SECOND, scate.MINUTE)]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>0@e@x@gold</id>
+                        <span>123,456</span>
+                        <type>{prop_type}</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Value>11</Value>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        objects = scate.from_xml(ET.fromstring(xml_str))
+        assert objects == [scate.Repeating(unit, range, value=11, span=(123, 456))]
+        assert _isoformats(objects) == [None]
+
+
 def test_special_repeating():
     for xml_type, xml_name, cls in [
             ("Season-Of-Year", "Spring", scate.Spring),
