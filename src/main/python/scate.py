@@ -918,10 +918,12 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 prop_am_pm = entity.findtext("properties/AMPM-Of-Day")
                 if prop_am_pm:
                     match pop(prop_am_pm).value:
-                        case "AM":
-                            pass
-                        case "PM":
+                        case "AM" if hour == 12:
+                            hour = 0
+                        case "PM" if hour != 12:
                             hour += 12
+                        case "AM" | "PM":
+                            pass
                         case _:
                             raise NotImplementedError(ET.tostring(entity))
                 obj = Repeating(Unit.HOUR, Unit.DAY, value=hour)
