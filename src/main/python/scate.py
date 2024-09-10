@@ -174,13 +174,22 @@ class Period(Offset):
     span: (int, int) = None
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        return Interval(other, other + self.unit.relativedelta(self.n))
+        if self.unit is None:
+            return Interval(other, None)
+        else:
+            return Interval(other, other + self.unit.relativedelta(self.n))
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        return Interval(other - self.unit.relativedelta(self.n), other)
+        if self.unit is None:
+            return Interval(None, other)
+        else:
+            return Interval(other - self.unit.relativedelta(self.n), other)
 
     def expand(self, interval: Interval) -> Interval:
-        return self.unit.expand(interval, self.n)
+        if self.unit is None:
+            return Interval(None, None)
+        else:
+            return self.unit.expand(interval, self.n)
 
 
 @dataclasses.dataclass
@@ -844,6 +853,9 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         def get_interval(prop_name: str) -> Interval:
             prop_interval_type = entity.findtext(f"properties/{prop_name}-Type")
             prop_interval = entity.findtext(f"properties/{prop_name}")
+            # this is a common annotation error, so rather than fail, handle it like DocTime
+            if prop_interval_type == "Link" and not prop_interval:
+                prop_interval_type = "DocTime"
             match prop_interval_type:
                 case "Link":
                     return pop(prop_interval)
@@ -942,6 +954,9 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     value = None
                 elif prop_value.isdigit():
                     value = int(prop_value)
+                elif '-' in prop_value:
+                    # TODO: handle ranges better
+                    value = None
                 else:
                     value = float(prop_value)
                 obj = Number(value)
@@ -950,7 +965,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 if obj is None:
                     obj = Interval(None, None)
             case "Modifier":
-                # ignore modifiers for now
+                # TODO: handle modifiers better
                 continue
             case other:
                 raise NotImplementedError(other)

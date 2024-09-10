@@ -37,6 +37,11 @@ def test_period():
     assert (date + period).end.isoformat() == "2005-01-01T00:00:00"
     assert (date - period).start.isoformat() == "1995-01-01T00:00:00"
 
+    period = scate.Period(None, 3)  # Unknown unit
+    assert (date + period).isoformat() == "2000-01-01T00:00:00 ..."
+    assert (date - period).isoformat() == "... 2000-01-01T00:00:00"
+    assert period.expand(date).isoformat() == "... ..."
+
 
 def test_period_sum():
     period1 = scate.Period(scate.YEAR, 1)
