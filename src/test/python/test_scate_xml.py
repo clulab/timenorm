@@ -469,6 +469,55 @@ def test_am_pm():
         assert scate.from_xml(ET.fromstring(xml_str)) == [hm30]
 
 
+def test_doc_time():
+    doc_time = scate.Interval.of(2024, 2, 2)
+    doc_time_year = scate.Year(2024)
+    for xml_type, xml_interval_type, cls, cls_doc_time, iso in [
+            ("Before", "DocTime", scate.Before, doc_time, "2024-01-15T00:00:00 2024-01-16T00:00:00"),
+            ("After", "DocTime-Year", scate.After, doc_time_year, "2025-01-15T00:00:00 2025-01-16T00:00:00"),
+            ("Last", "DocTime-Year", scate.Last, doc_time_year, "2023-12-15T00:00:00 2023-12-16T00:00:00"),
+            ("Next", "DocTime", scate.Next, doc_time, "2024-02-15T00:00:00 2024-02-16T00:00:00"),
+            ("This", "DocTime", scate.This, doc_time, "2024-02-15T00:00:00 2024-02-16T00:00:00"),
+            ("NthFromEnd", "DocTime-Year", scate.Nth, doc_time_year, "2024-12-15T00:00:00 2024-12-16T00:00:00"),
+    ]:
+        xml_str = inspect.cleandoc(f"""
+            <data>
+                <annotations>
+                    <entity>
+                        <id>0@e@Doc9@gold</id>
+                        <span>1,5</span>
+                        <type>{xml_type}</type>
+                        <parentsType>Operator</parentsType>
+                        <properties>
+                            <Semantics>Interval-Not-Included</Semantics>
+                            <Interval-Type>{xml_interval_type}</Interval-Type>
+                            <Interval></Interval>
+                            <Value>1</Value>
+                            <Period></Period>
+                            <Repeating-Interval>1@e@Doc9@gold</Repeating-Interval>
+                        </properties>
+                    </entity>
+                    <entity>
+                        <id>1@e@Doc9@gold</id>
+                        <span>6,14</span>
+                        <type>Day-Of-Month</type>
+                        <parentsType>Repeating-Interval</parentsType>
+                        <properties>
+                            <Value>15</Value>
+                            <Number></Number>
+                            <Modifier></Modifier>
+                        </properties>
+                    </entity>
+                </annotations>
+            </data>""")
+        kwargs = dict(index=1, from_end=True) if cls == scate.Nth else {}
+        d15 = scate.Repeating(scate.DAY, scate.MONTH, value=15, span=(6, 14))
+        op = cls(cls_doc_time, d15, span=(1, 14), **kwargs)
+        objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={(None, None): doc_time})
+        assert objects == [op]
+        assert _isoformats(objects) == [iso]
+
+
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>

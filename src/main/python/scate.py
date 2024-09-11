@@ -622,7 +622,7 @@ class Nth(IntervalOp):
             self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
             if (self.start is not None and self.start < self.interval.start) or \
                     (self.end is not None and self.end > self.interval.end):
-                raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}")
+                raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}:\n{self}")
 
 
 @dataclasses.dataclass
@@ -880,7 +880,10 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     return pop(prop_interval)
                 case "DocTime" if (None, None) in known_intervals:
                     return known_intervals.get((None, None))
-                case "DocTime":
+                case "DocTime-Year" if (None, None) in known_intervals:
+                    doc_time = known_intervals.get((None, None))
+                    return Year(doc_time.start.year)
+                case "DocTime" | "DocTime-Year":
                     raise ValueError(f"known_intervals[(None, None)] required for {ET.tostring(entity)}")
                 case "Unknown":
                     return Interval(None, None)
