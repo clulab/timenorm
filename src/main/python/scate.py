@@ -828,6 +828,10 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 id_to_children[entity_id].add(prop.text)
                 id_to_n_parents[prop.text] += 1
 
+    # to avoid infinite loops below, remove non-existent entities (i.e., values that are not keys)
+    for key in id_to_children:
+        id_to_children[key].intersection_update(id_to_children.keys())
+
     # topological sort
     sorted_ids = {}
     while id_to_children:
