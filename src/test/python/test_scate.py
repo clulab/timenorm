@@ -618,6 +618,14 @@ def test_none_values():
     d08 = scate.Repeating(scate.DAY, scate.MONTH, value=8)
     pUnk = scate.Period(scate.MONTH, None)
 
+    assert (date + scate.Repeating(None)).isoformat() == "... ..."
+    assert (date - scate.Repeating(None)).isoformat() == "... ..."
+    assert scate.Last(date, scate.Repeating(None)).isoformat() == "... ..."
+    assert scate.Next(date, scate.Repeating(None)).isoformat() == "... ..."
+    assert scate.Before(date, scate.Repeating(None)).isoformat() == "... ..."
+    assert scate.After(date, scate.Repeating(None)).isoformat() == "... ..."
+    assert scate.This(date, scate.Repeating(None)).isoformat() == "... ..."
+
     assert scate.Last(undef, d08).isoformat() == "... ..."
     assert scate.Next(undef, d08).isoformat() == "... ..."
     assert scate.Before(undef, d08).isoformat() == "... ..."

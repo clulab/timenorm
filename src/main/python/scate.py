@@ -270,6 +270,8 @@ class Repeating(Offset):
             self.rrule_kwargs[rrule_by] = self.value
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
+        if self.unit is None:
+            return Interval(None, None)
         other = self.unit.truncate(other)
         if self.rrule_kwargs:
             # HACK: rrule requires a starting point even when going backwards so use a big one
@@ -284,6 +286,8 @@ class Repeating(Offset):
         return interval
 
     def __radd__(self, other: datetime.datetime) -> Interval:
+        if self.unit is None:
+            return Interval(None, None)
         start = self.unit.truncate(other)
         if self.rrule_kwargs:
             start = dateutil.rrule.rrule(dtstart=start, **self.rrule_kwargs).after(other)
@@ -638,10 +642,13 @@ class This(Interval):
             self.start = None
             self.end = None
         elif isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
-            start = self.offset.range.truncate(self.interval.start)
-            self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
-            if (self.end + self.offset).end < self.interval.end:
-                raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
+            if self.offset.range is None:
+                self.start = self.end = None
+            else:
+                start = self.offset.range.truncate(self.interval.start)
+                self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
+                if (self.end + self.offset).end < self.interval.end:
+                    raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
         elif isinstance(self.offset, (Period, PeriodSum)):
             self.start, self.end = self.offset.expand(self.interval)
         else:
@@ -668,7 +675,7 @@ class Between(Interval):
             if self.end < self.start:
                 start_iso = self.start_interval.isoformat()
                 end_iso = self.end_interval.isoformat()
-                raise ValueError(f"{start_iso} is not before {end_iso}")
+                raise ValueError(f"{start_iso} is not before {end_iso}:\n{self}")
 
 
 @dataclasses.dataclass
@@ -948,7 +955,9 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 obj = Repeating(Unit.MINUTE, Unit.HOUR, value=int(prop_value))
             case "Second-Of-Minute":
                 obj = Repeating(Unit.SECOND, Unit.MINUTE, value=int(prop_value))
-            case "Part-Of-Day" | "Season-Of-Year":
+            case "Part-Of-Day" | "Season-Of-Year" if prop_type == "Unknown":
+                obj = Repeating(None)
+            case "Part-Of-Day" | "Season-Of-Year" :
                 obj = globals()[prop_type]()
             case "Calendar-Interval":
                 obj = Repeating(Unit.__members__[prop_type.upper()])
@@ -1007,7 +1016,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 obj = known_intervals.get(trigger_span)
                 if obj is None:
                     obj = Interval(None, None)
-            case "Modifier" | "Frequency":
+            case "Modifier" | "Frequency" | "NotNormalizable":
                 # TODO: handle modifiers and frequencies
                 continue
             case other:
