@@ -2,10 +2,10 @@ import abc
 import collections
 import dataclasses
 import datetime
-
 import dateutil.relativedelta
 import dateutil.rrule
 import enum
+import re
 import typing
 import xml.etree.ElementTree as ET
 
@@ -879,9 +879,6 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         def get_interval(prop_name: str) -> Interval:
             prop_interval_type = entity.findtext(f"properties/{prop_name}-Type")
             prop_interval = entity.findtext(f"properties/{prop_name}")
-            # this is a common annotation error, so rather than fail, handle it like DocTime
-            if prop_interval_type == "Link" and not prop_interval:
-                prop_interval_type = "DocTime"
             match prop_interval_type:
                 case "Link":
                     return pop(prop_interval)
@@ -891,7 +888,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     doc_time = known_intervals.get((None, None))
                     return Year(doc_time.start.year)
                 case "DocTime" | "DocTime-Year":
-                    raise ValueError(f"known_intervals[(None, None)] required for {ET.tostring(entity)}")
+                    raise ValueError(f"known_intervals[(None, None)] required")
                 case "Unknown":
                     return Interval(None, None)
                 case other_type:
@@ -913,114 +910,118 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     raise NotImplementedError(other_type)
 
         # create objects from <entity> elements
-        match entity_type:
-            case "Period":
-                if prop_type == "Unknown":
-                    unit = None
-                else:
-                    unit = Unit.__members__[prop_type.upper()[:-1]]
-                if prop_number:
-                    n = pop(prop_number).value
-                else:
-                    n = None
-                obj = Period(unit, n)
-            case "Year":
-                digits = prop_value.rstrip('?')
-                obj = Year(int(digits), len(prop_value) - len(digits))
-            case "Month-Of-Year":
-                month_int = datetime.datetime.strptime(prop_type, '%B').month
-                obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
-            case "Day-Of-Month":
-                obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
-            case "Day-Of-Week":
-                day_int = getattr(dateutil.relativedelta, prop_type.upper()[:2]).weekday
-                obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
-            case "AMPM-Of-Day":
-                obj = AMPM(prop_type)
-            case "Hour-Of-Day":
-                hour = int(prop_value)
-                prop_am_pm = entity.findtext("properties/AMPM-Of-Day")
-                if prop_am_pm:
-                    match pop(prop_am_pm).value:
-                        case "AM" if hour == 12:
-                            hour = 0
-                        case "PM" if hour != 12:
-                            hour += 12
-                        case "AM" | "PM":
-                            pass
-                        case _:
-                            raise NotImplementedError(ET.tostring(entity))
-                obj = Repeating(Unit.HOUR, Unit.DAY, value=hour)
-            case "Minute-Of-Hour":
-                obj = Repeating(Unit.MINUTE, Unit.HOUR, value=int(prop_value))
-            case "Second-Of-Minute":
-                obj = Repeating(Unit.SECOND, Unit.MINUTE, value=int(prop_value))
-            case "Part-Of-Day" | "Season-Of-Year" if prop_type == "Unknown":
-                obj = Repeating(None)
-            case "Part-Of-Day" | "Season-Of-Year" :
-                obj = globals()[prop_type]()
-            case "Calendar-Interval":
-                obj = Repeating(Unit.__members__[prop_type.upper()])
-            case "Union":
-                obj = OffsetUnion(pop_all_prop("Repeating-Intervals"))
-            case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":
-                cls_name = "Nth" if entity_type.startswith("Nth") else entity_type
-                interval = get_interval("Interval")
-                offset = get_offset()
-                kwargs = {}
-                match cls_name:
-                    case "Last" | "Next" | "Before" | "After":
-                        kwargs["interval_included"] = get_included("Semantics")
-                    case "Nth":
-                        kwargs["index"] = int(prop_value)
-                        kwargs["from_end"] = entity_type == "NthFromEnd"
-                if isinstance(offset, Number):
-                    kwargs["n"] = offset.value
-                    cls_name += "N"
-                    offset = offset.offset
-                obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
-            case "Two-Digit-Year":
-                obj = YearSuffix(get_interval("Interval"), int(prop_value), 2)
-            case "This":
-                obj = This(get_interval("Interval"), get_offset())
-            case "Between":
-                obj = Between(get_interval("Start-Interval"),
-                              get_interval("End-Interval"),
-                              start_included=get_included("Start-Included"),
-                              end_included=get_included("End-Included"))
-            case "Intersection":
-                match (pop_all_prop("Intervals"), pop_all_prop("Repeating-Intervals")):
-                    case intervals, []:
-                        obj = Intersection(intervals)
-                    case [], repeating_intervals:
-                        obj = RepeatingIntersection(repeating_intervals)
-                    case [interval], [repeating_interval]:
-                        obj = This(interval, repeating_interval)
-                    case [interval], repeating_intervals:
-                        obj = This(interval, RepeatingIntersection(repeating_intervals))
-                    case _:
-                        raise NotImplementedError(ET.tostring(entity))
-            case "Number":
-                if prop_value == '?':
-                    value = None
-                elif prop_value.isdigit():
-                    value = int(prop_value)
-                else:
-                    try:
-                        value = float(prop_value)
-                    except ValueError:
-                        # TODO: handle ranges better
+        try:
+            match entity_type:
+                case "Period":
+                    if prop_type == "Unknown":
+                        unit = None
+                    else:
+                        unit = Unit.__members__[prop_type.upper()[:-1]]
+                    if prop_number:
+                        n = pop(prop_number).value
+                    else:
+                        n = None
+                    obj = Period(unit, n)
+                case "Year":
+                    digits = prop_value.rstrip('?')
+                    obj = Year(int(digits), len(prop_value) - len(digits))
+                case "Month-Of-Year":
+                    month_int = datetime.datetime.strptime(prop_type, '%B').month
+                    obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
+                case "Day-Of-Month":
+                    obj = Repeating(Unit.DAY, Unit.MONTH, value=int(prop_value))
+                case "Day-Of-Week":
+                    day_int = getattr(dateutil.relativedelta, prop_type.upper()[:2]).weekday
+                    obj = Repeating(Unit.DAY, Unit.WEEK, value=day_int)
+                case "AMPM-Of-Day":
+                    obj = AMPM(prop_type)
+                case "Hour-Of-Day":
+                    hour = int(prop_value)
+                    prop_am_pm = entity.findtext("properties/AMPM-Of-Day")
+                    if prop_am_pm:
+                        match pop(prop_am_pm).value:
+                            case "AM" if hour == 12:
+                                hour = 0
+                            case "PM" if hour != 12:
+                                hour += 12
+                            case "AM" | "PM":
+                                pass
+                            case other:
+                                raise NotImplementedError(other)
+                    obj = Repeating(Unit.HOUR, Unit.DAY, value=hour)
+                case "Minute-Of-Hour":
+                    obj = Repeating(Unit.MINUTE, Unit.HOUR, value=int(prop_value))
+                case "Second-Of-Minute":
+                    obj = Repeating(Unit.SECOND, Unit.MINUTE, value=int(prop_value))
+                case "Part-Of-Day" | "Season-Of-Year" if prop_type == "Unknown":
+                    obj = Repeating(None)
+                case "Part-Of-Day" | "Season-Of-Year" :
+                    obj = globals()[prop_type]()
+                case "Calendar-Interval":
+                    obj = Repeating(Unit.__members__[prop_type.upper()])
+                case "Union":
+                    obj = OffsetUnion(pop_all_prop("Repeating-Intervals"))
+                case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":
+                    cls_name = "Nth" if entity_type.startswith("Nth") else entity_type
+                    interval = get_interval("Interval")
+                    offset = get_offset()
+                    kwargs = {}
+                    match cls_name:
+                        case "Last" | "Next" | "Before" | "After":
+                            kwargs["interval_included"] = get_included("Semantics")
+                        case "Nth":
+                            kwargs["index"] = int(prop_value)
+                            kwargs["from_end"] = entity_type == "NthFromEnd"
+                    if isinstance(offset, Number):
+                        kwargs["n"] = offset.value
+                        cls_name += "N"
+                        offset = offset.offset
+                    obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
+                case "Two-Digit-Year":
+                    obj = YearSuffix(get_interval("Interval"), int(prop_value), 2)
+                case "This":
+                    obj = This(get_interval("Interval"), get_offset())
+                case "Between":
+                    obj = Between(get_interval("Start-Interval"),
+                                  get_interval("End-Interval"),
+                                  start_included=get_included("Start-Included"),
+                                  end_included=get_included("End-Included"))
+                case "Intersection":
+                    match (pop_all_prop("Intervals"), pop_all_prop("Repeating-Intervals")):
+                        case intervals, []:
+                            obj = Intersection(intervals)
+                        case [], repeating_intervals:
+                            obj = RepeatingIntersection(repeating_intervals)
+                        case [interval], [repeating_interval]:
+                            obj = This(interval, repeating_interval)
+                        case [interval], repeating_intervals:
+                            obj = This(interval, RepeatingIntersection(repeating_intervals))
+                        case other:
+                            raise NotImplementedError(other)
+                case "Number":
+                    if prop_value == '?':
                         value = None
-                obj = Number(value)
-            case "Event":
-                obj = known_intervals.get(trigger_span)
-                if obj is None:
-                    obj = Interval(None, None)
-            case "Modifier" | "Frequency" | "NotNormalizable":
-                # TODO: handle modifiers and frequencies
-                continue
-            case other:
-                raise NotImplementedError(other)
+                    elif prop_value.isdigit():
+                        value = int(prop_value)
+                    else:
+                        try:
+                            value = float(prop_value)
+                        except ValueError:
+                            # TODO: handle ranges better
+                            value = None
+                    obj = Number(value)
+                case "Event":
+                    obj = known_intervals.get(trigger_span)
+                    if obj is None:
+                        obj = Interval(None, None)
+                case "Modifier" | "Frequency" | "NotNormalizable":
+                    # TODO: handle modifiers and frequencies
+                    continue
+                case other:
+                    raise NotImplementedError(other)
+        except Exception as e:
+            xml = re.sub(r"\s+", "", ET.tostring(entity, encoding="unicode"))
+            raise ValueError(f"triggered by {xml}") from e
 
         # add spans to objects
         obj.span = obj.trigger_span = trigger_span
