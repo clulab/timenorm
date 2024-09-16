@@ -917,7 +917,11 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
         # create objects from <entity> elements
         try:
-            trigger_span = tuple(int(x) for x in entity.findtext("span").split(","))
+            # TODO: revisit whether discontinuous spans need to be retained
+            char_offsets = {int(x)
+                            for start_end in entity.findtext("span").split(";")
+                            for x in start_end.split(",")}
+            trigger_span = (min(char_offsets), max(char_offsets))
             match entity_type:
                 case "Period":
                     if prop_type == "Unknown":

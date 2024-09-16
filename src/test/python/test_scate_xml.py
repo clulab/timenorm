@@ -524,6 +524,28 @@ def test_doc_time():
         assert _isoformats(objects) == [iso]
 
 
+def test_discontinuous_span():
+    xml_str = inspect.cleandoc(f"""
+        <data>
+            <annotations>
+                <entity>
+                    <id>177@e@Food_Assistance_Outlook_Brief_1-Jan-18@gold</id>
+                    <span>3605,3615;3633,3639</span>
+                    <type>Season-Of-Year</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>Unknown</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [scate.Repeating(None, span=(3605, 3639))]
+    assert _isoformats(objects) == [None]
+
+
 def test_noon():
     xml_str = inspect.cleandoc("""
         <data>
