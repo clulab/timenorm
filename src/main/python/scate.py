@@ -865,7 +865,6 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         prop_value = entity.findtext("properties/Value")
         prop_type = entity.findtext("properties/Type")
         prop_number = entity.findtext("properties/Number")
-        trigger_span = tuple(int(x) for x in entity.findtext("span").split(","))
         spans = []
 
         # helper for managing access to id_to_obj
@@ -918,6 +917,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
         # create objects from <entity> elements
         try:
+            trigger_span = tuple(int(x) for x in entity.findtext("span").split(","))
             match entity_type:
                 case "Period":
                     if prop_type == "Unknown":
