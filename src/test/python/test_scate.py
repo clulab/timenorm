@@ -617,9 +617,14 @@ def test_none_values():
     undef = scate.Interval(None, None)
     d08 = scate.Repeating(scate.DAY, scate.MONTH, value=8)
     pUnk = scate.Period(scate.MONTH, None)
+    rUnk = scate.Repeating(None)
 
-    assert (date + scate.Repeating(None)).isoformat() == "... ..."
-    assert (date - scate.Repeating(None)).isoformat() == "... ..."
+    assert (date + rUnk).isoformat() == "... ..."
+    assert (date - rUnk).isoformat() == "... ..."
+
+    assert (date + scate.RepeatingIntersection([d08, rUnk])).isoformat() == "... ..."
+    assert (date - scate.RepeatingIntersection([d08, rUnk])).isoformat() == "... ..."
+
     assert scate.Last(date, scate.Repeating(None)).isoformat() == "... ..."
     assert scate.Next(date, scate.Repeating(None)).isoformat() == "... ..."
     assert scate.Before(date, scate.Repeating(None)).isoformat() == "... ..."

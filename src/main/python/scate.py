@@ -417,13 +417,18 @@ class RepeatingIntersection(Offset):
                 rrule_periods.append(offset.period)
             else:
                 non_rrule_periods.append(offset.period)
-        self.min_period = min(periods, default=None, key=lambda p: p.unit)
-        self.rrule_period = min(rrule_periods, default=None, key=lambda p: p.unit)
-        self.non_rrule_period = min(non_rrule_periods, default=None, key=lambda p: p.unit)
+
+        def by_unit(period: Period) -> Unit:
+            return period.unit._n if period.unit is not None else 0  # smaller than all units
+        self.min_period = min(periods, default=None, key=by_unit)
+        self.rrule_period = min(rrule_periods, default=None, key=by_unit)
+        self.non_rrule_period = min(non_rrule_periods, default=None, key=by_unit)
         self.unit = self.min_period.unit
-        self.range = max(periods, default=None, key=lambda p: p.unit).unit
+        self.range = max(periods, default=None, key=by_unit).unit
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
+        if self.unit is None:
+            return Interval(None, None)
         start = self.min_period.unit.truncate(other)
         if self.rrule_period is not None:
             # HACK: rrule requires a starting point even when going backwards.
@@ -457,6 +462,8 @@ class RepeatingIntersection(Offset):
         return interval
 
     def __radd__(self, other: datetime.datetime) -> Interval:
+        if self.unit is None:
+            return Interval(None, None)
         start = self.min_period.unit.truncate(other)
         if start < other:
             start += self.min_period.unit.relativedelta(self.min_period.n)
