@@ -288,6 +288,12 @@ def test_n_operators():
                 "2025-01-06T00:00:00 2025-01-07T00:00:00",  # 1st Monday in 2025
                 "2025-01-13T00:00:00 2025-01-14T00:00:00",  # 2nd Monday in 2025
             ]]),
+            ("Before", scate.Before(**kwargs), [
+                "2023-12-18T00:00:00 2023-12-19T00:00:00",  # 2nd to last Monday in 2023
+            ]),
+            ("After", scate.After(**kwargs), [
+                "2025-01-13T00:00:00 2025-01-14T00:00:00",  # 2nd Monday in 2025
+            ]),
     ]:
         xml_str = inspect.cleandoc(f"""
             <data>
@@ -340,8 +346,8 @@ def test_n_operators():
                 </annotations>
             </data>""")
         objects = scate.from_xml(ET.fromstring(xml_str))
-        assert objects == [obj]
-        assert _isoformats(objects) == isos
+        assert objects == [obj], xml_type
+        assert _isoformats(objects) == isos, xml_type
 
 
 def test_sub_interval():

@@ -981,7 +981,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                             kwargs["from_end"] = entity_type == "NthFromEnd"
                     if isinstance(offset, Number):
                         kwargs["n"] = offset.value
-                        cls_name += "N"
+                        if cls_name not in {"Before", "After"}:
+                            cls_name += "N"
                         offset = offset.offset
                     obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
                 case "Two-Digit-Year":
