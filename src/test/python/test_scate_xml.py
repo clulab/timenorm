@@ -139,28 +139,31 @@ def test_sum():
     assert _isoformats(objects) == [None]
 
 
-def test_repeating_intervals_with_values():
-    for prop_type, unit, range in [
-            ("Day-Of-Month", scate.DAY, scate.MONTH),
-            ("Hour-Of-Day", scate.HOUR, scate.DAY),
-            ("Minute-Of-Hour", scate.MINUTE, scate.HOUR),
-            ("Second-Of-Minute", scate.SECOND, scate.MINUTE)]:
+def test_repeating_intervals():
+    for op_type, prop_xml, unit, range, value in [
+            ("Month-Of-Year", "<Type>December</Type>", scate.MONTH, scate.YEAR, 12),
+            ("Day-Of-Month", "<Value>11</Value>", scate.DAY, scate.MONTH, 11),
+            ("Day-Of-Week", "<Type>Wednesday</Type>", scate.DAY, scate.WEEK, 2),
+            ("Hour-Of-Day", "<Value>11</Value>", scate.HOUR, scate.DAY, 11),
+            ("Minute-Of-Hour", "<Value>11</Value>", scate.MINUTE, scate.HOUR, 11),
+            ("Second-Of-Minute", "<Value>11</Value>", scate.SECOND, scate.MINUTE, 11)]:
         xml_str = inspect.cleandoc(f"""
             <data>
                 <annotations>
                     <entity>
                         <id>0@e@x@gold</id>
                         <span>123,456</span>
-                        <type>{prop_type}</type>
+                        <type>{op_type}</type>
                         <parentsType>Repeating-Interval</parentsType>
                         <properties>
-                            <Value>11</Value>
+                            {prop_xml}
                         </properties>
                     </entity>
                 </annotations>
             </data>""")
+        obj = scate.Repeating(unit, range, value=value, span=(123, 456))
         objects = scate.from_xml(ET.fromstring(xml_str))
-        assert objects == [scate.Repeating(unit, range, value=11, span=(123, 456))]
+        assert objects == [obj], op_type
         assert _isoformats(objects) == [None]
 
 

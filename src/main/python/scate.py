@@ -1051,7 +1051,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 match entity_type:
                     case "Year" | "Two-Digit-Year":
                         obj = This(obj, sub_interval)
-                    case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day" | \
+                    case "Month-Of-Year" | "Day-Of-Month" | "Day-Of-Week" | "Part-Of-Day" | \
                          "Hour-Of-Day" | "Minute-Of-Hour" | "Second-Of-Minute":
                         obj = RepeatingIntersection([obj, sub_interval])
                     case other:
