@@ -54,6 +54,91 @@ def test_period():
         assert _isoformats(objects) == [None]
 
 
+def test_sum():
+    xml_str = inspect.cleandoc(f"""
+        <data>
+            <annotations>
+                <entity>
+                    <id>115@e@WSJ_20130321_1145@gold</id>
+                    <span>1578,1579</span>
+                    <type>Number</type>
+                    <parentsType>Other</parentsType>
+                    <properties>
+                        <Value>3</Value>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>116@e@WSJ_20130321_1145@gold</id>
+                    <span>1580,1582</span>
+                    <type>Number</type>
+                    <parentsType>Other</parentsType>
+                    <properties>
+                        <Value>7</Value>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>117@e@WSJ_20130321_1145@gold</id>
+                    <span>1583,1585</span>
+                    <type>Number</type>
+                    <parentsType>Other</parentsType>
+                    <properties>
+                        <Value>35</Value>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>118@e@WSJ_20130321_1145@gold</id>
+                    <span>1578,1579</span>
+                    <type>Period</type>
+                    <parentsType>Duration</parentsType>
+                    <properties>
+                        <Type>Hours</Type>
+                        <Number>115@e@WSJ_20130321_1145@gold</Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>119@e@WSJ_20130321_1145@gold</id>
+                    <span>1580,1582</span>
+                    <type>Period</type>
+                    <parentsType>Duration</parentsType>
+                    <properties>
+                        <Type>Minutes</Type>
+                        <Number>116@e@WSJ_20130321_1145@gold</Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>120@e@WSJ_20130321_1145@gold</id>
+                    <span>1583,1585</span>
+                    <type>Period</type>
+                    <parentsType>Duration</parentsType>
+                    <properties>
+                        <Type>Seconds</Type>
+                        <Number>117@e@WSJ_20130321_1145@gold</Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>121@e@WSJ_20130321_1145@gold</id>
+                    <span>1578,1579</span>
+                    <type>Sum</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Periods>118@e@WSJ_20130321_1145@gold</Periods>
+                        <Periods>119@e@WSJ_20130321_1145@gold</Periods>
+                        <Periods>120@e@WSJ_20130321_1145@gold</Periods>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    h3 = scate.Period(scate.HOUR, 3, span=(1578, 1579))
+    m7 = scate.Period(scate.MINUTE, 7, span=(1580, 1582))
+    s35 = scate.Period(scate.SECOND, 35, span=(1583, 1585))
+    objects = scate.from_xml(ET.fromstring(xml_str))
+    assert objects == [scate.PeriodSum([h3, m7, s35], span=(1578, 1585))]
+    assert _isoformats(objects) == [None]
+
+
 def test_repeating_intervals_with_values():
     for prop_type, unit, range in [
             ("Day-Of-Month", scate.DAY, scate.MONTH),

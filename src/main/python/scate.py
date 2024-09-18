@@ -868,7 +868,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         spans = []
 
         # helper for managing access to id_to_obj
-        def pop(obj_id: str) -> Interval | Offset | Repeating | Number | AMPM:
+        def pop(obj_id: str) -> Interval | Offset | Period | Repeating | Number | AMPM:
             result = id_to_obj[obj_id]
             id_to_n_parents[obj_id] -= 1
             if not id_to_n_parents[obj_id]:
@@ -878,7 +878,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             return result
 
         # helper for ET.findall + text + pop
-        def pop_all_prop(prop_name: str) -> list[Interval | Offset | Repeating | Number | AMPM]:
+        def pop_all_prop(prop_name: str) -> list[Interval | Offset | Period | Repeating | Number | AMPM]:
             return [pop(e.text) for e in entity.findall(f"properties/{prop_name}") if e.text]
 
         # helper for managing the multiple interval properties
@@ -933,6 +933,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     else:
                         n = None
                     obj = Period(unit, n)
+                case "Sum":
+                    obj = PeriodSum(pop_all_prop("Periods"))
                 case "Year":
                     digits = prop_value.rstrip('?')
                     obj = Year(int(digits), len(prop_value) - len(digits))
