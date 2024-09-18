@@ -1033,45 +1033,46 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     continue
                 case other:
                     raise NotImplementedError(other)
+
+            # add spans to objects
+            obj.span = obj.trigger_span = trigger_span
+            spans.append(obj.span)
+
+            # if Number property is present, wrap offset with number for later use
+            # skip this for Periods, which directly consume their Number above
+            if prop_number and not isinstance(obj, Period):
+                repeating_n = pop(prop_number)
+                repeating_n.offset = obj
+                obj = repeating_n
+
+            # create additional objects as necessary for sub-intervals
+            if sub_interval_id:
+                sub_interval = pop(sub_interval_id)
+                match entity_type:
+                    case "Year" | "Two-Digit-Year":
+                        obj = This(obj, sub_interval)
+                    case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day" | \
+                         "Hour-Of-Day" | "Minute-Of-Hour" | "Second-Of-Minute":
+                        obj = RepeatingIntersection([obj, sub_interval])
+                    case other:
+                        raise NotImplementedError(other)
+
+            # create additional objects as necessary for super-intervals
+            if super_interval_id:
+                super_interval = pop(super_interval_id)
+                match super_interval:
+                    case Year() | YearSuffix() | This():
+                        obj = This(super_interval, obj)
+                    case Repeating():
+                        obj = RepeatingIntersection([super_interval, obj])
+                    case other:
+                        raise NotImplementedError(other)
+
+            obj.span = (min(start for start, _ in spans), max(end for _, end in spans))
+
         except Exception as e:
             xml = re.sub(r"\s+", "", ET.tostring(entity, encoding="unicode"))
             raise ValueError(f"triggered by {xml}") from e
-
-        # add spans to objects
-        obj.span = obj.trigger_span = trigger_span
-        spans.append(obj.span)
-
-        # if Number property is present, wrap offset with number for later use
-        # skip this for Periods, which directly consume their Number above
-        if prop_number and not isinstance(obj, Period):
-            repeating_n = pop(prop_number)
-            repeating_n.offset = obj
-            obj = repeating_n
-
-        # create additional objects as necessary for sub-intervals
-        if sub_interval_id:
-            sub_interval = pop(sub_interval_id)
-            match entity_type:
-                case "Year" | "Two-Digit-Year":
-                    obj = This(obj, sub_interval)
-                case "Month-Of-Year" | "Day-Of-Month" | "Part-Of-Day" | \
-                     "Hour-Of-Day" | "Minute-Of-Hour" | "Second-Of-Minute":
-                    obj = RepeatingIntersection([obj, sub_interval])
-                case other:
-                    raise NotImplementedError(other)
-
-        # create additional objects as necessary for super-intervals
-        if super_interval_id:
-            super_interval = pop(super_interval_id)
-            match super_interval:
-                case Year() | YearSuffix() | This():
-                    obj = This(super_interval, obj)
-                case Repeating():
-                    obj = RepeatingIntersection([super_interval, obj])
-                case other:
-                    raise NotImplementedError(other)
-
-        obj.span = (min(start for start, _ in spans), max(end for _, end in spans))
 
         # add the object to the mapping
         id_to_obj[entity_id] = obj
