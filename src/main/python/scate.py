@@ -114,7 +114,9 @@ class Unit(enum.Enum):
         elif self is Unit.QUARTER_CENTURY:
             dt = datetime.datetime(dt.year // 25 * 25, 1, 1, 0, 0)
         elif self is Unit.CENTURY:
-            dt = datetime.datetime(dt.year // 100 * 100, 1, 1, 0, 0)
+            year = dt.year // 100 * 100
+            year = 1 if year == 0 else year  # year 0 does not exist
+            dt = datetime.datetime(year, 1, 1, 0, 0)
         return dt
 
     def relativedelta(self, n) -> dateutil.relativedelta.relativedelta:
@@ -177,7 +179,11 @@ class Period(Offset):
         if self.unit is None or self.n is None:
             return Interval(other, None)
         else:
-            return Interval(other, other + self.unit.relativedelta(self.n))
+            end = other + self.unit.relativedelta(self.n)
+            # in the first century, there's only 99 years
+            if other == datetime.datetime.min and self.unit is Unit.CENTURY:
+                end -= Unit.YEAR.relativedelta(1)
+            return Interval(other, end)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
         if self.unit is None or self.n is None:
@@ -620,19 +626,21 @@ class Nth(IntervalOp):
     span: (int, int) = None
 
     def __post_init__(self):
-        if not self.interval.is_defined() or self.offset is None:
+        if self.offset is None or (self.from_end and self.interval.end is None) \
+                or (not self.from_end and self.interval.start is None):
             self.start = None
             self.end = None
         else:
             offset = self.interval.end if self.from_end else self.interval.start
             # to allow repeating intervals to overlap start with our start, subtract a tiny amount
-            if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)) and not self.from_end:
+            if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)) \
+                    and not self.from_end and not offset == datetime.datetime.min:
                 offset -= Unit.MICROSECOND.relativedelta(1)
             for i in range(self.index - 1):
                 offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
             self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
-            if (self.start is not None and self.start < self.interval.start) or \
-                    (self.end is not None and self.end > self.interval.end):
+            if (self.start is not None and self.interval.start is not None and self.start < self.interval.start) or \
+                    (self.end is not None and self.interval.end is not None and self.end > self.interval.end):
                 raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}:\n{self}")
 
 
@@ -895,6 +903,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     return Year(doc_time.start.year)
                 case "DocTime" | "DocTime-Year":
                     raise ValueError(f"known_intervals[(None, None)] required")
+                case "DocTime-Era":
+                    return Interval(datetime.datetime.min, None)
                 case "Unknown":
                     return Interval(None, None)
                 case other_type:

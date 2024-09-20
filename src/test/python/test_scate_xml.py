@@ -1,3 +1,5 @@
+import datetime
+
 import scate
 import inspect
 import xml.etree.ElementTree as ET
@@ -1383,3 +1385,43 @@ def test_earlier_sunday():
     })
     assert objects == [intersection]
     assert _isoformats(objects) == ["1998-03-22T00:00:00 1998-03-22T12:00:00"]
+
+
+def test_20th_century():
+    # bbc_20130322_1150 (1969,1981) 20th Century
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>93@e@bbc_20130322_1150@gold</id>
+                    <span>1969,1973</span>
+                    <type>NthFromStart</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Interval-Type>DocTime-Era</Interval-Type>
+                        <Interval></Interval>
+                        <Value>20</Value>
+                        <Period></Period>
+                        <Repeating-Interval>94@e@bbc_20130322_1150@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>94@e@bbc_20130322_1150@gold</id>
+                    <span>1974,1981</span>
+                    <type>Calendar-Interval</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>Century</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    doc_time = scate.Interval.of(2013, 3, 22)
+    era_time = scate.Interval(datetime.datetime.min, None)
+    century = scate.Repeating(scate.CENTURY, span=(1974, 1981))
+    nth = scate.Nth(era_time, century, index=20, span=(1969, 1981))
+    objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={(None, None): doc_time})
+    assert objects == [nth]
+    assert _isoformats(objects) == ["1900-01-01T00:00:00 2000-01-01T00:00:00"]

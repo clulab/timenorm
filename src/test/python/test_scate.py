@@ -682,6 +682,14 @@ def test_none_values():
     assert list(scate.These(date, pUnk).isoformats()) == ["... ..."]
 
 
+def test_min_date():
+    min_date = scate.Interval(datetime.datetime.min, datetime.datetime.min)
+    assert (min_date + scate.Period(scate.CENTURY, 2)).isoformat() == \
+        "0001-01-01T00:00:00 0200-01-01T00:00:00"
+    assert (min_date + scate.Repeating(scate.CENTURY)).isoformat() == \
+        "0001-01-01T00:00:00 0100-01-01T00:00:00"
+
+
 def test_misc():
     # PRI19980216.2000.0170 (349,358) last week
     week = scate.Repeating(scate.WEEK)
