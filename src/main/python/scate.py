@@ -1038,8 +1038,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     obj = known_intervals.get(trigger_span)
                     if obj is None:
                         obj = Interval(None, None)
-                case "Modifier" | "Frequency" | "NotNormalizable":
-                    # TODO: handle modifiers and frequencies
+                case "Time-Zone" | "Modifier" | "Frequency" | "NotNormalizable":
+                    # TODO: handle time zones, modifiers, and frequencies
                     continue
                 case other:
                     raise NotImplementedError(other)
