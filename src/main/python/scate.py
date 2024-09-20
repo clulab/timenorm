@@ -937,7 +937,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     if prop_type == "Unknown":
                         unit = None
                     else:
-                        unit = Unit.__members__[prop_type.upper()[:-1]]
+                        unit_name = prop_type.upper()[:-1].replace("-", "_")
+                        unit = Unit.__members__[unit_name]
                     if prop_number:
                         n = pop(prop_number).value
                     else:
@@ -981,7 +982,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 case "Part-Of-Day" | "Season-Of-Year" :
                     obj = globals()[prop_type]()
                 case "Calendar-Interval":
-                    obj = Repeating(Unit.__members__[prop_type.upper()])
+                    unit_name = prop_type.upper().replace("-", "_")
+                    obj = Repeating(Unit.__members__[unit_name])
                 case "Union":
                     obj = OffsetUnion(pop_all_prop("Repeating-Intervals"))
                 case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":

@@ -20,12 +20,20 @@ def _isoformats(objects: list[scate.Interval | scate.Offset]):
     return result
 
 
-def test_period():
-    for prop_type, number_id, unit, n, span in [
-            ("Years", '160@e@sample-3-982-540-2@gold', scate.YEAR, 59, (45, 52)),
-            ("Unknown", '160@e@sample-3-982-540-2@gold', None, 59, (45, 52)),
-            ("Years", '', scate.YEAR, None, (48, 52)),
-            ("Unknown", '', None, None, (48, 52))]:
+def test_period_calendar_interval():
+    for entity_type, prop_type, number_id, obj in [
+            ("Calendar-Interval", "Quarter-Year", '',
+             scate.Repeating(scate.QUARTER_YEAR, span=(48, 52))),
+            ("Period", "Quarter-Years", '160@e@sample-3-982-540-2@gold',
+             scate.Period(scate.QUARTER_YEAR, 59, span=(45, 52))),
+            ("Period", "Years", '160@e@sample-3-982-540-2@gold',
+             scate.Period(scate.YEAR, 59, span=(45, 52))),
+            ("Period", "Unknown", '160@e@sample-3-982-540-2@gold',
+             scate.Period(None, 59, span=(45, 52))),
+            ("Period", "Years", '',
+             scate.Period(scate.YEAR, None, span=(48, 52))),
+            ("Period", "Unknown", '',
+             scate.Period(None, None, span=(48, 52)))]:
         xml_str = inspect.cleandoc(f"""
             <data>
                 <annotations>
@@ -41,7 +49,7 @@ def test_period():
                     <entity>
                         <id>161@e@sample-3-982-540-2@gold</id>
                         <span>48,52</span>
-                        <type>Period</type>
+                        <type>{entity_type}</type>
                         <parentsType>Duration</parentsType>
                         <properties>
                             <Type>{prop_type}</Type>
@@ -52,7 +60,7 @@ def test_period():
                 </annotations>
             </data>""")
         objects = scate.from_xml(ET.fromstring(xml_str))
-        assert objects == [scate.Period(unit, n, span=span)]
+        assert objects == [obj]
         assert _isoformats(objects) == [None]
 
 
