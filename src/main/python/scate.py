@@ -336,6 +336,14 @@ class Winter(Repeating):
     n_units: int = 3
 
 
+@dataclasses.dataclass
+class Weekend(Repeating):
+    unit: Unit = Unit.DAY
+    n_units: int = 2
+    rrule_kwargs: dict = dataclasses.field(
+        default_factory=lambda: dict(freq=dateutil.rrule.DAILY, byweekday=5))
+
+
 # defined as used in forecasts
 # https://www.weather.gov/bgm/forecast_terms
 @dataclasses.dataclass
@@ -979,7 +987,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     obj = Repeating(Unit.SECOND, Unit.MINUTE, value=int(prop_value))
                 case "Part-Of-Day" | "Season-Of-Year" if prop_type == "Unknown":
                     obj = Repeating(None)
-                case "Part-Of-Day" | "Season-Of-Year" :
+                case "Part-Of-Day" | "Part-Of-Week" | "Season-Of-Year":
                     obj = globals()[prop_type]()
                 case "Calendar-Interval":
                     unit_name = prop_type.upper().replace("-", "_")
@@ -1063,7 +1071,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                 match entity_type:
                     case "Year" | "Two-Digit-Year":
                         obj = This(obj, sub_interval)
-                    case "Month-Of-Year" | "Day-Of-Month" | "Day-Of-Week" | "Part-Of-Day" | \
+                    case "Month-Of-Year" | "Day-Of-Month" | "Day-Of-Week" | \
+                         "Part-Of-Week" | "Part-Of-Day" | \
                          "Hour-Of-Day" | "Minute-Of-Hour" | "Second-Of-Minute":
                         obj = RepeatingIntersection([obj, sub_interval])
                     case other:

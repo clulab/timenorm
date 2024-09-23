@@ -160,6 +160,12 @@ def test_day_parts():
     assert (interval - scate.Night()).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
 
 
+def test_week_parts():
+    interval = scate.Interval.of(2024, 9, 23)  # Monday
+    assert (interval + scate.Weekend()).isoformat() == "2024-09-28T00:00:00 2024-09-30T00:00:00"
+    assert (interval - scate.Weekend()).isoformat() == "2024-09-21T00:00:00 2024-09-23T00:00:00"
+
+
 def test_offset_union():
     interval = scate.Interval.fromisoformat("2003-01-01T00:00 2003-01-30T00:00")
     feb = scate.Repeating(scate.MONTH, scate.YEAR, value=2)

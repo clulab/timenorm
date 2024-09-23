@@ -183,6 +183,7 @@ def test_special_repeating():
             ("Season-Of-Year", "Summer", scate.Summer),
             ("Season-Of-Year", "Fall", scate.Fall),
             ("Season-Of-Year", "Winter", scate.Winter),
+            ("Part-Of-Week", "Weekend", scate.Weekend),
             ("Part-Of-Day", "Morning", scate.Morning),
             ("Part-Of-Day", "Noon", scate.Noon),
             ("Part-Of-Day", "Afternoon", scate.Afternoon),
@@ -1385,8 +1386,6 @@ def test_earlier_sunday():
     event = scate.Interval.fromisoformat("1998-03-22T12:00:00 1998-03-23T12:00:00")
     before = scate.Before(event, None, span=(3918, 3925))
     intersection = scate.Intersection([before, last], span=(3918, 3932))
-    print(before.isoformat())
-    print(last.isoformat())
     objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={
         (None, None): doc_time,
         (3750, 3759): event,
