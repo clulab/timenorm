@@ -945,7 +945,10 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     if prop_type == "Unknown":
                         unit = None
                     else:
-                        unit_name = prop_type.upper()[:-1].replace("-", "_")
+                        unit_name = prop_type.upper()
+                        unit_name = re.sub(r"IES$", r"Y", unit_name)
+                        unit_name = re.sub(r"S$", r"", unit_name)
+                        unit_name = re.sub("-", "_", unit_name)
                         unit = Unit.__members__[unit_name]
                     if prop_number:
                         n = pop(prop_number).value

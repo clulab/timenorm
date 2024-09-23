@@ -28,6 +28,8 @@ def test_period_calendar_interval():
              scate.Period(scate.QUARTER_YEAR, 59, span=(45, 52))),
             ("Period", "Years", '160@e@sample-3-982-540-2@gold',
              scate.Period(scate.YEAR, 59, span=(45, 52))),
+            ("Period", "Centuries", '160@e@sample-3-982-540-2@gold',
+             scate.Period(scate.CENTURY, 59, span=(45, 52))),
             ("Period", "Unknown", '160@e@sample-3-982-540-2@gold',
              scate.Period(None, 59, span=(45, 52))),
             ("Period", "Years", '',
