@@ -957,9 +957,19 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     obj = Period(unit, n)
                 case "Sum":
                     obj = PeriodSum(pop_all_prop("Periods"))
-                case "Year":
-                    digits = prop_value.rstrip('?')
-                    obj = Year(int(digits), len(prop_value) - len(digits))
+                case "Year" | "Two-Digit-Year":
+                    digits_str = prop_value.rstrip('?')
+                    n_missing_digits = len(prop_value) - len(digits_str)
+                    digits = int(digits_str)
+                    match entity_type:
+                        case "Year":
+                            obj = Year(digits, n_missing_digits)
+                        case "Two-Digit-Year":
+                            n_suffix_digits = 2 - n_missing_digits
+                            obj = YearSuffix(get_interval("Interval"), digits,
+                                             n_suffix_digits, n_missing_digits)
+                        case other:
+                            raise NotImplementedError(other)
                 case "Month-Of-Year":
                     month_int = datetime.datetime.strptime(prop_type, '%B').month
                     obj = Repeating(Unit.MONTH, Unit.YEAR, value=month_int)
@@ -1014,8 +1024,6 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                             cls_name += "N"
                         offset = offset.offset
                     obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
-                case "Two-Digit-Year":
-                    obj = YearSuffix(get_interval("Interval"), int(prop_value), 2)
                 case "This":
                     obj = This(get_interval("Interval"), get_offset())
                 case "Between":
