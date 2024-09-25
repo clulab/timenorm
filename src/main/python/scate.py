@@ -998,7 +998,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     obj = Repeating(Unit.MINUTE, Unit.HOUR, value=int(prop_value))
                 case "Second-Of-Minute":
                     obj = Repeating(Unit.SECOND, Unit.MINUTE, value=int(prop_value))
-                case "Part-Of-Day" | "Season-Of-Year" if prop_type == "Unknown":
+                case "Part-Of-Day" | "Season-Of-Year" if prop_type in {"Unknown", "Dawn", "Dusk"}:
+                    # TODO: improve handling of location-dependent times
                     obj = Repeating(None)
                 case "Part-Of-Day" | "Part-Of-Week" | "Season-Of-Year":
                     obj = globals()[prop_type]()
