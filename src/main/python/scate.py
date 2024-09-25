@@ -232,8 +232,8 @@ class Repeating(Offset):
         self.period = Period(self.unit, self.n_units)
         if self.range is None:
             self.range = self.unit
-        elif self.value is None:
-            raise ValueError(f"value=None is not allowed for range={self.range}")
+        elif self.value is None and self.range != self.unit:
+            raise ValueError(f"value=None is not allowed for unit={self.unit} and range={self.range}")
         else:
             match self.range:
                 case Unit.SECOND:
