@@ -492,8 +492,8 @@ class RepeatingIntersection(Offset):
 class Year(Interval):
     digits: int
     n_missing_digits: int = 0
-    start: datetime.datetime = dataclasses.field(init=False)
-    end: datetime.datetime = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
+    end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = None
 
     def __post_init__(self):
@@ -508,8 +508,8 @@ class YearSuffix(Interval):
     last_digits: int
     n_suffix_digits: int
     n_missing_digits: int = 0
-    start: datetime.datetime = dataclasses.field(init=False)
-    end: datetime.datetime = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
+    end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = None
 
     def __post_init__(self):
@@ -523,8 +523,8 @@ class YearSuffix(Interval):
 class IntervalOp(Interval):
     interval: Interval
     offset: Offset
-    start: datetime.datetime | None = dataclasses.field(init=False)
-    end: datetime.datetime | None = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
+    end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
 
 
 @dataclasses.dataclass
@@ -656,8 +656,8 @@ class Nth(IntervalOp):
 class This(Interval):
     interval: Interval
     offset: Offset
-    start: datetime.datetime | None = dataclasses.field(init=False)
-    end: datetime.datetime | None = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
+    end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = None
 
     def __post_init__(self):
@@ -684,8 +684,8 @@ class Between(Interval):
     end_interval: Interval
     start_included: bool = False
     end_included: bool = False
-    start: datetime.datetime | None = dataclasses.field(init=False)
-    end: datetime.datetime | None = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
+    end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = None
 
     def __post_init__(self):
@@ -704,8 +704,8 @@ class Between(Interval):
 @dataclasses.dataclass
 class Intersection(Interval):
     intervals: typing.Iterable[Interval]
-    start: datetime.datetime | None = dataclasses.field(init=False)
-    end: datetime.datetime | None = dataclasses.field(init=False)
+    start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
+    end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = None
 
     def __post_init__(self):
