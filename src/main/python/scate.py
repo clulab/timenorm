@@ -12,7 +12,23 @@ import typing
 import xml.etree.ElementTree as ET
 
 
-@dataclasses.dataclass
+def _dataclass(cls):
+    cls = dataclasses.dataclass(cls, repr=False)
+
+    def __repr__(self):
+        fields = [f for f in dataclasses.fields(self)
+                  if f.repr
+                  and getattr(self, f.name) != f.default
+                  and (f.default_factory is dataclasses.MISSING
+                       or getattr(self, f.name) != f.default_factory())]
+        field_str = ', '.join([f"{f.name}={getattr(self, f.name)!r}" for f in fields])
+        return f"{self.__class__.__qualname__}({field_str})"
+
+    cls.__repr__ = __repr__
+    return cls
+
+
+@_dataclass
 class Interval:
     start: datetime.datetime | None
     end: datetime.datetime | None
@@ -86,6 +102,9 @@ class Unit(enum.Enum):
         if self.__class__ is other.__class__:
             return self._n < other._n
         return NotImplemented
+
+    def __repr__(self):
+        return self.name
 
     def truncate(self, dt: datetime.datetime) -> datetime.datetime:
         if self is Unit.MILLISECOND:
@@ -171,7 +190,7 @@ class Offset:
         raise NotImplementedError
 
 
-@dataclasses.dataclass
+@_dataclass
 class Period(Offset):
     unit: Unit
     n: int | None
@@ -200,7 +219,7 @@ class Period(Offset):
             return self.unit.expand(interval, self.n)
 
 
-@dataclasses.dataclass
+@_dataclass
 class PeriodSum(Offset):
     periods: list[Period]
     span: (int, int) = None
@@ -221,7 +240,7 @@ class PeriodSum(Offset):
         return Interval(start, other)
 
 
-@dataclasses.dataclass
+@_dataclass
 class Repeating(Offset):
     unit: Unit
     range: Unit = None
@@ -306,7 +325,7 @@ class Repeating(Offset):
 
 # Defined as "meterological seasons"
 # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
-@dataclasses.dataclass
+@_dataclass
 class Spring(Repeating):
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
@@ -314,7 +333,7 @@ class Spring(Repeating):
     n_units: int = 3
 
 
-@dataclasses.dataclass
+@_dataclass
 class Summer(Repeating):
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
@@ -322,7 +341,7 @@ class Summer(Repeating):
     n_units: int = 3
 
 
-@dataclasses.dataclass
+@_dataclass
 class Fall(Repeating):
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
@@ -330,7 +349,7 @@ class Fall(Repeating):
     n_units: int = 3
 
 
-@dataclasses.dataclass
+@_dataclass
 class Winter(Repeating):
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
@@ -338,7 +357,7 @@ class Winter(Repeating):
     n_units: int = 3
 
 
-@dataclasses.dataclass
+@_dataclass
 class Weekend(Repeating):
     unit: Unit = Unit.DAY
     n_units: int = 2
@@ -348,7 +367,7 @@ class Weekend(Repeating):
 
 # defined as used in forecasts
 # https://www.weather.gov/bgm/forecast_terms
-@dataclasses.dataclass
+@_dataclass
 class Morning(Repeating):
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
@@ -356,14 +375,14 @@ class Morning(Repeating):
     n_units: int = 6
 
 
-@dataclasses.dataclass
+@_dataclass
 class Noon(Repeating):
     unit: Unit = Unit.MINUTE
     rrule_kwargs: dict = dataclasses.field(
         default_factory=lambda: dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
 
 
-@dataclasses.dataclass
+@_dataclass
 class Afternoon(Repeating):
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
@@ -371,7 +390,7 @@ class Afternoon(Repeating):
     n_units: int = 6
 
 
-@dataclasses.dataclass
+@_dataclass
 class Evening(Repeating):
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
@@ -379,7 +398,7 @@ class Evening(Repeating):
     n_units: int = 6
 
 
-@dataclasses.dataclass
+@_dataclass
 class Night(Repeating):
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
@@ -387,7 +406,7 @@ class Night(Repeating):
     n_units: int = 6
 
 
-@dataclasses.dataclass
+@_dataclass
 class OffsetUnion(Offset):
     offsets: typing.Iterable[Offset]
     span: (int, int) = None
@@ -405,7 +424,7 @@ class OffsetUnion(Offset):
                    key=lambda i: (i.start, i.start - i.end))
 
 
-@dataclasses.dataclass
+@_dataclass
 class RepeatingIntersection(Offset):
     offsets: typing.Iterable[Repeating]
     span: (int, int) = None
@@ -490,7 +509,7 @@ class RepeatingIntersection(Offset):
         return start + self.min_period
 
 
-@dataclasses.dataclass
+@_dataclass
 class Year(Interval):
     digits: int
     n_missing_digits: int = 0
@@ -504,7 +523,7 @@ class Year(Interval):
         self.end = self.start + dateutil.relativedelta.relativedelta(years=duration_in_years)
 
 
-@dataclasses.dataclass
+@_dataclass
 class YearSuffix(Interval):
     interval: Interval
     last_digits: int
@@ -521,7 +540,7 @@ class YearSuffix(Interval):
         self.start, self.end = Year(digits, self.n_missing_digits)
 
 
-@dataclasses.dataclass
+@_dataclass
 class IntervalOp(Interval):
     interval: Interval
     offset: Offset
@@ -529,7 +548,7 @@ class IntervalOp(Interval):
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
 
 
-@dataclasses.dataclass
+@_dataclass
 class Last(IntervalOp):
     interval_included: bool = False
     span: (int, int) = None
@@ -546,7 +565,7 @@ class Last(IntervalOp):
             self.start, self.end = start - self.offset
 
 
-@dataclasses.dataclass
+@_dataclass
 class Next(IntervalOp):
     interval_included: bool = False
     span: (int, int) = None
@@ -569,7 +588,7 @@ class Next(IntervalOp):
             self.start, self.end = end + self.offset
 
 
-@dataclasses.dataclass
+@_dataclass
 class Before(IntervalOp):
     n: int = 1
     interval_included: bool = False
@@ -598,7 +617,7 @@ class Before(IntervalOp):
             raise NotImplementedError
 
 
-@dataclasses.dataclass
+@_dataclass
 class After(IntervalOp):
     n: int = 1
     interval_included: bool = False
@@ -629,7 +648,7 @@ class After(IntervalOp):
             raise NotImplementedError
 
 
-@dataclasses.dataclass
+@_dataclass
 class Nth(IntervalOp):
     index: int
     from_end: bool = False
@@ -654,7 +673,7 @@ class Nth(IntervalOp):
                 raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}:\n{self}")
 
 
-@dataclasses.dataclass
+@_dataclass
 class This(Interval):
     interval: Interval
     offset: Offset
@@ -680,7 +699,7 @@ class This(Interval):
             raise NotImplementedError
 
 
-@dataclasses.dataclass
+@_dataclass
 class Between(Interval):
     start_interval: Interval
     end_interval: Interval
@@ -703,7 +722,7 @@ class Between(Interval):
                 raise ValueError(f"{start_iso} is not before {end_iso}:\n{self}")
 
 
-@dataclasses.dataclass
+@_dataclass
 class Intersection(Interval):
     intervals: typing.Iterable[Interval]
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
@@ -726,7 +745,7 @@ class Intervals(collections.abc.Iterable[Interval], abc.ABC):
             yield interval.isoformat()
 
 
-@dataclasses.dataclass
+@_dataclass
 class _N(Intervals):
     interval: Interval
     offset: Offset
@@ -750,7 +769,7 @@ class _N(Intervals):
                 interval_included = False
 
 
-@dataclasses.dataclass
+@_dataclass
 class LastN(_N):
     base_class: type = Last
     span: (int, int) = None
@@ -759,7 +778,7 @@ class LastN(_N):
         interval.start = None
 
 
-@dataclasses.dataclass
+@_dataclass
 class NextN(_N):
     base_class: type = Next
     span: (int, int) = None
@@ -768,7 +787,7 @@ class NextN(_N):
         interval.end = None
 
 
-@dataclasses.dataclass
+@_dataclass
 class NthN(Intervals):
     interval: Interval
     offset: Offset
@@ -790,7 +809,7 @@ class NthN(Intervals):
             yield interval
 
 
-@dataclasses.dataclass
+@_dataclass
 class These(Intervals):
     interval: Interval
     offset: Offset
@@ -834,13 +853,13 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
     if known_intervals is None:
         known_intervals = {}
 
-    @dataclasses.dataclass
+    @_dataclass
     class Number:
         value: int | float
         offset: Offset = None
         span: (int, int) = None
 
-    @dataclasses.dataclass
+    @_dataclass
     class AMPM:
         value: str
         span: (int, int) = None
