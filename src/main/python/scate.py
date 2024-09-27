@@ -1,10 +1,12 @@
 import abc
+import argparse
 import collections
 import dataclasses
 import datetime
 import dateutil.relativedelta
 import dateutil.rrule
 import enum
+import pathlib
 import re
 import typing
 import xml.etree.ElementTree as ET
@@ -883,6 +885,12 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         prop_number = entity.findtext("properties/Number")
         spans = []
 
+        # TODO: revisit whether discontinuous spans need to be retained
+        char_offsets = {int(x)
+                        for start_end in entity.findtext("span").split(";")
+                        for x in start_end.split(",")}
+        trigger_span = (min(char_offsets), max(char_offsets))
+
         # helper for managing access to id_to_obj
         def pop(obj_id: str) -> Interval | Offset | Period | Repeating | Number | AMPM:
             result = id_to_obj[obj_id]
@@ -935,11 +943,6 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
         # create objects from <entity> elements
         try:
-            # TODO: revisit whether discontinuous spans need to be retained
-            char_offsets = {int(x)
-                            for start_end in entity.findtext("span").split(";")
-                            for x in start_end.split(",")}
-            trigger_span = (min(char_offsets), max(char_offsets))
             match entity_type:
                 case "Period":
                     if prop_type == "Unknown":
@@ -1104,8 +1107,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             obj.span = (min(start for start, _ in spans), max(end for _, end in spans))
 
         except Exception as e:
-            xml = re.sub(r"\s+", "", ET.tostring(entity, encoding="unicode"))
-            raise ValueError(f"triggered by {xml}") from e
+            raise AnaforaXMLParsingError(entity, trigger_span) from e
 
         # add the object to the mapping
         id_to_obj[entity_id] = obj
@@ -1116,3 +1118,54 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
             del id_to_obj[key]
 
     return list(id_to_obj.values())
+
+
+class AnaforaXMLParsingError(RuntimeError):
+    def __init__(self, entity: ET.Element, trigger_span: (int, int)):
+        self.entity = entity
+        self.trigger_span = trigger_span
+        super().__init__(re.sub(r"\s+", "", ET.tostring(entity, encoding="unicode")))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("xml_dir")
+    parser.add_argument("--xml-suffix", default=".TimeNorm.gold.completed.xml")
+    parser.add_argument("--dct-dir")
+    parser.add_argument("--silent", action="store_true")
+    args = parser.parse_args()
+
+    # iterate over the selected Anafora XML paths
+    xml_paths = list(pathlib.Path(args.xml_dir).glob(f"**/*{args.xml_suffix}"))
+    if not xml_paths:
+        parser.exit(message=f"no such paths: {args.xml_dir}/**/*.{args.xml_suffix}\n")
+    for xml_path in xml_paths:
+
+        # load the document creation time, if provided
+        if args.dct_dir is not None:
+            dct_name = xml_path.name.replace(args.xml_suffix, ".dct")
+            dct_path = pathlib.Path(args.dct_dir) / dct_name
+            with open(dct_path) as dct_file:
+                [year_str, month_str, day_str] = dct_file.read().strip().split("-")
+                doc_time = Interval.of(int(year_str), int(month_str), int(day_str))
+
+        # use today for the document creation time, if not provided
+        else:
+            today = datetime.date.today()
+            doc_time = Interval.of(today.year, today.month, today.day)
+
+        # parse the Anafora XML into Intervals, Offsets, etc.
+        elem = ET.parse(xml_path).getroot()
+        try:
+            for obj in from_xml(elem, known_intervals={(None, None): doc_time}):
+                if not args.silent:
+                    print(obj)
+        except AnaforaXMLParsingError as e:
+            text_name = xml_path.name.replace(args.xml_suffix, "")
+            with open(xml_path.parent / text_name) as text_file:
+                text = text_file.read()
+
+            start, end = e.trigger_span
+            pre_text = text[max(0, start - 100):start]
+            post_text = text[end:min(len(text), end + 100)]
+            print(f"Error parsing:\nFile: {xml_path}\nXML: {e}\nContext: {pre_text}[[{text[start:end]}]]{post_text}")
