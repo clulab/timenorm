@@ -246,7 +246,7 @@ class Repeating(Offset):
     range: Unit = None
     value: int = dataclasses.field(default=None, kw_only=True)
     n_units: int = dataclasses.field(default=1, kw_only=True)
-    rrule_kwargs: dict = dataclasses.field(default_factory=dict, kw_only=True)
+    rrule_kwargs: dict = dataclasses.field(default_factory=dict, kw_only=True, repr=False)
     span: (int, int) = None
 
     def __post_init__(self):
