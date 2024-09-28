@@ -618,6 +618,17 @@ def test_these():
     assert len(list(scate.These(interval_week_thu, day))) == 7
 
 
+def test_repr():
+    for obj in [
+            scate.Interval.of(2022, 8, 13),
+            scate.Interval.fromisoformat("1111-11-11T11:11:11 1212-12-12T12:12:12"),
+            scate.Year(1314),
+            scate.Next(scate.Interval.of(1998, 7, 13), scate.Repeating(scate.DAY, scate.MONTH, value=13)),
+            scate.Between(scate.Year(1000), scate.Interval.of(2000, 10, 5))
+    ]:
+        assert obj == eval(repr(obj), vars(scate))
+
+
 def test_none_values():
     date = scate.Interval.of(2016, 10, 18)
     undef = scate.Interval(None, None)

@@ -28,7 +28,7 @@ def _dataclass(cls):
     return cls
 
 
-@_dataclass
+@dataclasses.dataclass
 class Interval:
     start: datetime.datetime | None
     end: datetime.datetime | None
@@ -40,6 +40,27 @@ class Interval:
         start_str = "..." if self.start is None else self.start.isoformat()
         end_str = "..." if self.end is None else self.end.isoformat()
         return f"{start_str} {end_str}"
+
+    def __repr__(self):
+        delta = dateutil.relativedelta.relativedelta(self.end, self.start)
+        if delta == dateutil.relativedelta.relativedelta(years=+1):
+            tuple_index = 1
+        elif delta == dateutil.relativedelta.relativedelta(months=+1):
+            tuple_index = 2
+        elif delta == dateutil.relativedelta.relativedelta(days=+1):
+            tuple_index = 3
+        elif delta == dateutil.relativedelta.relativedelta(hours=+1):
+            tuple_index = 4
+        elif delta == dateutil.relativedelta.relativedelta(minutes=+1):
+            tuple_index = 5
+        elif delta == dateutil.relativedelta.relativedelta(seconds=+1):
+            tuple_index = 6
+        else:
+            tuple_index = None
+        if tuple_index is not None:
+            return f"Interval.of({', '.join(map(repr, self.start.timetuple()[:tuple_index]))})"
+        else:
+            return f"Interval(start={self.start!r}, end={self.end!r})"
 
     def __len__(self):
         return 2
