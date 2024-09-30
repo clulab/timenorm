@@ -695,7 +695,7 @@ class Nth(IntervalOp):
 
 
 @_dataclass
-class This(Interval):
+class This(IntervalOp):
     interval: Interval
     offset: Offset
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
@@ -1167,12 +1167,30 @@ class AnaforaXMLParsingError(RuntimeError):
         super().__init__(re.sub(r"\s+", "", ET.tostring(entity, encoding="unicode")))
 
 
+def flatten(offset_or_interval: Offset | Interval) -> Offset | Interval:
+    match offset_or_interval:
+        case IntervalOp() as io:
+            return dataclasses.replace(io, offset=flatten(io.offset))
+        case RepeatingIntersection() as ri if any(isinstance(o, RepeatingIntersection) for o in ri.offsets):
+            offsets = []
+            for offset in ri.offsets:
+                offset = flatten(offset)
+                if isinstance(offset, RepeatingIntersection):
+                    offsets.extend(offset.offsets)
+                else:
+                    offsets.append(offset)
+            return dataclasses.replace(ri, offsets=offsets)
+        case _:
+            return offset_or_interval
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("xml_dir")
     parser.add_argument("--xml-suffix", default=".TimeNorm.gold.completed.xml")
     parser.add_argument("--dct-dir")
     parser.add_argument("--silent", action="store_true")
+    parser.add_argument("--flatten", action="store_true")
     args = parser.parse_args()
 
     # iterate over the selected Anafora XML paths
@@ -1198,6 +1216,8 @@ if __name__ == "__main__":
         elem = ET.parse(xml_path).getroot()
         try:
             for obj in from_xml(elem, known_intervals={(None, None): doc_time}):
+                if args.flatten:
+                    obj = flatten(obj)
                 if not args.silent:
                     print(obj)
         except AnaforaXMLParsingError as e:

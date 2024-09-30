@@ -631,6 +631,29 @@ def test_repr():
         assert obj == eval(repr(obj), vars(scate))
 
 
+def test_flatten():
+    for obj, obj_flat in [
+        (scate.Interval.of(2022, 8, 13),
+         scate.Interval.of(2022, 8, 13)),
+        (scate.This(scate.Year(1887), scate.RepeatingIntersection([
+            scate.Repeating(scate.MONTH, scate.YEAR, value=7),
+            scate.RepeatingIntersection([
+                scate.RepeatingIntersection([
+                    scate.Repeating(scate.DAY, scate.MONTH, value=7),
+                    scate.Repeating(scate.HOUR, scate.DAY, value=7),
+                ]),
+                scate.Repeating(scate.MINUTE, scate.HOUR, value=7),
+            ])])),
+         scate.This(scate.Year(1887), scate.RepeatingIntersection([
+            scate.Repeating(scate.MONTH, scate.YEAR, value=7),
+            scate.Repeating(scate.DAY, scate.MONTH, value=7),
+            scate.Repeating(scate.HOUR, scate.DAY, value=7),
+            scate.Repeating(scate.MINUTE, scate.HOUR, value=7),
+         ]))),
+    ]:
+        assert scate.flatten(obj) == obj_flat
+
+
 def test_none_values():
     date = scate.Interval.of(2016, 10, 18)
     undef = scate.Interval(None, None)
