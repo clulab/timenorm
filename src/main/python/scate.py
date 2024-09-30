@@ -215,7 +215,7 @@ class Offset:
 class Period(Offset):
     unit: Unit
     n: int | None
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __radd__(self, other: datetime.datetime) -> Interval:
         if self.unit is None or self.n is None:
@@ -243,7 +243,7 @@ class Period(Offset):
 @_dataclass
 class PeriodSum(Offset):
     periods: list[Period]
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         self.unit = max(self.periods, key=lambda p: p.unit).unit
@@ -268,7 +268,7 @@ class Repeating(Offset):
     value: int = dataclasses.field(default=None, kw_only=True)
     n_units: int = dataclasses.field(default=1, kw_only=True)
     rrule_kwargs: dict = dataclasses.field(default_factory=dict, kw_only=True, repr=False)
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         self.period = Period(self.unit, self.n_units)
@@ -430,7 +430,7 @@ class Night(Repeating):
 @_dataclass
 class OffsetUnion(Offset):
     offsets: typing.Iterable[Offset]
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         self.unit = min(o.unit for o in self.offsets)
@@ -448,7 +448,7 @@ class OffsetUnion(Offset):
 @_dataclass
 class RepeatingIntersection(Offset):
     offsets: typing.Iterable[Repeating]
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def _iter_offsets(self) -> typing.Iterator[Repeating]:
         for offset in self.offsets:
@@ -536,7 +536,7 @@ class Year(Interval):
     n_missing_digits: int = 0
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         duration_in_years = 10 ** self.n_missing_digits
@@ -552,7 +552,7 @@ class YearSuffix(Interval):
     n_missing_digits: int = 0
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
@@ -572,7 +572,7 @@ class IntervalOp(Interval):
 @_dataclass
 class Last(IntervalOp):
     interval_included: bool = False
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.interval.is_defined():
@@ -589,7 +589,7 @@ class Last(IntervalOp):
 @_dataclass
 class Next(IntervalOp):
     interval_included: bool = False
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.interval.is_defined():
@@ -613,7 +613,7 @@ class Next(IntervalOp):
 class Before(IntervalOp):
     n: int = 1
     interval_included: bool = False
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.interval.is_defined():
@@ -642,7 +642,7 @@ class Before(IntervalOp):
 class After(IntervalOp):
     n: int = 1
     interval_included: bool = False
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.interval.is_defined():
@@ -673,7 +673,7 @@ class After(IntervalOp):
 class Nth(IntervalOp):
     index: int
     from_end: bool = False
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if self.offset is None or (self.from_end and self.interval.end is None) \
@@ -700,7 +700,7 @@ class This(IntervalOp):
     offset: Offset
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.interval.is_defined() or self.offset is None:
@@ -728,7 +728,7 @@ class Between(Interval):
     end_included: bool = False
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.start_interval.is_defined() or not self.end_interval.is_defined():
@@ -748,7 +748,7 @@ class Intersection(Interval):
     intervals: typing.Iterable[Interval]
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if any(i.start is None and i.end is None for i in self.intervals):
@@ -793,7 +793,7 @@ class _N(Intervals):
 @_dataclass
 class LastN(_N):
     base_class: type = Last
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def _adjust_for_n_none(self, interval: Interval):
         interval.start = None
@@ -802,7 +802,7 @@ class LastN(_N):
 @_dataclass
 class NextN(_N):
     base_class: type = Next
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def _adjust_for_n_none(self, interval: Interval):
         interval.end = None
@@ -815,7 +815,7 @@ class NthN(Intervals):
     index: int
     n: int
     from_end: bool = False
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __iter__(self) -> typing.Iterator[Interval]:
         n = 2 if self.n is None else self.n
@@ -834,7 +834,7 @@ class NthN(Intervals):
 class These(Intervals):
     interval: Interval
     offset: Offset
-    span: (int, int) = None
+    span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         if not self.interval.is_defined() or self.offset is None:
@@ -878,12 +878,12 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
     class Number:
         value: int | float
         offset: Offset = None
-        span: (int, int) = None
+        span: (int, int) = dataclasses.field(default=None, repr=False)
 
     @_dataclass
     class AMPM:
         value: str
-        span: (int, int) = None
+        span: (int, int) = dataclasses.field(default=None, repr=False)
 
     id_to_entity = {}
     id_to_children = {}
