@@ -620,6 +620,7 @@ def test_these():
 
 def test_repr():
     for obj in [
+            scate.Repeating(scate.DAY),
             scate.Interval.of(2022, 8, 13),
             scate.Interval.fromisoformat("1111-11-11T11:11:11 1212-12-12T12:12:12"),
             scate.Year(1314),

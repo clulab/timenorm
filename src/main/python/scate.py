@@ -272,9 +272,11 @@ class Repeating(Offset):
 
     def __post_init__(self):
         self.period = Period(self.unit, self.n_units)
-        if self.range is None:
+        if self.range == self.unit:
+            pass  # same as self.range is None
+        elif self.range is None:
             self.range = self.unit
-        elif self.value is None and self.range != self.unit:
+        elif self.value is None:
             raise ValueError(f"value=None is not allowed for unit={self.unit} and range={self.range}")
         else:
             match self.range:
