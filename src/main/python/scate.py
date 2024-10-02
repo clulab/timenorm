@@ -1190,6 +1190,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("xml_dir")
     parser.add_argument("--xml-suffix", default=".TimeNorm.gold.completed.xml")
+    parser.add_argument("--text-dir")
     parser.add_argument("--dct-dir")
     parser.add_argument("--silent", action="store_true")
     parser.add_argument("--flatten", action="store_true")
@@ -1224,7 +1225,8 @@ if __name__ == "__main__":
                     print(obj)
         except AnaforaXMLParsingError as e:
             text_name = xml_path.name.replace(args.xml_suffix, "")
-            with open(xml_path.parent / text_name) as text_file:
+            text_dir = pathlib.Path(args.text_dir) if args.text_dir else xml_path.parent
+            with open(text_dir / text_name) as text_file:
                 text = text_file.read()
 
             start, end = e.trigger_span
