@@ -189,6 +189,7 @@ def test_special_repeating():
             ("Part-Of-Day", "Morning", scate.Morning),
             ("Part-Of-Day", "Noon", scate.Noon),
             ("Part-Of-Day", "Afternoon", scate.Afternoon),
+            ("Part-Of-Day", "Day", scate.Day),
             ("Part-Of-Day", "Evening", scate.Evening),
             ("Part-Of-Day", "Night", scate.Night)]:
         xml_str = inspect.cleandoc(f"""

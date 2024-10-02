@@ -152,6 +152,8 @@ def test_day_parts():
     assert (interval - scate.Morning()).isoformat() == "2002-03-21T06:00:00 2002-03-21T12:00:00"
     assert (interval + scate.Afternoon()).isoformat() == "2003-05-11T12:00:00 2003-05-11T18:00:00"
     assert (interval - scate.Afternoon()).isoformat() == "2002-03-21T12:00:00 2002-03-21T18:00:00"
+    assert (interval + scate.Day()).isoformat() == "2003-05-11T06:00:00 2003-05-11T18:00:00"
+    assert (interval - scate.Day()).isoformat() == "2002-03-21T06:00:00 2002-03-21T18:00:00"
     assert (interval + scate.Noon()).isoformat() == "2003-05-11T12:00:00 2003-05-11T12:01:00"
     assert (interval - scate.Noon()).isoformat() == "2002-03-21T12:00:00 2002-03-21T12:01:00"
     assert (interval + scate.Evening()).isoformat() == "2003-05-11T18:00:00 2003-05-12T00:00:00"

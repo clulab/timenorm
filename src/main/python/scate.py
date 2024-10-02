@@ -414,6 +414,14 @@ class Afternoon(Repeating):
 
 
 @_dataclass
+class Day(Repeating):
+    unit: Unit = Unit.HOUR
+    range: Unit = Unit.DAY
+    value: int = 6
+    n_units: int = 12
+
+
+@_dataclass
 class Evening(Repeating):
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
