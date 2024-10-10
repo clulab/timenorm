@@ -8,6 +8,7 @@ import dateutil.rrule
 import enum
 import pathlib
 import re
+import traceback
 import typing
 import xml.etree.ElementTree as ET
 
@@ -1240,4 +1241,5 @@ if __name__ == "__main__":
             start, end = e.trigger_span
             pre_text = text[max(0, start - 100):start]
             post_text = text[end:min(len(text), end + 100)]
-            print(f"Error parsing:\nFile: {xml_path}\nXML: {e}\nContext: {pre_text}[[{text[start:end]}]]{post_text}")
+            traceback.print_exception(e.__cause__)
+            print(f"\nContext:\n{pre_text}[[{text[start:end]}]]{post_text}\nXML:\n{e}\nFile:\n{xml_path}\n")
