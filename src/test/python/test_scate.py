@@ -134,6 +134,23 @@ def test_repeating_field():
     assert (interval - day31).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
 
 
+def test_every_nth():
+    interval = scate.Interval.of(2000, 1, 1)
+    second_day = scate.EveryNth(scate.Repeating(scate.DAY), 2)
+    assert (interval - second_day).isoformat() == "1999-12-30T00:00:00 1999-12-31T00:00:00"
+    assert (interval - second_day - second_day).isoformat() == "1999-12-28T00:00:00 1999-12-29T00:00:00"
+    assert (interval + second_day).isoformat() == "2000-01-03T00:00:00 2000-01-04T00:00:00"
+    assert (interval + second_day + second_day).isoformat() == "2000-01-05T00:00:00 2000-01-06T00:00:00"
+
+    # 28 Dec is a Tuesday
+    third_tue = scate.EveryNth(scate.Repeating(scate.DAY, scate.WEEK, value=1), 3)
+    assert (interval - third_tue).isoformat() == "1999-12-14T00:00:00 1999-12-15T00:00:00"
+    assert (interval - third_tue - third_tue).isoformat() == "1999-11-23T00:00:00 1999-11-24T00:00:00"
+    assert (interval + third_tue).isoformat() == "2000-01-18T00:00:00 2000-01-19T00:00:00"
+    assert (interval + third_tue + third_tue).isoformat() == "2000-02-08T00:00:00 2000-02-09T00:00:00"
+
+
+
 def test_seasons():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     assert (interval + scate.Spring()).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"

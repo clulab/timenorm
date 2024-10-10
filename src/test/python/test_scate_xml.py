@@ -1436,3 +1436,39 @@ def test_20th_century():
     objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={(None, None): doc_time})
     assert objects == [nth]
     assert _isoformats(objects) == ["1900-01-01T00:00:00 2000-01-01T00:00:00"]
+
+
+def test_every_other_day():
+    # ID176_clinic_416 (6149, 6154) Every-other-day
+    xml_str = inspect.cleandoc("""
+        <data>
+            <annotations>
+                <entity>
+                    <id>729@e@ID176_clinic_416@gold</id>
+                    <span>6149,6154</span>
+                    <type>Every-Nth</type>
+                    <parentsType>Operator</parentsType>
+                    <properties>
+                        <Value>2</Value>
+                        <Repeating-Interval>730@e@ID176_clinic_416@gold</Repeating-Interval>
+                    </properties>
+                </entity>
+                <entity>
+                    <id>730@e@ID176_clinic_416@gold</id>
+                    <span>6155,6158</span>
+                    <type>Calendar-Interval</type>
+                    <parentsType>Repeating-Interval</parentsType>
+                    <properties>
+                        <Type>Day</Type>
+                        <Number></Number>
+                        <Modifier></Modifier>
+                    </properties>
+                </entity>
+            </annotations>
+        </data>""")
+    doc_time = scate.Interval.of(2010, 8, 5)
+    day = scate.Repeating(scate.DAY, span=(6155, 6158))
+    every_other_day = scate.EveryNth(day, 2, span=(6149, 6158))
+    objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={(None, None): doc_time})
+    assert objects == [every_other_day]
+    assert _isoformats(objects) == [None]

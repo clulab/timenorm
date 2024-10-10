@@ -439,6 +439,25 @@ class Night(Repeating):
 
 
 @_dataclass
+class EveryNth(Offset):
+    offset: Offset
+    n: int
+    span: (int, int) = dataclasses.field(default=None, repr=False)
+
+    def __rsub__(self, other: datetime.datetime) -> Interval:
+        interval = other - self.offset
+        for _ in range(self.n - 1):
+            interval -= self.offset
+        return interval
+
+    def __radd__(self, other: datetime.datetime) -> Interval:
+        interval = other + self.offset
+        for _ in range(self.n - 1):
+            interval += self.offset
+        return interval
+
+
+@_dataclass
 class OffsetUnion(Offset):
     offsets: typing.Iterable[Offset]
     span: (int, int) = dataclasses.field(default=None, repr=False)
@@ -1062,6 +1081,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
                     obj = Repeating(Unit.__members__[unit_name])
                 case "Union":
                     obj = OffsetUnion(pop_all_prop("Repeating-Intervals"))
+                case "Every-Nth":
+                    obj = EveryNth(get_offset(), int(prop_value))
                 case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":
                     cls_name = "Nth" if entity_type.startswith("Nth") else entity_type
                     interval = get_interval("Interval")
