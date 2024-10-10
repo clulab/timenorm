@@ -3,11 +3,14 @@ import argparse
 import collections
 import dataclasses
 import datetime
+import sys
+
 import dateutil.relativedelta
 import dateutil.rrule
 import enum
 import pathlib
 import re
+import sys
 import traceback
 import typing
 import xml.etree.ElementTree as ET
@@ -1263,4 +1266,5 @@ if __name__ == "__main__":
             pre_text = text[max(0, start - 100):start]
             post_text = text[end:min(len(text), end + 100)]
             traceback.print_exception(e.__cause__)
-            print(f"\nContext:\n{pre_text}[[{text[start:end]}]]{post_text}\nXML:\n{e}\nFile:\n{xml_path}\n")
+            msg = f"\nContext:\n{pre_text}[[{text[start:end]}]]{post_text}\nXML:\n{e}\nFile:\n{xml_path}\n"
+            print(msg, file=sys.stderr)
