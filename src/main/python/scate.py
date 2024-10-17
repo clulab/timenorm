@@ -442,6 +442,13 @@ class Night(Repeating):
 
 
 @_dataclass
+class Midnight(Repeating):
+    unit: Unit = Unit.MINUTE
+    rrule_kwargs: dict = dataclasses.field(
+        default_factory=lambda: dict(freq=dateutil.rrule.DAILY, byhour=0, byminute=0))
+
+
+@_dataclass
 class EveryNth(Offset):
     offset: Offset
     n: int

@@ -150,7 +150,6 @@ def test_every_nth():
     assert (interval + third_tue + third_tue).isoformat() == "2000-02-08T00:00:00 2000-02-09T00:00:00"
 
 
-
 def test_seasons():
     interval = scate.Interval.fromisoformat("2002-03-22T11:30:30 2003-05-10T22:10:20")
     assert (interval + scate.Spring()).isoformat() == "2004-03-01T00:00:00 2004-06-01T00:00:00"
@@ -177,6 +176,8 @@ def test_day_parts():
     assert (interval - scate.Evening()).isoformat() == "2002-03-21T18:00:00 2002-03-22T00:00:00"
     assert (interval + scate.Night()).isoformat() == "2003-05-11T00:00:00 2003-05-11T06:00:00"
     assert (interval - scate.Night()).isoformat() == "2002-03-22T00:00:00 2002-03-22T06:00:00"
+    assert (interval + scate.Midnight()).isoformat() == "2003-05-11T00:00:00 2003-05-11T00:01:00"
+    assert (interval - scate.Midnight()).isoformat() == "2002-03-22T00:00:00 2002-03-22T00:01:00"
 
 
 def test_week_parts():
