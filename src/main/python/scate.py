@@ -1236,6 +1236,8 @@ if __name__ == "__main__":
     parser.add_argument("--flatten", action="store_true")
     args = parser.parse_args()
 
+    n_errors = 0
+
     # iterate over the selected Anafora XML paths
     xml_paths = list(pathlib.Path(args.xml_dir).glob(f"**/*{args.xml_suffix}"))
     if not xml_paths:
@@ -1275,3 +1277,7 @@ if __name__ == "__main__":
             traceback.print_exception(e.__cause__)
             msg = f"\nContext:\n{pre_text}[[{text[start:end]}]]{post_text}\nXML:\n{e}\nFile:\n{xml_path}\n"
             print(msg, file=sys.stderr)
+            n_errors += 1
+
+    if n_errors:
+        print(f"Errors: {n_errors}", file=sys.stderr)
