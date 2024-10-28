@@ -288,6 +288,21 @@ class PeriodSum(Offset):
 
 @_dataclass
 class Repeating(Offset):
+    """
+    A Repeating identifies intervals that are named by the calendar system and repeat along the timeline.
+    For example, the set of all months of year "February" would be represented as::
+
+        Repeating(MONTH, YEAR, value=2)
+
+    While the set of all generic calendar "day" would be represented as::
+
+        Repeating(DAY)
+
+    Note that for days of the week, the value follows dateutil in assigning Monday as 0, Tuesday as 1, etc.
+    So the set of all days of the week "Thursday" would be represented as::
+
+        Repeating(DAY, WEEK, value=3)
+    """
     unit: Unit
     range: Unit = None
     value: int = dataclasses.field(default=None, kw_only=True)
@@ -375,6 +390,9 @@ class Repeating(Offset):
 # https://www.ncei.noaa.gov/news/meteorological-versus-astronomical-seasons
 @_dataclass
 class Spring(Repeating):
+    """
+    The repeating interval for meteorological springs in the Northern Hemisphere, i.e., March, April, and May
+    """
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
     value: int = 3
@@ -383,6 +401,9 @@ class Spring(Repeating):
 
 @_dataclass
 class Summer(Repeating):
+    """
+    The repeating interval for meteorological summers in the Northern Hemisphere, i.e., June, July, and August
+    """
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
     value: int = 6
@@ -391,6 +412,9 @@ class Summer(Repeating):
 
 @_dataclass
 class Fall(Repeating):
+    """
+    The repeating interval for meteorological falls in the Northern Hemisphere, i.e., September, October, and November
+    """
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
     value: int = 9
@@ -399,6 +423,9 @@ class Fall(Repeating):
 
 @_dataclass
 class Winter(Repeating):
+    """
+    The repeating interval for meteorological winters in the Northern Hemisphere, i.e., December, January, and February
+    """
     unit: Unit = Unit.MONTH
     range: Unit = Unit.YEAR
     value: int = 12
@@ -407,6 +434,9 @@ class Winter(Repeating):
 
 @_dataclass
 class Weekend(Repeating):
+    """
+    The repeating interval for weekends, i.e., Saturdays and Sundays
+    """
     unit: Unit = Unit.DAY
     n_units: int = 2
     rrule_kwargs: dict = dataclasses.field(
@@ -417,6 +447,9 @@ class Weekend(Repeating):
 # https://www.weather.gov/bgm/forecast_terms
 @_dataclass
 class Morning(Repeating):
+    """
+    The repeating interval for meteorological mornings, i.e., 06:00 until 12:00
+    """
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
     value: int = 6
@@ -425,6 +458,9 @@ class Morning(Repeating):
 
 @_dataclass
 class Noon(Repeating):
+    """
+    The repeating interval for noons, i.e., 12:00 until 12:01
+    """
     unit: Unit = Unit.MINUTE
     rrule_kwargs: dict = dataclasses.field(
         default_factory=lambda: dict(freq=dateutil.rrule.DAILY, byhour=12, byminute=0))
@@ -432,6 +468,9 @@ class Noon(Repeating):
 
 @_dataclass
 class Afternoon(Repeating):
+    """
+    The repeating interval for meteorological afternoons, i.e., 12:00 until 18:00
+    """
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
     value: int = 12
@@ -440,6 +479,9 @@ class Afternoon(Repeating):
 
 @_dataclass
 class Day(Repeating):
+    """
+    The repeating interval for meteorological daytime, i.e., 06:00 until 06:00
+    """
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
     value: int = 6
@@ -448,6 +490,9 @@ class Day(Repeating):
 
 @_dataclass
 class Evening(Repeating):
+    """
+    The repeating interval for meteorological evenings, i.e., 18:00 until 00:00
+    """
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
     value: int = 18
@@ -456,6 +501,9 @@ class Evening(Repeating):
 
 @_dataclass
 class Night(Repeating):
+    """
+    The repeating interval for meteorological nights, i.e., 00:00 until 06:00
+    """
     unit: Unit = Unit.HOUR
     range: Unit = Unit.DAY
     value: int = 0
@@ -464,6 +512,9 @@ class Night(Repeating):
 
 @_dataclass
 class Midnight(Repeating):
+    """
+    The repeating interval for midnights, i.e., 00:00 until 00:01
+    """
     unit: Unit = Unit.MINUTE
     rrule_kwargs: dict = dataclasses.field(
         default_factory=lambda: dict(freq=dateutil.rrule.DAILY, byhour=0, byminute=0))
