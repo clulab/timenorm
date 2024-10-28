@@ -3,7 +3,6 @@ import argparse
 import collections
 import dataclasses
 import datetime
-import sys
 
 import dateutil.relativedelta
 import dateutil.rrule
@@ -13,11 +12,11 @@ import re
 import sys
 import traceback
 import typing
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 
 def _dataclass(cls):
-    cls = dataclasses.dataclass(cls, repr=False)
+    cls = dataclasses.dataclass(repr=False)(cls)
 
     def __repr__(self):
         fields = [f for f in dataclasses.fields(self)
@@ -910,7 +909,7 @@ class These(Intervals):
                 interval = interval.end + self.offset
 
 
-def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = None):
+def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = None):
     if known_intervals is None:
         known_intervals = {}
 
@@ -932,7 +931,7 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
         entity_id = entity.findtext("id")
         if entity_id in id_to_entity:
             other = id_to_entity[entity_id]
-            raise ValueError(f"duplicate id {entity_id} on {ET.tostring(entity)} and {ET.tostring(other)}")
+            raise ValueError(f"duplicate id {entity_id} on {et.tostring(entity)} and {et.tostring(other)}")
         id_to_entity[entity_id] = entity
         id_to_children[entity_id] = set()
         for prop in entity.find("properties"):
@@ -1188,8 +1187,8 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
             obj.span = (min(start for start, _ in spans), max(end for _, end in spans))
 
-        except Exception as e:
-            raise AnaforaXMLParsingError(entity, trigger_span) from e
+        except Exception as ex:
+            raise AnaforaXMLParsingError(entity, trigger_span) from ex
 
         # add the object to the mapping
         id_to_obj[entity_id] = obj
@@ -1203,10 +1202,10 @@ def from_xml(elem: ET.Element, known_intervals: dict[(int, int), Interval] = Non
 
 
 class AnaforaXMLParsingError(RuntimeError):
-    def __init__(self, entity: ET.Element, trigger_span: (int, int)):
+    def __init__(self, entity: et.Element, trigger_span: (int, int)):
         self.entity = entity
         self.trigger_span = trigger_span
-        super().__init__(re.sub(r"\s+", "", ET.tostring(entity, encoding="unicode")))
+        super().__init__(re.sub(r"\s+", "", et.tostring(entity, encoding="unicode")))
 
 
 def flatten(offset_or_interval: Offset | Interval) -> Offset | Interval:
@@ -1226,7 +1225,7 @@ def flatten(offset_or_interval: Offset | Interval) -> Offset | Interval:
             return offset_or_interval
 
 
-if __name__ == "__main__":
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument("xml_dir")
     parser.add_argument("--xml-suffix", default=".TimeNorm.gold.completed.xml")
@@ -1258,7 +1257,7 @@ if __name__ == "__main__":
             doc_time = Interval.of(today.year, today.month, today.day)
 
         # parse the Anafora XML into Intervals, Offsets, etc.
-        elem = ET.parse(xml_path).getroot()
+        elem = et.parse(xml_path).getroot()
         try:
             for obj in from_xml(elem, known_intervals={(None, None): doc_time}):
                 if args.flatten:
@@ -1281,3 +1280,7 @@ if __name__ == "__main__":
 
     if n_errors:
         print(f"Errors: {n_errors}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    _main()
