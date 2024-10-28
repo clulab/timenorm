@@ -33,6 +33,13 @@ def _dataclass(cls):
 
 @dataclasses.dataclass
 class Interval:
+    """
+    An interval on the timeline, defined by a starting point (inclusive) and an ending point (exclusive).
+    For example, the expression "1990", interpreted as the entire year on the timeline, would be represented as::
+
+        Interval(start=datetime.datetime.fromisoformat("1990-01-01T00:00:00"),
+                 end=datetime.datetime.fromisoformat("1991-01-01T00:00:00"))
+    """
     start: datetime.datetime | None
     end: datetime.datetime | None
 
@@ -216,6 +223,15 @@ class Offset:
 
 @_dataclass
 class Period(Offset):
+    """
+    An amount of time, expressed as counts of standard time units.
+    For example, "three months" would be represented as::
+
+        Period(MONTH, 3)
+
+    Note that periods are independent of the timeline. For example, given only the period expression "10 weeks", it is
+    impossible to assign time points of the form XXXX-XX-XXTXX:XX:XX to its start and end.
+    """
     unit: Unit
     n: int | None
     span: (int, int) = dataclasses.field(default=None, repr=False)
@@ -245,6 +261,12 @@ class Period(Offset):
 
 @_dataclass
 class PeriodSum(Offset):
+    """
+    A period whose duration is the sum of two or more periods.
+    For example, "two years and a day" would be represented as::
+
+        PeriodSum([Period(YEAR, 2), Period(DAY, 1)])
+    """
     periods: list[Period]
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
