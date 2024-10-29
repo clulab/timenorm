@@ -5,11 +5,11 @@ import inspect
 import xml.etree.ElementTree as ET
 
 
-def _isoformats(objects: list[scate.Interval | scate.Offset]):
+def _isoformats(objects: list[scate.Interval | scate.Shift]):
     result = []
     for o in objects:
         match o:
-            case scate.Offset():
+            case scate.Shift():
                 result.append(None)
             case scate.Interval():
                 result.append(o.isoformat())
@@ -373,7 +373,7 @@ def test_nth_operators():
 def test_n_operators():
     y2024 = scate.Year(2024, span=(20, 25))
     mon = scate.Repeating(scate.DAY, scate.WEEK, value=0, span=(30, 35))
-    kwargs = dict(n=2, interval=y2024, offset=mon, span=(10, 45))
+    kwargs = dict(n=2, interval=y2024, shift=mon, span=(10, 45))
     for xml_type, obj, isos in [
             ("NthFromEnd", scate.NthN(index=3, from_end=True, **kwargs), [[
                 "2024-12-02T00:00:00 2024-12-03T00:00:00",  # 5th from last Monday in 2024
@@ -1094,7 +1094,7 @@ def test_december_17_and_18():
     d17m12 = scate.RepeatingIntersection([m12, d17], span=(0, 11))
     d18 = scate.Repeating(scate.DAY, scate.MONTH, value=18, span=(16, 18))
     d18m12 = scate.RepeatingIntersection([m12, d18], span=(0, 18))
-    union = scate.OffsetUnion([d17m12, d18m12], span=(0, 18))
+    union = scate.ShiftUnion([d17m12, d18m12], span=(0, 18))
     objects = scate.from_xml(ET.fromstring(xml_str))
     assert objects == [union]
     assert _isoformats(objects) == [None]

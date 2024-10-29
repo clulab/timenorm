@@ -79,11 +79,11 @@ class Interval:
         yield self.start
         yield self.end
 
-    def __add__(self, offset):
-        return self.end + offset
+    def __add__(self, shift):
+        return self.end + shift
 
-    def __sub__(self, offset):
-        return self.start - offset
+    def __sub__(self, shift):
+        return self.start - shift
 
     @classmethod
     def fromisoformat(cls, string):
@@ -211,7 +211,7 @@ class Unit(enum.Enum):
 globals().update(Unit.__members__)
 
 
-class Offset:
+class Shift:
     unit: Unit
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
@@ -222,7 +222,7 @@ class Offset:
 
 
 @_dataclass
-class Period(Offset):
+class Period(Shift):
     """
     An amount of time, expressed as counts of standard time units.
     For example, "three months" would be represented as::
@@ -260,7 +260,7 @@ class Period(Offset):
 
 
 @_dataclass
-class PeriodSum(Offset):
+class PeriodSum(Shift):
     """
     A period whose duration is the sum of two or more periods.
     For example, "two years and a day" would be represented as::
@@ -287,7 +287,7 @@ class PeriodSum(Offset):
 
 
 @_dataclass
-class Repeating(Offset):
+class Repeating(Shift):
     """
     A Repeating identifies intervals that are named by the calendar system and repeat along the timeline.
     For example, the set of all months of year "February" would be represented as::
@@ -521,76 +521,76 @@ class Midnight(Repeating):
 
 
 @_dataclass
-class EveryNth(Offset):
+class EveryNth(Shift):
     """
     A repeating interval that retains only every nth interval of another repeating interval.
     For example, "every other Friday" would be represented as::
 
         EveryNth(Repeating(DAY, WEEK, value=4), n=2)
     """
-    offset: Offset
+    shift: Shift
     n: int
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        interval = other - self.offset
+        interval = other - self.shift
         for _ in range(self.n - 1):
-            interval -= self.offset
+            interval -= self.shift
         return interval
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        interval = other + self.offset
+        interval = other + self.shift
         for _ in range(self.n - 1):
-            interval += self.offset
+            interval += self.shift
         return interval
 
 
 @_dataclass
-class OffsetUnion(Offset):
-    offsets: typing.Iterable[Offset]
+class ShiftUnion(Shift):
+    shifts: typing.Iterable[Shift]
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
-        self.unit = min(o.unit for o in self.offsets)
-        self.range = max(o.unit for o in self.offsets)
+        self.unit = min(o.unit for o in self.shifts)
+        self.range = max(o.unit for o in self.shifts)
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
-        return max((other - offset for offset in self.offsets),
+        return max((other - shift for shift in self.shifts),
                    key=lambda i: (i.end, i.end - i.start))
 
     def __radd__(self, other: datetime.datetime) -> Interval:
-        return min((other + offset for offset in self.offsets),
+        return min((other + shift for shift in self.shifts),
                    key=lambda i: (i.start, i.start - i.end))
 
 
 @_dataclass
-class RepeatingIntersection(Offset):
-    offsets: typing.Iterable[Repeating]
+class RepeatingIntersection(Shift):
+    shifts: typing.Iterable[Repeating]
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
-    def _iter_offsets(self) -> typing.Iterator[Repeating]:
-        for offset in self.offsets:
-            if isinstance(offset, RepeatingIntersection):
-                yield from offset._iter_offsets()
-            elif not isinstance(offset, Repeating):
-                raise NotImplementedError(offset)
+    def _iter_shifts(self) -> typing.Iterator[Repeating]:
+        for shift in self.shifts:
+            if isinstance(shift, RepeatingIntersection):
+                yield from shift._iter_shifts()
+            elif not isinstance(shift, Repeating):
+                raise NotImplementedError(shift)
             else:
-                yield offset
+                yield shift
 
     def __post_init__(self):
-        if not self.offsets:
-            raise ValueError(f"{self.__class__.__name__} offsets cannot be empty")
+        if not self.shifts:
+            raise ValueError(f"{self.__class__.__name__} shifts cannot be empty")
         self.rrule_kwargs = {}
         periods = []
         rrule_periods = []
         non_rrule_periods = []
-        for offset in self._iter_offsets():
-            periods.append(offset.period)
-            if offset.rrule_kwargs:
-                self.rrule_kwargs |= offset.rrule_kwargs
-                rrule_periods.append(offset.period)
+        for shift in self._iter_shifts():
+            periods.append(shift.period)
+            if shift.rrule_kwargs:
+                self.rrule_kwargs |= shift.rrule_kwargs
+                rrule_periods.append(shift.period)
             else:
-                non_rrule_periods.append(offset.period)
+                non_rrule_periods.append(shift.period)
 
         def by_unit(period: Period) -> Unit:
             return period.unit._n if period.unit is not None else 0  # smaller than all units
@@ -682,7 +682,7 @@ class YearSuffix(Interval):
 @_dataclass
 class IntervalOp(Interval):
     interval: Interval
-    offset: Offset
+    shift: Shift
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
 
@@ -696,12 +696,12 @@ class Last(IntervalOp):
         if not self.interval.is_defined():
             self.start = None
             self.end = None
-        elif self.offset is None:
+        elif self.shift is None:
             self.start = None
             self.end = self.interval.start
         else:
             start = self.interval.end if self.interval_included else self.interval.start
-            self.start, self.end = start - self.offset
+            self.start, self.end = start - self.shift
 
 
 @_dataclass
@@ -713,18 +713,18 @@ class Next(IntervalOp):
         if not self.interval.is_defined():
             self.start = None
             self.end = None
-        elif self.offset is None:
+        elif self.shift is None:
             self.start = self.interval.end
             self.end = None
         else:
             if self.interval_included:
                 end = self.interval.start
                 # to allow repeating intervals to start with our start, subtract a tiny amount
-                if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
+                if isinstance(self.shift, (Repeating, ShiftUnion, RepeatingIntersection)):
                     end -= Unit.MICROSECOND.relativedelta(1)
             else:
                 end = self.interval.end
-            self.start, self.end = end + self.offset
+            self.start, self.end = end + self.shift
 
 
 @_dataclass
@@ -737,19 +737,19 @@ class Before(IntervalOp):
         if not self.interval.is_defined():
             self.start = None
             self.end = None
-        elif isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
+        elif isinstance(self.shift, (Repeating, ShiftUnion, RepeatingIntersection)):
             start = self.interval.end if self.interval_included else self.interval.start
             for i in range(self.n - 1):
-                start = (start - self.offset).start
-            self.start, self.end = start - self.offset
-        elif isinstance(self.offset, (Period, PeriodSum)):
+                start = (start - self.shift).start
+            self.start, self.end = start - self.shift
+        elif isinstance(self.shift, (Period, PeriodSum)):
             if self.interval_included:
                 raise ValueError("interval_included=True cannot be used with Periods")
             self.start, self.end = self.interval
             for i in range(self.n):
-                self.start = (self.start - self.offset).start
-                self.end = (self.end - self.offset).start
-        elif self.offset is None:
+                self.start = (self.start - self.shift).start
+                self.end = (self.end - self.shift).start
+        elif self.shift is None:
             self.start = None
             self.end = self.interval.start
         else:
@@ -766,21 +766,21 @@ class After(IntervalOp):
         if not self.interval.is_defined():
             self.start = None
             self.end = None
-        elif isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
+        elif isinstance(self.shift, (Repeating, ShiftUnion, RepeatingIntersection)):
             # to allow repeating intervals to overlap start with our start, subtract a tiny amount
             end = self.interval.start - Unit.MICROSECOND.relativedelta(
                 1) if self.interval_included else self.interval.end
             for i in range(self.n - 1):
-                end = (end + self.offset).end
-            self.start, self.end = end + self.offset
-        elif isinstance(self.offset, (Period, PeriodSum)):
+                end = (end + self.shift).end
+            self.start, self.end = end + self.shift
+        elif isinstance(self.shift, (Period, PeriodSum)):
             if self.interval_included:
                 raise ValueError("interval_included=True cannot be used with Periods")
             self.start, self.end = self.interval
             for i in range(self.n):
-                self.start = (self.start + self.offset).end
-                self.end = (self.end + self.offset).end
-        elif self.offset is None:
+                self.start = (self.start + self.shift).end
+                self.end = (self.end + self.shift).end
+        elif self.shift is None:
             self.start = self.interval.end
             self.end = None
         else:
@@ -794,19 +794,19 @@ class Nth(IntervalOp):
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
-        if self.offset is None or (self.from_end and self.interval.end is None) \
+        if self.shift is None or (self.from_end and self.interval.end is None) \
                 or (not self.from_end and self.interval.start is None):
             self.start = None
             self.end = None
         else:
-            offset = self.interval.end if self.from_end else self.interval.start
+            point = self.interval.end if self.from_end else self.interval.start
             # to allow repeating intervals to overlap start with our start, subtract a tiny amount
-            if isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)) \
-                    and not self.from_end and not offset == datetime.datetime.min:
-                offset -= Unit.MICROSECOND.relativedelta(1)
+            if isinstance(self.shift, (Repeating, ShiftUnion, RepeatingIntersection)) \
+                    and not self.from_end and not point == datetime.datetime.min:
+                point -= Unit.MICROSECOND.relativedelta(1)
             for i in range(self.index - 1):
-                offset = (offset - self.offset).start if self.from_end else (offset + self.offset).end
-            self.start, self.end = offset - self.offset if self.from_end else offset + self.offset
+                point = (point - self.shift).start if self.from_end else (point + self.shift).end
+            self.start, self.end = point - self.shift if self.from_end else point + self.shift
             if (self.start is not None and self.interval.start is not None and self.start < self.interval.start) or \
                     (self.end is not None and self.interval.end is not None and self.end > self.interval.end):
                 raise ValueError(f"{self.isoformat()} is not within {self.interval.isoformat()}:\n{self}")
@@ -815,25 +815,25 @@ class Nth(IntervalOp):
 @_dataclass
 class This(IntervalOp):
     interval: Interval
-    offset: Offset
+    shift: Shift
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
-        if not self.interval.is_defined() or self.offset is None:
+        if not self.interval.is_defined() or self.shift is None:
             self.start = None
             self.end = None
-        elif isinstance(self.offset, (Repeating, OffsetUnion, RepeatingIntersection)):
-            if self.offset.range is None:
+        elif isinstance(self.shift, (Repeating, ShiftUnion, RepeatingIntersection)):
+            if self.shift.range is None:
                 self.start = self.end = None
             else:
-                start = self.offset.range.truncate(self.interval.start)
-                self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.offset
-                if (self.end + self.offset).end < self.interval.end:
-                    raise ValueError(f"there is more than one {self.offset} in {self.interval.isoformat()}")
-        elif isinstance(self.offset, (Period, PeriodSum)):
-            self.start, self.end = self.offset.expand(self.interval)
+                start = self.shift.range.truncate(self.interval.start)
+                self.start, self.end = start - Unit.MICROSECOND.relativedelta(1) + self.shift
+                if (self.end + self.shift).end < self.interval.end:
+                    raise ValueError(f"there is more than one {self.shift} in {self.interval.isoformat()}")
+        elif isinstance(self.shift, (Period, PeriodSum)):
+            self.start, self.end = self.shift.expand(self.interval)
         else:
             raise NotImplementedError
 
@@ -887,7 +887,7 @@ class Intervals(collections.abc.Iterable[Interval], abc.ABC):
 @_dataclass
 class _N(Intervals):
     interval: Interval
-    offset: Offset
+    shift: Shift
     n: int
     interval_included: bool = False
     base_class: type = None
@@ -900,7 +900,7 @@ class _N(Intervals):
         interval_included = self.interval_included
         n = 2 if self.n is None else self.n
         for i in range(n):
-            interval = self.base_class(interval, self.offset, interval_included)
+            interval = self.base_class(interval, self.shift, interval_included)
             if self.n is None and i == 1:
                 self._adjust_for_n_none(interval)
             yield interval
@@ -929,7 +929,7 @@ class NextN(_N):
 @_dataclass
 class NthN(Intervals):
     interval: Interval
-    offset: Offset
+    shift: Shift
     index: int
     n: int
     from_end: bool = False
@@ -939,7 +939,7 @@ class NthN(Intervals):
         n = 2 if self.n is None else self.n
         start = 1 + (self.index - 1) * n
         for index in range(start, start + n):
-            interval = Nth(self.interval, self.offset, index, from_end=self.from_end)
+            interval = Nth(self.interval, self.shift, index, from_end=self.from_end)
             if self.n is None and index == start + 1:
                 if self.from_end:
                     interval.start = None
@@ -951,18 +951,18 @@ class NthN(Intervals):
 @_dataclass
 class These(Intervals):
     interval: Interval
-    offset: Offset
+    shift: Shift
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
-        if not self.interval.is_defined() or self.offset is None:
+        if not self.interval.is_defined() or self.shift is None:
             start = None
             end = None
         else:
-            if isinstance(self.offset, Repeating):
-                range_unit = self.offset.range
+            if isinstance(self.shift, Repeating):
+                range_unit = self.shift.range
             else:
-                range_unit = self.offset.unit
+                range_unit = self.shift.unit
             start = range_unit.truncate(self.interval.start)
             end = range_unit.truncate(self.interval.end)
             if end != self.interval.end:
@@ -977,7 +977,7 @@ class These(Intervals):
         elif self.interval.end is None:
             yield Interval(None, None)
         else:
-            interval = self.interval.start + self.offset
+            interval = self.interval.start + self.shift
             while True:
                 if interval.end is None:
                     yield Interval(None, None)
@@ -985,7 +985,7 @@ class These(Intervals):
                 if interval.end > self.interval.end:
                     break
                 yield interval
-                interval = interval.end + self.offset
+                interval = interval.end + self.shift
 
 
 def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = None):
@@ -995,7 +995,7 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
     @_dataclass
     class Number:
         value: int | float
-        offset: Offset = None
+        shift: Shift = None
         span: (int, int) = dataclasses.field(default=None, repr=False)
 
     @_dataclass
@@ -1050,7 +1050,7 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
         trigger_span = (min(char_offsets), max(char_offsets))
 
         # helper for managing access to id_to_obj
-        def pop(obj_id: str) -> Interval | Offset | Period | Repeating | Number | AMPM:
+        def pop(obj_id: str) -> Interval | Shift | Period | Repeating | Number | AMPM:
             result = id_to_obj[obj_id]
             id_to_n_parents[obj_id] -= 1
             if not id_to_n_parents[obj_id]:
@@ -1060,7 +1060,7 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
             return result
 
         # helper for ET.findall + text + pop
-        def pop_all_prop(prop_name: str) -> list[Interval | Offset | Period | Repeating | Number | AMPM]:
+        def pop_all_prop(prop_name: str) -> list[Interval | Shift | Period | Repeating | Number | AMPM]:
             return [pop(e.text) for e in entity.findall(f"properties/{prop_name}") if e.text]
 
         # helper for managing the multiple interval properties
@@ -1084,10 +1084,10 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
                 case other_type:
                     raise NotImplementedError(other_type)
 
-        # helper for managing the multiple offset properties
-        def get_offset() -> Offset:
-            prop_offset = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
-            return pop(prop_offset) if prop_offset else None
+        # helper for managing the multiple shift properties
+        def get_shift() -> Shift:
+            prop_shift = entity.findtext("properties/Period") or entity.findtext("properties/Repeating-Interval")
+            return pop(prop_shift) if prop_shift else None
 
         # helper for managing Included properties
         def get_included(prop_name: str) -> bool:
@@ -1168,13 +1168,13 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
                     unit_name = prop_type.upper().replace("-", "_")
                     obj = Repeating(Unit.__members__[unit_name])
                 case "Union":
-                    obj = OffsetUnion(pop_all_prop("Repeating-Intervals"))
+                    obj = ShiftUnion(pop_all_prop("Repeating-Intervals"))
                 case "Every-Nth":
-                    obj = EveryNth(get_offset(), int(prop_value))
+                    obj = EveryNth(get_shift(), int(prop_value))
                 case "Last" | "Next" | "Before" | "After" | "NthFromEnd" | "NthFromStart":
                     cls_name = "Nth" if entity_type.startswith("Nth") else entity_type
                     interval = get_interval("Interval")
-                    offset = get_offset()
+                    shift = get_shift()
                     kwargs = {}
                     match cls_name:
                         case "Last" | "Next" | "Before" | "After":
@@ -1182,14 +1182,14 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
                         case "Nth":
                             kwargs["index"] = int(prop_value)
                             kwargs["from_end"] = entity_type == "NthFromEnd"
-                    if isinstance(offset, Number):
-                        kwargs["n"] = offset.value
+                    if isinstance(shift, Number):
+                        kwargs["n"] = shift.value
                         if cls_name not in {"Before", "After"}:
                             cls_name += "N"
-                        offset = offset.offset
-                    obj = globals()[cls_name](interval=interval, offset=offset, **kwargs)
+                        shift = shift.shift
+                    obj = globals()[cls_name](interval=interval, shift=shift, **kwargs)
                 case "This":
-                    obj = This(get_interval("Interval"), get_offset())
+                    obj = This(get_interval("Interval"), get_shift())
                 case "Between":
                     obj = Between(get_interval("Start-Interval"),
                                   get_interval("End-Interval"),
@@ -1233,11 +1233,11 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
             obj.span = obj.trigger_span = trigger_span
             spans.append(obj.span)
 
-            # if Number property is present, wrap offset with number for later use
+            # if Number property is present, wrap shift with number for later use
             # skip this for Periods, which directly consume their Number above
             if prop_number and not isinstance(obj, Period):
                 repeating_n = pop(prop_number)
-                repeating_n.offset = obj
+                repeating_n.shift = obj
                 obj = repeating_n
 
             # create additional objects as necessary for sub-intervals
@@ -1287,21 +1287,21 @@ class AnaforaXMLParsingError(RuntimeError):
         super().__init__(re.sub(r"\s+", "", et.tostring(entity, encoding="unicode")))
 
 
-def flatten(offset_or_interval: Offset | Interval) -> Offset | Interval:
-    match offset_or_interval:
+def flatten(shift_or_interval: Shift | Interval) -> Shift | Interval:
+    match shift_or_interval:
         case IntervalOp() as io:
-            return dataclasses.replace(io, offset=flatten(io.offset))
-        case RepeatingIntersection() as ri if any(isinstance(o, RepeatingIntersection) for o in ri.offsets):
-            offsets = []
-            for offset in ri.offsets:
-                offset = flatten(offset)
-                if isinstance(offset, RepeatingIntersection):
-                    offsets.extend(offset.offsets)
+            return dataclasses.replace(io, shift=flatten(io.shift))
+        case RepeatingIntersection() as ri if any(isinstance(o, RepeatingIntersection) for o in ri.shifts):
+            shifts = []
+            for shift in ri.shifts:
+                shift = flatten(shift)
+                if isinstance(shift, RepeatingIntersection):
+                    shifts.extend(shift.shifts)
                 else:
-                    offsets.append(offset)
-            return dataclasses.replace(ri, offsets=offsets)
+                    shifts.append(shift)
+            return dataclasses.replace(ri, shifts=shifts)
         case _:
-            return offset_or_interval
+            return shift_or_interval
 
 
 def _main():
@@ -1335,7 +1335,7 @@ def _main():
             today = datetime.date.today()
             doc_time = Interval.of(today.year, today.month, today.day)
 
-        # parse the Anafora XML into Intervals, Offsets, etc.
+        # parse the Anafora XML into Intervals, Shifts, etc.
         elem = et.parse(xml_path).getroot()
         try:
             for obj in from_xml(elem, known_intervals={(None, None): doc_time}):

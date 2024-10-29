@@ -190,7 +190,7 @@ def test_offset_union():
     interval = scate.Interval.fromisoformat("2003-01-01T00:00 2003-01-30T00:00")
     feb = scate.Repeating(scate.MONTH, scate.YEAR, value=2)
     day20 = scate.Repeating(scate.DAY, scate.MONTH, value=20)
-    union = scate.OffsetUnion([feb, day20])
+    union = scate.ShiftUnion([feb, day20])
     assert (interval - union).isoformat() == "2002-12-20T00:00:00 2002-12-21T00:00:00"
     assert (interval - union - union).isoformat() == "2002-11-20T00:00:00 2002-11-21T00:00:00"
     assert (interval + union).isoformat() == "2003-02-01T00:00:00 2003-03-01T00:00:00"
@@ -199,7 +199,7 @@ def test_offset_union():
     interval = scate.Interval.fromisoformat("2011-07-02T00:00 2011-07-31T00:00")
     day = scate.Repeating(scate.DAY)
     month = scate.Repeating(scate.MONTH)
-    union = scate.OffsetUnion([day, month])
+    union = scate.ShiftUnion([day, month])
     assert (interval - union).isoformat() == "2011-07-01T00:00:00 2011-07-02T00:00:00"
     assert (interval - union - union).isoformat() == "2011-06-01T00:00:00 2011-07-01T00:00:00"
     assert (interval + union).isoformat() == "2011-07-31T00:00:00 2011-08-01T00:00:00"
@@ -208,7 +208,7 @@ def test_offset_union():
     # NOTE: In 2001, June 20 and July 25 are Mondays
     interval = scate.Interval.fromisoformat("2011-07-01T00:00 2011-07-19T00:00")
     week = scate.Repeating(scate.WEEK)
-    union = scate.OffsetUnion([week, day20])
+    union = scate.ShiftUnion([week, day20])
     assert (interval - union).isoformat() == "2011-06-20T00:00:00 2011-06-27T00:00:00"
     assert (interval - union - union).isoformat() == "2011-06-13T00:00:00 2011-06-20T00:00:00"
     assert (interval + union).isoformat() == "2011-07-20T00:00:00 2011-07-21T00:00:00"
