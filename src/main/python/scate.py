@@ -522,6 +522,12 @@ class Midnight(Repeating):
 
 @_dataclass
 class EveryNth(Offset):
+    """
+    A repeating interval that retains only every nth interval of another repeating interval.
+    For example, "every other Friday" would be represented as::
+
+        EveryNth(Repeating(DAY, WEEK, value=4), n=2)
+    """
     offset: Offset
     n: int
     span: (int, int) = dataclasses.field(default=None, repr=False)
