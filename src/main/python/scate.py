@@ -575,6 +575,12 @@ class ShiftUnion(Shift):
 
 @_dataclass
 class RepeatingIntersection(Shift):
+    """
+    A repeating interval that is the intersection of two or more repeating intervals.
+    For example, "Saturdays in March" would be represented as::
+
+        RepeatingIntersection([Repeating(DAY, WEEK, value=5), Repeating(MONTH, YEAR, value=3)])
+    """
     shifts: typing.Iterable[Repeating]
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
@@ -660,6 +666,17 @@ class RepeatingIntersection(Shift):
 
 @_dataclass
 class Year(Interval):
+    """
+    The interval from the first second of a year (inclusive) to the first second of the next year (exclusive).
+    For example, the year-long interval "2014" would be represented as::
+
+        Year(2014)
+
+    Year can also be used to identify decades and centuries by indicating how many digits are missing.
+    For example, the 10-year-long interval "the 1980s" would be represented as::
+
+        Year(198, n_missing_digits=1)
+    """
     digits: int
     n_missing_digits: int = 0
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
@@ -674,18 +691,29 @@ class Year(Interval):
 
 @_dataclass
 class YearSuffix(Interval):
+    """
+    A year-long interval created from the year of another interval and a suffix of digits to replace in that year.
+    For example, the year "96" in the context of a document written in 1993 would be represented as::
+
+        YearSuffix(Year(1993), last_digits=96)
+
+    YearSuffix can also be used to modify decades and centuries by indicating how many digits are missing.
+    For example, the 10-year-long interval "the 70s" in the context of a document written in 1864 be represented as::
+
+        YearSuffix(Year(1864), 7, n_missing_digits=1)
+    """
     interval: Interval
-    last_digits: int
-    n_suffix_digits: int
+    digits: int
     n_missing_digits: int = 0
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
-        divider = 10 ** (self.n_suffix_digits + self.n_missing_digits)
-        multiplier = 10 ** self.n_suffix_digits
-        digits = self.interval.start.year // divider * multiplier + self.last_digits
+        n_digits = len(str(self.digits))
+        divider = 10 ** (n_digits + self.n_missing_digits)
+        multiplier = 10 ** n_digits
+        digits = self.interval.start.year // divider * multiplier + self.digits
         self.start, self.end = Year(digits, self.n_missing_digits)
 
 
@@ -1136,9 +1164,7 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
                         case "Year":
                             obj = Year(digits, n_missing_digits)
                         case "Two-Digit-Year":
-                            n_suffix_digits = 2 - n_missing_digits
-                            obj = YearSuffix(get_interval("Interval"), digits,
-                                             n_suffix_digits, n_missing_digits)
+                            obj = YearSuffix(get_interval("Interval"), digits, n_missing_digits)
                         case other:
                             raise NotImplementedError(other)
                 case "Month-Of-Year":

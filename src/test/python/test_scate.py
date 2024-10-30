@@ -317,13 +317,13 @@ def test_year():
 
 
 def test_year_suffix():
-    assert scate.YearSuffix(scate.Year(1903), 37, 2).isoformat() == scate.Interval.of(1937).isoformat()
-    assert scate.YearSuffix(scate.Year(2016), 418, 3).isoformat() == scate.Interval.of(2418).isoformat()
-    assert scate.YearSuffix(scate.Year(132, 1), 85, 2).isoformat() == scate.Interval.of(1385).isoformat()
-    assert scate.YearSuffix(scate.Year(23, 2), 22, 2).isoformat() == scate.Interval.of(2322).isoformat()
-    assert scate.YearSuffix(scate.Year(1903), 3, 1, 1).isoformat() == "1930-01-01T00:00:00 1940-01-01T00:00:00"
-    assert scate.YearSuffix(scate.Year(132, 1), 8, 1, 1).isoformat() == "1380-01-01T00:00:00 1390-01-01T00:00:00"
-    assert scate.YearSuffix(scate.Year(132, 1), 240, 3, 1).isoformat() == "2400-01-01T00:00:00 2410-01-01T00:00:00"
+    assert scate.YearSuffix(scate.Year(1903), 37).isoformat() == scate.Interval.of(1937).isoformat()
+    assert scate.YearSuffix(scate.Year(2016), 418).isoformat() == scate.Interval.of(2418).isoformat()
+    assert scate.YearSuffix(scate.Year(132, 1), 85).isoformat() == scate.Interval.of(1385).isoformat()
+    assert scate.YearSuffix(scate.Year(23, 2), 22).isoformat() == scate.Interval.of(2322).isoformat()
+    assert scate.YearSuffix(scate.Year(1903), 3, 1).isoformat() == "1930-01-01T00:00:00 1940-01-01T00:00:00"
+    assert scate.YearSuffix(scate.Year(132, 1), 8, 1).isoformat() == "1380-01-01T00:00:00 1390-01-01T00:00:00"
+    assert scate.YearSuffix(scate.Year(132, 1), 240, 1).isoformat() == "2400-01-01T00:00:00 2410-01-01T00:00:00"
 
 
 def test_last():

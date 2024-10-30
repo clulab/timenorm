@@ -240,10 +240,10 @@ def test_year():
 
 
 def test_two_digit_year():
-    for value, last_digits, n_suffix_digits, n_missing_digits, iso in [
-            ("84", 84, 2, 0, "1984-01-01T00:00:00 1985-01-01T00:00:00"),
-            ("19", 19, 2, 0, "1919-01-01T00:00:00 1920-01-01T00:00:00"),
-            ("9?", 9, 1, 1, "1990-01-01T00:00:00 2000-01-01T00:00:00")]:
+    for value, digits, n_missing_digits, iso in [
+            ("84", 84, 0, "1984-01-01T00:00:00 1985-01-01T00:00:00"),
+            ("19", 19, 0, "1919-01-01T00:00:00 1920-01-01T00:00:00"),
+            ("9?", 9, 1, "1990-01-01T00:00:00 2000-01-01T00:00:00")]:
         xml_str = inspect.cleandoc(f"""
             <data>
                 <annotations>
@@ -261,7 +261,7 @@ def test_two_digit_year():
                 </annotations>
             </data>""")
         doc_time = scate.Interval.of(1928, 2, 13)
-        obj = scate.YearSuffix(doc_time, last_digits, n_suffix_digits, n_missing_digits, span=(1704, 1706))
+        obj = scate.YearSuffix(doc_time, digits, n_missing_digits, span=(1704, 1706))
         objects = scate.from_xml(ET.fromstring(xml_str), known_intervals={(None, None): doc_time})
         assert objects == [obj]
         assert _isoformats(objects) == [iso]
