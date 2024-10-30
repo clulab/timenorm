@@ -83,9 +83,9 @@ def test_repeating_unit():
     assert (interval + century).isoformat() == "2100-01-01T00:00:00 2200-01-01T00:00:00"
     assert (interval - decade).isoformat() == "1990-01-01T00:00:00 2000-01-01T00:00:00"
     assert (interval + decade).isoformat() == "2010-01-01T00:00:00 2020-01-01T00:00:00"
-    # March 11, 2002 is a Monday
+    # 11 Mar 2002 is a Monday
     assert (interval - week).isoformat() == "2002-03-11T00:00:00 2002-03-18T00:00:00"
-    # May 12, 2003 is a Monday
+    # 12 May 2003 is a Monday
     assert (interval + week).isoformat() == "2003-05-12T00:00:00 2003-05-19T00:00:00"
 
     interval = scate.Interval.fromisoformat("2001-02-12T03:03 2001-02-14T22:00")
@@ -96,7 +96,7 @@ def test_repeating_unit():
     assert (interval - day).isoformat() == scate.Interval.of(2001, 2, 11).isoformat()
     assert (interval + day).isoformat() == scate.Interval.of(2001, 2, 14).isoformat()
 
-    # December 31, 2012 is a Monday
+    # 31 Dec 2012 is a Monday
     interval = scate.Interval.of(2013, 1, 8)
     assert (interval - week).isoformat() == "2012-12-31T00:00:00 2013-01-07T00:00:00"
 
@@ -138,6 +138,7 @@ def test_repeating_field():
     sat = scate.Repeating(scate.DAY, scate.WEEK, value=5)
     assert (sun_2024_10_27 + mon).isoformat() == "2024-10-28T00:00:00 2024-10-29T00:00:00"
     assert (sun_2024_10_27 - sat).isoformat() == "2024-10-26T00:00:00 2024-10-27T00:00:00"
+
 
 def test_every_nth():
     interval = scate.Interval.of(2000, 1, 1)
@@ -222,28 +223,28 @@ def test_offset_union():
 
 def test_repeating_intersection():
     # Friday the 13ths 2012 - 2023:
-    # Friday, January 13, 2012
-    # Friday, April 13, 2012
-    # Friday, July 13, 2012
-    # Friday, September 13, 2013
-    # Friday, December 13, 2013
-    # Friday, June 13, 2014
-    # Friday, February 13, 2015
-    # Friday, March 13, 2015
-    # Friday, November 13, 2015
-    # Friday, May 13, 2016
-    # Friday, January 13, 2017
-    # Friday, October 13, 2017
-    # Friday, April 13, 2018
-    # Friday, July 13, 2018
-    # Friday, September 13, 2019
-    # Friday, December 13, 2019
-    # Friday, March 13, 2020
-    # Friday, November 13, 2020
-    # Friday, August 13, 2021
-    # Friday, May 13, 2022
-    # Friday, January 13, 2023
-    # Friday, October 13, 2023
+    # Fri 13 Jan 2012
+    # Fri 13 Apr 2012
+    # Fri 13 Jul 2012
+    # Fri 13 Sep 2013
+    # Fri 13 Dec 2013
+    # Fri 13 Jun 2014
+    # Fri 13 Feb 2015
+    # Fri 13 Mar 2015
+    # Fri 13 Nov 2015
+    # Fri 13 May 2016
+    # Fri 13 Jan 2017
+    # Fri 13 Oct 2017
+    # Fri 13 Apr 2018
+    # Fri 13 Jul 2018
+    # Fri 13 Sep 2019
+    # Fri 13 Dec 2019
+    # Fri 13 Mar 2020
+    # Fri 13 Nov 2020
+    # Fri 13 Aug 2021
+    # Fri 13 May 2022
+    # Fri 13 Jan 2023
+    # Fri 13 Oct 2023
 
     y2016 = scate.Year(2016)
     jan_fri_13 = scate.RepeatingIntersection([
@@ -345,7 +346,7 @@ def test_last():
            "2017-07-06T00:00:00 2017-07-07T00:00:00"
     assert scate.Last(scate.Interval.of(2017, 7, 7), day, interval_included=True).isoformat() == \
            "2017-07-07T00:00:00 2017-07-08T00:00:00"
-    # July 7, 2017 is a Friday
+    # 7 Jul 2017 is a Friday
     assert scate.Last(scate.Interval.of(2017, 7, 7), friday).isoformat() == \
            "2017-06-30T00:00:00 2017-07-01T00:00:00"
     assert scate.Last(scate.Interval.of(2017, 7, 7), friday, interval_included=True).isoformat() == \
@@ -684,14 +685,14 @@ def test_none_values():
     date = scate.Interval.of(2016, 10, 18)
     undef = scate.Interval(None, None)
     d08 = scate.Repeating(scate.DAY, scate.MONTH, value=8)
-    pUnk = scate.Period(scate.MONTH, None)
-    rUnk = scate.Repeating(None)
+    p_unk = scate.Period(scate.MONTH, None)
+    r_unk = scate.Repeating(None)
 
-    assert (date + rUnk).isoformat() == "... ..."
-    assert (date - rUnk).isoformat() == "... ..."
+    assert (date + r_unk).isoformat() == "... ..."
+    assert (date - r_unk).isoformat() == "... ..."
 
-    assert (date + scate.RepeatingIntersection([d08, rUnk])).isoformat() == "... ..."
-    assert (date - scate.RepeatingIntersection([d08, rUnk])).isoformat() == "... ..."
+    assert (date + scate.RepeatingIntersection([d08, r_unk])).isoformat() == "... ..."
+    assert (date - scate.RepeatingIntersection([d08, r_unk])).isoformat() == "... ..."
 
     assert scate.Last(date, scate.Repeating(None)).isoformat() == "... ..."
     assert scate.Next(date, scate.Repeating(None)).isoformat() == "... ..."
@@ -738,16 +739,16 @@ def test_none_values():
     assert list(scate.NthN(date, None, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
     assert list(scate.These(date, None).isoformats()) == ["... ..."]
 
-    assert scate.Last(date, pUnk).isoformat() == "... 2016-10-18T00:00:00"
-    assert scate.Next(date, pUnk).isoformat() == "2016-10-19T00:00:00 ..."
-    assert scate.Before(date, pUnk).isoformat() == "... ..."
-    assert scate.After(date, pUnk).isoformat() == "... ..."
-    assert scate.Nth(date, pUnk, index=5).isoformat() == "... ..."
-    assert scate.This(date, pUnk).isoformat() == "... ..."
-    assert list(scate.LastN(date, pUnk, n=3).isoformats()) == ["... 2016-10-18T00:00:00", "... ...", "... ..."]
-    assert list(scate.NextN(date, pUnk, n=3).isoformats()) == ["2016-10-19T00:00:00 ...", "... ...", "... ..."]
-    assert list(scate.NthN(date, pUnk, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
-    assert list(scate.These(date, pUnk).isoformats()) == ["... ..."]
+    assert scate.Last(date, p_unk).isoformat() == "... 2016-10-18T00:00:00"
+    assert scate.Next(date, p_unk).isoformat() == "2016-10-19T00:00:00 ..."
+    assert scate.Before(date, p_unk).isoformat() == "... ..."
+    assert scate.After(date, p_unk).isoformat() == "... ..."
+    assert scate.Nth(date, p_unk, index=5).isoformat() == "... ..."
+    assert scate.This(date, p_unk).isoformat() == "... ..."
+    assert list(scate.LastN(date, p_unk, n=3).isoformats()) == ["... 2016-10-18T00:00:00", "... ...", "... ..."]
+    assert list(scate.NextN(date, p_unk, n=3).isoformats()) == ["2016-10-19T00:00:00 ...", "... ...", "... ..."]
+    assert list(scate.NthN(date, p_unk, index=5, n=3).isoformats()) == ["... ...", "... ...", "... ..."]
+    assert list(scate.These(date, p_unk).isoformats()) == ["... ..."]
 
 
 def test_min_date():
