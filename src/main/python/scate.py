@@ -212,6 +212,10 @@ globals().update(Unit.__members__)
 
 
 class Shift:
+    """
+    An object that can be added or subtracted from a time point yielding an Interval
+    """
+
     unit: Unit
 
     def __rsub__(self, other: datetime.datetime) -> Interval:
@@ -380,7 +384,7 @@ class Repeating(Shift):
             return Interval(None, None)
         start = self.unit.truncate(other)
         if self.rrule_kwargs:
-            start = dateutil.rrule.rrule(dtstart=start, **self.rrule_kwargs).after(other)
+            start = dateutil.rrule.rrule(dtstart=start, **self.rrule_kwargs).after(other, inc=True)
         elif start < other:
             start += self.period.unit.relativedelta(1)
         return start + self.period
@@ -547,6 +551,12 @@ class EveryNth(Shift):
 
 @_dataclass
 class ShiftUnion(Shift):
+    """
+    The union of two or more time shifts (periods, repeating intervals, etc.).
+    For example, the set of all days of the week "Mondays and Fridays" would be represented as::
+
+        ShiftUnion([Repeating(DAY, WEEK, value=0), Repeating(DAY, WEEK, value=4)])
+    """
     shifts: typing.Iterable[Shift]
     span: (int, int) = dataclasses.field(default=None, repr=False)
 

@@ -133,6 +133,11 @@ def test_repeating_field():
     assert (interval + day31).isoformat() == "2000-03-31T00:00:00 2000-04-01T00:00:00"
     assert (interval - day31).isoformat() == "2000-01-31T00:00:00 2000-02-01T00:00:00"
 
+    sun_2024_10_27 = scate.Interval.of(2024, 10, 27)
+    mon = scate.Repeating(scate.DAY, scate.WEEK, value=0)
+    sat = scate.Repeating(scate.DAY, scate.WEEK, value=5)
+    assert (sun_2024_10_27 + mon).isoformat() == "2024-10-28T00:00:00 2024-10-29T00:00:00"
+    assert (sun_2024_10_27 - sat).isoformat() == "2024-10-26T00:00:00 2024-10-27T00:00:00"
 
 def test_every_nth():
     interval = scate.Interval.of(2000, 1, 1)
