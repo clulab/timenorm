@@ -39,6 +39,15 @@ class Interval:
 
         Interval(start=datetime.datetime.fromisoformat("1990-01-01T00:00:00"),
                  end=datetime.datetime.fromisoformat("1991-01-01T00:00:00"))
+
+    The :func:`of` method provides a shorthand for intervals that align to exactly one calendar unit.
+    So "1990" may be written more concisely as::
+
+        Interval.of(1990)
+
+    And "1 Apr 1918" may be written as::
+
+        Interval.of(1998, 4, 1)
     """
     start: datetime.datetime | None
     end: datetime.datetime | None
@@ -719,6 +728,9 @@ class YearSuffix(Interval):
 
 @_dataclass
 class IntervalOp(Interval):
+    """
+    A superclass for operators that take an Interval and a Shift as input and produce an Interval as output.
+    """
     interval: Interval
     shift: Shift
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
@@ -727,6 +739,23 @@ class IntervalOp(Interval):
 
 @_dataclass
 class Last(IntervalOp):
+    """
+    The closest preceding interval matching the specified Shift.
+    For example, "over the past four days" when spoken on 1 Nov 2024 would be represented as::
+
+        Last(Interval.of(2024, 11, 1), Period(DAY, 4))
+
+    Similarly, "the previous summer" when spoken on 14 Feb 1912 would be represented as::
+
+        Last(Interval.of(1912, 2, 14), Summer())
+
+    By default, the resulting interval must end by the start of the input interval, but :code:`interval_included=True`
+    will allow the resulting interval to end as late as the end of the input interval.
+    For example, if text written on Tue 8 Nov 2016 wrote "arrived on Tuesday" with the intention of "arrived today"
+    (a common practice in news articles), it would be represented as::
+
+        Last(Interval.of(2016, 11, 8), Repeating(DAY, WEEK, value=1), interval_included=True)
+    """
     interval_included: bool = False
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
@@ -744,6 +773,20 @@ class Last(IntervalOp):
 
 @_dataclass
 class Next(IntervalOp):
+    """
+    The closest following interval matching the specified Shift.
+    For example, "the next three hours" when spoken on 1 Nov 2024 would be represented as::
+
+        Next(Interval.of(2024, 11, 1), Period(HOUR, 3))
+
+    Similarly, "the coming week" when spoken on 14 Feb 1912 would be represented as::
+
+        Next(Interval.of(1912, 2, 14), Repeating(WEEK))
+
+    By default, the resulting interval must not start before the end of the input interval,
+    but :code:`interval_included=True` will allow the resulting interval to start as early as the start of the input
+    interval.
+    """
     interval_included: bool = False
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
