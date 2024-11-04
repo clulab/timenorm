@@ -898,6 +898,22 @@ class After(IntervalOp):
 
 @_dataclass
 class Nth(IntervalOp):
+    """
+    Selects the nth repetition of a Shift starting from one end of the Interval.
+    For example, "second hour of the meeting" for a meeting at 09:30-12:30 on 30 Mar 2007 would be represented as::
+
+        Nth(Interval.fromisoformat("2007-03-30T09:30 2007-03-30T12:30"), Period(HOUR, 1), index=2)
+
+    Similarly, "fiftieth day of 2016" would be represented as::
+
+        Nth(Year(2016), Repeating(DAY), index=50)
+
+    By default, Nth will start from the start and count forward in time, but with :code:`from_end=True` Nth will instead
+    start from the end and count backward in time.
+    For example, "third-to-last Sunday of 2024" would be represented as::
+
+        Nth(Year(2024), Repeating(DAY, WEEK, value=6), index=3, from_end=True)
+    """
     index: int
     from_end: bool = False
     span: (int, int) = dataclasses.field(default=None, repr=False)
