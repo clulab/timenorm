@@ -810,6 +810,20 @@ class Next(IntervalOp):
 
 @_dataclass
 class Before(IntervalOp):
+    """
+    Moves the input Interval earlier by the specified Shift the specified number of times.
+    For example, "a year ago" written on 13 Sep 1595 would be represented as::
+
+        Before(Interval.of(1595, 9, 13), Period(YEAR, 1))
+
+    Similarly, "two Tuesdays before" written on Sat 23 Jan 1993 would be represented as::
+
+        Before(Interval.of(1993, 1, 23), Repeating(DAY, WEEK, value=1), n=2)
+
+    By default, the resulting interval must end by the start of the input interval,
+    but when the Shift is a Repeating, :code:`interval_included=True` will allow the resulting interval to end as late
+    as the end of the input interval.
+    """
     n: int = 1
     interval_included: bool = False
     span: (int, int) = dataclasses.field(default=None, repr=False)
@@ -839,6 +853,20 @@ class Before(IntervalOp):
 
 @_dataclass
 class After(IntervalOp):
+    """
+    Moves the input Interval later by the specified Shift the specified number of times.
+    For example, "a month later" written on 13 Sep 1595 would be represented as::
+
+        After(Interval.of(1595, 9, 13), Period(MONTH, 1))
+
+    Similarly, "three Aprils after" written on Sat 23 Jan 1993 would be represented as::
+
+        After(Interval.of(1993, 1, 23), Repeating(MONTH, YEAR, value=4), n=3)
+
+    By default, the resulting interval must not start before the end of the input interval,
+    but when the Shift is a Repeating, :code:`interval_included=True` will allow the resulting interval to start as
+    early as the start of the input interval.
+    """
     n: int = 1
     interval_included: bool = False
     span: (int, int) = dataclasses.field(default=None, repr=False)
