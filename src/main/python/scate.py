@@ -265,12 +265,6 @@ class Period(Shift):
         else:
             return Interval(other - self.unit.relativedelta(self.n), other)
 
-    def expand(self, interval: Interval) -> Interval:
-        if self.unit is None or self.n is None:
-            return Interval(None, None)
-        else:
-            return self.unit.expand(interval, self.n)
-
 
 @_dataclass
 class PeriodSum(Shift):
@@ -958,7 +952,10 @@ class This(IntervalOp):
                 if (self.end + self.shift).end < self.interval.end:
                     raise ValueError(f"there is more than one {self.shift} in {self.interval.isoformat()}")
         elif isinstance(self.shift, (Period, PeriodSum)):
-            self.start, self.end = self.shift.expand(self.interval)
+            if self.shift.unit is None or self.shift.n is None:
+                self.start = self.end = None
+            else:
+                self.start, self.end = self.shift.unit.expand(self.interval, self.shift.n)
         else:
             raise NotImplementedError
 

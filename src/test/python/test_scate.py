@@ -40,7 +40,6 @@ def test_period():
     period = scate.Period(None, 3)  # Unknown unit
     assert (date + period).isoformat() == "2000-01-01T00:00:00 ..."
     assert (date - period).isoformat() == "... 2000-01-01T00:00:00"
-    assert period.expand(date).isoformat() == "... ..."
 
 
 def test_period_sum():
@@ -511,6 +510,9 @@ def test_this():
 
     interval = scate.Interval.fromisoformat("2016-07-01T10:00:00 2016-07-01T11:00:00")
     assert scate.This(interval, scate.Noon()).isoformat() == "2016-07-01T12:00:00 2016-07-01T12:01:00"
+
+    assert scate.This(interval, scate.Period(None, 1)).isoformat() == "... ..."
+    assert scate.This(interval, scate.Period(scate.YEAR, None)).isoformat() == "... ..."
 
 
 def test_between():
