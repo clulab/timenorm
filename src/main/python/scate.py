@@ -40,17 +40,64 @@ class Interval:
         Interval(start=datetime.datetime.fromisoformat("1990-01-01T00:00:00"),
                  end=datetime.datetime.fromisoformat("1991-01-01T00:00:00"))
 
-    The :func:`of` method provides a shorthand for intervals that align to exactly one calendar unit.
-    So "1990" may be written more concisely as::
-
-        Interval.of(1990)
-
-    And "1 Apr 1918" may be written as::
-
-        Interval.of(1998, 4, 1)
+    See the :func:`fromisoformat` and :func:`of` methods for more concise ways of constructing Intervals.
     """
     start: datetime.datetime | None
     end: datetime.datetime | None
+
+    @classmethod
+    def fromisoformat(cls, string):
+        """
+        Creates an Interval from two dates in ISO 8601 format.
+        For example, "May 1362" may be represented as::
+
+            Interval.fromisoformat("1362-03-01T00:00:00 1362-04-01T00:00:00")
+
+        The supported formats are the same as :func:`datetime.datetime.fromisoformat`, so "May 1362" may be more
+        concisely written as::
+
+            Interval.fromisoformat("1362-03-01 1362-04-01")
+
+        :param string: A string containing a starting point and an ending point in ISO 8601 format.
+        :return: An Interval from the starting point to the ending point.
+        """
+        start, end = [datetime.datetime.fromisoformat(x) for x in string.split()]
+        return cls(start, end)
+
+    @classmethod
+    def of(cls, *args):
+        """
+        Creates an Interval that aligns to exactly one calendar unit.
+        For example, "1990" may be represented as::
+
+            Interval.of(1990)
+
+        And "1 Apr 1918" may be represented as::
+
+            Interval.of(1998, 4, 1)
+
+        :param args: A starting point specified by any prefix of the list of time units:
+        year, month, day, hour, minute, second, and microsecond.
+        :return: An Interval that starts from the given starting point, and ends after the smallest time unit specified.
+        """
+        # match Interval.of arguments with datetime.__init__ arguments
+        names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]
+        if len(args) > len(names):
+            raise ValueError(f"found {len(args)} arguments, {args!r}, for only {len(names)} time units, {names!r}")
+        pairs = list(zip(names, args))
+        kwargs = dict(pairs)
+        # month and day are required by datetime, so give defaults here
+        for name in ["month", "day"]:
+            if name not in kwargs:
+                kwargs[name] = 1
+        # create the datetime for the start
+        start = datetime.datetime(**kwargs)
+        # end is one smallest unit specified larger than the start
+        last_name, _ = pairs[-1]
+        # relativedelta argument names are plural
+        last_name += "s"
+        end = start + dateutil.relativedelta.relativedelta(**{last_name: 1})
+        return cls(start, end)
 
     def is_defined(self) -> bool:
         return self.start is not None and self.end is not None
@@ -79,7 +126,7 @@ class Interval:
         if tuple_index is not None:
             return f"Interval.of({', '.join(map(repr, self.start.timetuple()[:tuple_index]))})"
         else:
-            return f"Interval(start={self.start!r}, end={self.end!r})"
+            return f"Interval.fromisoformat('{self.start.isoformat()} {self.end.isoformat()}')"
 
     def __len__(self):
         return 2
@@ -93,30 +140,6 @@ class Interval:
 
     def __sub__(self, shift):
         return self.start - shift
-
-    @classmethod
-    def fromisoformat(cls, string):
-        start, end = [datetime.datetime.fromisoformat(x) for x in string.split()]
-        return cls(start, end)
-
-    @classmethod
-    def of(cls, year, *args):
-        # match Interval.of arguments with datetime.__init__ arguments
-        names = ["year", "month", "day", "hour", "minute", "second", "microsecond"]
-        pairs = list(zip(names, (year,) + args))
-        kwargs = dict(pairs)
-        # month and day are required by datetime, so give defaults here
-        for name in ["month", "day"]:
-            if name not in kwargs:
-                kwargs[name] = 1
-        # create the datetime for the start
-        start = datetime.datetime(**kwargs)
-        # end is one smallest unit specified larger than the start
-        last_name, _ = pairs[-1]
-        # relativedelta argument names are plural
-        last_name += "s"
-        end = start + dateutil.relativedelta.relativedelta(**{last_name: 1})
-        return cls(start, end)
 
 
 class Unit(enum.Enum):

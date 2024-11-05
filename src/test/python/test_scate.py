@@ -9,6 +9,8 @@ def test_interval():
     assert scate.Interval.of(1985, 6, 17).isoformat() == "1985-06-17T00:00:00 1985-06-18T00:00:00"
     assert scate.Interval.of(1985, 6, 17, 23).isoformat() == "1985-06-17T23:00:00 1985-06-18T00:00:00"
     assert scate.Interval.of(1985, 6, 17, 23, 0).isoformat() == "1985-06-17T23:00:00 1985-06-17T23:01:00"
+    with pytest.raises(ValueError):
+        scate.Interval.of(1, 2, 3, 4, 5, 6, 7, 8)
 
 
 def test_unit_truncate():
