@@ -956,6 +956,19 @@ class Nth(IntervalOp):
 
 @_dataclass
 class This(IntervalOp):
+    """
+    For period Shifts, creates an interval of the given length centered at the given interval.
+    For example, "these six days" spoken on 29 Apr 1176 would be interpreted as
+    [1176-04-26T12:00:00, 1176-05-02T12:00:00) and represented as::
+
+        This(Interval.of(1176, 4, 29), Period(DAY, 6))
+
+    For repeating Shifts, finds the Shift range containing this interval, then finds the Shift unit within that range.
+    For example, "this January" spoken on 10 Nov 1037 would be interpreted as
+    [1037-01-01T00:00:00, 1037-02-01T00:00:00) and represented as::
+
+        This(Interval.of(1037, 11, 10), Repeating(MONTH, YEAR, value=1))
+    """
     interval: Interval
     shift: Shift
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
