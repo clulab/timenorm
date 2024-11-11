@@ -998,6 +998,20 @@ class This(IntervalOp):
 
 @_dataclass
 class Between(Interval):
+    """
+    The interval between a start and an end interval.
+    For example, "since 1994" written on 09 Jan 2007 and interpreted as [1995-01-01T00:00:00, 2007-01-09T00:00:00)
+    would be represented as::
+
+        Between(Year(1994), Interval.of(2007, 1, 9))
+
+    If :code:`start_included=False`, starts from the end of `start_interval`, otherwise, starts from the start.
+    If :code:`end_included=False`, ends at the start of `end_interval`, otherwise ends at the end.
+    So "since 1994" written on 09 Jan 2007 and interpreted as [1994-01-01T00:00:00, 2007-01-10T00:00:00)
+    would be represented as::
+
+        Between(Year(1994), Interval.of(2007, 1, 9), start_included=True, end_included=True)
+    """
     start_interval: Interval
     end_interval: Interval
     start_included: bool = False
