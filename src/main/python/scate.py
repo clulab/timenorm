@@ -1061,9 +1061,8 @@ class Intervals(collections.abc.Iterable[Interval], abc.ABC):
     """
     A collection of intervals on the timeline.
     """
-    def isoformats(self) -> collections.abc.Iterator[str]:
-        for interval in self:
-            yield interval.isoformat()
+    def isoformats(self) -> list[str]:
+        return [interval.isoformat() for interval in self]
 
 
 @_dataclass
