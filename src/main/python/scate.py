@@ -744,7 +744,7 @@ class YearSuffix(Interval):
 
 
 @_dataclass
-class IntervalOp(Interval):
+class _IntervalOp(Interval):
     """
     A superclass for operators that take an Interval and a Shift as input and produce an Interval as output.
     """
@@ -755,7 +755,7 @@ class IntervalOp(Interval):
 
 
 @_dataclass
-class Last(IntervalOp):
+class Last(_IntervalOp):
     """
     The closest preceding interval matching the specified Shift.
     For example, "over the past four days" when spoken on 1 Nov 2024 would be represented as::
@@ -789,7 +789,7 @@ class Last(IntervalOp):
 
 
 @_dataclass
-class Next(IntervalOp):
+class Next(_IntervalOp):
     """
     The closest following interval matching the specified Shift.
     For example, "the next three hours" when spoken on 1 Nov 2024 would be represented as::
@@ -826,7 +826,7 @@ class Next(IntervalOp):
 
 
 @_dataclass
-class Before(IntervalOp):
+class Before(_IntervalOp):
     """
     Moves the input Interval earlier by the specified Shift the specified number of times.
     For example, "a year ago" written on 13 Sep 1595 would be represented as::
@@ -869,7 +869,7 @@ class Before(IntervalOp):
 
 
 @_dataclass
-class After(IntervalOp):
+class After(_IntervalOp):
     """
     Moves the input Interval later by the specified Shift the specified number of times.
     For example, "a month later" written on 13 Sep 1595 would be represented as::
@@ -914,7 +914,7 @@ class After(IntervalOp):
 
 
 @_dataclass
-class Nth(IntervalOp):
+class Nth(_IntervalOp):
     """
     Selects the nth repetition of a Shift starting from one end of the Interval.
     For example, "second hour of the meeting" for a meeting at 09:30-12:30 on 30 Mar 2007 would be represented as::
@@ -955,7 +955,7 @@ class Nth(IntervalOp):
 
 
 @_dataclass
-class This(IntervalOp):
+class This(_IntervalOp):
     """
     For period Shifts, creates an interval of the given length centered at the given interval.
     For example, "these six days" spoken on 29 Apr 1176 would be interpreted as
@@ -1466,7 +1466,7 @@ class AnaforaXMLParsingError(RuntimeError):
 
 def flatten(shift_or_interval: Shift | Interval) -> Shift | Interval:
     match shift_or_interval:
-        case IntervalOp() as io:
+        case _IntervalOp() as io:
             return dataclasses.replace(io, shift=flatten(io.shift))
         case RepeatingIntersection() as ri if any(isinstance(o, RepeatingIntersection) for o in ri.shifts):
             shifts = []
