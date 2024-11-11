@@ -1152,6 +1152,12 @@ class NthN(Intervals):
 
 @_dataclass
 class These(Intervals):
+    """
+    Finds the Shift range containing this interval, then finds the Shift units within that range.
+    For example, "Tuesdays and Thursdays in January 2025" would be represented as::
+
+        These(Interval.of(2025, 1), ShiftUnion([Repeating(DAY, WEEK, value=1), Repeating(DAY, WEEK, value=3)]))
+    """
     interval: Interval
     shift: Shift
     span: (int, int) = dataclasses.field(default=None, repr=False)
