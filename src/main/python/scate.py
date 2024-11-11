@@ -1124,6 +1124,12 @@ class NextN(_N):
 
 @_dataclass
 class NthN(Intervals):
+    """
+    Selects a specified number of nth repetitions of a Shift starting from one end of the Interval.
+    For example, "the second six Mondays of 1997" would be represented as::
+
+        NthN(Year(1997), Repeating(DAY, WEEK, value=0), index=2, n=6)
+    """
     interval: Interval
     shift: Shift
     index: int
