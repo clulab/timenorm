@@ -680,6 +680,13 @@ def test_flatten():
             scate.Repeating(scate.HOUR, scate.DAY, value=7),
             scate.Repeating(scate.MINUTE, scate.HOUR, value=7),
          ]))),
+        (scate.LastN(scate.Interval.of(1211, 7),
+                     scate.RepeatingIntersection([scate.RepeatingIntersection([
+                         scate.Repeating(scate.MINUTE, scate.HOUR, value=7)])]),
+                     n=5),
+         scate.LastN(scate.Interval.of(1211, 7),
+                     scate.RepeatingIntersection([scate.Repeating(scate.MINUTE, scate.HOUR, value=7)]),
+                     n=5)),
     ]:
         assert scate.flatten(obj) == obj_flat
 

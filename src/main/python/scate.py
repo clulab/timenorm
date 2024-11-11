@@ -1196,7 +1196,16 @@ class These(Intervals):
                 interval = interval.end + self.shift
 
 
-def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = None):
+def from_xml(elem: et.Element,
+             known_intervals: dict[(int, int), Interval] = None) -> list[Shift | Interval | Intervals]:
+    """
+    Reads Intervals and Shifts from SCATE Anafora XML.
+
+    :param elem: The root <data> element of a SCATE Anafora XML document.
+    :param known_intervals: A mapping from character offset spans to Intervals, representing intervals that are already
+    known before parsing begins. The document creation time should be specified with the span (None, None).
+    :return: Intervals and Shifts corresponding to the XML definitions.
+    """
     if known_intervals is None:
         known_intervals = {}
 
@@ -1487,6 +1496,9 @@ def from_xml(elem: et.Element, known_intervals: dict[(int, int), Interval] = Non
 
 
 class AnaforaXMLParsingError(RuntimeError):
+    """
+    An exception thrown when `from_xml` is unable to parse a valid Shift, Interval, or Intervals from an Anafora XML
+    """
     def __init__(self, entity: et.Element, trigger_span: (int, int)):
         self.entity = entity
         self.trigger_span = trigger_span
@@ -1494,9 +1506,13 @@ class AnaforaXMLParsingError(RuntimeError):
 
 
 def flatten(shift_or_interval: Shift | Interval) -> Shift | Interval:
+    """
+    Flattens any nested RepeatingIntersection objects.
+
+    :param shift_or_interval: The object to flatten
+    :return: A copy with any nested RepeatingIntersection replaced with a single nested RepeatingIntersection.
+    """
     match shift_or_interval:
-        case _IntervalOp() as io:
-            return dataclasses.replace(io, shift=flatten(io.shift))
         case RepeatingIntersection() as ri if any(isinstance(o, RepeatingIntersection) for o in ri.shifts):
             shifts = []
             for shift in ri.shifts:
@@ -1506,6 +1522,8 @@ def flatten(shift_or_interval: Shift | Interval) -> Shift | Interval:
                 else:
                     shifts.append(shift)
             return dataclasses.replace(ri, shifts=shifts)
+        case has_shift if hasattr(has_shift, "shift"):
+            return dataclasses.replace(has_shift, shift=flatten(has_shift.shift))
         case _:
             return shift_or_interval
 
