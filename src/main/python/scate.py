@@ -746,7 +746,7 @@ class YearSuffix(Interval):
 @_dataclass
 class _IntervalOp(Interval):
     """
-    A superclass for operators that take an Interval and a Shift as input and produce an Interval as output.
+    A base class for operators that take in an Interval and a Shift and produce an Interval.
     """
     interval: Interval
     shift: Shift
@@ -1058,6 +1058,9 @@ class Intersection(Interval):
 
 
 class Intervals(collections.abc.Iterable[Interval], abc.ABC):
+    """
+    A collection of intervals on the timeline.
+    """
     def isoformats(self) -> collections.abc.Iterator[str]:
         for interval in self:
             yield interval.isoformat()
@@ -1065,6 +1068,9 @@ class Intervals(collections.abc.Iterable[Interval], abc.ABC):
 
 @_dataclass
 class _N(Intervals):
+    """
+    A base class for operators that in an Interval, a Shift, and an integer, and produce an Interval.
+    """
     interval: Interval
     shift: Shift
     n: int
@@ -1089,6 +1095,12 @@ class _N(Intervals):
 
 @_dataclass
 class LastN(_N):
+    """
+    Repeats the `Last` operation n times.
+    For example, "the previous two summers" when written on 29 May 1264 would be represented as::
+
+        LastN(Interval.of(1264, 5, 29), Summer(), n=2)
+    """
     base_class: type = Last
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
@@ -1098,6 +1110,12 @@ class LastN(_N):
 
 @_dataclass
 class NextN(_N):
+    """
+    Repeats the `Next` operation n times.
+    For example, "the next six Fridays" when written on Sat 22 Dec 1714 would be represented as::
+
+        NextN(Interval.of(1714, 12, 22), Repeating(DAY, WEEK, value=4), n=6)
+    """
     base_class: type = Next
     span: (int, int) = dataclasses.field(default=None, repr=False)
 
