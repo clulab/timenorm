@@ -999,7 +999,7 @@ class This(IntervalOp):
 @_dataclass
 class Between(Interval):
     """
-    The interval between a start and an end interval.
+    Selects the interval between a start and an end interval.
     For example, "since 1994" written on 09 Jan 2007 and interpreted as [1995-01-01T00:00:00, 2007-01-09T00:00:00)
     would be represented as::
 
@@ -1035,6 +1035,13 @@ class Between(Interval):
 
 @_dataclass
 class Intersection(Interval):
+    """
+    Selects the interval in which all given intervals overlap.
+    For example, "Earlier that day" in the context of "We met at 6:00 on 24 Jan 1979. Earlier that day..." would be
+    interpreted as [1979-01-24T00:00:00, 1979-01-24T06:00:00) and represented as::
+
+        Intersection([Last(Interval.of(1979, 1, 24, 6), None), Interval.of(1979, 1, 24)])
+    """
     intervals: typing.Iterable[Interval]
     start: datetime.datetime | None = dataclasses.field(init=False, repr=False)
     end: datetime.datetime | None = dataclasses.field(init=False, repr=False)
